@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./lib",
+    "strict": true,
+    "target": "ES2019"
+  },
+  "exclude": ["**/*.test.ts", "lib"]
+}
