@@ -1,5 +1,7 @@
 # Cognito Local
 
+![CI](https://github.com/jagregory/cognito-local/workflows/CI/badge.svg)
+
 An offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
 The goal for this project is to be _Good Enough_ for local development use, and that's it. Don't expect it to be perfect, because it won't be.
