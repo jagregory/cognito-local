@@ -8,5 +8,6 @@
     "strict": true,
     "target": "ES2019"
   },
-  "exclude": ["lib"]
+  "exclude": ["lib"],
+  "include": ["src"]
 }
