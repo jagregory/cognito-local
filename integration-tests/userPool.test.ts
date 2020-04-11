@@ -1,3 +1,4 @@
+import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import { createUserPool, UserPool } from "../src/services/userPool";
 import fs from "fs";
 import { promisify } from "util";
@@ -8,9 +9,11 @@ const rmdir = promisify(fs.rmdir);
 
 describe("User Pool", () => {
   let path: string;
+  let tmpCreateDataStore: CreateDataStore;
 
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
+    tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
   });
 
   afterEach(() =>
@@ -20,7 +23,7 @@ describe("User Pool", () => {
   );
 
   it("creates a database", async () => {
-    await createUserPool({ UsernameAttributes: [] }, path);
+    await createUserPool({ UsernameAttributes: [] }, tmpCreateDataStore);
 
     expect(fs.existsSync(path + "/local.json")).toBe(true);
   });
@@ -28,7 +31,10 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const dataStore = await createUserPool({ UsernameAttributes: [] }, path);
+      const dataStore = await createUserPool(
+        { UsernameAttributes: [] },
+        tmpCreateDataStore
+      );
 
       await dataStore.saveUser({
         Username: "1",
@@ -63,7 +69,10 @@ describe("User Pool", () => {
 
     it("updates a user", async () => {
       const now = new Date().getTime();
-      const dataStore = await createUserPool({ UsernameAttributes: [] }, path);
+      const dataStore = await createUserPool(
+        { UsernameAttributes: [] },
+        tmpCreateDataStore
+      );
 
       await dataStore.saveUser({
         Username: "1",
@@ -144,7 +153,7 @@ describe("User Pool", () => {
         beforeAll(async () => {
           dataStore = await createUserPool(
             { UsernameAttributes: username_attributes },
-            path
+            tmpCreateDataStore
           );
 
           await dataStore.saveUser({

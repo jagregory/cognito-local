@@ -1,8 +1,4 @@
-import StormDB from "stormdb";
-import fs from "fs";
-import { promisify } from "util";
-
-const mkdir = promisify(fs.mkdir);
+import { CreateDataStore } from "./dataStore";
 
 export interface User {
   Username: string;
@@ -35,16 +31,12 @@ export const createUserPool = async (
   options: UserPoolOptions = {
     UsernameAttributes: ["email", "phone_number"],
   },
-  directory = ".cognito/db"
+  createDataStore: CreateDataStore
 ): Promise<UserPool> => {
-  await mkdir(directory, { recursive: true });
-  const engine = new StormDB.localFileEngine(`${directory}/local.json`, {
-    async: true,
-    serialize: (obj: unknown) => JSON.stringify(obj, undefined, 2),
+  const dataStore = await createDataStore("local", {
+    Users: {},
+    Options: options,
   });
-  const db = new StormDB(engine);
-
-  db.default({ Users: {}, Options: options });
 
   const attributeEquals = (
     attributeName: string,
@@ -61,15 +53,15 @@ export const createUserPool = async (
     async getUserByUsername(username) {
       console.log("getUserByUsername", username);
 
-      const options = db.get("Options").value();
-      const aliasEmailEnabled = options.UsernameAttributes.includes("email");
-      const aliasPhoneNumberEnabled = options.UsernameAttributes.includes(
+      const options = await dataStore.get<UserPoolOptions>("Options");
+      const aliasEmailEnabled = options?.UsernameAttributes.includes("email");
+      const aliasPhoneNumberEnabled = options?.UsernameAttributes.includes(
         "phone_number"
       );
 
-      const users = (await db.get("Users").value()) as { [key: string]: User };
+      const users = await dataStore.get<Record<string, User>>("Users");
 
-      for (const user of Object.values(users)) {
+      for (const user of Object.values(users ?? {})) {
         if (attributeEquals("sub", username, user)) {
           return user;
         }
@@ -96,13 +88,10 @@ export const createUserPool = async (
         ? user.Attributes
         : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
 
-      await db
-        .get("Users")
-        .set(user.Username, {
-          ...user,
-          Attributes: attributes,
-        })
-        .save();
+      await dataStore.set<User>(`Users.${user.Username}`, {
+        ...user,
+        Attributes: attributes,
+      });
     },
   };
 };
