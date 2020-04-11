@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc --emitDeclarationOnly && babel src --extensions \".ts\" --out-dir lib --ignore '**/*.test.ts'",
+    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && babel src --extensions \".ts\" --out-dir lib --ignore '**/*.test.ts'",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
