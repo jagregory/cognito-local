@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  unit_test:
+    runs-on: ubuntu-latest
+    name: Unit Test
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn test
+
+  integration_test:
+    runs-on: ubuntu-latest
+    name: Integration Test
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn integration-test
+  
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    needs: [unit_test, integration_test]
+    
+    steps:
+      - uses: actions/checkout@v2
+      - run: yarn install
+      - run: yarn build
