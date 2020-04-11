@@ -46,14 +46,16 @@ export const createUserPool = async (
 
   db.default({ Users: {}, Options: options });
 
-  const hasAttribute = (
+  const attributeEquals = (
     attributeName: string,
     attributeValue: string,
     user: User
   ) =>
-    user.Attributes.filter(
+    !!user.Attributes.find(
       (x) => x.Name === attributeName && x.Value === attributeValue
     );
+  const hasAttribute = (attributeName: string, user: User) =>
+    !!user.Attributes.find((x) => x.Name === attributeName);
 
   return {
     async getUserByUsername(username) {
@@ -68,17 +70,17 @@ export const createUserPool = async (
       const users = (await db.get("Users").value()) as { [key: string]: User };
 
       for (const user of Object.values(users)) {
-        if (hasAttribute("sub", username, user)) {
+        if (attributeEquals("sub", username, user)) {
           return user;
         }
 
-        if (aliasEmailEnabled && hasAttribute("email", username, user)) {
+        if (aliasEmailEnabled && attributeEquals("email", username, user)) {
           return user;
         }
 
         if (
           aliasPhoneNumberEnabled &&
-          hasAttribute("phone_number", username, user)
+          attributeEquals("phone_number", username, user)
         ) {
           return user;
         }
@@ -90,7 +92,17 @@ export const createUserPool = async (
     async saveUser(user) {
       console.log("saveUser", user);
 
-      await db.get("Users").set(user.Username, user).save();
+      const attributes = hasAttribute("sub", user)
+        ? user.Attributes
+        : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
+
+      await db
+        .get("Users")
+        .set(user.Username, {
+          ...user,
+          Attributes: attributes,
+        })
+        .save();
     },
   };
 };

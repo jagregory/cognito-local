@@ -1,4 +1,4 @@
-import { createUserPool } from "../src/services/userPool";
+import { createUserPool, UserPool } from "../src/services/userPool";
 import fs from "fs";
 import { promisify } from "util";
 
@@ -26,7 +26,7 @@ describe("User Pool", () => {
   });
 
   describe("saveUser", () => {
-    it("saves a user", async () => {
+    it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
       const dataStore = await createUserPool({ UsernameAttributes: [] }, path);
 
@@ -49,7 +49,10 @@ describe("User Pool", () => {
             Username: "1",
             Password: "hunter3",
             UserStatus: "UNCONFIRMED",
-            Attributes: [{ Name: "email", Value: "example@example.com" }],
+            Attributes: [
+              { Name: "sub", Value: "1" },
+              { Name: "email", Value: "example@example.com" },
+            ],
             UserLastModifiedDate: now,
             UserCreateDate: now,
             Enabled: true,
@@ -83,7 +86,10 @@ describe("User Pool", () => {
             Password: "hunter3",
             UserStatus: "UNCONFIRMED",
             ConfirmationCode: "1234",
-            Attributes: [{ Name: "email", Value: "example@example.com" }],
+            Attributes: [
+              { Name: "sub", Value: "1" },
+              { Name: "email", Value: "example@example.com" },
+            ],
             UserLastModifiedDate: now,
             UserCreateDate: now,
             Enabled: true,
@@ -110,7 +116,10 @@ describe("User Pool", () => {
             Username: "1",
             Password: "hunter3",
             UserStatus: "CONFIRMED",
-            Attributes: [{ Name: "email", Value: "example@example.com" }],
+            Attributes: [
+              { Name: "sub", Value: "1" },
+              { Name: "email", Value: "example@example.com" },
+            ],
             UserLastModifiedDate: now,
             UserCreateDate: now,
             Enabled: true,
