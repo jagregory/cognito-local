@@ -25,6 +25,8 @@
     "@babel/node": "^7.8.7",
     "@babel/preset-env": "^7.9.5",
     "@babel/preset-typescript": "^7.9.0",
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
     "@semantic-release/changelog": "^5.0.1",
     "@semantic-release/git": "^9.0.0",
     "@types/body-parser": "^1.19.0",
@@ -78,6 +80,7 @@
   },
   "husky": {
     "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged"
     }
   },
