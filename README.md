@@ -12,6 +12,7 @@ The goal for this project is to be _Good Enough_ for local development use, and 
 - [x] Confirm Sign Up
 - [x] Initiate Auth (Login)
 - [x] Forgot Password
+- [x] Confirm Forgot Password
 
 ## Installation
 
