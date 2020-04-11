@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "emitDeclarationOnly": true,
     "esModuleInterop": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -9,5 +8,5 @@
     "strict": true,
     "target": "ES2019"
   },
-  "exclude": ["**/*.test.ts", "lib"]
+  "exclude": ["lib"]
 }

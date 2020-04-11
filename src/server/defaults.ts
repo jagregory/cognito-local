@@ -6,9 +6,10 @@ import { Router } from "../targets/router";
 import { createServer, Server } from "./server";
 
 export const createDefaultServer = async (): Promise<Server> => {
+  const dataStore = await createUserPool();
   const router = Router({
     codeDelivery: createCodeDelivery(ConsoleCodeSender, otp),
-    createUserPool,
+    storage: dataStore,
   });
 
   return createServer(router);

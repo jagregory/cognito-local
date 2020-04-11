@@ -10,7 +10,7 @@ export interface ServerStartOptions {
 }
 
 export interface Server {
-  application: any;
+  application: any; // eslint-disable-line
   start(options?: ServerStartOptions): Promise<ServerStartOptions>;
 }
 

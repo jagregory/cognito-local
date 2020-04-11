@@ -1,13 +1,16 @@
+import { User } from "../userPool";
 import { createCodeDelivery } from "./codeDelivery";
 import { CodeSender } from "./codeSender";
 
 describe("Code Delivery", () => {
-  const user = {
-    id: "1",
-    confirmed: false,
-    username: "janice",
-    attributes: [],
-    password: "hunter2",
+  const user: User = {
+    Username: "1",
+    UserStatus: "CONFIRMED",
+    Attributes: [],
+    Password: "hunter2",
+    Enabled: true,
+    UserCreateDate: new Date().getTime(),
+    UserLastModifiedDate: new Date().getTime(),
   };
 
   describe("when delivery method is EMAIL", () => {

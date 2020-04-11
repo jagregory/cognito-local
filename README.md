@@ -49,8 +49,7 @@ For example:
 │                                                       │
 │   Confirmation Code Delivery                          │
 │                                                       │
-│   User ID:     c63651ae-59c6-4ede-ae7d-a8400ff65e8d   │
-│   Username:    example@example.com                    │
+│   Username:    c63651ae-59c6-4ede-ae7d-a8400ff65e8d   │
 │   Destination: example@example.com                    │
 │   Code:        3520                                   │
 │                                                       │

@@ -11,8 +11,7 @@ const sendToConsole = (
     boxen(
       `Confirmation Code Delivery
 
-User ID:     ${user.id}
-Username:    ${user.username}
+Username:    ${user.Username}
 Destination: ${destination}
 Code:        ${code}`,
       {

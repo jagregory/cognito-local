@@ -35,7 +35,7 @@ export const createUserPool = async (
   options: UserPoolOptions = {
     UsernameAttributes: ["email", "phone_number"],
   },
-  directory: string = ".cognito/db"
+  directory = ".cognito/db"
 ): Promise<UserPool> => {
   await mkdir(directory, { recursive: true });
   const engine = new StormDB.localFileEngine(`${directory}/local.json`, {
@@ -65,7 +65,7 @@ export const createUserPool = async (
         "phone_number"
       );
 
-      let users = (await db.get("Users").value()) as { [key: string]: User };
+      const users = (await db.get("Users").value()) as { [key: string]: User };
 
       for (const user of Object.values(users)) {
         if (hasAttribute("sub", username, user)) {
