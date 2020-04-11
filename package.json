@@ -5,7 +5,9 @@
   "bin": "lib/bin/start.js",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "build": "rm -rf lib && tsc --emitDeclarationOnly && babel src --extensions \".ts\" --out-dir lib --ignore '**/*.test.ts'",
     "integration-test": "jest --config integration-tests/jest.config.js",
@@ -33,8 +35,10 @@
     "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
+    "husky": "^4.2.5",
     "jest": "^25.3.0",
     "jest-date-mock": "^1.0.8",
+    "lint-staged": "^10.1.3",
     "nodemon": "^2.0.3",
     "prettier": "^2.0.4",
     "supertest": "^4.0.2",
@@ -60,6 +64,18 @@
     ],
     "ext": "ts",
     "exec": "yarn start"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "tsc --esModuleInterop --noEmit",
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "engines": {
     "node": ">=10"
