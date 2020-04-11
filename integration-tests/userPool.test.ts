@@ -31,12 +31,12 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const dataStore = await createUserPool(
+      const userPool = await createUserPool(
         { UsernameAttributes: [] },
         tmpCreateDataStore
       );
 
-      await dataStore.saveUser({
+      await userPool.saveUser({
         Username: "1",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
@@ -69,12 +69,12 @@ describe("User Pool", () => {
 
     it("updates a user", async () => {
       const now = new Date().getTime();
-      const dataStore = await createUserPool(
+      const userPool = await createUserPool(
         { UsernameAttributes: [] },
         tmpCreateDataStore
       );
 
-      await dataStore.saveUser({
+      await userPool.saveUser({
         Username: "1",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
@@ -106,7 +106,7 @@ describe("User Pool", () => {
         },
       });
 
-      await dataStore.saveUser({
+      await userPool.saveUser({
         Username: "1",
         Password: "hunter3",
         UserStatus: "CONFIRMED",
@@ -139,84 +139,38 @@ describe("User Pool", () => {
   });
 
   describe("getUserByUsername", () => {
-    describe.each`
-      username_attributes          | find_by_email | find_by_phone_number
-      ${[]}                        | ${false}      | ${false}
-      ${["email"]}                 | ${true}       | ${false}
-      ${["phone_number"]}          | ${false}      | ${true}
-      ${["email", "phone_number"]} | ${true}       | ${true}
-    `(
-      "$username_attributes username attributes",
-      ({ username_attributes, find_by_email, find_by_phone_number }) => {
-        let dataStore: UserPool;
+    let userPool: UserPool;
+    beforeAll(async () => {
+      userPool = await createUserPool(
+        { UsernameAttributes: [] },
+        tmpCreateDataStore
+      );
 
-        beforeAll(async () => {
-          dataStore = await createUserPool(
-            { UsernameAttributes: username_attributes },
-            tmpCreateDataStore
-          );
+      await userPool.saveUser({
+        Username: "1",
+        Password: "hunter2",
+        UserStatus: "UNCONFIRMED",
+        Attributes: [
+          { Name: "email", Value: "example@example.com" },
+          { Name: "phone_number", Value: "0411000111" },
+        ],
+        UserCreateDate: new Date().getTime(),
+        UserLastModifiedDate: new Date().getTime(),
+        Enabled: true,
+      });
+    });
 
-          await dataStore.saveUser({
-            Username: "1",
-            Password: "hunter2",
-            UserStatus: "UNCONFIRMED",
-            Attributes: [
-              { Name: "email", Value: "example@example.com" },
-              { Name: "phone_number", Value: "0411000111" },
-            ],
-            UserCreateDate: new Date().getTime(),
-            UserLastModifiedDate: new Date().getTime(),
-            Enabled: true,
-          });
-        });
+    it("returns null if user doesn't exist", async () => {
+      const user = await userPool.getUserByUsername("invalid");
 
-        it("returns null if user doesn't exist", async () => {
-          const user = await dataStore.getUserByUsername("invalid");
+      expect(user).toBeNull();
+    });
 
-          expect(user).toBeNull();
-        });
+    it("returns existing user by their sub attribute", async () => {
+      const user = await userPool.getUserByUsername("1");
 
-        it("returns existing user by their sub attribute", async () => {
-          const user = await dataStore.getUserByUsername("1");
-
-          expect(user).not.toBeNull();
-          expect(user?.Username).toEqual("1");
-        });
-
-        if (find_by_email) {
-          it("returns existing user by their email", async () => {
-            const user = await dataStore.getUserByUsername(
-              "example@example.com"
-            );
-
-            expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("1");
-          });
-        } else {
-          it("does not return the user by their email", async () => {
-            const user = await dataStore.getUserByUsername(
-              "example@example.com"
-            );
-
-            expect(user).toBeNull();
-          });
-        }
-
-        if (find_by_phone_number) {
-          it("returns existing user by their phone number", async () => {
-            const user = await dataStore.getUserByUsername("0411000111");
-
-            expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("1");
-          });
-        } else {
-          it("does not return the user by their phone number", async () => {
-            const user = await dataStore.getUserByUsername("0411000111");
-
-            expect(user).toBeNull();
-          });
-        }
-      }
-    );
+      expect(user).not.toBeNull();
+      expect(user?.Username).toEqual("1");
+    });
   });
 });
