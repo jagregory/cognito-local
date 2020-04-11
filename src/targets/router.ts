@@ -1,11 +1,13 @@
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { ConfirmSignUp } from "./confirmSignUp";
+import { ForgotPassword } from "./ForgotPassword";
 import { InitiateAuth } from "./initiateAuth";
 import { SignUp } from "./signUp";
 
 export const Targets = {
   ConfirmSignUp,
+  ForgotPassword,
   InitiateAuth,
   SignUp,
 };

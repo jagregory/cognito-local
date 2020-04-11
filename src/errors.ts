@@ -17,6 +17,12 @@ export class NotAuthorizedError extends CognitoError {
   }
 }
 
+export class UserNotFoundError extends CognitoError {
+  public constructor() {
+    super("UserNotFoundException", "User not found");
+  }
+}
+
 export class UsernameExistsError extends CognitoError {
   public constructor() {
     super("UsernameExistsException", "User already exists");
