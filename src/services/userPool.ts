@@ -5,7 +5,7 @@ export interface User {
   UserCreateDate: number;
   UserLastModifiedDate: number;
   Enabled: boolean;
-  UserStatus: "CONFIRMED" | "UNCONFIRMED";
+  UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
   Attributes: readonly {
     Name: "sub" | "email" | "phone_number" | "preferred_username" | string;
     Value: string;
@@ -18,22 +18,22 @@ export interface User {
 
 export interface UserPool {
   getUserByUsername(username: string): Promise<User | null>;
+  getUserPoolIdForClientId(clientId: string): Promise<string | null>;
   saveUser(user: User): Promise<void>;
 }
 
 type UsernameAttribute = "email" | "phone_number";
 
 interface UserPoolOptions {
+  UserPoolId: string;
   UsernameAttributes: UsernameAttribute[];
 }
 
 export const createUserPool = async (
-  options: UserPoolOptions = {
-    UsernameAttributes: ["email", "phone_number"],
-  },
+  options: UserPoolOptions,
   createDataStore: CreateDataStore
 ): Promise<UserPool> => {
-  const dataStore = await createDataStore("local", {
+  const dataStore = await createDataStore(options.UserPoolId, {
     Users: {},
     Options: options,
   });
@@ -50,6 +50,13 @@ export const createUserPool = async (
     !!user.Attributes.find((x) => x.Name === attributeName);
 
   return {
+    async getUserPoolIdForClientId() {
+      // TODO: support user pool to client mapping
+      const options = await dataStore.get<UserPoolOptions>("Options");
+
+      return Promise.resolve(options?.UserPoolId ?? "local");
+    },
+
     async getUserByUsername(username) {
       console.log("getUserByUsername", username);
 

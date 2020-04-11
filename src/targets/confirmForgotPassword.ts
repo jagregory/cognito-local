@@ -11,9 +11,9 @@ interface Input {
 export type ConfirmForgotPasswordTarget = (body: Input) => Promise<{}>;
 
 export const ConfirmForgotPassword = ({
-  storage,
+  userPool,
 }: Services): ConfirmForgotPasswordTarget => async (body) => {
-  const user = await storage.getUserByUsername(body.Username);
+  const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {
     throw new UserNotFoundError();
@@ -23,7 +23,7 @@ export const ConfirmForgotPassword = ({
     throw new CodeMismatchError();
   }
 
-  await storage.saveUser({
+  await userPool.saveUser({
     ...user,
     UserLastModifiedDate: new Date().getTime(),
     UserStatus: "CONFIRMED",

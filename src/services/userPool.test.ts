@@ -15,10 +15,13 @@ describe("User Pool", () => {
     const createDataStore = (jest.fn(
       () => mockDataStore
     ) as unknown) as CreateDataStore;
-    await createUserPool({ UsernameAttributes: [] }, createDataStore);
+    await createUserPool(
+      { UserPoolId: "local", UsernameAttributes: [] },
+      createDataStore
+    );
 
     expect(createDataStore).toHaveBeenCalledWith("local", {
-      Options: { UsernameAttributes: [] },
+      Options: { UserPoolId: "local", UsernameAttributes: [] },
       Users: {},
     });
   });
@@ -26,8 +29,9 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPool({ UsernameAttributes: [] }, () =>
-        Promise.resolve(mockDataStore)
+      const userPool = await createUserPool(
+        { UserPoolId: "local", UsernameAttributes: [] },
+        () => Promise.resolve(mockDataStore)
       );
 
       await userPool.saveUser({
@@ -68,7 +72,10 @@ describe("User Pool", () => {
         let userPool: UserPool;
 
         beforeAll(async () => {
-          const options = { UsernameAttributes: username_attributes };
+          const options = {
+            UserPoolId: "local",
+            UsernameAttributes: username_attributes,
+          };
           const users = {
             "1": {
               Username: "1",

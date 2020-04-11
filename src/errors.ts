@@ -41,6 +41,27 @@ export class InvalidPasswordError extends CognitoError {
   }
 }
 
+export class PasswordResetRequiredError extends CognitoError {
+  public constructor() {
+    super("PasswordResetRequiredException", "Password reset required");
+  }
+}
+
+export class ResourceNotFoundError extends CognitoError {
+  public constructor() {
+    super("ResourceNotFoundException", "Resource not found");
+  }
+}
+
+export class UnexpectedLambdaExceptionError extends CognitoError {
+  public constructor() {
+    super(
+      "UnexpectedLambdaExceptionException",
+      "Unexpected error when invoking lambda"
+    );
+  }
+}
+
 export const unsupported = (message: string, res: Response) => {
   console.error(`Cognito Local unsupported feature: ${message}`);
   return res.status(500).json({

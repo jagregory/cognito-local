@@ -11,9 +11,9 @@ interface Input {
 export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 
 export const ConfirmSignUp = ({
-  storage,
+  userPool,
 }: Services): ConfirmSignUpTarget => async (body) => {
-  const user = await storage.getUserByUsername(body.Username);
+  const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {
     throw new NotAuthorizedError();
@@ -23,7 +23,7 @@ export const ConfirmSignUp = ({
     throw new CodeMismatchError();
   }
 
-  await storage.saveUser({
+  await userPool.saveUser({
     ...user,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,

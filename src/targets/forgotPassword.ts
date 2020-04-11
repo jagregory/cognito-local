@@ -14,10 +14,10 @@ interface Output {
 export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
 
 export const ForgotPassword = ({
-  storage,
+  userPool,
   codeDelivery,
 }: Services): ForgotPasswordTarget => async (body) => {
-  const user = await storage.getUserByUsername(body.Username);
+  const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {
     throw new UserNotFoundError();
@@ -33,7 +33,7 @@ export const ForgotPassword = ({
 
   const code = await codeDelivery(user, deliveryDetails);
 
-  await storage.saveUser({
+  await userPool.saveUser({
     ...user,
     UserLastModifiedDate: new Date().getTime(),
     ConfirmationCode: code,

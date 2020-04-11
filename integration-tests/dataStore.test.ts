@@ -1,9 +1,4 @@
-import {
-  CreateDataStore,
-  createDataStore,
-  DataStore,
-} from "../src/services/dataStore";
-import { createUserPool, UserPool } from "../src/services/userPool";
+import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
 

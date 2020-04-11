@@ -1,6 +1,7 @@
 import { advanceBy, advanceTo } from "jest-date-mock";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
-import { CodeDelivery, UserPool } from "../services";
+import { UserPool } from "../services";
+import { Triggers } from "../services/triggers";
 import {
   ConfirmForgotPassword,
   ConfirmForgotPasswordTarget,
@@ -10,6 +11,7 @@ describe("ConfirmForgotPassword target", () => {
   let confirmForgotPassword: ConfirmForgotPasswordTarget;
   let mockDataStore: jest.Mocked<UserPool>;
   let mockCodeDelivery: jest.Mock;
+  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -18,13 +20,19 @@ describe("ConfirmForgotPassword target", () => {
 
     mockDataStore = {
       getUserByUsername: jest.fn(),
+      getUserPoolIdForClientId: jest.fn(),
       saveUser: jest.fn(),
     };
     mockCodeDelivery = jest.fn();
+    mockTriggers = {
+      enabled: jest.fn(),
+      userMigration: jest.fn(),
+    };
 
     confirmForgotPassword = ConfirmForgotPassword({
-      storage: mockDataStore as UserPool,
-      codeDelivery: mockCodeDelivery as CodeDelivery,
+      userPool: mockDataStore,
+      codeDelivery: mockCodeDelivery,
+      triggers: mockTriggers,
     });
   });
 

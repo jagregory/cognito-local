@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import {
   InvalidPasswordError,
   NotAuthorizedError,
+  PasswordResetRequiredError,
+  ResourceNotFoundError,
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
@@ -26,18 +28,40 @@ interface Output {
 export type InitiateAuthTarget = (body: Input) => Promise<Output>;
 
 export const InitiateAuth = ({
-  storage,
+  userPool,
+  triggers,
 }: Services): InitiateAuthTarget => async (body) => {
   if (body.AuthFlow !== "USER_PASSWORD_AUTH") {
     throw new UnsupportedError(`AuthFlow=${body.AuthFlow}`);
   }
 
-  const user = await storage.getUserByUsername(body.AuthParameters.USERNAME);
+  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
+  if (!userPoolId) {
+    throw new ResourceNotFoundError();
+  }
+
+  let user = await userPool.getUserByUsername(body.AuthParameters.USERNAME);
+
+  if (!user && triggers.enabled("UserMigration")) {
+    // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
+    //
+    // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time of
+    // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
+    // Cognito creates the user in the user pool.
+    user = await triggers.userMigration({
+      userPoolId,
+      clientId: body.ClientId,
+      username: body.AuthParameters.USERNAME,
+      password: body.AuthParameters.PASSWORD,
+    });
+  }
 
   if (!user) {
     throw new NotAuthorizedError();
   }
-
+  if (user.UserStatus === "RESET_REQUIRED") {
+    throw new PasswordResetRequiredError();
+  }
   if (user.Password !== body.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
   }

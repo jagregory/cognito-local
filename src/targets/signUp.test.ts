@@ -1,6 +1,7 @@
 import { advanceTo } from "jest-date-mock";
 import { UsernameExistsError } from "../errors";
-import { CodeDelivery, UserPool } from "../services";
+import { UserPool } from "../services";
+import { Triggers } from "../services/triggers";
 import { SignUp, SignUpTarget } from "./signUp";
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -9,6 +10,7 @@ describe("SignUp target", () => {
   let signUp: SignUpTarget;
   let mockDataStore: jest.Mocked<UserPool>;
   let mockCodeDelivery: jest.Mock;
+  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -17,13 +19,19 @@ describe("SignUp target", () => {
 
     mockDataStore = {
       getUserByUsername: jest.fn(),
+      getUserPoolIdForClientId: jest.fn(),
       saveUser: jest.fn(),
     };
     mockCodeDelivery = jest.fn();
+    mockTriggers = {
+      enabled: jest.fn(),
+      userMigration: jest.fn(),
+    };
 
     signUp = SignUp({
-      storage: mockDataStore as UserPool,
-      codeDelivery: mockCodeDelivery as CodeDelivery,
+      userPool: mockDataStore,
+      codeDelivery: mockCodeDelivery,
+      triggers: mockTriggers,
     });
   });
 
