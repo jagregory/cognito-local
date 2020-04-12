@@ -1,3 +1,5 @@
+import { advanceTo } from "jest-date-mock";
+import * as uuid from "uuid";
 import {
   InvalidPasswordError,
   NotAuthorizedError,
@@ -8,14 +10,21 @@ import { UserPool } from "../services";
 import { Triggers } from "../services/triggers";
 import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 import jwt from "jsonwebtoken";
+import PublicKey from "../keys/cognitoLocal.public.json";
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
   let mockDataStore: jest.Mocked<UserPool>;
   let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
+  let now: Date;
 
   beforeEach(() => {
+    now = new Date(2020, 1, 2, 3, 4, 5);
+    advanceTo(now);
+
     mockDataStore = {
       getUserByUsername: jest.fn(),
       getUserPoolIdForClientId: jest.fn(),
@@ -183,17 +192,52 @@ describe("InitiateAuth target", () => {
 
         expect(decodedAccessToken).toMatchObject({
           client_id: "clientId",
-          iss: "http://localhost:9229/user-pool-id",
+          iss: "http://localhost:9229/userPoolId",
           sub: "0000-0000",
           token_use: "access",
           username: "0000-0000",
+          event_id: expect.stringMatching(UUID),
+          scope: "aws.cognito.signin.user.admin", // TODO: scopes
+          auth_time: now.getTime(),
+          jti: expect.stringMatching(UUID),
         });
+      });
+
+      it("generates an access token that's verifiable with our public key", async () => {
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [],
+          UserStatus: "CONFIRMED",
+          Password: "hunter2",
+          Username: "0000-0000",
+          Enabled: true,
+          UserCreateDate: new Date().getTime(),
+          UserLastModifiedDate: new Date().getTime(),
+        });
+
+        const output = await initiateAuth({
+          ClientId: "clientId",
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: {
+            USERNAME: "0000-0000",
+            PASSWORD: "hunter2",
+          },
+        });
+
+        expect(output).toBeDefined();
+        expect(output.AuthenticationResult.AccessToken).toBeDefined();
+
+        expect(
+          jwt.verify(output.AuthenticationResult.AccessToken!, PublicKey.pem, {
+            algorithms: ["RS256"],
+          })
+        ).toBeTruthy();
       });
 
       it("generates an id token", async () => {
         mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
         mockDataStore.getUserByUsername.mockResolvedValue({
-          Attributes: [],
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
           UserStatus: "CONFIRMED",
           Password: "hunter2",
           Username: "0000-0000",
@@ -218,11 +262,46 @@ describe("InitiateAuth target", () => {
 
         expect(decodedIdToken).toMatchObject({
           aud: "clientId",
-          iss: "http://localhost:9229/user-pool-id",
+          iss: "http://localhost:9229/userPoolId",
           sub: "0000-0000",
           token_use: "id",
           "cognito:username": "0000-0000",
+          email_verified: true,
+          event_id: expect.stringMatching(UUID),
+          auth_time: now.getTime(),
+          email: "example@example.com",
         });
+      });
+
+      it("generates an id token verifiable with our public key", async () => {
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
+          UserStatus: "CONFIRMED",
+          Password: "hunter2",
+          Username: "0000-0000",
+          Enabled: true,
+          UserCreateDate: new Date().getTime(),
+          UserLastModifiedDate: new Date().getTime(),
+        });
+
+        const output = await initiateAuth({
+          ClientId: "clientId",
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: {
+            USERNAME: "0000-0000",
+            PASSWORD: "hunter2",
+          },
+        });
+
+        expect(output).toBeDefined();
+        expect(output.AuthenticationResult.IdToken).toBeDefined();
+
+        expect(
+          jwt.verify(output.AuthenticationResult.IdToken!, PublicKey.pem, {
+            algorithms: ["RS256"],
+          })
+        ).toBeTruthy();
       });
 
       it.todo("generates a refresh token");

@@ -77,7 +77,7 @@
   "lint-staged": {
     "*.ts": [
       "eslint --fix",
-      "tsc --esModuleInterop --noEmit",
+      "tsc --esModuleInterop --resolveJsonModule --noEmit",
       "prettier --write"
     ]
   },

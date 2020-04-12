@@ -7,6 +7,8 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
+import PrivateKey from "../keys/cognitoLocal.private.json";
+import * as uuid from "uuid";
 
 interface Input {
   AuthFlow: "USER_PASSWORD_AUTH" | "CUSTOM_AUTH";
@@ -66,6 +68,9 @@ export const InitiateAuth = ({
     throw new InvalidPasswordError();
   }
 
+  const eventId = uuid.v4();
+  const authTime = new Date().getTime();
+
   return {
     ChallengeName: "PASSWORD_VERIFIER",
     ChallengeParameters: {},
@@ -73,37 +78,42 @@ export const InitiateAuth = ({
       AccessToken: jwt.sign(
         {
           sub: user.Username,
-          event_id: "439a2a30-ecbc-4788-9ce6-fc6eb9a2d535",
+          event_id: eventId,
           token_use: "access",
-          scope: "aws.cognito.signin.user.admin",
-          auth_time: 1585450518,
-          jti: "b398b959-9f2f-40fa-9832-0a237524e460",
+          scope: "aws.cognito.signin.user.admin", // TODO: scopes
+          auth_time: authTime,
+          jti: uuid.v4(),
           client_id: body.ClientId,
           username: user.Username,
         },
-        "secret",
+        PrivateKey.pem,
         {
-          issuer: "http://localhost:9229/user-pool-id",
+          algorithm: "RS256",
+          issuer: `http://localhost:9229/${userPoolId}`,
           expiresIn: "24h",
+          keyid: "CognitoLocal",
         }
       ),
       IdToken: jwt.sign(
         {
           sub: user.Username,
           email_verified: true,
-          event_id: "439a2a30-ecbc-4788-9ce6-fc6eb9a2d535",
+          event_id: eventId,
           token_use: "id",
-          auth_time: 1585450518,
+          auth_time: authTime,
           "cognito:username": user.Username,
           email: user.Attributes.filter((x) => x.Name === "email").map(
             (x) => x.Value
           )[0],
         },
-        "secret",
+        PrivateKey.pem,
         {
-          issuer: "http://localhost:9229/user-pool-id",
+          algorithm: "RS256",
+          // TODO: this needs to match the actual host/port we started the server on
+          issuer: `http://localhost:9229/${userPoolId}`,
           expiresIn: "24h",
           audience: body.ClientId,
+          keyid: "CognitoLocal",
         }
       ),
       RefreshToken: "<< TODO >>",

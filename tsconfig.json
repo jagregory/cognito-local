@@ -5,6 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./lib",
+    "resolveJsonModule": true,
     "strict": true,
     "target": "ES2019"
   },
