@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
 import { Router } from "../targets/router";
+import PublicKey from "../keys/cognitoLocal.public.json";
 
 export interface ServerStartOptions {
   port?: number;
@@ -27,6 +28,12 @@ export const createServer = (router: Router): Server => {
       type: "application/x-amz-json-1.1",
     })
   );
+
+  app.get("/:userPoolId/.well-known/jwks.json", (req, res) => {
+    res.status(200).json({
+      keys: [PublicKey.jwk],
+    });
+  });
 
   app.post("/", async (req, res) => {
     const xAmzTarget = req.headers["x-amz-target"];

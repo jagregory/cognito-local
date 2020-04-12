@@ -1,5 +1,5 @@
 {
-  "jwt": {
+  "jwk": {
     "kty": "RSA",
     "e": "AQAB",
     "use": "sig",
