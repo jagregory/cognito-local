@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/jagregory/cognito-local/compare/v1.1.0...v1.1.1) (2020-04-12)
+
+
+### Bug Fixes
+
+* **release:** reorder semantic-release plugins to commit last ([3a94c03](https://github.com/jagregory/cognito-local/commit/3a94c031d8699470f03a08b6fd5e85058b6a22f3))
+
 # [1.1.0](https://github.com/jagregory/cognito-local/compare/v1.0.0...v1.1.0) (2020-04-12)
 
 
