@@ -1,5 +1,12 @@
 import { CreateDataStore, DataStore } from "./dataStore";
-import { createUserPool, UserPool } from "./userPool";
+import {
+  attributesInclude,
+  attributesIncludeMatch,
+  attributesToRecord,
+  createUserPool,
+  UserAttribute,
+  UserPool,
+} from "./userPool";
 
 describe("User Pool", () => {
   let mockDataStore: jest.Mocked<DataStore>;
@@ -153,5 +160,51 @@ describe("User Pool", () => {
         }
       }
     );
+  });
+
+  describe("attributes", () => {
+    const attributes: readonly UserAttribute[] = [
+      { Name: "sub", Value: "uuid" },
+      { Name: "email", Value: "example@example.com" },
+    ];
+
+    describe("attributesIncludeMatch", () => {
+      it("returns true if attribute exists in collection with matching name and value", () => {
+        expect(
+          attributesIncludeMatch("email", "example@example.com", attributes)
+        ).toBe(true);
+      });
+
+      it("returns false if attribute exists in collection with matching name but not matching value", () => {
+        expect(attributesIncludeMatch("email", "invalid", attributes)).toBe(
+          false
+        );
+      });
+
+      it("returns false if attribute does not exist in collection", () => {
+        expect(attributesIncludeMatch("invalid", "invalid", attributes)).toBe(
+          false
+        );
+      });
+    });
+
+    describe("attributesInclude", () => {
+      it("returns true if attribute exists in collection with matching name", () => {
+        expect(attributesInclude("email", attributes)).toBe(true);
+      });
+
+      it("returns false if attribute does not exist in collection", () => {
+        expect(attributesInclude("invalid", attributes)).toBe(false);
+      });
+    });
+
+    describe("attributesToRecord", () => {
+      it("converts the attributes to a record", () => {
+        expect(attributesToRecord(attributes)).toEqual({
+          email: "example@example.com",
+          sub: "uuid",
+        });
+      });
+    });
   });
 });

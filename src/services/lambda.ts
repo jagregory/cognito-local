@@ -8,6 +8,7 @@ interface UserMigrationEvent {
   clientId: string;
   username: string;
   password: string;
+  userAttributes: Record<string, string>;
   triggerSource: "UserMigration_Authentication";
 }
 
@@ -49,10 +50,15 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
       userPoolId: event.userPoolId,
       triggerSource: event.triggerSource,
       request: {
-        userAttributes: {},
+        userAttributes: event.userAttributes,
       },
       response: {},
     };
+
+    if (event.triggerSource === "UserMigration_Authentication") {
+      lambdaEvent.request.password = event.password;
+      lambdaEvent.request.validationData = {};
+    }
 
     console.log(
       `Invoking "${lambdaName}" with event`,

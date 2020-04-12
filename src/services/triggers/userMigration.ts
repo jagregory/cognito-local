@@ -2,13 +2,14 @@ import * as uuid from "uuid";
 import { NotAuthorizedError } from "../../errors";
 import { UserPool } from "../index";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
-import { User } from "../userPool";
+import { attributesToRecord, User, UserAttribute } from "../userPool";
 
 export type UserMigrationTrigger = (params: {
   userPoolId: string;
   clientId: string;
   username: string;
   password: string;
+  userAttributes: readonly UserAttribute[];
 }) => Promise<User>;
 
 export const UserMigration = ({
@@ -22,6 +23,7 @@ export const UserMigration = ({
   clientId,
   username,
   password,
+  userAttributes,
 }): Promise<User> => {
   let result: CognitoUserPoolResponse;
 
@@ -32,13 +34,14 @@ export const UserMigration = ({
       username,
       password,
       triggerSource: "UserMigration_Authentication",
+      userAttributes: attributesToRecord(userAttributes),
     });
   } catch (ex) {
     throw new NotAuthorizedError();
   }
 
   const user: User = {
-    Attributes: [{ Name: "email", Value: username }],
+    Attributes: userAttributes,
     Enabled: true,
     Password: password,
     UserCreateDate: new Date().getTime(),

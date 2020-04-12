@@ -37,6 +37,7 @@ describe("UserMigration trigger", () => {
           clientId: "clientId",
           username: "username",
           password: "password",
+          userAttributes: [],
         })
       ).rejects.toBeInstanceOf(NotAuthorizedError);
     });
@@ -51,6 +52,16 @@ describe("UserMigration trigger", () => {
         clientId: "clientId",
         username: "example@example.com",
         password: "password",
+        userAttributes: [{ Name: "email", Value: "example@example.com" }],
+      });
+
+      expect(mockLambda.invoke).toHaveBeenCalledWith("UserMigration", {
+        clientId: "clientId",
+        password: "password",
+        triggerSource: "UserMigration_Authentication",
+        userAttributes: { email: "example@example.com" },
+        userPoolId: "userPoolId",
+        username: "example@example.com",
       });
 
       expect(user).not.toBeNull();
@@ -73,6 +84,7 @@ describe("UserMigration trigger", () => {
         clientId: "clientId",
         username: "example@example.com",
         password: "password",
+        userAttributes: [],
       });
 
       expect(user).not.toBeNull();

@@ -1,15 +1,36 @@
 import { CreateDataStore } from "./dataStore";
 
+export interface UserAttribute {
+  Name: "sub" | "email" | "phone_number" | "preferred_username" | string;
+  Value: string;
+}
+
+export const attributesIncludeMatch = (
+  attributeName: string,
+  attributeValue: string,
+  attributes: readonly UserAttribute[]
+) =>
+  !!attributes.find(
+    (x) => x.Name === attributeName && x.Value === attributeValue
+  );
+
+export const attributesInclude = (
+  attributeName: string,
+  attributes: readonly UserAttribute[]
+) => !!attributes.find((x) => x.Name === attributeName);
+
+export const attributesToRecord = (
+  attributes: readonly UserAttribute[]
+): Record<string, string> =>
+  attributes.reduce((acc, attr) => ({ ...acc, [attr.Name]: attr.Value }), {});
+
 export interface User {
   Username: string;
   UserCreateDate: number;
   UserLastModifiedDate: number;
   Enabled: boolean;
   UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
-  Attributes: readonly {
-    Name: "sub" | "email" | "phone_number" | "preferred_username" | string;
-    Value: string;
-  }[];
+  Attributes: readonly UserAttribute[];
 
   // extra attributes for Cognito Local
   Password: string;
@@ -38,17 +59,6 @@ export const createUserPool = async (
     Options: options,
   });
 
-  const attributeEquals = (
-    attributeName: string,
-    attributeValue: string,
-    user: User
-  ) =>
-    !!user.Attributes.find(
-      (x) => x.Name === attributeName && x.Value === attributeValue
-    );
-  const hasAttribute = (attributeName: string, user: User) =>
-    !!user.Attributes.find((x) => x.Name === attributeName);
-
   return {
     async getUserPoolIdForClientId() {
       // TODO: support user pool to client mapping
@@ -69,17 +79,20 @@ export const createUserPool = async (
       const users = await dataStore.get<Record<string, User>>("Users");
 
       for (const user of Object.values(users ?? {})) {
-        if (attributeEquals("sub", username, user)) {
+        if (attributesIncludeMatch("sub", username, user.Attributes)) {
           return user;
         }
 
-        if (aliasEmailEnabled && attributeEquals("email", username, user)) {
+        if (
+          aliasEmailEnabled &&
+          attributesIncludeMatch("email", username, user.Attributes)
+        ) {
           return user;
         }
 
         if (
           aliasPhoneNumberEnabled &&
-          attributeEquals("phone_number", username, user)
+          attributesIncludeMatch("phone_number", username, user.Attributes)
         ) {
           return user;
         }
@@ -91,7 +104,7 @@ export const createUserPool = async (
     async saveUser(user) {
       console.log("saveUser", user);
 
-      const attributes = hasAttribute("sub", user)
+      const attributes = attributesInclude("sub", user.Attributes)
         ? user.Attributes
         : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
 
