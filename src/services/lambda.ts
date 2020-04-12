@@ -1,5 +1,6 @@
 import { CognitoUserPoolEvent } from "aws-lambda";
 import * as AWS from "aws-sdk";
+import { InvocationResponse } from "aws-sdk/clients/lambda";
 import { UnexpectedLambdaExceptionError } from "../errors";
 
 interface UserMigrationEvent {
@@ -57,13 +58,19 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
       `Invoking "${lambdaName}" with event`,
       JSON.stringify(lambdaEvent, undefined, 2)
     );
-    const result = await lambdaClient
-      .invoke({
-        FunctionName: lambdaName,
-        InvocationType: "RequestResponse",
-        Payload: JSON.stringify(lambdaEvent),
-      })
-      .promise();
+    let result: InvocationResponse;
+    try {
+      result = await lambdaClient
+        .invoke({
+          FunctionName: lambdaName,
+          InvocationType: "RequestResponse",
+          Payload: JSON.stringify(lambdaEvent),
+        })
+        .promise();
+    } catch (ex) {
+      console.log(ex);
+      throw new UnexpectedLambdaExceptionError();
+    }
 
     console.log(
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`

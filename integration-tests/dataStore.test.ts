@@ -94,6 +94,20 @@ describe("Data Store", () => {
   });
 
   describe("get", () => {
+    it("returns entire db if no key used", async () => {
+      const dataStore = await createDataStore(
+        "example",
+        { DefaultValue: true },
+        path
+      );
+
+      await dataStore.set("key", "value");
+
+      const result = await dataStore.get();
+
+      expect(result).toEqual({ DefaultValue: true, key: "value" });
+    });
+
     it("returns a default", async () => {
       const dataStore = await createDataStore(
         "example",

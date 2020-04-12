@@ -5,7 +5,7 @@ import { promisify } from "util";
 const mkdir = promisify(fs.mkdir);
 
 export interface DataStore {
-  get<T>(key: string): Promise<T | null>;
+  get<T>(key?: string): Promise<T | null>;
   set<T>(key: string, value: T): Promise<void>;
 }
 
@@ -30,7 +30,11 @@ export const createDataStore: CreateDataStore = async (
   db.default(defaults);
 
   return {
-    async get(key: string) {
+    async get(key?: string) {
+      if (!key) {
+        return db.value();
+      }
+
       const result = await db.get(key).value();
 
       return result ?? null;

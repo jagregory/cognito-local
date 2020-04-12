@@ -6,19 +6,21 @@ import { createLambda } from "../services/lambda";
 import { createTriggers } from "../services/triggers";
 import { createUserPool } from "../services/userPool";
 import { Router } from "../targets/router";
+import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
 import * as AWS from "aws-sdk";
 
 export const createDefaultServer = async (): Promise<Server> => {
+  const config = await loadConfig();
+
+  console.log("Loaded config:", config);
+
   const userPool = await createUserPool(
-    {
-      UserPoolId: "local",
-      UsernameAttributes: ["email"],
-    },
+    config.UserPoolDefaults,
     createDataStore
   );
-  const lambdaClient = new AWS.Lambda({});
-  const lambda = createLambda({}, lambdaClient);
+  const lambdaClient = new AWS.Lambda(config.LambdaClient);
+  const lambda = createLambda(config.TriggerFunctions, lambdaClient);
   const triggers = createTriggers({
     lambda,
     userPool,

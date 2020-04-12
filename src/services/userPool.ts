@@ -24,16 +24,16 @@ export interface UserPool {
 
 type UsernameAttribute = "email" | "phone_number";
 
-interface UserPoolOptions {
-  UserPoolId: string;
-  UsernameAttributes: UsernameAttribute[];
+export interface UserPoolOptions {
+  UserPoolId?: string;
+  UsernameAttributes?: UsernameAttribute[];
 }
 
 export const createUserPool = async (
   options: UserPoolOptions,
   createDataStore: CreateDataStore
 ): Promise<UserPool> => {
-  const dataStore = await createDataStore(options.UserPoolId, {
+  const dataStore = await createDataStore(options.UserPoolId ?? "local", {
     Users: {},
     Options: options,
   });
@@ -61,8 +61,8 @@ export const createUserPool = async (
       console.log("getUserByUsername", username);
 
       const options = await dataStore.get<UserPoolOptions>("Options");
-      const aliasEmailEnabled = options?.UsernameAttributes.includes("email");
-      const aliasPhoneNumberEnabled = options?.UsernameAttributes.includes(
+      const aliasEmailEnabled = options?.UsernameAttributes?.includes("email");
+      const aliasPhoneNumberEnabled = options?.UsernameAttributes?.includes(
         "phone_number"
       );
 
