@@ -2,7 +2,7 @@ import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
-import { ForgotPassword } from "./ForgotPassword";
+import { ForgotPassword } from "./forgotPassword";
 import { InitiateAuth } from "./initiateAuth";
 import { SignUp } from "./signUp";
 
