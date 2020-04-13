@@ -4,6 +4,7 @@ import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { ForgotPassword } from "./forgotPassword";
 import { InitiateAuth } from "./initiateAuth";
+import { ListUsers } from "./listUsers";
 import { SignUp } from "./signUp";
 
 export const Targets = {
@@ -11,6 +12,7 @@ export const Targets = {
   ConfirmSignUp,
   ForgotPassword,
   InitiateAuth,
+  ListUsers,
   SignUp,
 };
 

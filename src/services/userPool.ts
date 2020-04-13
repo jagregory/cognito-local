@@ -45,6 +45,7 @@ export interface User {
 export interface UserPool {
   getUserByUsername(username: string): Promise<User | null>;
   getUserPoolIdForClientId(clientId: string): Promise<string | null>;
+  listUsers(): Promise<readonly User[]>;
   saveUser(user: User): Promise<void>;
 }
 
@@ -104,6 +105,13 @@ export const createUserPool = async (
       }
 
       return null;
+    },
+
+    async listUsers(): Promise<readonly User[]> {
+      console.log("listUsers");
+      const users = (await dataStore.get<Record<string, User>>("Users")) ?? {};
+
+      return Object.values(users);
     },
 
     async saveUser(user) {

@@ -18,6 +18,7 @@ describe("PostConfirmation trigger", () => {
     mockUserPool = {
       getUserByUsername: jest.fn(),
       getUserPoolIdForClientId: jest.fn(),
+      listUsers: jest.fn(),
       saveUser: jest.fn(),
     };
 

@@ -176,4 +176,70 @@ describe("User Pool", () => {
       expect(user?.Username).toEqual("1");
     });
   });
+
+  describe("listUsers", () => {
+    let userPool: UserPool;
+    let now: Date;
+
+    beforeAll(async () => {
+      now = new Date();
+
+      userPool = await createUserPool(
+        { UserPoolId: "local", UsernameAttributes: [] },
+        tmpCreateDataStore
+      );
+
+      await userPool.saveUser({
+        Username: "1",
+        Password: "hunter2",
+        UserStatus: "UNCONFIRMED",
+        Attributes: [
+          { Name: "email", Value: "example@example.com" },
+          { Name: "phone_number", Value: "0411000111" },
+        ],
+        UserCreateDate: now.getTime(),
+        UserLastModifiedDate: now.getTime(),
+        Enabled: true,
+      });
+
+      await userPool.saveUser({
+        Username: "2",
+        Password: "password1",
+        UserStatus: "UNCONFIRMED",
+        Attributes: [],
+        UserCreateDate: now.getTime(),
+        UserLastModifiedDate: now.getTime(),
+        Enabled: true,
+      });
+    });
+
+    it("returns all users", async () => {
+      const users = await userPool.listUsers();
+
+      expect(users).toEqual([
+        {
+          Username: "1",
+          Password: "hunter2",
+          UserStatus: "UNCONFIRMED",
+          Attributes: [
+            { Name: "sub", Value: "1" },
+            { Name: "email", Value: "example@example.com" },
+            { Name: "phone_number", Value: "0411000111" },
+          ],
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          Enabled: true,
+        },
+        {
+          Username: "2",
+          Password: "password1",
+          UserStatus: "UNCONFIRMED",
+          Attributes: [{ Name: "sub", Value: "2" }],
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          Enabled: true,
+        },
+      ]);
+    });
+  });
 });

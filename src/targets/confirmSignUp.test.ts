@@ -22,6 +22,7 @@ describe("ConfirmSignUp target", () => {
     mockDataStore = {
       getUserByUsername: jest.fn(),
       getUserPoolIdForClientId: jest.fn(),
+      listUsers: jest.fn(),
       saveUser: jest.fn(),
     };
     mockCodeDelivery = jest.fn();

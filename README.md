@@ -8,15 +8,20 @@ The goal for this project is to be _Good Enough_ for local development use, and 
 
 ## Features
 
-- [x] Sign Up
-- [x] Confirm Sign Up
-- [x] Initiate Auth (Login)
-- [x] JWKs verification
-- [x] Forgot Password
-- [x] Confirm Forgot Password
-- [x] User Migration lambda trigger (Authentication)
-- [ ] User Migration lambda trigger (Forgot Password)
-- [x] Post Confirmation lambda trigger (ConfirmSignUp & ConfirmForgotPassword)
+> At this point in time, assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. If they don't work for you, please raise an issue.
+
+- [ConfirmForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html)
+- [ConfirmSignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html)
+- [ForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html)
+- [InitiateAuth](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html)
+- [ListUsers](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListUsers.html)
+- [SignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html)
+
+Additional supported features:
+
+- JWKs verification
+- User Migration lambda trigger
+- Post Confirmation lambda trigger
 
 ## Installation
 
