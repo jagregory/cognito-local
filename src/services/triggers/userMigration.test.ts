@@ -44,22 +44,26 @@ describe("UserMigration trigger", () => {
   });
 
   describe("when lambda invoke succeeds", () => {
-    it("saves user", async () => {
-      mockLambda.invoke.mockResolvedValue({});
+    it("saves user with attributes from response", async () => {
+      mockLambda.invoke.mockResolvedValue({
+        userAttributes: {
+          email: "example@example.com",
+        },
+      });
 
       const user = await userMigration({
         userPoolId: "userPoolId",
         clientId: "clientId",
-        username: "example@example.com",
+        username: "example@example.com", // username may be an email when migration is from a login attempt
         password: "password",
-        userAttributes: [{ Name: "email", Value: "example@example.com" }],
+        userAttributes: [], // there won't be any attributes yet because we don't know who the user is
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith("UserMigration", {
         clientId: "clientId",
         password: "password",
         triggerSource: "UserMigration_Authentication",
-        userAttributes: { email: "example@example.com" },
+        userAttributes: {},
         userPoolId: "userPoolId",
         username: "example@example.com",
       });

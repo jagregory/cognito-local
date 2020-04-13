@@ -1,5 +1,6 @@
 import { CreateDataStore, DataStore } from "./dataStore";
 import {
+  attributesFromRecord,
   attributesInclude,
   attributesIncludeMatch,
   attributesToRecord,
@@ -201,9 +202,20 @@ describe("User Pool", () => {
     describe("attributesToRecord", () => {
       it("converts the attributes to a record", () => {
         expect(attributesToRecord(attributes)).toEqual({
-          email: "example@example.com",
           sub: "uuid",
+          email: "example@example.com",
         });
+      });
+    });
+
+    describe("attributesFromRecord", () => {
+      it("converts the attributes to a record", () => {
+        expect(
+          attributesFromRecord({
+            sub: "uuid",
+            email: "example@example.com",
+          })
+        ).toEqual(attributes);
       });
     });
   });

@@ -24,6 +24,11 @@ export const attributesToRecord = (
 ): Record<string, string> =>
   attributes.reduce((acc, attr) => ({ ...acc, [attr.Name]: attr.Value }), {});
 
+export const attributesFromRecord = (
+  attributes: Record<string, string>
+): readonly UserAttribute[] =>
+  Object.entries(attributes).map(([Name, Value]) => ({ Name, Value }));
+
 export interface User {
   Username: string;
   UserCreateDate: number;

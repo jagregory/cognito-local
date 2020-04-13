@@ -2,7 +2,12 @@ import * as uuid from "uuid";
 import { NotAuthorizedError } from "../../errors";
 import { UserPool } from "../index";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
-import { attributesToRecord, User, UserAttribute } from "../userPool";
+import {
+  attributesFromRecord,
+  attributesToRecord,
+  User,
+  UserAttribute,
+} from "../userPool";
 
 export type UserMigrationTrigger = (params: {
   userPoolId: string;
@@ -41,7 +46,7 @@ export const UserMigration = ({
   }
 
   const user: User = {
-    Attributes: userAttributes,
+    Attributes: attributesFromRecord(result.userAttributes ?? {}),
     Enabled: true,
     Password: password,
     UserCreateDate: new Date().getTime(),
