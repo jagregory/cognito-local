@@ -5,17 +5,21 @@ import { CognitoError, unsupported, UnsupportedError } from "../errors";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 
-export interface ServerStartOptions {
+export interface ServerOptions {
   port?: number;
   hostname?: string;
+  development?: boolean;
 }
 
 export interface Server {
   application: any; // eslint-disable-line
-  start(options?: ServerStartOptions): Promise<ServerStartOptions>;
+  start(options?: ServerOptions): Promise<ServerOptions>;
 }
 
-export const createServer = (router: Router): Server => {
+export const createServer = (
+  router: Router,
+  options: ServerOptions = {}
+): Server => {
   const app = express();
 
   app.use(
@@ -58,6 +62,18 @@ export const createServer = (router: Router): Server => {
     } catch (ex) {
       console.error(`Error handling target: ${target}`, ex);
       if (ex instanceof UnsupportedError) {
+        if (options.development) {
+          console.log("======");
+          console.log();
+          console.log("Unsupported target");
+          console.log("");
+          console.log(`x-amz-target: ${xAmzTarget}`);
+          console.log("Body:");
+          console.log(JSON.stringify(req.body, undefined, 2));
+          console.log();
+          console.log("======");
+        }
+
         return unsupported(ex.message, res);
       } else if (ex instanceof CognitoError) {
         return res.status(400).json({
@@ -72,8 +88,10 @@ export const createServer = (router: Router): Server => {
 
   return {
     application: app,
-    start(options) {
+    start(startOptions) {
       const actualOptions = {
+        ...options,
+        ...startOptions,
         port: options?.port ?? 9229,
         hostname: options?.hostname ?? "localhost",
       };

@@ -31,5 +31,7 @@ export const createDefaultServer = async (): Promise<Server> => {
     triggers,
   });
 
-  return createServer(router);
+  return createServer(router, {
+    development: !!process.env.COGNITO_LOCAL_DEVMODE,
+  });
 };
