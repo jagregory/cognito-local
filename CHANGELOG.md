@@ -1,3 +1,17 @@
+# [1.2.0](https://github.com/jagregory/cognito-local/compare/v1.1.1...v1.2.0) (2020-04-13)
+
+
+### Bug Fixes
+
+* **jwt:** sign tokens with real rsa key ([949d3fc](https://github.com/jagregory/cognito-local/commit/949d3fcbad8e247047922580fe237e537bf50926))
+
+
+### Features
+
+* **lambda:** post confirmation lambda trigger ([f30573b](https://github.com/jagregory/cognito-local/commit/f30573b771109e7da28687805c6b7734f89fce80))
+* include user attributes in user migration lambda call ([dabed92](https://github.com/jagregory/cognito-local/commit/dabed92182ff7dc5285ea21dbc042584b1ce2cd9))
+* **jwt:** expose jwk endpoint to support verifying tokens ([bc27b86](https://github.com/jagregory/cognito-local/commit/bc27b867ff8eeabbeade3fcf983dd38d3b8953f7))
+
 ## [1.1.1](https://github.com/jagregory/cognito-local/compare/v1.1.0...v1.1.1) (2020-04-12)
 
 
