@@ -86,6 +86,12 @@ The default config is:
 }
 ```
 
+### HTTPS endpoints with self-signed certificates
+
+If you need your Lambda endpoint to be HTTPS with a self-signed certificate, you will need to disable certificate verification in Node for Cognito Local. The easiest way to do this is to run Cognito Local with the `NODE_TLS_REJECT_UNAUTHORIZED` environment variable.
+
+    NODE_TLS_REJECT_UNAUTHORIZED=0 cognito-local
+
 ## Known Limitations
 
 Many. Cognito Local only works for my exact use-case.
