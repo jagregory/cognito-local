@@ -55,6 +55,7 @@ export const InitiateAuth = ({
       clientId: body.ClientId,
       username: body.AuthParameters.USERNAME,
       password: body.AuthParameters.PASSWORD,
+      userAttributes: [],
     });
   }
 

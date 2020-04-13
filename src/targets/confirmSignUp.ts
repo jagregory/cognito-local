@@ -1,4 +1,8 @@
-import { CodeMismatchError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  NotAuthorizedError,
+  ResourceNotFoundError,
+} from "../errors";
 import { Services } from "../services";
 
 interface Input {
@@ -12,7 +16,13 @@ export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 
 export const ConfirmSignUp = ({
   userPool,
+  triggers,
 }: Services): ConfirmSignUpTarget => async (body) => {
+  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
+  if (!userPoolId) {
+    throw new ResourceNotFoundError();
+  }
+
   const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {
@@ -29,4 +39,14 @@ export const ConfirmSignUp = ({
     ConfirmationCode: undefined,
     UserLastModifiedDate: new Date().getTime(),
   });
+
+  if (triggers.enabled("PostConfirmation")) {
+    await triggers.postConfirmation({
+      source: "PostConfirmation_ConfirmSignUp",
+      username: user.Username,
+      clientId: body.ClientId,
+      userPoolId,
+      userAttributes: user.Attributes,
+    });
+  }
 };

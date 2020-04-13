@@ -1,4 +1,8 @@
-import { CodeMismatchError, UserNotFoundError } from "../errors";
+import {
+  CodeMismatchError,
+  ResourceNotFoundError,
+  UserNotFoundError,
+} from "../errors";
 import { Services } from "../services";
 
 interface Input {
@@ -12,7 +16,13 @@ export type ConfirmForgotPasswordTarget = (body: Input) => Promise<{}>;
 
 export const ConfirmForgotPassword = ({
   userPool,
+  triggers,
 }: Services): ConfirmForgotPasswordTarget => async (body) => {
+  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
+  if (!userPoolId) {
+    throw new ResourceNotFoundError();
+  }
+
   const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {
@@ -30,6 +40,16 @@ export const ConfirmForgotPassword = ({
     ConfirmationCode: undefined,
     Password: body.Password,
   });
+
+  if (triggers.enabled("PostConfirmation")) {
+    await triggers.postConfirmation({
+      source: "PostConfirmation_ConfirmForgotPassword",
+      username: user.Username,
+      clientId: body.ClientId,
+      userPoolId,
+      userAttributes: user.Attributes,
+    });
+  }
 
   return {};
 };

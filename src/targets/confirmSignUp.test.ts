@@ -1,5 +1,9 @@
 import { advanceBy, advanceTo } from "jest-date-mock";
-import { CodeMismatchError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  NotAuthorizedError,
+  ResourceNotFoundError,
+} from "../errors";
 import { UserPool } from "../services";
 import { Triggers } from "../services/triggers";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
@@ -23,6 +27,7 @@ describe("ConfirmSignUp target", () => {
     mockCodeDelivery = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
+      postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };
 
@@ -33,7 +38,21 @@ describe("ConfirmSignUp target", () => {
     });
   });
 
+  it("throws if can't find user pool by client id", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue(null);
+
+    await expect(
+      confirmSignUp({
+        ClientId: "clientId",
+        Username: "janice",
+        ConfirmationCode: "1234",
+        ForceAliasCreation: false,
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+  });
+
   it("throws if user doesn't exist", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
     mockDataStore.getUserByUsername.mockResolvedValue(null);
 
     await expect(
@@ -47,6 +66,7 @@ describe("ConfirmSignUp target", () => {
   });
 
   it("throws if confirmation code doesn't match stored value", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
     mockDataStore.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "4567",
@@ -70,6 +90,7 @@ describe("ConfirmSignUp target", () => {
 
   describe("when code matches", () => {
     it("updates the user's confirmed status", async () => {
+      mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
       mockDataStore.getUserByUsername.mockResolvedValue({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: "4567",
@@ -101,6 +122,71 @@ describe("ConfirmSignUp target", () => {
         UserLastModifiedDate: newNow.getTime(),
         UserStatus: "CONFIRMED",
         Username: "0000-0000",
+      });
+    });
+
+    describe("when PostConfirmation trigger configured", () => {
+      it("invokes the trigger", async () => {
+        mockTriggers.enabled.mockReturnValue(true);
+
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
+          ConfirmationCode: "4567",
+          Enabled: true,
+          Password: "pwd",
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          UserStatus: "UNCONFIRMED",
+          Username: "0000-0000",
+        });
+
+        await confirmSignUp({
+          ClientId: "clientId",
+          Username: "janice",
+          ConfirmationCode: "4567",
+          ForceAliasCreation: false,
+        });
+
+        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
+          clientId: "clientId",
+          source: "PostConfirmation_ConfirmSignUp",
+          userAttributes: [
+            {
+              Name: "email",
+              Value: "example@example.com",
+            },
+          ],
+          userPoolId: "userPoolId",
+          username: "0000-0000",
+        });
+      });
+    });
+
+    describe("when PostConfirmation trigger not configured", () => {
+      it("doesn't invoke the trigger", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
+          ConfirmationCode: "4567",
+          Enabled: true,
+          Password: "pwd",
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          UserStatus: "UNCONFIRMED",
+          Username: "0000-0000",
+        });
+
+        await confirmSignUp({
+          ClientId: "clientId",
+          Username: "janice",
+          ConfirmationCode: "4567",
+          ForceAliasCreation: false,
+        });
+
+        expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();
       });
     });
   });

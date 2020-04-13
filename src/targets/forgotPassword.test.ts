@@ -23,6 +23,7 @@ describe("ForgotPassword target", () => {
     mockCodeDelivery = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
+      postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };
 

@@ -12,6 +12,16 @@ interface UserMigrationEvent {
   triggerSource: "UserMigration_Authentication";
 }
 
+interface PostConfirmationEvent {
+  userPoolId: string;
+  clientId: string;
+  username: string;
+  userAttributes: Record<string, string>;
+  triggerSource:
+    | "PostConfirmation_ConfirmSignUp"
+    | "PostConfirmation_ConfirmForgotPassword";
+}
+
 export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
 
 export interface Lambda {
@@ -19,11 +29,16 @@ export interface Lambda {
     lambda: "UserMigration",
     event: UserMigrationEvent
   ): Promise<CognitoUserPoolResponse>;
+  invoke(
+    lambda: "PostConfirmation",
+    event: PostConfirmationEvent
+  ): Promise<CognitoUserPoolResponse>;
   enabled(lambda: "UserMigration"): boolean;
 }
 
 export interface FunctionConfig {
   UserMigration?: string;
+  PostConfirmation?: string;
 }
 
 export type CreateLambda = (
@@ -33,10 +48,13 @@ export type CreateLambda = (
 
 export const createLambda: CreateLambda = (config, lambdaClient) => ({
   enabled: (lambda) => !!config[lambda],
-  async invoke(lambda, event) {
-    const lambdaName = config[lambda];
-    if (!lambdaName) {
-      throw new Error(`${lambda} trigger not configured`);
+  async invoke(
+    trigger: keyof FunctionConfig,
+    event: UserMigrationEvent | PostConfirmationEvent
+  ) {
+    const functionName = config[trigger];
+    if (!functionName) {
+      throw new Error(`${trigger} trigger not configured`);
     }
 
     const lambdaEvent: CognitoUserPoolEvent = {
@@ -61,14 +79,14 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
     }
 
     console.log(
-      `Invoking "${lambdaName}" with event`,
+      `Invoking "${functionName}" with event`,
       JSON.stringify(lambdaEvent, undefined, 2)
     );
     let result: InvocationResponse;
     try {
       result = await lambdaClient
         .invoke({
-          FunctionName: lambdaName,
+          FunctionName: functionName,
           InvocationType: "RequestResponse",
           Payload: JSON.stringify(lambdaEvent),
         })

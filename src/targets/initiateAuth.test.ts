@@ -1,5 +1,4 @@
 import { advanceTo } from "jest-date-mock";
-import * as uuid from "uuid";
 import {
   InvalidPasswordError,
   NotAuthorizedError,
@@ -33,6 +32,7 @@ describe("InitiateAuth target", () => {
     mockCodeDelivery = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
+      postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };
 

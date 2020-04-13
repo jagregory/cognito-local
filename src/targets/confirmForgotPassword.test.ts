@@ -1,5 +1,9 @@
 import { advanceBy, advanceTo } from "jest-date-mock";
-import { CodeMismatchError, UserNotFoundError } from "../errors";
+import {
+  CodeMismatchError,
+  ResourceNotFoundError,
+  UserNotFoundError,
+} from "../errors";
 import { UserPool } from "../services";
 import { Triggers } from "../services/triggers";
 import {
@@ -26,6 +30,7 @@ describe("ConfirmForgotPassword target", () => {
     mockCodeDelivery = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
+      postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };
 
@@ -36,7 +41,21 @@ describe("ConfirmForgotPassword target", () => {
     });
   });
 
+  it("throws if can't find user pool by client id", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue(null);
+
+    await expect(
+      confirmForgotPassword({
+        ClientId: "clientId",
+        Username: "janice",
+        ConfirmationCode: "1234",
+        Password: "newPassword",
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+  });
+
   it("throws if user doesn't exist", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
     mockDataStore.getUserByUsername.mockResolvedValue(null);
 
     await expect(
@@ -50,6 +69,7 @@ describe("ConfirmForgotPassword target", () => {
   });
 
   it("throws if confirmation code doesn't match stored value", async () => {
+    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
     mockDataStore.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "4567",
@@ -73,6 +93,7 @@ describe("ConfirmForgotPassword target", () => {
 
   describe("when code matches", () => {
     it("updates the user's password", async () => {
+      mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
       mockDataStore.getUserByUsername.mockResolvedValue({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: "4567",
@@ -104,6 +125,71 @@ describe("ConfirmForgotPassword target", () => {
         UserLastModifiedDate: newNow.getTime(),
         UserStatus: "CONFIRMED",
         Username: "0000-0000",
+      });
+    });
+
+    describe("when PostConfirmation trigger configured", () => {
+      it("invokes the trigger", async () => {
+        mockTriggers.enabled.mockReturnValue(true);
+
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
+          ConfirmationCode: "4567",
+          Enabled: true,
+          Password: "pwd",
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          UserStatus: "UNCONFIRMED",
+          Username: "0000-0000",
+        });
+
+        await confirmForgotPassword({
+          ClientId: "clientId",
+          Username: "janice",
+          ConfirmationCode: "4567",
+          Password: "newPassword",
+        });
+
+        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
+          clientId: "clientId",
+          source: "PostConfirmation_ConfirmForgotPassword",
+          userAttributes: [
+            {
+              Name: "email",
+              Value: "example@example.com",
+            },
+          ],
+          userPoolId: "userPoolId",
+          username: "0000-0000",
+        });
+      });
+    });
+
+    describe("when PostConfirmation trigger not configured", () => {
+      it("doesn't invoke the trigger", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
+        mockDataStore.getUserByUsername.mockResolvedValue({
+          Attributes: [{ Name: "email", Value: "example@example.com" }],
+          ConfirmationCode: "4567",
+          Enabled: true,
+          Password: "pwd",
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+          UserStatus: "UNCONFIRMED",
+          Username: "0000-0000",
+        });
+
+        await confirmForgotPassword({
+          ClientId: "clientId",
+          Username: "janice",
+          ConfirmationCode: "4567",
+          Password: "newPassword",
+        });
+
+        expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();
       });
     });
   });

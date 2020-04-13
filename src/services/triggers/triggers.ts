@@ -1,10 +1,12 @@
 import { Services, UserPool } from "../index";
 import { Lambda } from "../lambda";
+import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
 
 export interface Triggers {
-  enabled(trigger: "UserMigration"): boolean;
+  enabled(trigger: "UserMigration" | "PostConfirmation"): boolean;
   userMigration: UserMigrationTrigger;
+  postConfirmation: PostConfirmationTrigger;
 }
 
 export const createTriggers = (services: {
@@ -13,4 +15,5 @@ export const createTriggers = (services: {
 }): Triggers => ({
   enabled: (trigger: "UserMigration") => services.lambda.enabled(trigger),
   userMigration: UserMigration(services),
+  postConfirmation: PostConfirmation(services),
 });
