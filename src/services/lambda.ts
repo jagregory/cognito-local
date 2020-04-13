@@ -1,7 +1,14 @@
 import { CognitoUserPoolEvent } from "aws-lambda";
 import * as AWS from "aws-sdk";
 import { InvocationResponse } from "aws-sdk/clients/lambda";
+import * as fs from "fs";
 import { UnexpectedLambdaExceptionError } from "../errors";
+
+const awsSdkPackageJson = fs.readFileSync(
+  require.resolve("aws-sdk/package.json"),
+  "utf-8"
+);
+const awsSdkVersion = JSON.parse(awsSdkPackageJson).version;
 
 interface UserMigrationEvent {
   userPoolId: string;
@@ -61,7 +68,7 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
       version: 0, // TODO: how do we know what this is?
       userName: event.username,
       callerContext: {
-        awsSdkVersion: "2.656.0", // TODO: this isn't correct
+        awsSdkVersion,
         clientId: event.clientId,
       },
       region: "local", // TODO: pull from above,
