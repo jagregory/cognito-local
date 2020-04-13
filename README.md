@@ -11,6 +11,7 @@ The goal for this project is to be _Good Enough_ for local development use, and 
 - [x] Sign Up
 - [x] Confirm Sign Up
 - [x] Initiate Auth (Login)
+- [x] JWKs verification
 - [x] Forgot Password
 - [x] Confirm Forgot Password
 - [x] User Migration lambda trigger (Authentication)
