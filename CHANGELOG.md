@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/jagregory/cognito-local/compare/v1.2.1...v1.2.2) (2020-04-13)
+
+
+### Bug Fixes
+
+* **lambda:** save attributes from user migration lambda on user record ([dc7a1c6](https://github.com/jagregory/cognito-local/commit/dc7a1c6b2db2851760df106daededa9bf849a5d6))
+
 ## [1.2.1](https://github.com/jagregory/cognito-local/compare/v1.2.0...v1.2.1) (2020-04-13)
 
 
