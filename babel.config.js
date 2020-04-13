@@ -10,4 +10,5 @@ module.exports = {
     ],
     "@babel/preset-typescript",
   ],
+  plugins: ["inline-json-import"],
 };
