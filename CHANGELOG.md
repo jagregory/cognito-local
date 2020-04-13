@@ -1,3 +1,11 @@
+## [1.2.1](https://github.com/jagregory/cognito-local/compare/v1.2.0...v1.2.1) (2020-04-13)
+
+
+### Bug Fixes
+
+* **lambda:** invoke lambda with actual AWS SDK version ([bed1b7c](https://github.com/jagregory/cognito-local/commit/bed1b7c971f0f87891133151035a1d6960c2cf6b))
+* imported json files weren't being published to npm ([5f76d86](https://github.com/jagregory/cognito-local/commit/5f76d8671cd8172eb94abe00e252ad4a511e7d47))
+
 # [1.2.0](https://github.com/jagregory/cognito-local/compare/v1.1.1...v1.2.0) (2020-04-13)
 
 
