@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/jagregory/cognito-local/compare/v1.2.2...v1.3.0) (2020-04-29)
+
+
+### Features
+
+* **server:** add hostname option ([0365f3a](https://github.com/jagregory/cognito-local/commit/0365f3acac5ff8a6541834ca26fbe04fdf176743))
+
 ## [1.2.2](https://github.com/jagregory/cognito-local/compare/v1.2.1...v1.2.2) (2020-04-13)
 
 
