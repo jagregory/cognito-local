@@ -4,8 +4,9 @@ import { createDefaultServer } from "../server";
 
 createDefaultServer()
   .then((server) => {
+    const hostname = process.env.HOST || "localhost";
     const port = parseInt(process.env.PORT || "9229", 10);
-    return server.start({ port });
+    return server.start({ hostname, port });
   })
   .then((options) => {
     console.log(
