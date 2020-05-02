@@ -24,7 +24,7 @@ describe("User Pool", () => {
 
   it("creates a database", async () => {
     await createUserPool(
-      { UserPoolId: "local", UsernameAttributes: [] },
+      { Id: "local", UsernameAttributes: [] },
       tmpCreateDataStore
     );
 
@@ -35,7 +35,7 @@ describe("User Pool", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
       const userPool = await createUserPool(
-        { UserPoolId: "local", UsernameAttributes: [] },
+        { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
 
@@ -52,7 +52,7 @@ describe("User Pool", () => {
       const file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
 
       expect(file).toEqual({
-        Options: { UserPoolId: "local", UsernameAttributes: [] },
+        Options: { Id: "local", UsernameAttributes: [] },
         Users: {
           "1": {
             Username: "1",
@@ -73,7 +73,7 @@ describe("User Pool", () => {
     it("updates a user", async () => {
       const now = new Date().getTime();
       const userPool = await createUserPool(
-        { UserPoolId: "local", UsernameAttributes: [] },
+        { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
 
@@ -91,7 +91,7 @@ describe("User Pool", () => {
       let file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
 
       expect(file).toEqual({
-        Options: { UserPoolId: "local", UsernameAttributes: [] },
+        Options: { Id: "local", UsernameAttributes: [] },
         Users: {
           "1": {
             Username: "1",
@@ -122,7 +122,7 @@ describe("User Pool", () => {
       file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
 
       expect(file).toEqual({
-        Options: { UserPoolId: "local", UsernameAttributes: [] },
+        Options: { Id: "local", UsernameAttributes: [] },
         Users: {
           "1": {
             Username: "1",
@@ -145,7 +145,7 @@ describe("User Pool", () => {
     let userPool: UserPool;
     beforeAll(async () => {
       userPool = await createUserPool(
-        { UserPoolId: "local", UsernameAttributes: [] },
+        { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
 

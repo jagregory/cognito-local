@@ -16,6 +16,7 @@ describe("User Pool", () => {
     mockDataStore = {
       set: jest.fn(),
       get: jest.fn(),
+      getRoot: jest.fn(),
     };
   });
 
@@ -24,12 +25,12 @@ describe("User Pool", () => {
       () => mockDataStore
     ) as unknown) as CreateDataStore;
     await createUserPool(
-      { UserPoolId: "local", UsernameAttributes: [] },
+      { Id: "local", UsernameAttributes: [] },
       createDataStore
     );
 
     expect(createDataStore).toHaveBeenCalledWith("local", {
-      Options: { UserPoolId: "local", UsernameAttributes: [] },
+      Options: { Id: "local", UsernameAttributes: [] },
       Users: {},
     });
   });
@@ -38,7 +39,7 @@ describe("User Pool", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
       const userPool = await createUserPool(
-        { UserPoolId: "local", UsernameAttributes: [] },
+        { Id: "local", UsernameAttributes: [] },
         () => Promise.resolve(mockDataStore)
       );
 
@@ -81,7 +82,7 @@ describe("User Pool", () => {
 
         beforeAll(async () => {
           const options = {
-            UserPoolId: "local",
+            Id: "local",
             UsernameAttributes: username_attributes,
           };
           const users = {

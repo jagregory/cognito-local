@@ -19,7 +19,7 @@ const defaults: Config = {
   },
   TriggerFunctions: {},
   UserPoolDefaults: {
-    UserPoolId: "local",
+    Id: "local",
     UsernameAttributes: ["email"],
   },
 };
@@ -27,7 +27,7 @@ const defaults: Config = {
 export const loadConfig = async (): Promise<Config> => {
   const dataStore = await createDataStore("config", defaults, ".cognito");
 
-  const config = await dataStore.get<Config>();
+  const config = await dataStore.getRoot<Config>();
 
   return deepmerge(defaults, config ?? {});
 };

@@ -71,7 +71,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `TriggerFunctions`                         | `object`   | `{}`        | Trigger name to Function name mapping                       |
 | `TriggerFunctions.UserMigration`           | `string`   |             | User Migration lambda name                                  |
 | `UserPoolDefaults`                         | `object`   |             | Default behaviour to use for the User Pool                  |
-| `UserPoolDefaults.UserPoolId`              | `string`   | `local`     | Default User Pool Id                                        |
+| `UserPoolDefaults.Id`                      | `string`   | `local`     | Default User Pool Id                                        |
 | `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]` | Username alias attributes                                   |
 
 The default config is:
@@ -87,7 +87,7 @@ The default config is:
   },
   "TriggerFunctions": {},
   "UserPoolDefaults": {
-    "UserPoolId": "local",
+    "Id": "local",
     "UsernameAttributes": ["email"]
   }
 }

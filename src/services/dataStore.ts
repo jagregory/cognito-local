@@ -1,11 +1,13 @@
-import StormDB from "stormdb";
 import fs from "fs";
+import StormDB from "stormdb";
 import { promisify } from "util";
 
 const mkdir = promisify(fs.mkdir);
 
 export interface DataStore {
-  get<T>(key?: string): Promise<T | null>;
+  getRoot<T>(): Promise<T | null>;
+  get<T>(key: string): Promise<T | null>;
+  get<T>(key: string, defaultValue: T): Promise<T>;
   set<T>(key: string, value: T): Promise<void>;
 }
 
@@ -30,14 +32,12 @@ export const createDataStore: CreateDataStore = async (
   db.default(defaults);
 
   return {
-    async get(key?: string) {
-      if (!key) {
-        return db.value();
-      }
+    async getRoot() {
+      return (await db.value()) ?? null;
+    },
 
-      const result = await db.get(key).value();
-
-      return result ?? null;
+    async get(key: string, defaultValue?: unknown) {
+      return (await db.get(key).value()) ?? defaultValue ?? null;
     },
 
     async set(key, value) {

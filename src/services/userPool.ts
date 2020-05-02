@@ -52,25 +52,28 @@ export interface UserPool {
 type UsernameAttribute = "email" | "phone_number";
 
 export interface UserPoolOptions {
-  UserPoolId?: string;
+  Id: string;
   UsernameAttributes?: UsernameAttribute[];
 }
 
 export const createUserPool = async (
-  options: UserPoolOptions,
+  defaultOptions: UserPoolOptions,
   createDataStore: CreateDataStore
 ): Promise<UserPool> => {
-  const dataStore = await createDataStore(options.UserPoolId ?? "local", {
+  const dataStore = await createDataStore(defaultOptions.Id, {
     Users: {},
-    Options: options,
+    Options: defaultOptions,
   });
 
   return {
     async getUserPoolIdForClientId() {
       // TODO: support user pool to client mapping
-      const options = await dataStore.get<UserPoolOptions>("Options");
+      const options = await dataStore.get<UserPoolOptions>(
+        "Options",
+        defaultOptions
+      );
 
-      return Promise.resolve(options?.UserPoolId ?? "local");
+      return Promise.resolve(options.Id);
     },
 
     async getUserByUsername(username) {
