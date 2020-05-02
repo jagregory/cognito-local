@@ -1,4 +1,4 @@
-import { User } from "../userPool";
+import { User } from "../userPoolClient";
 import { createCodeDelivery } from "./codeDelivery";
 import { CodeSender } from "./codeSender";
 

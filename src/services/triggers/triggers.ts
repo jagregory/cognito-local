@@ -1,4 +1,4 @@
-import { Services, UserPool } from "../index";
+import { Services, CognitoClient } from "../index";
 import { Lambda } from "../lambda";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
@@ -11,7 +11,7 @@ export interface Triggers {
 
 export const createTriggers = (services: {
   lambda: Lambda;
-  userPool: UserPool;
+  cognitoClient: CognitoClient;
 }): Triggers => ({
   enabled: (trigger: "UserMigration") => services.lambda.enabled(trigger),
   userMigration: UserMigration(services),

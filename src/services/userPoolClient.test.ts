@@ -4,13 +4,14 @@ import {
   attributesInclude,
   attributesIncludeMatch,
   attributesToRecord,
-  createUserPool,
+  createUserPoolClient,
   UserAttribute,
-  UserPool,
-} from "./userPool";
+  UserPoolClient,
+} from "./userPoolClient";
 
-describe("User Pool", () => {
+describe("User Pool Client", () => {
   let mockDataStore: jest.Mocked<DataStore>;
+  let createDataStore: jest.MockedFunction<CreateDataStore>;
 
   beforeEach(() => {
     mockDataStore = {
@@ -18,13 +19,11 @@ describe("User Pool", () => {
       get: jest.fn(),
       getRoot: jest.fn(),
     };
+    createDataStore = jest.fn().mockResolvedValue(mockDataStore);
   });
 
   it("creates a database", async () => {
-    const createDataStore = (jest.fn(
-      () => mockDataStore
-    ) as unknown) as CreateDataStore;
-    await createUserPool(
+    await createUserPoolClient(
       { Id: "local", UsernameAttributes: [] },
       createDataStore
     );
@@ -38,7 +37,7 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPool(
+      const userPool = await createUserPoolClient(
         { Id: "local", UsernameAttributes: [] },
         () => Promise.resolve(mockDataStore)
       );
@@ -78,7 +77,7 @@ describe("User Pool", () => {
     `(
       "$username_attributes username attributes",
       ({ username_attributes, find_by_email, find_by_phone_number }) => {
-        let userPool: UserPool;
+        let userPool: UserPoolClient;
 
         beforeAll(async () => {
           const options = {
@@ -109,7 +108,7 @@ describe("User Pool", () => {
 
             return Promise.resolve(null);
           });
-          userPool = await createUserPool(options, () =>
+          userPool = await createUserPoolClient(options, () =>
             Promise.resolve(mockDataStore)
           );
         });
@@ -162,6 +161,51 @@ describe("User Pool", () => {
         }
       }
     );
+  });
+
+  describe("listUsers", () => {
+    let userPool: UserPoolClient;
+
+    beforeEach(async () => {
+      const options = {
+        Id: "local",
+      };
+      const users = {
+        "1": {
+          Username: "1",
+          Password: "hunter3",
+          UserStatus: "UNCONFIRMED",
+          Attributes: [
+            { Name: "sub", Value: "1" },
+            { Name: "email", Value: "example@example.com" },
+            { Name: "phone_number", Value: "0411000111" },
+          ],
+          UserLastModifiedDate: new Date().getTime(),
+          UserCreateDate: new Date().getTime(),
+          Enabled: true,
+        },
+      };
+      mockDataStore.get.mockImplementation((key) => {
+        if (key === "Users") {
+          return Promise.resolve(users);
+        } else if (key === "Options") {
+          return Promise.resolve(options);
+        }
+
+        return Promise.resolve(null);
+      });
+      userPool = await createUserPoolClient(options, () =>
+        Promise.resolve(mockDataStore)
+      );
+    });
+
+    it("returns existing users", async () => {
+      const users = await userPool.listUsers();
+
+      expect(users).not.toBeNull();
+      expect(users).toHaveLength(1);
+      expect(users[0].Username).toEqual("1");
+    });
   });
 
   describe("attributes", () => {

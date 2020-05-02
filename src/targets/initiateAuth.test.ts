@@ -5,7 +5,7 @@ import {
   PasswordResetRequiredError,
   ResourceNotFoundError,
 } from "../errors";
-import { UserPool } from "../services";
+import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 import jwt from "jsonwebtoken";
@@ -15,7 +15,8 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
-  let mockDataStore: jest.Mocked<UserPool>;
+  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -24,11 +25,15 @@ describe("InitiateAuth target", () => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockDataStore = {
+    mockUserPoolClient = {
+      id: "test",
       getUserByUsername: jest.fn(),
-      getUserPoolIdForClientId: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),
+    };
+    mockCognitoClient = {
+      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
     mockTriggers = {
@@ -38,14 +43,14 @@ describe("InitiateAuth target", () => {
     };
 
     initiateAuth = InitiateAuth({
-      userPool: mockDataStore,
+      cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
   });
 
   it("throws if can't find user pool by client id", async () => {
-    mockDataStore.getUserPoolIdForClientId.mockResolvedValue(null);
+    mockCognitoClient.getUserPoolForClientId.mockResolvedValue(null);
 
     await expect(
       initiateAuth({
@@ -61,8 +66,7 @@ describe("InitiateAuth target", () => {
 
   describe("USER_PASSWORD_AUTH auth flow", () => {
     it("throws if password is incorrect", async () => {
-      mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-      mockDataStore.getUserByUsername.mockResolvedValue({
+      mockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [],
         UserStatus: "CONFIRMED",
         Password: "hunter2",
@@ -85,8 +89,7 @@ describe("InitiateAuth target", () => {
     });
 
     it("throws when user requires reset", async () => {
-      mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-      mockDataStore.getUserByUsername.mockResolvedValue({
+      mockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [],
         UserStatus: "RESET_REQUIRED",
         Password: "hunter2",
@@ -121,10 +124,7 @@ describe("InitiateAuth target", () => {
             Enabled: true,
             Attributes: [],
           });
-          mockDataStore.getUserPoolIdForClientId.mockResolvedValue(
-            "userPoolId"
-          );
-          mockDataStore.getUserByUsername.mockResolvedValue(null);
+          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
           const output = await initiateAuth({
             ClientId: "clientId",
@@ -143,10 +143,7 @@ describe("InitiateAuth target", () => {
       describe("when User Migration trigger is disabled", () => {
         it("throws", async () => {
           mockTriggers.enabled.mockReturnValue(false);
-          mockDataStore.getUserPoolIdForClientId.mockResolvedValue(
-            "userPoolId"
-          );
-          mockDataStore.getUserByUsername.mockResolvedValue(null);
+          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
           await expect(
             initiateAuth({
@@ -164,8 +161,7 @@ describe("InitiateAuth target", () => {
 
     describe("when password matches", () => {
       it("generates an access token", async () => {
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [],
           UserStatus: "CONFIRMED",
           Password: "hunter2",
@@ -193,7 +189,7 @@ describe("InitiateAuth target", () => {
 
         expect(decodedAccessToken).toMatchObject({
           client_id: "clientId",
-          iss: "http://localhost:9229/userPoolId",
+          iss: "http://localhost:9229/test",
           sub: "0000-0000",
           token_use: "access",
           username: "0000-0000",
@@ -205,8 +201,7 @@ describe("InitiateAuth target", () => {
       });
 
       it("generates an access token that's verifiable with our public key", async () => {
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [],
           UserStatus: "CONFIRMED",
           Password: "hunter2",
@@ -236,8 +231,7 @@ describe("InitiateAuth target", () => {
       });
 
       it("generates an id token", async () => {
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           UserStatus: "CONFIRMED",
           Password: "hunter2",
@@ -263,7 +257,7 @@ describe("InitiateAuth target", () => {
 
         expect(decodedIdToken).toMatchObject({
           aud: "clientId",
-          iss: "http://localhost:9229/userPoolId",
+          iss: "http://localhost:9229/test",
           sub: "0000-0000",
           token_use: "id",
           "cognito:username": "0000-0000",
@@ -275,8 +269,7 @@ describe("InitiateAuth target", () => {
       });
 
       it("generates an id token verifiable with our public key", async () => {
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           UserStatus: "CONFIRMED",
           Password: "hunter2",

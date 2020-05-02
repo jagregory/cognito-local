@@ -1,13 +1,13 @@
 import * as uuid from "uuid";
-import { NotAuthorizedError } from "../../errors";
-import { UserPool } from "../index";
+import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
+import { CognitoClient } from "../index";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
 import {
   attributesFromRecord,
   attributesToRecord,
   User,
   UserAttribute,
-} from "../userPool";
+} from "../userPoolClient";
 
 export type UserMigrationTrigger = (params: {
   userPoolId: string;
@@ -19,10 +19,10 @@ export type UserMigrationTrigger = (params: {
 
 export const UserMigration = ({
   lambda,
-  userPool,
+  cognitoClient,
 }: {
   lambda: Lambda;
-  userPool: UserPool;
+  cognitoClient: CognitoClient;
 }): UserMigrationTrigger => async ({
   userPoolId,
   clientId,
@@ -30,6 +30,11 @@ export const UserMigration = ({
   password,
   userAttributes,
 }): Promise<User> => {
+  const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+  if (!userPool) {
+    throw new ResourceNotFoundError();
+  }
+
   let result: CognitoUserPoolResponse;
 
   try {

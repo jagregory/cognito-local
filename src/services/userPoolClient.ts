@@ -13,17 +13,14 @@ export const attributesIncludeMatch = (
   !!attributes.find(
     (x) => x.Name === attributeName && x.Value === attributeValue
   );
-
 export const attributesInclude = (
   attributeName: string,
   attributes: readonly UserAttribute[]
 ) => !!attributes.find((x) => x.Name === attributeName);
-
 export const attributesToRecord = (
   attributes: readonly UserAttribute[]
 ): Record<string, string> =>
   attributes.reduce((acc, attr) => ({ ...acc, [attr.Name]: attr.Value }), {});
-
 export const attributesFromRecord = (
   attributes: Record<string, string>
 ): readonly UserAttribute[] =>
@@ -42,52 +39,50 @@ export interface User {
   ConfirmationCode?: string;
 }
 
-export interface UserPool {
+export interface UserPoolClient {
+  readonly id: string;
   getUserByUsername(username: string): Promise<User | null>;
-  getUserPoolIdForClientId(clientId: string): Promise<string | null>;
   listUsers(): Promise<readonly User[]>;
   saveUser(user: User): Promise<void>;
 }
 
 type UsernameAttribute = "email" | "phone_number";
 
-export interface UserPoolOptions {
+export interface UserPool {
   Id: string;
   UsernameAttributes?: UsernameAttribute[];
+  MfaConfiguration?: "OFF" | "ON" | "OPTIONAL";
 }
 
-export const createUserPool = async (
-  defaultOptions: UserPoolOptions,
+export type CreateUserPoolClient = (
+  defaultOptions: UserPool,
   createDataStore: CreateDataStore
-): Promise<UserPool> => {
+) => Promise<UserPoolClient>;
+
+export const createUserPoolClient = async (
+  defaultOptions: UserPool,
+  createDataStore: CreateDataStore
+): Promise<UserPoolClient> => {
   const dataStore = await createDataStore(defaultOptions.Id, {
     Users: {},
     Options: defaultOptions,
   });
 
   return {
-    async getUserPoolIdForClientId() {
-      // TODO: support user pool to client mapping
-      const options = await dataStore.get<UserPoolOptions>(
-        "Options",
-        defaultOptions
-      );
-
-      return Promise.resolve(options.Id);
-    },
+    id: defaultOptions.Id,
 
     async getUserByUsername(username) {
       console.log("getUserByUsername", username);
 
-      const options = await dataStore.get<UserPoolOptions>("Options");
-      const aliasEmailEnabled = options?.UsernameAttributes?.includes("email");
-      const aliasPhoneNumberEnabled = options?.UsernameAttributes?.includes(
+      const options = await dataStore.get<UserPool>("Options", defaultOptions);
+      const aliasEmailEnabled = options.UsernameAttributes?.includes("email");
+      const aliasPhoneNumberEnabled = options.UsernameAttributes?.includes(
         "phone_number"
       );
 
-      const users = await dataStore.get<Record<string, User>>("Users");
+      const users = await dataStore.get<Record<string, User>>("Users", {});
 
-      for (const user of Object.values(users ?? {})) {
+      for (const user of Object.values(users)) {
         if (attributesIncludeMatch("sub", username, user.Attributes)) {
           return user;
         }
@@ -112,7 +107,7 @@ export const createUserPool = async (
 
     async listUsers(): Promise<readonly User[]> {
       console.log("listUsers");
-      const users = (await dataStore.get<Record<string, User>>("Users")) ?? {};
+      const users = await dataStore.get<Record<string, User>>("Users", {});
 
       return Object.values(users);
     },

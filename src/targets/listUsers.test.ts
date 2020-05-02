@@ -1,11 +1,13 @@
 import { advanceTo } from "jest-date-mock";
-import { UserPool } from "../services";
+import { ResourceNotFoundError } from "../errors";
+import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import { ListUsers, ListUsersTarget } from "./listUsers";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;
-  let mockDataStore: jest.Mocked<UserPool>;
+  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -14,11 +16,15 @@ describe("ListUsers target", () => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockDataStore = {
+    mockUserPoolClient = {
+      id: "test",
       getUserByUsername: jest.fn(),
-      getUserPoolIdForClientId: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),
+    };
+    mockCognitoClient = {
+      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
     mockTriggers = {
@@ -28,16 +34,24 @@ describe("ListUsers target", () => {
     };
 
     listUsers = ListUsers({
-      userPool: mockDataStore,
+      cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
   });
 
-  it.todo("should validate UserPoolId parameter");
+  it("throws if can't find user pool", async () => {
+    mockCognitoClient.getUserPool.mockResolvedValue(null);
+
+    await expect(
+      listUsers({
+        UserPoolId: "userPoolId",
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+  });
 
   it("lists users and removes Cognito Local fields", async () => {
-    mockDataStore.listUsers.mockResolvedValue([
+    mockUserPoolClient.listUsers.mockResolvedValue([
       {
         Attributes: [],
         UserStatus: "CONFIRMED",

@@ -16,7 +16,7 @@ interface Input {
   AuthParameters: { USERNAME: string; PASSWORD: string };
 }
 
-interface Output {
+type Output = {
   ChallengeName: "CUSTOM_CHALLENGE" | "PASSWORD_VERIFIER";
   ChallengeParameters: Record<string, string>;
   Session: string;
@@ -25,20 +25,20 @@ interface Output {
     AccessToken?: string;
     RefreshToken?: string;
   };
-}
+};
 
 export type InitiateAuthTarget = (body: Input) => Promise<Output>;
 
 export const InitiateAuth = ({
-  userPool,
+  cognitoClient,
   triggers,
 }: Services): InitiateAuthTarget => async (body) => {
   if (body.AuthFlow !== "USER_PASSWORD_AUTH") {
     throw new UnsupportedError(`AuthFlow=${body.AuthFlow}`);
   }
 
-  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
-  if (!userPoolId) {
+  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+  if (!userPool) {
     throw new ResourceNotFoundError();
   }
 
@@ -51,7 +51,7 @@ export const InitiateAuth = ({
     // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
     // Cognito creates the user in the user pool.
     user = await triggers.userMigration({
-      userPoolId,
+      userPoolId: userPool.id,
       clientId: body.ClientId,
       username: body.AuthParameters.USERNAME,
       password: body.AuthParameters.PASSWORD,
@@ -90,7 +90,7 @@ export const InitiateAuth = ({
         PrivateKey.pem,
         {
           algorithm: "RS256",
-          issuer: `http://localhost:9229/${userPoolId}`,
+          issuer: `http://localhost:9229/${userPool.id}`,
           expiresIn: "24h",
           keyid: "CognitoLocal",
         }
@@ -111,7 +111,7 @@ export const InitiateAuth = ({
         {
           algorithm: "RS256",
           // TODO: this needs to match the actual host/port we started the server on
-          issuer: `http://localhost:9229/${userPoolId}`,
+          issuer: `http://localhost:9229/${userPool.id}`,
           expiresIn: "24h",
           audience: body.ClientId,
           keyid: "CognitoLocal",

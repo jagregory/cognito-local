@@ -1,4 +1,4 @@
-import { UserNotFoundError } from "../errors";
+import { ResourceNotFoundError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/codeDelivery/codeDelivery";
 
@@ -14,9 +14,14 @@ interface Output {
 export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
 
 export const ForgotPassword = ({
-  userPool,
+  cognitoClient,
   codeDelivery,
 }: Services): ForgotPasswordTarget => async (body) => {
+  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+  if (!userPool) {
+    throw new ResourceNotFoundError();
+  }
+
   const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {

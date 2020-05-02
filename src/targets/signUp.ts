@@ -1,8 +1,8 @@
 import * as uuid from "uuid";
-import { UsernameExistsError } from "../errors";
+import { ResourceNotFoundError, UsernameExistsError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/codeDelivery/codeDelivery";
-import { User } from "../services/userPool";
+import { User } from "../services/userPoolClient";
 
 interface Input {
   ClientId: string;
@@ -24,12 +24,17 @@ interface Output {
 export type SignUpTarget = (body: Input) => Promise<Output>;
 
 export const SignUp = ({
-  userPool,
+  cognitoClient,
   codeDelivery,
 }: Services): SignUpTarget => async (body) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
   // is enabled on the user pool. This will be the default after Feb 2020.
   // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
+  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+  if (!userPool) {
+    throw new ResourceNotFoundError();
+  }
+
   const existingUser = await userPool.getUserByUsername(body.Username);
   if (existingUser) {
     throw new UsernameExistsError();

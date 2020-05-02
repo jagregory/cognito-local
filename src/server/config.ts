@@ -1,12 +1,12 @@
 import deepmerge from "deepmerge";
 import { createDataStore } from "../services/dataStore";
 import { FunctionConfig } from "../services/lambda";
-import { UserPoolOptions } from "../services/userPool";
+import { UserPool } from "../services/userPoolClient";
 
 export interface Config {
   LambdaClient: AWS.Lambda.ClientConfiguration;
   TriggerFunctions: FunctionConfig;
-  UserPoolDefaults: UserPoolOptions;
+  UserPoolDefaults: UserPool;
 }
 
 const defaults: Config = {

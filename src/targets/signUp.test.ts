@@ -1,6 +1,6 @@
 import { advanceTo } from "jest-date-mock";
 import { UsernameExistsError } from "../errors";
-import { UserPool } from "../services";
+import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import { SignUp, SignUpTarget } from "./signUp";
 
@@ -8,7 +8,8 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
-  let mockDataStore: jest.Mocked<UserPool>;
+  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -17,11 +18,15 @@ describe("SignUp target", () => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockDataStore = {
+    mockUserPoolClient = {
+      id: "test",
       getUserByUsername: jest.fn(),
-      getUserPoolIdForClientId: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),
+    };
+    mockCognitoClient = {
+      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
     mockTriggers = {
@@ -31,14 +36,14 @@ describe("SignUp target", () => {
     };
 
     signUp = SignUp({
-      userPool: mockDataStore,
+      cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
   });
 
   it("throws if user already exists", async () => {
-    mockDataStore.getUserByUsername.mockResolvedValue({
+    mockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [],
       Enabled: true,
       Password: "hunter2",
@@ -59,7 +64,7 @@ describe("SignUp target", () => {
   });
 
   it("saves a new user", async () => {
-    mockDataStore.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await signUp({
       ClientId: "clientId",
@@ -68,7 +73,7 @@ describe("SignUp target", () => {
       UserAttributes: [],
     });
 
-    expect(mockDataStore.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
       Attributes: [],
       Enabled: true,
       Password: "pwd",
@@ -80,7 +85,7 @@ describe("SignUp target", () => {
   });
 
   it("sends a confirmation code to the user's email address", async () => {
-    mockDataStore.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
     mockCodeDelivery.mockResolvedValue("1234");
 
     await signUp({
@@ -109,7 +114,7 @@ describe("SignUp target", () => {
   });
 
   it("saves the confirmation code on the user for comparison when confirming", async () => {
-    mockDataStore.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
     mockCodeDelivery.mockResolvedValue("1234");
 
     await signUp({
@@ -119,7 +124,7 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockDataStore.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "1234",
       Enabled: true,

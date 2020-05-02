@@ -1,13 +1,12 @@
-import { NotAuthorizedError } from "../../errors";
 import { Lambda } from "../lambda";
-import { UserPool } from "../userPool";
+import { UserPoolClient } from "../userPoolClient";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+import { CognitoClient } from "../cognitoClient";
 
 describe("PostConfirmation trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
-  let mockUserPool: jest.Mocked<UserPool>;
+  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
@@ -15,16 +14,19 @@ describe("PostConfirmation trigger", () => {
       enabled: jest.fn(),
       invoke: jest.fn(),
     };
-    mockUserPool = {
+    mockUserPoolClient = {
+      id: "test",
       getUserByUsername: jest.fn(),
-      getUserPoolIdForClientId: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),
     };
-
+    mockCognitoClient = {
+      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+    };
     postConfirmation = PostConfirmation({
       lambda: mockLambda,
-      userPool: mockUserPool,
+      cognitoClient: mockCognitoClient,
     });
   });
 

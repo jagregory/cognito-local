@@ -1,12 +1,13 @@
 import { Triggers } from "./triggers";
 import { CodeDelivery } from "./codeDelivery/codeDelivery";
-import { UserPool } from "./userPool";
+import { CognitoClient } from "./cognitoClient";
 
-export { UserPool } from "./userPool";
+export { CognitoClient } from "./cognitoClient";
+export { UserPoolClient } from "./userPoolClient";
 export { createCodeDelivery, CodeDelivery } from "./codeDelivery/codeDelivery";
 
 export interface Services {
-  userPool: UserPool;
+  cognitoClient: CognitoClient;
   codeDelivery: CodeDelivery;
   triggers: Triggers;
 }

@@ -4,7 +4,7 @@ import {
   ResourceNotFoundError,
   UserNotFoundError,
 } from "../errors";
-import { UserPool } from "../services";
+import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import {
   ConfirmForgotPassword,
@@ -13,7 +13,8 @@ import {
 
 describe("ConfirmForgotPassword target", () => {
   let confirmForgotPassword: ConfirmForgotPasswordTarget;
-  let mockDataStore: jest.Mocked<UserPool>;
+  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -22,11 +23,15 @@ describe("ConfirmForgotPassword target", () => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockDataStore = {
+    mockUserPoolClient = {
+      id: "test",
       getUserByUsername: jest.fn(),
-      getUserPoolIdForClientId: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),
+    };
+    mockCognitoClient = {
+      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
     mockTriggers = {
@@ -36,14 +41,14 @@ describe("ConfirmForgotPassword target", () => {
     };
 
     confirmForgotPassword = ConfirmForgotPassword({
-      userPool: mockDataStore,
+      cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
   });
 
   it("throws if can't find user pool by client id", async () => {
-    mockDataStore.getUserPoolIdForClientId.mockResolvedValue(null);
+    mockCognitoClient.getUserPoolForClientId.mockResolvedValue(null);
 
     await expect(
       confirmForgotPassword({
@@ -56,8 +61,7 @@ describe("ConfirmForgotPassword target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-    mockDataStore.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       confirmForgotPassword({
@@ -70,8 +74,7 @@ describe("ConfirmForgotPassword target", () => {
   });
 
   it("throws if confirmation code doesn't match stored value", async () => {
-    mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-    mockDataStore.getUserByUsername.mockResolvedValue({
+    mockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "4567",
       Enabled: true,
@@ -94,8 +97,7 @@ describe("ConfirmForgotPassword target", () => {
 
   describe("when code matches", () => {
     it("updates the user's password", async () => {
-      mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-      mockDataStore.getUserByUsername.mockResolvedValue({
+      mockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: "4567",
         Enabled: true,
@@ -117,7 +119,7 @@ describe("ConfirmForgotPassword target", () => {
         Password: "newPassword",
       });
 
-      expect(mockDataStore.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: undefined,
         Enabled: true,
@@ -133,8 +135,7 @@ describe("ConfirmForgotPassword target", () => {
       it("invokes the trigger", async () => {
         mockTriggers.enabled.mockReturnValue(true);
 
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           ConfirmationCode: "4567",
           Enabled: true,
@@ -161,7 +162,7 @@ describe("ConfirmForgotPassword target", () => {
               Value: "example@example.com",
             },
           ],
-          userPoolId: "userPoolId",
+          userPoolId: "test",
           username: "0000-0000",
         });
       });
@@ -171,8 +172,7 @@ describe("ConfirmForgotPassword target", () => {
       it("doesn't invoke the trigger", async () => {
         mockTriggers.enabled.mockReturnValue(false);
 
-        mockDataStore.getUserPoolIdForClientId.mockResolvedValue("userPoolId");
-        mockDataStore.getUserByUsername.mockResolvedValue({
+        mockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           ConfirmationCode: "4567",
           Enabled: true,

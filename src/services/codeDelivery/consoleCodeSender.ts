@@ -1,5 +1,5 @@
 import boxen from "boxen";
-import { User } from "../userPool";
+import { User } from "../userPoolClient";
 import { CodeSender } from "./codeSender";
 
 const sendToConsole = (

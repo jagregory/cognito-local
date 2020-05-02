@@ -1,5 +1,8 @@
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
-import { createUserPool, UserPool } from "../src/services/userPool";
+import {
+  createUserPoolClient,
+  UserPoolClient,
+} from "../src/services/userPoolClient";
 import fs from "fs";
 import { promisify } from "util";
 
@@ -23,7 +26,7 @@ describe("User Pool", () => {
   );
 
   it("creates a database", async () => {
-    await createUserPool(
+    await createUserPoolClient(
       { Id: "local", UsernameAttributes: [] },
       tmpCreateDataStore
     );
@@ -34,7 +37,7 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPool(
+      const userPool = await createUserPoolClient(
         { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
@@ -72,7 +75,7 @@ describe("User Pool", () => {
 
     it("updates a user", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPool(
+      const userPool = await createUserPoolClient(
         { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
@@ -142,9 +145,9 @@ describe("User Pool", () => {
   });
 
   describe("getUserByUsername", () => {
-    let userPool: UserPool;
+    let userPool: UserPoolClient;
     beforeAll(async () => {
-      userPool = await createUserPool(
+      userPool = await createUserPoolClient(
         { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
@@ -178,14 +181,14 @@ describe("User Pool", () => {
   });
 
   describe("listUsers", () => {
-    let userPool: UserPool;
+    let userPool: UserPoolClient;
     let now: Date;
 
     beforeAll(async () => {
       now = new Date();
 
-      userPool = await createUserPool(
-        { UserPoolId: "local", UsernameAttributes: [] },
+      userPool = await createUserPoolClient(
+        { Id: "local", UsernameAttributes: [] },
         tmpCreateDataStore
       );
 

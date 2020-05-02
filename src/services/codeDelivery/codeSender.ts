@@ -1,4 +1,4 @@
-import { User } from "../userPool";
+import { User } from "../userPoolClient";
 
 export interface CodeSender {
   sendEmail(user: User, destination: string, code: string): Promise<void>;

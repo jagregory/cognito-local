@@ -4,7 +4,7 @@ import { otp } from "../services/codeDelivery/otp";
 import { createDataStore } from "../services/dataStore";
 import { createLambda } from "../services/lambda";
 import { createTriggers } from "../services/triggers";
-import { createUserPool } from "../services/userPool";
+import { createCognitoClient } from "../services/cognitoClient";
 import { Router } from "../targets/router";
 import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
@@ -15,7 +15,7 @@ export const createDefaultServer = async (): Promise<Server> => {
 
   console.log("Loaded config:", config);
 
-  const userPool = await createUserPool(
+  const cognitoClient = await createCognitoClient(
     config.UserPoolDefaults,
     createDataStore
   );
@@ -23,11 +23,11 @@ export const createDefaultServer = async (): Promise<Server> => {
   const lambda = createLambda(config.TriggerFunctions, lambdaClient);
   const triggers = createTriggers({
     lambda,
-    userPool,
+    cognitoClient,
   });
   const router = Router({
     codeDelivery: createCodeDelivery(ConsoleCodeSender, otp),
-    userPool,
+    cognitoClient,
     triggers,
   });
 

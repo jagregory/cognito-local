@@ -1,4 +1,4 @@
-import { User } from "../userPool";
+import { User } from "../userPoolClient";
 import { CodeSender } from "./codeSender";
 
 export type DeliveryDetails =

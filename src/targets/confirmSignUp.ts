@@ -15,11 +15,11 @@ interface Input {
 export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 
 export const ConfirmSignUp = ({
-  userPool,
+  cognitoClient,
   triggers,
 }: Services): ConfirmSignUpTarget => async (body) => {
-  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
-  if (!userPoolId) {
+  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+  if (!userPool) {
     throw new ResourceNotFoundError();
   }
 
@@ -45,7 +45,7 @@ export const ConfirmSignUp = ({
       source: "PostConfirmation_ConfirmSignUp",
       username: user.Username,
       clientId: body.ClientId,
-      userPoolId,
+      userPoolId: userPool.id,
       userAttributes: user.Attributes,
     });
   }

@@ -15,11 +15,11 @@ interface Input {
 export type ConfirmForgotPasswordTarget = (body: Input) => Promise<{}>;
 
 export const ConfirmForgotPassword = ({
-  userPool,
+  cognitoClient,
   triggers,
 }: Services): ConfirmForgotPasswordTarget => async (body) => {
-  const userPoolId = await userPool.getUserPoolIdForClientId(body.ClientId);
-  if (!userPoolId) {
+  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+  if (!userPool) {
     throw new ResourceNotFoundError();
   }
 
@@ -46,7 +46,7 @@ export const ConfirmForgotPassword = ({
       source: "PostConfirmation_ConfirmForgotPassword",
       username: user.Username,
       clientId: body.ClientId,
-      userPoolId,
+      userPoolId: userPool.id,
       userAttributes: user.Attributes,
     });
   }
