@@ -1,3 +1,36 @@
+# [2.0.0](https://github.com/jagregory/cognito-local/compare/v1.3.0...v2.0.0) (2020-05-03)
+
+
+### Bug Fixes
+
+* hide debug logging by default ([48de4e5](https://github.com/jagregory/cognito-local/commit/48de4e5be1e1a1c47768910355c3010e6923865d))
+* propagate Session parameter through initiateAuth ([688fd4a](https://github.com/jagregory/cognito-local/commit/688fd4a476160fe9c99fbea19c5fd94e36d1a060))
+* **server:** better default handling for HOST and PORT ([69b4648](https://github.com/jagregory/cognito-local/commit/69b4648977807d6491caa1243848c430d68f641b))
+* change UserPoolId to Id in user pool storage ([71f5e52](https://github.com/jagregory/cognito-local/commit/71f5e524a249a0c17a3cd30af53205a1ba0c93e3))
+
+
+### Features
+
+* **api:** respondToAuthChallenge support ([842633e](https://github.com/jagregory/cognito-local/commit/842633ea779ceed39be78338d6ccd6f613c7e0c0))
+* **api:** sms_mfa support for initiateAuth ([f16afe6](https://github.com/jagregory/cognito-local/commit/f16afe60bcfad03ec960a0a6e5d3ccb594c38708))
+* createUserPoolClient support ([df421d7](https://github.com/jagregory/cognito-local/commit/df421d7ca83312f6b643d5ee9d3e9aa0bfff63a4))
+* store clients for user pools ([eaad662](https://github.com/jagregory/cognito-local/commit/eaad66279346fbc8f5b8bb3b8ea6c9fd5d6882a8))
+* **api:** basic listUsers support ([6e0c18f](https://github.com/jagregory/cognito-local/commit/6e0c18f162733b25fd3590bf1e87dc87d077e395))
+
+
+### BREAKING CHANGES
+
+* client ids are now validated and associated with
+specific user pools.
+* Nit pick of a breaking change, make the user pool
+database representation match what AWS reponds with from the API;
+keeping consistent with their response format should make it easier for
+us to implement APIs later. Sorry for the breakage.
+
+Migration steps:
+
+1. Open any database json files and rename the UserPoolId key to Id
+
 # [1.3.0](https://github.com/jagregory/cognito-local/compare/v1.2.2...v1.3.0) (2020-04-29)
 
 
