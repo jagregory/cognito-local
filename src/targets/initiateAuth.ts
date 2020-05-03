@@ -14,6 +14,7 @@ interface Input {
   AuthFlow: "USER_PASSWORD_AUTH" | "CUSTOM_AUTH";
   ClientId: string;
   AuthParameters: { USERNAME: string; PASSWORD: string };
+  Session: string | null;
 }
 
 export interface SmsMfaOutput {
@@ -23,13 +24,13 @@ export interface SmsMfaOutput {
     CODE_DELIVERY_DESTINATION: string;
     USER_ID_FOR_SRP: string;
   };
-  Session: string;
+  Session: string | null;
 }
 
 export interface PasswordVerifierOutput {
   ChallengeName: "PASSWORD_VERIFIER";
   ChallengeParameters: {};
-  Session: string;
+  Session: string | null;
   AuthenticationResult: {
     IdToken: string;
     AccessToken: string;
@@ -43,6 +44,7 @@ export type InitiateAuthTarget = (body: Input) => Promise<Output>;
 
 const verifyMfaChallenge = async (
   user: User,
+  body: Input,
   userPool: UserPoolClient,
   codeDelivery: CodeDelivery
 ): Promise<SmsMfaOutput> => {
@@ -79,7 +81,7 @@ const verifyMfaChallenge = async (
       CODE_DELIVERY_DESTINATION: deliveryDestination,
       USER_ID_FOR_SRP: user.Username,
     },
-    Session: "",
+    Session: body.Session,
   };
 };
 
@@ -138,7 +140,7 @@ const verifyPasswordChallenge = (
       ),
       RefreshToken: "<< TODO >>",
     },
-    Session: "",
+    Session: body.Session,
   };
 };
 
@@ -180,12 +182,11 @@ export const InitiateAuth = ({
   }
 
   if (
-    userPool.config.MfaConfiguration === "OPTIONAL" &&
-    (user.MFAOptions ?? []).length > 0
+    (userPool.config.MfaConfiguration === "OPTIONAL" &&
+      (user.MFAOptions ?? []).length > 0) ||
+    userPool.config.MfaConfiguration === "ON"
   ) {
-    return verifyMfaChallenge(user, userPool, codeDelivery);
-  } else if (userPool.config.MfaConfiguration === "ON") {
-    return verifyMfaChallenge(user, userPool, codeDelivery);
+    return verifyMfaChallenge(user, body, userPool, codeDelivery);
   }
 
   return verifyPasswordChallenge(user, body, userPool);

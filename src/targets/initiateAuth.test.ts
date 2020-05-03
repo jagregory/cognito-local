@@ -77,6 +77,7 @@ describe("InitiateAuth target", () => {
             USERNAME: "0000-0000",
             PASSWORD: "bad-password",
           },
+          Session: "Session",
         })
       ).rejects.toBeInstanceOf(InvalidPasswordError);
     });
@@ -100,6 +101,7 @@ describe("InitiateAuth target", () => {
             USERNAME: "0000-0000",
             PASSWORD: "bad-password",
           },
+          Session: "Session",
         })
       ).rejects.toBeInstanceOf(PasswordResetRequiredError);
     });
@@ -119,19 +121,19 @@ describe("InitiateAuth target", () => {
           });
           mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
-          const output = await initiateAuth({
+          const output = (await initiateAuth({
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: "0000-0000",
               PASSWORD: "hunter2",
             },
-          });
+            Session: "Session",
+          })) as PasswordVerifierOutput;
 
           expect(output).toBeDefined();
-          expect(
-            (output as PasswordVerifierOutput).AuthenticationResult.AccessToken
-          ).toBeDefined();
+          expect(output.Session).toBe("Session");
+          expect(output.AuthenticationResult.AccessToken).toBeDefined();
         });
       });
 
@@ -148,6 +150,7 @@ describe("InitiateAuth target", () => {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
+              Session: "Session",
             })
           ).rejects.toBeInstanceOf(NotAuthorizedError);
         });
@@ -197,9 +200,12 @@ describe("InitiateAuth target", () => {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
+              Session: "Session",
             })) as SmsMfaOutput;
 
             expect(output).toBeDefined();
+            expect(output.Session).toBe("Session");
+
             expect(mockCodeDelivery).toHaveBeenCalledWith(user, {
               AttributeName: "phone_number",
               DeliveryMedium: "SMS",
@@ -236,6 +242,7 @@ describe("InitiateAuth target", () => {
                   USERNAME: "0000-0000",
                   PASSWORD: "hunter2",
                 },
+                Session: "Session",
               })
             ).rejects.toBeInstanceOf(NotAuthorizedError);
           });
@@ -284,9 +291,12 @@ describe("InitiateAuth target", () => {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
+              Session: "Session",
             })) as SmsMfaOutput;
 
             expect(output).toBeDefined();
+            expect(output.Session).toBe("Session");
+
             expect(mockCodeDelivery).toHaveBeenCalledWith(user, {
               AttributeName: "phone_number",
               DeliveryMedium: "SMS",
@@ -325,9 +335,11 @@ describe("InitiateAuth target", () => {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
+              Session: "Session",
             })) as PasswordVerifierOutput;
 
             expect(output).toBeDefined();
+            expect(output.Session).toBe("Session");
 
             // access token
             expect(output.AuthenticationResult.AccessToken).toBeDefined();
@@ -405,9 +417,11 @@ describe("InitiateAuth target", () => {
               USERNAME: "0000-0000",
               PASSWORD: "hunter2",
             },
+            Session: "Session",
           })) as PasswordVerifierOutput;
 
           expect(output).toBeDefined();
+          expect(output.Session).toBe("Session");
 
           // access token
           expect(output.AuthenticationResult.AccessToken).toBeDefined();
