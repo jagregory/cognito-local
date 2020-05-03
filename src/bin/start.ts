@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import log from "../log";
 import { createDefaultServer } from "../server";
 
 createDefaultServer()
@@ -18,7 +19,7 @@ createDefaultServer()
         ? address
         : `${address.address}:${address.port}`;
 
-    console.log(`Cognito Local running on http://${url}`);
+    log.info(`Cognito Local running on http://${url}`);
   })
   .catch((err) => {
     console.error(err);

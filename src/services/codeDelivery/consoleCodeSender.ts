@@ -1,4 +1,5 @@
 import boxen from "boxen";
+import log from "../../log";
 import { User } from "../userPoolClient";
 import { CodeSender } from "./codeSender";
 
@@ -7,7 +8,7 @@ const sendToConsole = (
   destination: string,
   code: string
 ): Promise<void> => {
-  console.log(
+  log.info(
     boxen(
       `Confirmation Code Delivery
 

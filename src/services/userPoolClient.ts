@@ -1,3 +1,4 @@
+import log from "../log";
 import { AppClient, newId } from "./appClient";
 import { CreateDataStore, DataStore } from "./dataStore";
 
@@ -104,7 +105,7 @@ export const createUserPoolClient = async (
     },
 
     async getUserByUsername(username) {
-      console.log("getUserByUsername", username);
+      log.debug("getUserByUsername", username);
 
       const aliasEmailEnabled = config.UsernameAttributes?.includes("email");
       const aliasPhoneNumberEnabled = config.UsernameAttributes?.includes(
@@ -137,14 +138,14 @@ export const createUserPoolClient = async (
     },
 
     async listUsers(): Promise<readonly User[]> {
-      console.log("listUsers");
+      log.debug("listUsers");
       const users = await dataStore.get<Record<string, User>>("Users", {});
 
       return Object.values(users);
     },
 
     async saveUser(user) {
-      console.log("saveUser", user);
+      log.debug("saveUser", user);
 
       const attributes = attributesInclude("sub", user.Attributes)
         ? user.Attributes

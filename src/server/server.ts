@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import * as http from "http";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
+import log from "../log";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 
@@ -64,15 +65,15 @@ export const createServer = (
       console.error(`Error handling target: ${target}`, ex);
       if (ex instanceof UnsupportedError) {
         if (options.development) {
-          console.log("======");
-          console.log();
-          console.log("Unsupported target");
-          console.log("");
-          console.log(`x-amz-target: ${xAmzTarget}`);
-          console.log("Body:");
-          console.log(JSON.stringify(req.body, undefined, 2));
-          console.log();
-          console.log("======");
+          log.info("======");
+          log.info();
+          log.info("Unsupported target");
+          log.info("");
+          log.info(`x-amz-target: ${xAmzTarget}`);
+          log.info("Body:");
+          log.info(JSON.stringify(req.body, undefined, 2));
+          log.info();
+          log.info("======");
         }
 
         return unsupported(ex.message, res);

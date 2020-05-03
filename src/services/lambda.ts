@@ -3,6 +3,7 @@ import * as AWS from "aws-sdk";
 import { InvocationResponse } from "aws-sdk/clients/lambda";
 import * as fs from "fs";
 import { UnexpectedLambdaExceptionError } from "../errors";
+import log from "../log";
 
 const awsSdkPackageJson = fs.readFileSync(
   require.resolve("aws-sdk/package.json"),
@@ -85,7 +86,7 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
       lambdaEvent.request.validationData = {};
     }
 
-    console.log(
+    log.debug(
       `Invoking "${functionName}" with event`,
       JSON.stringify(lambdaEvent, undefined, 2)
     );
@@ -99,11 +100,11 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
         })
         .promise();
     } catch (ex) {
-      console.log(ex);
+      log.error(ex);
       throw new UnexpectedLambdaExceptionError();
     }
 
-    console.log(
+    log.debug(
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
     );
     if (result.StatusCode === 200) {

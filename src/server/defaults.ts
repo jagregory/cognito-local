@@ -1,3 +1,4 @@
+import log from "../log";
 import { createCodeDelivery } from "../services";
 import { ConsoleCodeSender } from "../services/codeDelivery/consoleCodeSender";
 import { otp } from "../services/codeDelivery/otp";
@@ -14,7 +15,7 @@ import * as AWS from "aws-sdk";
 export const createDefaultServer = async (): Promise<Server> => {
   const config = await loadConfig();
 
-  console.log("Loaded config:", config);
+  log.debug("Loaded config:", config);
 
   const cognitoClient = await createCognitoClient(
     config.UserPoolDefaults,
