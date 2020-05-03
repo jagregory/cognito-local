@@ -1,24 +1,25 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
+import * as http from "http";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 
 export interface ServerOptions {
-  port?: number;
-  hostname?: string;
-  development?: boolean;
+  port: number;
+  hostname: string;
+  development: boolean;
 }
 
 export interface Server {
   application: any; // eslint-disable-line
-  start(options?: ServerOptions): Promise<ServerOptions>;
+  start(options?: Partial<ServerOptions>): Promise<http.Server>;
 }
 
 export const createServer = (
   router: Router,
-  options: ServerOptions = {}
+  options: Partial<ServerOptions> = {}
 ): Server => {
   const app = express();
 
@@ -89,20 +90,26 @@ export const createServer = (
   return {
     application: app,
     start(startOptions) {
-      const actualOptions = {
-        ...options,
-        ...startOptions,
+      const actualOptions: ServerOptions = {
         port: options?.port ?? 9229,
         hostname: options?.hostname ?? "localhost",
+        development: options?.development ?? false,
+        ...options,
+        ...startOptions,
       };
+
       return new Promise((resolve, reject) => {
-        app.listen(actualOptions.port, actualOptions.hostname, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(actualOptions);
+        const httpServer = app.listen(
+          actualOptions.port,
+          actualOptions.hostname,
+          (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(httpServer);
+            }
           }
-        });
+        );
       });
     },
   };
