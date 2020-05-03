@@ -20,8 +20,10 @@ describe("ConfirmForgotPassword target", () => {
     advanceTo(now);
 
     mockUserPoolClient = {
+      config: {
+        Id: "test",
+      },
       createAppClient: jest.fn(),
-      id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),

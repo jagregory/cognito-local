@@ -84,7 +84,7 @@ describe("Cognito Client", () => {
 
       const userPool = await cognitoClient.getUserPoolForClientId("testing");
 
-      expect(mockDataStore.get).toHaveBeenCalledWith("Clients.testing");
+      expect(mockDataStore.get).toHaveBeenCalledWith(["Clients", "testing"]);
       expect(createUserPoolClient).toHaveBeenCalledWith(
         { Id: "userPoolId", UsernameAttributes: [] },
         mockDataStore,

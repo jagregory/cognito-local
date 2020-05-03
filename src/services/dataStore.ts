@@ -6,9 +6,9 @@ const mkdir = promisify(fs.mkdir);
 
 export interface DataStore {
   getRoot<T>(): Promise<T | null>;
-  get<T>(key: string): Promise<T | null>;
-  get<T>(key: string, defaultValue: T): Promise<T>;
-  set<T>(key: string, value: T): Promise<void>;
+  get<T>(key: string | string[]): Promise<T | null>;
+  get<T>(key: string | string[], defaultValue: T): Promise<T>;
+  set<T>(key: string | string[], value: T): Promise<void>;
 }
 
 export type CreateDataStore = (
@@ -36,8 +36,14 @@ export const createDataStore: CreateDataStore = async (
       return (await db.value()) ?? null;
     },
 
-    async get(key: string, defaultValue?: unknown) {
-      return (await db.get(key).value()) ?? defaultValue ?? null;
+    async get(key: string | string[], defaultValue?: unknown) {
+      return (
+        (await (key instanceof Array ? key : [key])
+          .reduce((acc, k) => acc.get(k), db)
+          .value()) ??
+        defaultValue ??
+        null
+      );
     },
 
     async set(key, value) {

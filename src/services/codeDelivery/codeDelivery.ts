@@ -7,7 +7,11 @@ export type DeliveryDetails =
       DeliveryMedium: "EMAIL";
       Destination: string;
     }
-  | { AttributeName: "phone"; DeliveryMedium: "SMS"; Destination: string };
+  | {
+      AttributeName: "phone_number";
+      DeliveryMedium: "SMS";
+      Destination: string;
+    };
 
 export type CodeDelivery = (
   user: User,

@@ -37,7 +37,7 @@ export const ConfirmSignUp = ({
       source: "PostConfirmation_ConfirmSignUp",
       username: user.Username,
       clientId: body.ClientId,
-      userPoolId: userPool.id,
+      userPoolId: userPool.config.Id,
       userAttributes: user.Attributes,
     });
   }

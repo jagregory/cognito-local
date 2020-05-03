@@ -122,7 +122,7 @@ describe("Data Store", () => {
       expect(result).toEqual(true);
     });
 
-    it("returns null if user doesn't exist", async () => {
+    it("returns null if key doesn't exist", async () => {
       const dataStore = await createDataStore("example", {}, path);
 
       const result = await dataStore.get("invalid");
@@ -130,7 +130,7 @@ describe("Data Store", () => {
       expect(result).toBeNull();
     });
 
-    it("returns existing user by their sub attribute", async () => {
+    it("returns existing value", async () => {
       const dataStore = await createDataStore("example", {}, path);
 
       await dataStore.set("key", 1);

@@ -38,7 +38,7 @@ export const ConfirmForgotPassword = ({
       source: "PostConfirmation_ConfirmForgotPassword",
       username: user.Username,
       clientId: body.ClientId,
-      userPoolId: userPool.id,
+      userPoolId: userPool.config.Id,
       userAttributes: user.Attributes,
     });
   }

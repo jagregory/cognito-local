@@ -67,7 +67,7 @@ describe("User Pool Client", () => {
       });
 
       expect(mockClientsDataStore.set).toHaveBeenCalledWith(
-        `Clients.${result.ClientId}`,
+        ["Clients", result.ClientId],
         result
       );
     });

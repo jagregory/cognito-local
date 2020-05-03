@@ -9,7 +9,10 @@ createDefaultServer()
     return server.start({ hostname, port });
   })
   .then((httpServer) => {
-    const address = httpServer.address()!;
+    const address = httpServer.address();
+    if (!address) {
+      throw new Error("Server started without address");
+    }
     const url =
       typeof address === "string"
         ? address

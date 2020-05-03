@@ -50,7 +50,7 @@ describe("Code Delivery", () => {
       const code = await codeDelivery(user, {
         Destination: "0123445670",
         DeliveryMedium: "SMS",
-        AttributeName: "phone",
+        AttributeName: "phone_number",
       });
 
       expect(sender.sendSms).toHaveBeenCalledWith(user, "0123445670", "1234");

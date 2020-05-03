@@ -18,8 +18,10 @@ describe("UserMigration trigger", () => {
       invoke: jest.fn(),
     };
     mockUserPoolClient = {
+      config: {
+        Id: "test",
+      },
       createAppClient: jest.fn(),
-      id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),
       saveUser: jest.fn(),

@@ -6,6 +6,11 @@ export interface UserAttribute {
   Value: string;
 }
 
+export interface MFAOption {
+  DeliveryMedium: "SMS";
+  AttributeName: "phone_number";
+}
+
 export const attributesIncludeMatch = (
   attributeName: string,
   attributeValue: string,
@@ -18,6 +23,10 @@ export const attributesInclude = (
   attributeName: string,
   attributes: readonly UserAttribute[]
 ) => !!attributes.find((x) => x.Name === attributeName);
+export const attributeValue = (
+  attributeName: string,
+  attributes: readonly UserAttribute[]
+) => attributes.find((x) => x.Name === attributeName)?.Value;
 export const attributesToRecord = (
   attributes: readonly UserAttribute[]
 ): Record<string, string> =>
@@ -34,18 +43,12 @@ export interface User {
   Enabled: boolean;
   UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
   Attributes: readonly UserAttribute[];
+  MFAOptions?: readonly MFAOption[];
 
   // extra attributes for Cognito Local
   Password: string;
   ConfirmationCode?: string;
-}
-
-export interface UserPoolClient {
-  readonly id: string;
-  createAppClient(name: string): Promise<AppClient>;
-  getUserByUsername(username: string): Promise<User | null>;
-  listUsers(): Promise<readonly User[]>;
-  saveUser(user: User): Promise<void>;
+  MFACode?: string;
 }
 
 type UsernameAttribute = "email" | "phone_number";
@@ -54,6 +57,14 @@ export interface UserPool {
   Id: string;
   UsernameAttributes?: UsernameAttribute[];
   MfaConfiguration?: "OFF" | "ON" | "OPTIONAL";
+}
+
+export interface UserPoolClient {
+  readonly config: UserPool;
+  createAppClient(name: string): Promise<AppClient>;
+  getUserByUsername(username: string): Promise<User | null>;
+  listUsers(): Promise<readonly User[]>;
+  saveUser(user: User): Promise<void>;
 }
 
 export type CreateUserPoolClient = (
@@ -71,10 +82,10 @@ export const createUserPoolClient = async (
     Users: {},
     Options: defaultOptions,
   });
+  const config = await dataStore.get<UserPool>("Options", defaultOptions);
 
   return {
-    id: defaultOptions.Id,
-
+    config,
     async createAppClient(name) {
       const id = newId();
       const appClient: AppClient = {
@@ -87,7 +98,7 @@ export const createUserPoolClient = async (
         RefreshTokenValidity: 30,
       };
 
-      await clientsDataStore.set(`Clients.${id}`, appClient);
+      await clientsDataStore.set(["Clients", id], appClient);
 
       return appClient;
     },
@@ -95,9 +106,8 @@ export const createUserPoolClient = async (
     async getUserByUsername(username) {
       console.log("getUserByUsername", username);
 
-      const options = await dataStore.get<UserPool>("Options", defaultOptions);
-      const aliasEmailEnabled = options.UsernameAttributes?.includes("email");
-      const aliasPhoneNumberEnabled = options.UsernameAttributes?.includes(
+      const aliasEmailEnabled = config.UsernameAttributes?.includes("email");
+      const aliasPhoneNumberEnabled = config.UsernameAttributes?.includes(
         "phone_number"
       );
 
