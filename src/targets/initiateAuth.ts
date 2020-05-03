@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import {
   InvalidPasswordError,
   NotAuthorizedError,
@@ -6,8 +5,7 @@ import {
   UnsupportedError,
 } from "../errors";
 import { CodeDelivery, Services, UserPoolClient } from "../services";
-import PrivateKey from "../keys/cognitoLocal.private.json";
-import * as uuid from "uuid";
+import { generateTokens } from "../services/tokens";
 import { attributeValue, User } from "../services/userPoolClient";
 
 interface Input {
@@ -89,60 +87,12 @@ const verifyPasswordChallenge = (
   user: User,
   body: Input,
   userPool: UserPoolClient
-): PasswordVerifierOutput => {
-  const eventId = uuid.v4();
-  const authTime = new Date().getTime();
-
-  return {
-    ChallengeName: "PASSWORD_VERIFIER",
-    ChallengeParameters: {},
-    AuthenticationResult: {
-      AccessToken: jwt.sign(
-        {
-          sub: user.Username,
-          event_id: eventId,
-          token_use: "access",
-          scope: "aws.cognito.signin.user.admin", // TODO: scopes
-          auth_time: authTime,
-          jti: uuid.v4(),
-          client_id: body.ClientId,
-          username: user.Username,
-        },
-        PrivateKey.pem,
-        {
-          algorithm: "RS256",
-          issuer: `http://localhost:9229/${userPool.config.Id}`,
-          expiresIn: "24h",
-          keyid: "CognitoLocal",
-        }
-      ),
-      IdToken: jwt.sign(
-        {
-          sub: user.Username,
-          email_verified: true,
-          event_id: eventId,
-          token_use: "id",
-          auth_time: authTime,
-          "cognito:username": user.Username,
-          email: user.Attributes.filter((x) => x.Name === "email").map(
-            (x) => x.Value
-          )[0],
-        },
-        PrivateKey.pem,
-        {
-          algorithm: "RS256",
-          // TODO: this needs to match the actual host/port we started the server on
-          issuer: `http://localhost:9229/${userPool.config.Id}`,
-          expiresIn: "24h",
-          audience: body.ClientId,
-          keyid: "CognitoLocal",
-        }
-      ),
-      RefreshToken: "<< TODO >>",
-    },
-    Session: body.Session,
-  };
-};
+): PasswordVerifierOutput => ({
+  ChallengeName: "PASSWORD_VERIFIER",
+  ChallengeParameters: {},
+  AuthenticationResult: generateTokens(user, body.ClientId, userPool.config.Id),
+  Session: body.Session,
+});
 
 export const InitiateAuth = ({
   codeDelivery,

@@ -18,6 +18,7 @@ perfect, because it won't be.
 - [ForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html)
 - [InitiateAuth](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html)
 - [ListUsers](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListUsers.html)
+- [RespondToAuthChallenge](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html)
 - [SignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html)
 
 Additional supported features:
@@ -78,6 +79,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `UserPoolDefaults`                         | `object`   |             | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.Id`                      | `string`   | `local`     | Default User Pool Id                                        |
 | `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]` | Username alias attributes                                   |
+| `UserPoolDefaults.MfaConfiguration`        | `string`   |             | MFA type                                                    |
 
 The default config is:
 
@@ -121,17 +123,21 @@ Many. Cognito Local only works for my exact use-case.
 
 Issues I know about:
 
-- The database is shared for all User Pools, if you use different User Pool IDs they will all access the same database.
-- Client IDs are ignored and all connect to the same User Pool.
 - Users can't be disabled
 - Only `USER_PASSWORD_AUTH` flow is supported
-- You can't reset your password
 - Not all Lambda triggers (yet, watch this space)
+
+## Multi-factor authentication
+
+There is limited support for Multi-Factor Authentication in Cognito Local. Currently, if a User Pool is configured to
+have a `MfaConfiguration` of `OPTIONAL` or `ON` **and** a user has an `MFAOption` of `SMS` then Cognito Local will
+follow the MFA flows. If a user does not have a `phone_number` attribute or any other type of MFA is used, Cognito Local
+will fail.
 
 ## Confirmation codes
 
-If you register a new user and they need to confirm their account, Cognito Local will write a message to the console
-with their confirmation code instead of emailing it to the user.
+When a user is prompted for a code of some kind (confirming their account, multi-factor auth), Cognito Local will write
+a message to the console with their confirmation code instead of emailing it to the user.
 
 For example:
 

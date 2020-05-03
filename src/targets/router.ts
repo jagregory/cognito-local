@@ -6,6 +6,7 @@ import { CreateUserPoolClient } from "./createUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListUsers } from "./listUsers";
+import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { SignUp } from "./signUp";
 
 export const Targets = {
@@ -15,6 +16,7 @@ export const Targets = {
   ForgotPassword,
   InitiateAuth,
   ListUsers,
+  RespondToAuthChallenge,
   SignUp,
 };
 
