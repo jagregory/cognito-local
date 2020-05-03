@@ -3,7 +3,6 @@ import {
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
-  ResourceNotFoundError,
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
@@ -38,10 +37,6 @@ export const InitiateAuth = ({
   }
 
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
-
   let user = await userPool.getUserByUsername(body.AuthParameters.USERNAME);
 
   if (!user && triggers.enabled("UserMigration")) {

@@ -1,5 +1,4 @@
 import { advanceTo } from "jest-date-mock";
-import { ResourceNotFoundError } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import { ListUsers, ListUsersTarget } from "./listUsers";
@@ -17,6 +16,7 @@ describe("ListUsers target", () => {
     advanceTo(now);
 
     mockUserPoolClient = {
+      createAppClient: jest.fn(),
       id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),
@@ -38,16 +38,6 @@ describe("ListUsers target", () => {
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
-  });
-
-  it("throws if can't find user pool", async () => {
-    mockCognitoClient.getUserPool.mockResolvedValue(null);
-
-    await expect(
-      listUsers({
-        UserPoolId: "userPoolId",
-      })
-    ).rejects.toBeInstanceOf(ResourceNotFoundError);
   });
 
   it("lists users and removes Cognito Local fields", async () => {

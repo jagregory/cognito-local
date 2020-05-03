@@ -1,4 +1,3 @@
-import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
 import { UserAttribute } from "../services/userPoolClient";
 
@@ -30,10 +29,6 @@ export const ListUsers = ({
   cognitoClient,
 }: Services): ListUsersTarget => async (body) => {
   const userPool = await cognitoClient.getUserPool(body.UserPoolId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
-
   const users = await userPool.listUsers();
 
   return {

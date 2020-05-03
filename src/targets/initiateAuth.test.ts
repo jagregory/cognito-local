@@ -3,7 +3,6 @@ import {
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
-  ResourceNotFoundError,
 } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
@@ -26,6 +25,7 @@ describe("InitiateAuth target", () => {
     advanceTo(now);
 
     mockUserPoolClient = {
+      createAppClient: jest.fn(),
       id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),
@@ -47,21 +47,6 @@ describe("InitiateAuth target", () => {
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
-  });
-
-  it("throws if can't find user pool by client id", async () => {
-    mockCognitoClient.getUserPoolForClientId.mockResolvedValue(null);
-
-    await expect(
-      initiateAuth({
-        ClientId: "clientId",
-        AuthFlow: "USER_PASSWORD_AUTH",
-        AuthParameters: {
-          USERNAME: "0000-0000",
-          PASSWORD: "hunter2",
-        },
-      })
-    ).rejects.toBeInstanceOf(ResourceNotFoundError);
   });
 
   describe("USER_PASSWORD_AUTH auth flow", () => {

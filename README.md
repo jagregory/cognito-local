@@ -4,14 +4,17 @@
 
 An offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
-The goal for this project is to be _Good Enough_ for local development use, and that's it. Don't expect it to be perfect, because it won't be.
+The goal for this project is to be _Good Enough_ for local development use, and that's it. Don't expect it to be
+perfect, because it won't be.
 
 ## Features
 
-> At this point in time, assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. If they don't work for you, please raise an issue.
+> At this point in time, assume any features listed below are _partially implemented_ based on @jagregory's personal
+> use-cases. If they don't work for you, please raise an issue.
 
 - [ConfirmForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html)
 - [ConfirmSignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html)
+- [CreateUserPoolClient](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html)
 - [ForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html)
 - [InitiateAuth](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html)
 - [ListUsers](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListUsers.html)
@@ -40,7 +43,8 @@ Additional supported features:
 
 Cognito Local will now be listening on `http://localhost:9229`.
 
-You can now update your AWS code to use the local address for Cognito's endpoint. For example, if you're using amazon-cognito-identity-js you can update your `CognitoUserPool` usage to override the endpoint:
+You can now update your AWS code to use the local address for Cognito's endpoint. For example, if you're using
+amazon-cognito-identity-js you can update your `CognitoUserPool` usage to override the endpoint:
 
 ```js
 new CognitoUserPool({
@@ -53,7 +57,8 @@ You likely only want to do this when you're running locally on your development 
 
 ## Configuration
 
-You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda triggers, you will definitely need to override `LambdaClient.endpoint` at a minimum.
+You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda
+triggers, you will definitely need to override `LambdaClient.endpoint` at a minimum.
 
 Before starting Cognito Local, create a config file:
 
@@ -95,9 +100,20 @@ The default config is:
 
 ### HTTPS endpoints with self-signed certificates
 
-If you need your Lambda endpoint to be HTTPS with a self-signed certificate, you will need to disable certificate verification in Node for Cognito Local. The easiest way to do this is to run Cognito Local with the `NODE_TLS_REJECT_UNAUTHORIZED` environment variable.
+If you need your Lambda endpoint to be HTTPS with a self-signed certificate, you will need to disable certificate
+verification in Node for Cognito Local. The easiest way to do this is to run Cognito Local with the
+`NODE_TLS_REJECT_UNAUTHORIZED` environment variable.
 
     NODE_TLS_REJECT_UNAUTHORIZED=0 cognito-local
+
+### User Pools and Clients
+
+User Pools are stored in `.cognito/db/$userPoolId.json`. As not all API features are supported yet, you'll likely find
+yourself needing to manually edit this file to update the User Pool config or users. If you do modify this file, you
+will need to restart Cognito Local.
+
+User Pool Clients are stored in `.cognito/db/clients.json`. You can create new User Pool Clients using the
+`CreateUserPoolClient` API.
 
 ## Known Limitations
 
@@ -114,7 +130,8 @@ Issues I know about:
 
 ## Confirmation codes
 
-If you register a new user and they need to confirm their account, Cognito Local will write a message to the console with their confirmation code instead of emailing it to the user.
+If you register a new user and they need to confirm their account, Cognito Local will write a message to the console
+with their confirmation code instead of emailing it to the user.
 
 For example:
 

@@ -1,8 +1,4 @@
-import {
-  CodeMismatchError,
-  ResourceNotFoundError,
-  UserNotFoundError,
-} from "../errors";
+import { CodeMismatchError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 
 interface Input {
@@ -19,10 +15,6 @@ export const ConfirmForgotPassword = ({
   triggers,
 }: Services): ConfirmForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
-
   const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {

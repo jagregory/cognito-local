@@ -1,4 +1,5 @@
 import { ResourceNotFoundError } from "../errors";
+import { AppClient } from "./appClient";
 import { CreateDataStore } from "./dataStore";
 import {
   CreateUserPoolClient,
@@ -7,7 +8,7 @@ import {
 } from "./userPoolClient";
 
 export interface CognitoClient {
-  getUserPool(userPoolId: string): Promise<UserPoolClient | null>;
+  getUserPool(userPoolId: string): Promise<UserPoolClient>;
   getUserPoolForClientId(clientId: string): Promise<UserPoolClient>;
 }
 
@@ -22,18 +23,20 @@ export const createCognitoClient = async (
     async getUserPool(userPoolId) {
       return createUserPoolClient(
         { ...userPoolDefaultOptions, Id: userPoolId },
+        clients,
         createDataStore
       );
     },
 
     async getUserPoolForClientId(clientId) {
-      const userPoolId = await clients.get<string>(`Clients.${clientId}`);
-      if (!userPoolId) {
+      const appClient = await clients.get<AppClient>(`Clients.${clientId}`);
+      if (!appClient) {
         throw new ResourceNotFoundError();
       }
 
       return createUserPoolClient(
-        { ...userPoolDefaultOptions, Id: userPoolId },
+        { ...userPoolDefaultOptions, Id: appClient.UserPoolId },
+        clients,
         createDataStore
       );
     },

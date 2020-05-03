@@ -2,6 +2,7 @@ import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
+import { CreateUserPoolClient } from "./createUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListUsers } from "./listUsers";
@@ -10,6 +11,7 @@ import { SignUp } from "./signUp";
 export const Targets = {
   ConfirmForgotPassword,
   ConfirmSignUp,
+  CreateUserPoolClient,
   ForgotPassword,
   InitiateAuth,
   ListUsers,

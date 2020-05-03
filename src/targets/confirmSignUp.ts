@@ -1,8 +1,4 @@
-import {
-  CodeMismatchError,
-  NotAuthorizedError,
-  ResourceNotFoundError,
-} from "../errors";
+import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 
 interface Input {
@@ -19,10 +15,6 @@ export const ConfirmSignUp = ({
   triggers,
 }: Services): ConfirmSignUpTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
-
   const user = await userPool.getUserByUsername(body.Username);
 
   if (!user) {

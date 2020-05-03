@@ -19,6 +19,7 @@ describe("SignUp target", () => {
     advanceTo(now);
 
     mockUserPoolClient = {
+      createAppClient: jest.fn(),
       id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),

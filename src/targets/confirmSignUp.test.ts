@@ -1,9 +1,5 @@
 import { advanceBy, advanceTo } from "jest-date-mock";
-import {
-  CodeMismatchError,
-  NotAuthorizedError,
-  ResourceNotFoundError,
-} from "../errors";
+import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
 import { Triggers } from "../services/triggers";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
@@ -21,6 +17,7 @@ describe("ConfirmSignUp target", () => {
     advanceTo(now);
 
     mockUserPoolClient = {
+      createAppClient: jest.fn(),
       id: "test",
       getUserByUsername: jest.fn(),
       listUsers: jest.fn(),
@@ -42,19 +39,6 @@ describe("ConfirmSignUp target", () => {
       codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
-  });
-
-  it("throws if can't find user pool by client id", async () => {
-    mockCognitoClient.getUserPoolForClientId.mockResolvedValue(null);
-
-    await expect(
-      confirmSignUp({
-        ClientId: "clientId",
-        Username: "janice",
-        ConfirmationCode: "1234",
-        ForceAliasCreation: false,
-      })
-    ).rejects.toBeInstanceOf(ResourceNotFoundError);
   });
 
   it("throws if user doesn't exist", async () => {

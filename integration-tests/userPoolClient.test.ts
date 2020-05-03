@@ -1,3 +1,7 @@
+import {
+  CognitoClient,
+  createCognitoClient,
+} from "../src/services/cognitoClient";
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import {
   createUserPoolClient,
@@ -10,13 +14,22 @@ const mkdtemp = promisify(fs.mkdtemp);
 const readFile = promisify(fs.readFile);
 const rmdir = promisify(fs.rmdir);
 
-describe("User Pool", () => {
+describe("User Pool Client", () => {
   let path: string;
   let tmpCreateDataStore: CreateDataStore;
+  let cognitoClient: CognitoClient;
 
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
+    cognitoClient = await createCognitoClient(
+      {
+        Id: "local",
+        UsernameAttributes: [],
+      },
+      tmpCreateDataStore,
+      createUserPoolClient
+    );
   });
 
   afterEach(() =>
@@ -26,10 +39,7 @@ describe("User Pool", () => {
   );
 
   it("creates a database", async () => {
-    await createUserPoolClient(
-      { Id: "local", UsernameAttributes: [] },
-      tmpCreateDataStore
-    );
+    await cognitoClient.getUserPool("local");
 
     expect(fs.existsSync(path + "/local.json")).toBe(true);
   });
@@ -37,10 +47,7 @@ describe("User Pool", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPoolClient(
-        { Id: "local", UsernameAttributes: [] },
-        tmpCreateDataStore
-      );
+      const userPool = await cognitoClient.getUserPool("local");
 
       await userPool.saveUser({
         Username: "1",
@@ -75,10 +82,7 @@ describe("User Pool", () => {
 
     it("updates a user", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPoolClient(
-        { Id: "local", UsernameAttributes: [] },
-        tmpCreateDataStore
-      );
+      const userPool = await cognitoClient.getUserPool("local");
 
       await userPool.saveUser({
         Username: "1",
@@ -147,10 +151,7 @@ describe("User Pool", () => {
   describe("getUserByUsername", () => {
     let userPool: UserPoolClient;
     beforeAll(async () => {
-      userPool = await createUserPoolClient(
-        { Id: "local", UsernameAttributes: [] },
-        tmpCreateDataStore
-      );
+      userPool = await cognitoClient.getUserPool("local");
 
       await userPool.saveUser({
         Username: "1",
@@ -186,11 +187,7 @@ describe("User Pool", () => {
 
     beforeAll(async () => {
       now = new Date();
-
-      userPool = await createUserPoolClient(
-        { Id: "local", UsernameAttributes: [] },
-        tmpCreateDataStore
-      );
+      userPool = await cognitoClient.getUserPool("local");
 
       await userPool.saveUser({
         Username: "1",

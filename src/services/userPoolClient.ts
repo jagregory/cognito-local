@@ -1,4 +1,5 @@
-import { CreateDataStore } from "./dataStore";
+import { AppClient, newId } from "./appClient";
+import { CreateDataStore, DataStore } from "./dataStore";
 
 export interface UserAttribute {
   Name: "sub" | "email" | "phone_number" | "preferred_username" | string;
@@ -41,6 +42,7 @@ export interface User {
 
 export interface UserPoolClient {
   readonly id: string;
+  createAppClient(name: string): Promise<AppClient>;
   getUserByUsername(username: string): Promise<User | null>;
   listUsers(): Promise<readonly User[]>;
   saveUser(user: User): Promise<void>;
@@ -56,11 +58,13 @@ export interface UserPool {
 
 export type CreateUserPoolClient = (
   defaultOptions: UserPool,
+  clientsDataStore: DataStore,
   createDataStore: CreateDataStore
 ) => Promise<UserPoolClient>;
 
 export const createUserPoolClient = async (
   defaultOptions: UserPool,
+  clientsDataStore: DataStore,
   createDataStore: CreateDataStore
 ): Promise<UserPoolClient> => {
   const dataStore = await createDataStore(defaultOptions.Id, {
@@ -70,6 +74,23 @@ export const createUserPoolClient = async (
 
   return {
     id: defaultOptions.Id,
+
+    async createAppClient(name) {
+      const id = newId();
+      const appClient: AppClient = {
+        ClientId: id,
+        ClientName: name,
+        UserPoolId: defaultOptions.Id,
+        CreationDate: new Date().getTime(),
+        LastModifiedDate: new Date().getTime(),
+        AllowedOAuthFlowsUserPoolClient: false,
+        RefreshTokenValidity: 30,
+      };
+
+      await clientsDataStore.set(`Clients.${id}`, appClient);
+
+      return appClient;
+    },
 
     async getUserByUsername(username) {
       console.log("getUserByUsername", username);

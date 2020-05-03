@@ -49,6 +49,7 @@ describe("Cognito Client", () => {
 
       expect(createUserPoolClient).toHaveBeenCalledWith(
         { Id: "testing", UsernameAttributes: [] },
+        mockDataStore,
         createDataStore
       );
       expect(userPool).toEqual(mockUserPool);
@@ -72,7 +73,9 @@ describe("Cognito Client", () => {
     });
 
     it("creates a user pool by the id in the client config", async () => {
-      mockDataStore.get.mockResolvedValue("userPoolId");
+      mockDataStore.get.mockResolvedValue({
+        UserPoolId: "userPoolId",
+      });
       const cognitoClient = await createCognitoClient(
         { Id: "local", UsernameAttributes: [] },
         createDataStore,
@@ -84,6 +87,7 @@ describe("Cognito Client", () => {
       expect(mockDataStore.get).toHaveBeenCalledWith("Clients.testing");
       expect(createUserPoolClient).toHaveBeenCalledWith(
         { Id: "userPoolId", UsernameAttributes: [] },
+        mockDataStore,
         createDataStore
       );
       expect(userPool).toEqual(mockUserPool);

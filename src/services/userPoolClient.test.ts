@@ -1,3 +1,4 @@
+import { advanceTo } from "jest-date-mock";
 import { CreateDataStore, DataStore } from "./dataStore";
 import {
   attributesFromRecord,
@@ -10,10 +11,20 @@ import {
 } from "./userPoolClient";
 
 describe("User Pool Client", () => {
+  let mockClientsDataStore: jest.Mocked<DataStore>;
   let mockDataStore: jest.Mocked<DataStore>;
   let createDataStore: jest.MockedFunction<CreateDataStore>;
+  let now: Date;
 
   beforeEach(() => {
+    now = new Date(2020, 1, 2, 3, 4, 5);
+    advanceTo(now);
+
+    mockClientsDataStore = {
+      set: jest.fn(),
+      get: jest.fn(),
+      getRoot: jest.fn(),
+    };
     mockDataStore = {
       set: jest.fn(),
       get: jest.fn(),
@@ -25,6 +36,7 @@ describe("User Pool Client", () => {
   it("creates a database", async () => {
     await createUserPoolClient(
       { Id: "local", UsernameAttributes: [] },
+      mockClientsDataStore,
       createDataStore
     );
 
@@ -34,12 +46,40 @@ describe("User Pool Client", () => {
     });
   });
 
+  describe("createAppClient", () => {
+    it("saves an app client", async () => {
+      const userPool = await createUserPoolClient(
+        { Id: "local", UsernameAttributes: [] },
+        mockClientsDataStore,
+        createDataStore
+      );
+
+      const result = await userPool.createAppClient("clientName");
+
+      expect(result).toEqual({
+        AllowedOAuthFlowsUserPoolClient: false,
+        ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
+        ClientName: "clientName",
+        CreationDate: now.getTime(),
+        LastModifiedDate: now.getTime(),
+        RefreshTokenValidity: 30,
+        UserPoolId: "local",
+      });
+
+      expect(mockClientsDataStore.set).toHaveBeenCalledWith(
+        `Clients.${result.ClientId}`,
+        result
+      );
+    });
+  });
+
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
       const userPool = await createUserPoolClient(
         { Id: "local", UsernameAttributes: [] },
-        () => Promise.resolve(mockDataStore)
+        mockClientsDataStore,
+        createDataStore
       );
 
       await userPool.saveUser({
@@ -108,8 +148,10 @@ describe("User Pool Client", () => {
 
             return Promise.resolve(null);
           });
-          userPool = await createUserPoolClient(options, () =>
-            Promise.resolve(mockDataStore)
+          userPool = await createUserPoolClient(
+            options,
+            mockClientsDataStore,
+            createDataStore
           );
         });
 
@@ -194,8 +236,10 @@ describe("User Pool Client", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await createUserPoolClient(options, () =>
-        Promise.resolve(mockDataStore)
+      userPool = await createUserPoolClient(
+        options,
+        mockClientsDataStore,
+        createDataStore
       );
     });
 
