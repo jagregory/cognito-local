@@ -3,6 +3,18 @@ import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { User } from "./userPoolClient";
 
+export interface Token {
+  client_id: string;
+  iss: string;
+  sub: string;
+  token_use: string;
+  username: string;
+  event_id: string;
+  scope: string;
+  auth_time: Date;
+  jti: string;
+}
+
 export function generateTokens(
   user: User,
   clientId: string,

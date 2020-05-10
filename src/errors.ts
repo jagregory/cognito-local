@@ -62,6 +62,12 @@ export class UnexpectedLambdaExceptionError extends CognitoError {
   }
 }
 
+export class InvalidParameterError extends CognitoError {
+  public constructor() {
+    super("InvalidParameterException", "Invalid parameter");
+  }
+}
+
 export const unsupported = (message: string, res: Response) => {
   console.error(`Cognito Local unsupported feature: ${message}`);
   return res.status(500).json({
