@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/jagregory/cognito-local/compare/v2.0.0...v2.1.0) (2020-05-10)
+
+
+### Features
+
+* support for GetUser api ([cc8048b](https://github.com/jagregory/cognito-local/commit/cc8048b08d2937844e1bb3bcf5d966ed28b26465))
+
 # [2.0.0](https://github.com/jagregory/cognito-local/compare/v1.3.0...v2.0.0) (2020-05-03)
 
 
