@@ -47,7 +47,7 @@ export const createDataStore: CreateDataStore = async (
     },
 
     async set(key, value) {
-      await db.set(key, value).save();
+      await db.set(key instanceof Array ? key.join(".") : key, value).save();
     },
   };
 };
