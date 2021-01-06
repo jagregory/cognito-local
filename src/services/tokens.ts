@@ -21,7 +21,7 @@ export function generateTokens(
   userPoolId: string
 ) {
   const eventId = uuid.v4();
-  const authTime = new Date().getTime();
+  const authTime = Math.floor(new Date().getTime() / 1000);
 
   return {
     AccessToken: jwt.sign(
