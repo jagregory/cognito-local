@@ -354,7 +354,7 @@ describe("InitiateAuth target", () => {
               username: "0000-0000",
               event_id: expect.stringMatching(UUID),
               scope: "aws.cognito.signin.user.admin", // TODO: scopes
-              auth_time: now.getTime(),
+              auth_time: Math.floor(now.getTime() / 1000),
               jti: expect.stringMatching(UUID),
             });
             expect(
@@ -380,7 +380,7 @@ describe("InitiateAuth target", () => {
               "cognito:username": "0000-0000",
               email_verified: true,
               event_id: expect.stringMatching(UUID),
-              auth_time: now.getTime(),
+              auth_time: Math.floor(now.getTime() / 1000),
               email: "example@example.com",
             });
             expect(
@@ -436,7 +436,7 @@ describe("InitiateAuth target", () => {
             username: "0000-0000",
             event_id: expect.stringMatching(UUID),
             scope: "aws.cognito.signin.user.admin", // TODO: scopes
-            auth_time: now.getTime(),
+            auth_time: Math.floor(now.getTime() / 1000),
             jti: expect.stringMatching(UUID),
           });
           expect(
@@ -458,7 +458,7 @@ describe("InitiateAuth target", () => {
             "cognito:username": "0000-0000",
             email_verified: true,
             event_id: expect.stringMatching(UUID),
-            auth_time: now.getTime(),
+            auth_time: Math.floor(now.getTime() / 1000),
             email: "example@example.com",
           });
           expect(
