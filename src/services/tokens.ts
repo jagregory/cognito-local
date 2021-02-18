@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { loadConfig } from "../server/config";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { User } from "./userPoolClient";
+
+export interface TokenConfig {
+  IssuerDomain?: string;
+}
 
 export interface Token {
   client_id: string;
@@ -15,13 +20,14 @@ export interface Token {
   jti: string;
 }
 
-export function generateTokens(
+export async function generateTokens(
   user: User,
   clientId: string,
   userPoolId: string
 ) {
   const eventId = uuid.v4();
   const authTime = new Date().getTime();
+  const config = await loadConfig();
 
   return {
     AccessToken: jwt.sign(
@@ -38,7 +44,7 @@ export function generateTokens(
       PrivateKey.pem,
       {
         algorithm: "RS256",
-        issuer: `http://localhost:9229/${userPoolId}`,
+        issuer: `${config.TokenConfig.IssuerDomain}/${userPoolId}`,
         expiresIn: "24h",
         keyid: "CognitoLocal",
       }
