@@ -8806,10 +8806,10 @@ stealthy-require@^1.1.1:
   resolved "https://registry.yarnpkg.com/stealthy-require/-/stealthy-require-1.1.1.tgz#35b09875b4ff49f26a777e509b3090a3226bf24b"
   integrity sha1-NbCYdbT/SfJqd35QmzCQoyJr8ks=
 
-stormdb@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/stormdb/-/stormdb-0.3.0.tgz#7ecdffbf8f59709508e7126c1d581ea866749476"
-  integrity sha512-cpziMPVMlyizwlkryn5h8FD9rj3RezZ0PAOj2Skj+48Mdv1fJffjOO2xzlGSNisseUVhxRsrfPL/H4P06n3fBQ==
+stormdb@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/stormdb/-/stormdb-0.4.1.tgz#00e0049da6408eacace5a3e97a54cb3fbb035cdd"
+  integrity sha512-syYUq/lhwT82HZSyHFsy1kqV6ibLIJWEg55O2rHfxW87MS16zhIK7tanhfC2Ihz1So5bgZxrqultLIgisGf74w==
 
 stream-combiner2@~1.1.1:
   version "1.1.1"

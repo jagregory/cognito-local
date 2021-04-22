@@ -9,6 +9,7 @@ export interface DataStore {
   get<T>(key: string | string[]): Promise<T | null>;
   get<T>(key: string | string[], defaultValue: T): Promise<T>;
   set<T>(key: string | string[], value: T): Promise<void>;
+  setValue<T>(value: T, pointers: string[]): Promise<void>;
 }
 
 export type CreateDataStore = (
@@ -48,6 +49,11 @@ export const createDataStore: CreateDataStore = async (
 
     async set(key, value) {
       await db.set(key, value).save();
+    },
+
+    async setValue(value, pointers) {
+      db.setValue(value, pointers);
+      await db.save();
     },
   };
 };

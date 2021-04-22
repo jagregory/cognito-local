@@ -12,6 +12,7 @@ describe("Cognito Client", () => {
   beforeEach(() => {
     mockDataStore = {
       set: jest.fn(),
+      setValue: jest.fn(),
       get: jest.fn(),
       getRoot: jest.fn(),
     };

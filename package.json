@@ -63,7 +63,7 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "short-uuid": "^3.1.1",
-    "stormdb": "^0.3.0",
+    "stormdb": "^0.4.1",
     "uuid": "^7.0.3"
   },
   "nodemonConfig": {

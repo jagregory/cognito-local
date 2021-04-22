@@ -22,11 +22,13 @@ describe("User Pool Client", () => {
 
     mockClientsDataStore = {
       set: jest.fn(),
+      setValue: jest.fn(),
       get: jest.fn(),
       getRoot: jest.fn(),
     };
     mockDataStore = {
       set: jest.fn(),
+      setValue: jest.fn(),
       get: jest.fn(),
       getRoot: jest.fn(),
     };
