@@ -1,4 +1,5 @@
 import { Services } from "../services";
+import { User } from "../services/userPoolClient";
 
 interface Input {
   UserPoolId: string;
@@ -9,7 +10,11 @@ interface Input {
   DesiredDeliveryMediums?: any;
 }
 
-export type AdminCreateUserTarget = (body: Input) => Promise<null>;
+interface Output {
+  User: User;
+}
+
+export type AdminCreateUserTarget = (body: Input) => Promise<User | null>;
 
 export const AdminCreateUser = ({
   cognitoClient,
@@ -17,7 +22,7 @@ export const AdminCreateUser = ({
   const { UserPoolId, Username, TemporaryPassword, UserAttributes } =
     body || {};
   const userPool = await cognitoClient.getUserPool(UserPoolId);
-  await userPool.saveUser({
+  const user: User = {
     Username,
     Password: TemporaryPassword,
     Attributes: UserAttributes,
@@ -26,7 +31,8 @@ export const AdminCreateUser = ({
     ConfirmationCode: undefined,
     UserCreateDate: new Date().getTime(),
     UserLastModifiedDate: new Date().getTime(),
-  });
-  // TODO: Anything to return?
-  return null;
+  };
+  await userPool.saveUser(user);
+  // TODO: Shuldn't return password.
+  return user;
 };

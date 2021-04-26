@@ -4,6 +4,7 @@ import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateUserPoolClient } from "./createUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
+import { ChangePassword } from "./changePassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListUsers } from "./listUsers";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
@@ -12,12 +13,15 @@ import { GetUser } from "./getUser";
 import { AdminCreateUser } from "./adminCreateUser";
 import { AdminGetUser } from "./adminGetUser";
 import { AdminDeleteUser } from "./adminDeleteUser";
+import { AdminConfirmSignUp } from "./adminConfirmSignUp";
+import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
 
 export const Targets = {
   ConfirmForgotPassword,
   ConfirmSignUp,
   CreateUserPoolClient,
   ForgotPassword,
+  ChangePassword,
   InitiateAuth,
   ListUsers,
   RespondToAuthChallenge,
@@ -26,6 +30,8 @@ export const Targets = {
   AdminCreateUser,
   AdminGetUser,
   AdminDeleteUser,
+  AdminConfirmSignUp,
+  AdminUpdateUserAttributes,
 };
 
 type TargetName = keyof typeof Targets;
