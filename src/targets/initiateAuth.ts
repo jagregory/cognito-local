@@ -4,7 +4,8 @@ import {
   PasswordResetRequiredError,
   UnsupportedError,
 } from "../errors";
-import { CodeDelivery, Services, UserPoolClient } from "../services";
+import { MessageDelivery, Services, UserPoolClient } from "../services";
+import { Messages } from "../services/messages";
 import { generateTokens } from "../services/tokens";
 import { attributeValue, User } from "../services/userPoolClient";
 
@@ -42,10 +43,11 @@ export type InitiateAuthTarget = (body: Input) => Promise<Output>;
 
 const verifyMfaChallenge = async (
   otp: () => string,
+  messages: Messages,
   user: User,
   body: Input,
   userPool: UserPoolClient,
-  codeDelivery: CodeDelivery
+  messageDelivery: MessageDelivery
 ): Promise<SmsMfaOutput> => {
   if (!user.MFAOptions?.length) {
     throw new NotAuthorizedError();
@@ -64,10 +66,15 @@ const verifyMfaChallenge = async (
   }
 
   const code = otp();
-  await codeDelivery(code, user, {
-    ...smsMfaOption,
-    Destination: deliveryDestination,
-  });
+  const message = await messages.authentication(code);
+  await messageDelivery(
+    user,
+    {
+      ...smsMfaOption,
+      Destination: deliveryDestination,
+    },
+    message
+  );
 
   await userPool.saveUser({
     ...user,
@@ -97,7 +104,8 @@ const verifyPasswordChallenge = (
 });
 
 export const InitiateAuth = ({
-  codeDelivery,
+  messageDelivery,
+  messages,
   cognitoClient,
   otp,
   triggers,
@@ -139,7 +147,14 @@ export const InitiateAuth = ({
       (user.MFAOptions ?? []).length > 0) ||
     userPool.config.MfaConfiguration === "ON"
   ) {
-    return verifyMfaChallenge(otp, user, body, userPool, codeDelivery);
+    return verifyMfaChallenge(
+      otp,
+      messages,
+      user,
+      body,
+      userPool,
+      messageDelivery
+    );
   }
 
   return verifyPasswordChallenge(user, body, userPool);

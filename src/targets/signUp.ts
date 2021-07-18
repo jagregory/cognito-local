@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import { UsernameExistsError } from "../errors";
 import { Services } from "../services";
-import { DeliveryDetails } from "../services/codeDelivery/codeDelivery";
+import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import { User } from "../services/userPoolClient";
 
 interface Input {
@@ -25,7 +25,8 @@ export type SignUpTarget = (body: Input) => Promise<Output>;
 
 export const SignUp = ({
   cognitoClient,
-  codeDelivery,
+  messageDelivery,
+  messages,
   otp,
 }: Services): SignUpTarget => async (body) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
@@ -56,7 +57,8 @@ export const SignUp = ({
   };
 
   const code = otp();
-  await codeDelivery(code, user, deliveryDetails);
+  const message = await messages.signUp(code);
+  await messageDelivery(user, deliveryDetails, message);
 
   await userPool.saveUser({
     ...user,

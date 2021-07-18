@@ -13,7 +13,9 @@ export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 export const ConfirmSignUp = ({
   cognitoClient,
   triggers,
-}: Services): ConfirmSignUpTarget => async (body) => {
+}: Pick<Services, "cognitoClient" | "triggers">): ConfirmSignUpTarget => async (
+  body
+) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
 

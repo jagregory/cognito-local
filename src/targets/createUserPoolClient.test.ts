@@ -1,7 +1,6 @@
 import { advanceTo } from "jest-date-mock";
 import { CognitoClient, UserPoolClient } from "../services";
 import { AppClient } from "../services/appClient";
-import { Triggers } from "../services/triggers";
 import {
   CreateUserPoolClient,
   CreateUserPoolClientTarget,
@@ -11,8 +10,6 @@ describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
-  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -32,17 +29,9 @@ describe("CreateUserPoolClient target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
-    mockTriggers = {
-      enabled: jest.fn(),
-      postConfirmation: jest.fn(),
-      userMigration: jest.fn(),
-    };
 
     createUserPoolClient = CreateUserPoolClient({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
-      triggers: mockTriggers,
     });
   });
 

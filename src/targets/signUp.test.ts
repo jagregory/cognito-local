@@ -1,6 +1,7 @@
 import { advanceTo } from "jest-date-mock";
 import { UsernameExistsError } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
+import { Messages } from "../services/messages";
 import { Triggers } from "../services/triggers";
 import { SignUp, SignUpTarget } from "./signUp";
 
@@ -10,7 +11,8 @@ describe("SignUp target", () => {
   let signUp: SignUpTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mock;
+  let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -32,7 +34,14 @@ describe("SignUp target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
+    mockMessageDelivery = jest.fn();
+    mockMessages = {
+      authentication: jest.fn(),
+      forgotPassword: jest.fn(),
+      signUp: jest.fn().mockResolvedValue({
+        emailSubject: "Mock message",
+      }),
+    };
     mockOtp = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
@@ -42,7 +51,8 @@ describe("SignUp target", () => {
 
     signUp = SignUp({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
+      messageDelivery: mockMessageDelivery,
+      messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
     });
@@ -101,8 +111,7 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockCodeDelivery).toHaveBeenCalledWith(
-      "1234",
+    expect(mockMessageDelivery).toHaveBeenCalledWith(
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,
@@ -116,7 +125,8 @@ describe("SignUp target", () => {
         AttributeName: "email",
         DeliveryMedium: "EMAIL",
         Destination: "example@example.com",
-      }
+      },
+      { emailSubject: "Mock message" }
     );
   });
 

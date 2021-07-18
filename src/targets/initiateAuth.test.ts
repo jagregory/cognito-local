@@ -7,6 +7,7 @@ import {
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import { CognitoClient, UserPoolClient } from "../services";
+import { Messages } from "../services/messages";
 import { Triggers } from "../services/triggers";
 import { User } from "../services/userPoolClient";
 import {
@@ -22,7 +23,8 @@ describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mock;
+  let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -44,7 +46,14 @@ describe("InitiateAuth target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
+    mockMessageDelivery = jest.fn();
+    mockMessages = {
+      authentication: jest.fn().mockResolvedValue({
+        emailSubject: "Mock message",
+      }),
+      forgotPassword: jest.fn(),
+      signUp: jest.fn(),
+    };
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = {
       enabled: jest.fn(),
@@ -54,7 +63,8 @@ describe("InitiateAuth target", () => {
 
     initiateAuth = InitiateAuth({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
+      messageDelivery: mockMessageDelivery,
+      messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
     });
@@ -207,11 +217,15 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockCodeDelivery).toHaveBeenCalledWith("1234", user, {
-              AttributeName: "phone_number",
-              DeliveryMedium: "SMS",
-              Destination: "0411000111",
-            });
+            expect(mockMessageDelivery).toHaveBeenCalledWith(
+              user,
+              {
+                AttributeName: "phone_number",
+                DeliveryMedium: "SMS",
+                Destination: "0411000111",
+              },
+              { emailSubject: "Mock message" }
+            );
 
             // also saves the code on the user for comparison later
             expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
@@ -296,11 +310,15 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockCodeDelivery).toHaveBeenCalledWith("1234", user, {
-              AttributeName: "phone_number",
-              DeliveryMedium: "SMS",
-              Destination: "0411000111",
-            });
+            expect(mockMessageDelivery).toHaveBeenCalledWith(
+              user,
+              {
+                AttributeName: "phone_number",
+                DeliveryMedium: "SMS",
+                Destination: "0411000111",
+              },
+              { emailSubject: "Mock message" }
+            );
 
             // also saves the code on the user for comparison later
             expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({

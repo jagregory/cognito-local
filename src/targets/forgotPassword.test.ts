@@ -1,6 +1,7 @@
 import { advanceTo } from "jest-date-mock";
 import { UserNotFoundError } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
+import { Messages } from "../services/messages";
 import { Triggers } from "../services/triggers";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
 
@@ -8,7 +9,8 @@ describe("ForgotPassword target", () => {
   let forgotPassword: ForgotPasswordTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mock;
+  let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
@@ -30,7 +32,14 @@ describe("ForgotPassword target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
+    mockMessageDelivery = jest.fn();
+    mockMessages = {
+      authentication: jest.fn(),
+      forgotPassword: jest.fn().mockResolvedValue({
+        emailSubject: "Mock message",
+      }),
+      signUp: jest.fn(),
+    };
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = {
       enabled: jest.fn(),
@@ -40,7 +49,8 @@ describe("ForgotPassword target", () => {
 
     forgotPassword = ForgotPassword({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
+      messageDelivery: mockMessageDelivery,
+      messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
     });
@@ -73,8 +83,7 @@ describe("ForgotPassword target", () => {
       Username: "0000-0000",
     });
 
-    expect(mockCodeDelivery).toHaveBeenCalledWith(
-      "1234",
+    expect(mockMessageDelivery).toHaveBeenCalledWith(
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,
@@ -88,7 +97,8 @@ describe("ForgotPassword target", () => {
         AttributeName: "email",
         DeliveryMedium: "EMAIL",
         Destination: "example@example.com",
-      }
+      },
+      { emailSubject: "Mock message" }
     );
 
     expect(result).toEqual({

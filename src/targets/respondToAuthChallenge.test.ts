@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import { CognitoClient, UserPoolClient } from "../services";
-import { Triggers } from "../services/triggers";
 import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
@@ -15,8 +14,6 @@ describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
-  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -36,17 +33,9 @@ describe("RespondToAuthChallenge target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
-    mockTriggers = {
-      enabled: jest.fn(),
-      postConfirmation: jest.fn(),
-      userMigration: jest.fn(),
-    };
 
     respondToAuthChallenge = RespondToAuthChallenge({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
-      triggers: mockTriggers,
     });
   });
 

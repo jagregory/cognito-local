@@ -1,8 +1,9 @@
 import log from "../log";
-import { createCodeDelivery } from "../services";
-import { ConsoleCodeSender } from "../services/codeDelivery/consoleCodeSender";
+import { createMessageDelivery } from "../services";
+import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { createDataStore } from "../services/dataStore";
 import { createLambda } from "../services/lambda";
+import { createMessages } from "../services/messages";
 import { otp } from "../services/otp";
 import { createTriggers } from "../services/triggers";
 import { createCognitoClient } from "../services/cognitoClient";
@@ -29,8 +30,9 @@ export const createDefaultServer = async (): Promise<Server> => {
     cognitoClient,
   });
   const router = Router({
-    codeDelivery: createCodeDelivery(ConsoleCodeSender),
     cognitoClient,
+    messageDelivery: createMessageDelivery(ConsoleMessageSender),
+    messages: createMessages(),
     otp,
     triggers,
   });

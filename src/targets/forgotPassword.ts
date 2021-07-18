@@ -1,6 +1,6 @@
 import { UserNotFoundError } from "../errors";
 import { Services } from "../services";
-import { DeliveryDetails } from "../services/codeDelivery/codeDelivery";
+import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 
 interface Input {
   ClientId: string;
@@ -15,7 +15,8 @@ export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
 
 export const ForgotPassword = ({
   cognitoClient,
-  codeDelivery,
+  messageDelivery,
+  messages,
   otp,
 }: Services): ForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
@@ -33,7 +34,8 @@ export const ForgotPassword = ({
   };
 
   const code = otp();
-  await codeDelivery(code, user, deliveryDetails);
+  const message = await messages.forgotPassword(code);
+  await messageDelivery(user, deliveryDetails, message);
 
   await userPool.saveUser({
     ...user,

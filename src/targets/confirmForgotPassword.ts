@@ -13,7 +13,10 @@ export type ConfirmForgotPasswordTarget = (body: Input) => Promise<{}>;
 export const ConfirmForgotPassword = ({
   cognitoClient,
   triggers,
-}: Services): ConfirmForgotPasswordTarget => async (body) => {
+}: Pick<
+  Services,
+  "cognitoClient" | "triggers"
+>): ConfirmForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
 

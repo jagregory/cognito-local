@@ -27,7 +27,7 @@ export type ListUsersTarget = (body: Input) => Promise<Output>;
 
 export const ListUsers = ({
   cognitoClient,
-}: Services): ListUsersTarget => async (body) => {
+}: Pick<Services, "cognitoClient">): ListUsersTarget => async (body) => {
   const userPool = await cognitoClient.getUserPool(body.UserPoolId);
   const users = await userPool.listUsers();
 

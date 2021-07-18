@@ -17,9 +17,9 @@ interface Output {
 
 export type GetUserTarget = (body: Input) => Promise<Output | null>;
 
-export const GetUser = ({ cognitoClient }: Services): GetUserTarget => async (
-  body
-) => {
+export const GetUser = ({
+  cognitoClient,
+}: Pick<Services, "cognitoClient">): GetUserTarget => async (body) => {
   const decodedToken = jwt.decode(body.AccessToken) as Token | null;
   if (!decodedToken) {
     log.info("Unable to decode token");

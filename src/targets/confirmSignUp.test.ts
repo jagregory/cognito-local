@@ -8,7 +8,6 @@ describe("ConfirmSignUp target", () => {
   let confirmSignUp: ConfirmSignUpTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
@@ -29,7 +28,6 @@ describe("ConfirmSignUp target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
       postConfirmation: jest.fn(),
@@ -38,7 +36,6 @@ describe("ConfirmSignUp target", () => {
 
     confirmSignUp = ConfirmSignUp({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
       triggers: mockTriggers,
     });
   });

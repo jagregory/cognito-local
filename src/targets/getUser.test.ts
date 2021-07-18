@@ -4,15 +4,12 @@ import * as uuid from "uuid";
 import { InvalidParameterError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { CognitoClient, UserPoolClient } from "../services";
-import { Triggers } from "../services/triggers";
 import { GetUser, GetUserTarget } from "./getUser";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockCodeDelivery: jest.Mock;
-  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -32,17 +29,9 @@ describe("GetUser target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockCodeDelivery = jest.fn();
-    mockTriggers = {
-      enabled: jest.fn(),
-      postConfirmation: jest.fn(),
-      userMigration: jest.fn(),
-    };
 
     getUser = GetUser({
       cognitoClient: mockCognitoClient,
-      codeDelivery: mockCodeDelivery,
-      triggers: mockTriggers,
     });
   });
 

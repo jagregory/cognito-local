@@ -2,11 +2,13 @@ import * as AWS from "aws-sdk";
 import fs from "fs";
 import http from "http";
 import { promisify } from "util";
-import { createServer } from "../../src/server";
-import { CodeDelivery } from "../../src/services";
+import { createServer } from "../../src";
+import { MessageDelivery } from "../../src/services";
 import { createCognitoClient } from "../../src/services/cognitoClient";
 import { createDataStore, CreateDataStore } from "../../src/services/dataStore";
 import { Lambda } from "../../src/services/lambda";
+import { createMessages } from "../../src/services/messages";
+import { otp } from "../../src/services/otp";
 import { createTriggers } from "../../src/services/triggers";
 import { createUserPoolClient } from "../../src/services/userPoolClient";
 import { Router } from "../../src/targets/router";
@@ -41,11 +43,13 @@ export const withCognitoSdk = (
       lambda: mockLambda,
       cognitoClient,
     });
-    const mockCodeDelivery: jest.MockedFunction<CodeDelivery> = jest.fn();
+    const mockCodeDelivery: jest.MockedFunction<MessageDelivery> = jest.fn();
 
     const router = Router({
-      codeDelivery: mockCodeDelivery,
       cognitoClient,
+      messageDelivery: mockCodeDelivery,
+      messages: createMessages(),
+      otp,
       triggers,
     });
     const server = createServer(router);
