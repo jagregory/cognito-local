@@ -16,6 +16,7 @@ export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
 export const ForgotPassword = ({
   cognitoClient,
   codeDelivery,
+  otp,
 }: Services): ForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
@@ -31,7 +32,8 @@ export const ForgotPassword = ({
     )[0],
   };
 
-  const code = await codeDelivery(user, deliveryDetails);
+  const code = otp();
+  await codeDelivery(code, user, deliveryDetails);
 
   await userPool.saveUser({
     ...user,

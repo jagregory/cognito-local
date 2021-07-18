@@ -9,5 +9,6 @@ export { createCodeDelivery, CodeDelivery } from "./codeDelivery/codeDelivery";
 export interface Services {
   cognitoClient: CognitoClient;
   codeDelivery: CodeDelivery;
+  otp: () => string;
   triggers: Triggers;
 }

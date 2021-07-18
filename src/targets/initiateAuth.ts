@@ -41,6 +41,7 @@ export type Output = SmsMfaOutput | PasswordVerifierOutput;
 export type InitiateAuthTarget = (body: Input) => Promise<Output>;
 
 const verifyMfaChallenge = async (
+  otp: () => string,
   user: User,
   body: Input,
   userPool: UserPoolClient,
@@ -62,7 +63,8 @@ const verifyMfaChallenge = async (
     throw new UnsupportedError(`SMS_MFA without ${smsMfaOption.AttributeName}`);
   }
 
-  const code = await codeDelivery(user, {
+  const code = otp();
+  await codeDelivery(code, user, {
     ...smsMfaOption,
     Destination: deliveryDestination,
   });
@@ -97,6 +99,7 @@ const verifyPasswordChallenge = (
 export const InitiateAuth = ({
   codeDelivery,
   cognitoClient,
+  otp,
   triggers,
 }: Services): InitiateAuthTarget => async (body) => {
   if (body.AuthFlow !== "USER_PASSWORD_AUTH") {
@@ -136,7 +139,7 @@ export const InitiateAuth = ({
       (user.MFAOptions ?? []).length > 0) ||
     userPool.config.MfaConfiguration === "ON"
   ) {
-    return verifyMfaChallenge(user, body, userPool, codeDelivery);
+    return verifyMfaChallenge(otp, user, body, userPool, codeDelivery);
   }
 
   return verifyPasswordChallenge(user, body, userPool);

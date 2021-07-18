@@ -19,10 +19,10 @@ describe("Code Delivery", () => {
         sendEmail: jest.fn(),
         sendSms: jest.fn(),
       };
-      const otp = () => "1234";
-      const codeDelivery = createCodeDelivery(sender, otp);
+      const code = "1234";
+      const codeDelivery = createCodeDelivery(sender);
 
-      const code = await codeDelivery(user, {
+      await codeDelivery(code, user, {
         Destination: "example@example.com",
         DeliveryMedium: "EMAIL",
         AttributeName: "email",
@@ -44,10 +44,10 @@ describe("Code Delivery", () => {
         sendEmail: jest.fn(),
         sendSms: jest.fn(),
       };
-      const otp = () => "1234";
-      const codeDelivery = createCodeDelivery(sender, otp);
+      const code = "1234";
+      const codeDelivery = createCodeDelivery(sender);
 
-      const code = await codeDelivery(user, {
+      await codeDelivery(code, user, {
         Destination: "0123445670",
         DeliveryMedium: "SMS",
         AttributeName: "phone_number",

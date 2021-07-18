@@ -1,4 +1,4 @@
-import { Services, CognitoClient } from "../index";
+import { CognitoClient } from "../index";
 import { Lambda } from "../lambda";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";

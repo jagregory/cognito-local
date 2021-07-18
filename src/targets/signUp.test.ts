@@ -11,6 +11,7 @@ describe("SignUp target", () => {
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
+  let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
@@ -32,6 +33,7 @@ describe("SignUp target", () => {
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
+    mockOtp = jest.fn();
     mockTriggers = {
       enabled: jest.fn(),
       postConfirmation: jest.fn(),
@@ -41,6 +43,7 @@ describe("SignUp target", () => {
     signUp = SignUp({
       cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
+      otp: mockOtp,
       triggers: mockTriggers,
     });
   });
@@ -89,7 +92,7 @@ describe("SignUp target", () => {
 
   it("sends a confirmation code to the user's email address", async () => {
     mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
-    mockCodeDelivery.mockResolvedValue("1234");
+    mockOtp.mockReturnValue("1234");
 
     await signUp({
       ClientId: "clientId",
@@ -99,6 +102,7 @@ describe("SignUp target", () => {
     });
 
     expect(mockCodeDelivery).toHaveBeenCalledWith(
+      "1234",
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,
@@ -118,7 +122,7 @@ describe("SignUp target", () => {
 
   it("saves the confirmation code on the user for comparison when confirming", async () => {
     mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
-    mockCodeDelivery.mockResolvedValue("1234");
+    mockOtp.mockReturnValue("1234");
 
     await signUp({
       ClientId: "clientId",

@@ -26,6 +26,7 @@ export type SignUpTarget = (body: Input) => Promise<Output>;
 export const SignUp = ({
   cognitoClient,
   codeDelivery,
+  otp,
 }: Services): SignUpTarget => async (body) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
   // is enabled on the user pool. This will be the default after Feb 2020.
@@ -54,7 +55,8 @@ export const SignUp = ({
     )[0],
   };
 
-  const code = await codeDelivery(user, deliveryDetails);
+  const code = otp();
+  await codeDelivery(code, user, deliveryDetails);
 
   await userPool.saveUser({
     ...user,

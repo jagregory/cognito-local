@@ -23,6 +23,7 @@ describe("InitiateAuth target", () => {
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
+  let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
@@ -44,6 +45,7 @@ describe("InitiateAuth target", () => {
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
+    mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = {
       enabled: jest.fn(),
       postConfirmation: jest.fn(),
@@ -53,6 +55,7 @@ describe("InitiateAuth target", () => {
     initiateAuth = InitiateAuth({
       cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
+      otp: mockOtp,
       triggers: mockTriggers,
     });
   });
@@ -191,8 +194,6 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            mockCodeDelivery.mockResolvedValue("abc");
-
             const output = (await initiateAuth({
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
@@ -206,7 +207,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockCodeDelivery).toHaveBeenCalledWith(user, {
+            expect(mockCodeDelivery).toHaveBeenCalledWith("1234", user, {
               AttributeName: "phone_number",
               DeliveryMedium: "SMS",
               Destination: "0411000111",
@@ -215,7 +216,7 @@ describe("InitiateAuth target", () => {
             // also saves the code on the user for comparison later
             expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
               ...user,
-              MFACode: "abc",
+              MFACode: "1234",
             });
           });
         });
@@ -282,8 +283,6 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            mockCodeDelivery.mockResolvedValue("abc");
-
             const output = (await initiateAuth({
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
@@ -297,7 +296,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockCodeDelivery).toHaveBeenCalledWith(user, {
+            expect(mockCodeDelivery).toHaveBeenCalledWith("1234", user, {
               AttributeName: "phone_number",
               DeliveryMedium: "SMS",
               Destination: "0411000111",
@@ -306,7 +305,7 @@ describe("InitiateAuth target", () => {
             // also saves the code on the user for comparison later
             expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
               ...user,
-              MFACode: "abc",
+              MFACode: "1234",
             });
           });
         });

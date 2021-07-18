@@ -9,6 +9,7 @@ describe("ForgotPassword target", () => {
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockCodeDelivery: jest.Mock;
+  let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
@@ -30,6 +31,7 @@ describe("ForgotPassword target", () => {
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
     mockCodeDelivery = jest.fn();
+    mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = {
       enabled: jest.fn(),
       postConfirmation: jest.fn(),
@@ -39,6 +41,7 @@ describe("ForgotPassword target", () => {
     forgotPassword = ForgotPassword({
       cognitoClient: mockCognitoClient,
       codeDelivery: mockCodeDelivery,
+      otp: mockOtp,
       triggers: mockTriggers,
     });
   });
@@ -64,7 +67,6 @@ describe("ForgotPassword target", () => {
       UserStatus: "CONFIRMED",
       Username: "0000-0000",
     });
-    mockCodeDelivery.mockResolvedValue("1234");
 
     const result = await forgotPassword({
       ClientId: "clientId",
@@ -72,6 +74,7 @@ describe("ForgotPassword target", () => {
     });
 
     expect(mockCodeDelivery).toHaveBeenCalledWith(
+      "1234",
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,
@@ -107,7 +110,6 @@ describe("ForgotPassword target", () => {
       UserStatus: "CONFIRMED",
       Username: "0000-0000",
     });
-    mockCodeDelivery.mockResolvedValue("1234");
 
     await forgotPassword({
       ClientId: "clientId",
