@@ -53,7 +53,7 @@ export const withCognitoSdk = (
       {
         cognitoClient,
         messageDelivery: mockCodeDelivery,
-        messages: new MessagesService(),
+        messages: new MessagesService(triggers),
         otp,
         triggers,
       },

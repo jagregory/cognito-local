@@ -50,6 +50,7 @@ describe("SignUp target", () => {
     };
     mockOtp = jest.fn();
     mockTriggers = {
+      customMessage: jest.fn(),
       enabled: jest.fn(),
       postConfirmation: jest.fn(),
       userMigration: jest.fn(),

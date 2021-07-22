@@ -29,6 +29,7 @@ describe("ConfirmSignUp target", () => {
     };
     mockTriggers = {
       enabled: jest.fn(),
+      customMessage: jest.fn(),
       postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };

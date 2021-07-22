@@ -37,7 +37,12 @@ export const ForgotPassword = ({
   };
 
   const code = otp();
-  const message = await messages.forgotPassword(code);
+  const message = await messages.forgotPassword(
+    body.ClientId,
+    userPool.config.Id,
+    user,
+    code
+  );
   await messageDelivery.deliver(user, deliveryDetails, message);
 
   await userPool.saveUser({

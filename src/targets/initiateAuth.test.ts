@@ -63,6 +63,7 @@ describe("InitiateAuth target", () => {
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = {
       enabled: jest.fn(),
+      customMessage: jest.fn(),
       postConfirmation: jest.fn(),
       userMigration: jest.fn(),
     };

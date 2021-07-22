@@ -39,7 +39,7 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
       messageDelivery: new MessageDeliveryService(
         new ConsoleMessageSender(logger)
       ),
-      messages: new MessagesService(),
+      messages: new MessagesService(triggers),
       otp,
       triggers,
     },

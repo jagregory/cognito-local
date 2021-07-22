@@ -5,6 +5,22 @@ import { UnexpectedLambdaExceptionError } from "../errors";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
 import { Logger } from "../log";
 
+interface CustomMessageEvent {
+  userPoolId: string;
+  clientId: string;
+  username: string;
+  code: string;
+  userAttributes: Record<string, string>;
+  triggerSource:
+    | "CustomMessage_SignUp"
+    | "CustomMessage_AdminCreateUser"
+    | "CustomMessage_ResendCode"
+    | "CustomMessage_ForgotPassword"
+    | "CustomMessage_UpdateUserAttribute"
+    | "CustomMessage_VerifyUserAttribute"
+    | "CustomMessage_Authentication";
+}
+
 interface UserMigrationEvent {
   userPoolId: string;
   clientId: string;
@@ -27,6 +43,7 @@ interface PostConfirmationEvent {
 export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
 
 export interface FunctionConfig {
+  CustomMessage?: string;
   UserMigration?: string;
   PostConfirmation?: string;
 }
@@ -34,8 +51,16 @@ export interface FunctionConfig {
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
   invoke(
-    trigger: keyof FunctionConfig,
-    event: UserMigrationEvent | PostConfirmationEvent
+    lambda: "CustomMessage",
+    event: CustomMessageEvent
+  ): Promise<CognitoUserPoolResponse>;
+  invoke(
+    lambda: "UserMigration",
+    event: UserMigrationEvent
+  ): Promise<CognitoUserPoolResponse>;
+  invoke(
+    lambda: "PostConfirmation",
+    event: PostConfirmationEvent
   ): Promise<CognitoUserPoolResponse>;
 }
 
@@ -60,8 +85,8 @@ export class LambdaService implements Lambda {
 
   public async invoke(
     trigger: keyof FunctionConfig,
-    event: UserMigrationEvent | PostConfirmationEvent
-  ): Promise<CognitoUserPoolResponse> {
+    event: CustomMessageEvent | UserMigrationEvent | PostConfirmationEvent
+  ) {
     const functionName = this.config[trigger];
     if (!functionName) {
       throw new Error(`${trigger} trigger not configured`);
@@ -86,6 +111,17 @@ export class LambdaService implements Lambda {
     if (event.triggerSource === "UserMigration_Authentication") {
       lambdaEvent.request.password = event.password;
       lambdaEvent.request.validationData = {};
+    } else if (
+      event.triggerSource === "CustomMessage_SignUp" ||
+      event.triggerSource === "CustomMessage_AdminCreateUser" ||
+      event.triggerSource === "CustomMessage_ResendCode" ||
+      event.triggerSource === "CustomMessage_ForgotPassword" ||
+      event.triggerSource === "CustomMessage_UpdateUserAttribute" ||
+      event.triggerSource === "CustomMessage_VerifyUserAttribute" ||
+      event.triggerSource === "CustomMessage_Authentication"
+    ) {
+      lambdaEvent.request.usernameParameter = event.username;
+      lambdaEvent.request.codeParameter = event.code;
     }
 
     this.logger.debug(
