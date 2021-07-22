@@ -5,7 +5,9 @@
     "@semantic-release/changelog",
     "@semantic-release/npm",
     "@codedependant/semantic-release-docker",
-    "@semantic-release/github",
+    ["@semantic-release/github", {
+      "addReleases": "top"
+    }],
     ["@semantic-release/git", {
       "assets": ["CHANGELOG.md"],
     }]
