@@ -1,13 +1,14 @@
 import { advanceTo } from "jest-date-mock";
+import { ResourceNotFoundError } from "../errors";
 import { CognitoClient, UserPoolClient } from "../services";
 import { AppClient } from "../services/appClient";
 import {
-  CreateUserPoolClient,
-  CreateUserPoolClientTarget,
-} from "./createUserPoolClient";
+  DescribeUserPoolClient,
+  DescribeUserPoolClientTarget,
+} from "./describeUserPoolClient";
 
-describe("CreateUserPoolClient target", () => {
-  let createUserPoolClient: CreateUserPoolClientTarget;
+describe("DescribeUserPoolClient target", () => {
+  let describeUserPoolClient: DescribeUserPoolClientTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let now: Date;
@@ -31,13 +32,13 @@ describe("CreateUserPoolClient target", () => {
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
 
-    createUserPoolClient = CreateUserPoolClient({
+    describeUserPoolClient = DescribeUserPoolClient({
       cognitoClient: mockCognitoClient,
     });
   });
 
-  it("creates a new app client", async () => {
-    const createdAppClient: AppClient = {
+  it("returns an existing app client", async () => {
+    const existingAppClient: AppClient = {
       RefreshTokenValidity: 30,
       AllowedOAuthFlowsUserPoolClient: false,
       LastModifiedDate: new Date().getTime(),
@@ -46,17 +47,24 @@ describe("CreateUserPoolClient target", () => {
       ClientId: "abc",
       ClientName: "clientName",
     };
-    mockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
+    mockCognitoClient.getAppClient.mockResolvedValue(existingAppClient);
 
-    const result = await createUserPoolClient({
-      ClientName: "clientName",
+    const result = await describeUserPoolClient({
+      ClientId: "abc",
       UserPoolId: "userPoolId",
     });
 
-    expect(mockUserPoolClient.createAppClient).toHaveBeenCalledWith(
-      "clientName"
-    );
+    expect(result).toEqual({ UserPoolClient: existingAppClient });
+  });
 
-    expect(result).toEqual({ UserPoolClient: createdAppClient });
+  it("throws resource not found for an invalid app client", async () => {
+    mockCognitoClient.getAppClient.mockResolvedValue(null);
+
+    await expect(
+      describeUserPoolClient({
+        ClientId: "abc",
+        UserPoolId: "userPoolId",
+      })
+    ).rejects.toEqual(new ResourceNotFoundError());
   });
 });

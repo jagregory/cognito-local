@@ -35,6 +35,7 @@ describe("SignUp target", () => {
       saveUser: jest.fn(),
     };
     mockCognitoClient = {
+      getAppClient: jest.fn(),
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };

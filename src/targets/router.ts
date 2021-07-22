@@ -4,6 +4,7 @@ import { UnsupportedError } from "../errors";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateUserPoolClient } from "./createUserPoolClient";
+import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListUsers } from "./listUsers";
@@ -15,12 +16,13 @@ export const Targets = {
   ConfirmForgotPassword,
   ConfirmSignUp,
   CreateUserPoolClient,
+  DescribeUserPoolClient,
   ForgotPassword,
+  GetUser,
   InitiateAuth,
   ListUsers,
   RespondToAuthChallenge,
   SignUp,
-  GetUser,
 };
 
 type TargetName = keyof typeof Targets;
