@@ -4,8 +4,12 @@ import {
   PasswordResetRequiredError,
   UnsupportedError,
 } from "../errors";
-import { MessageDelivery, Services, UserPoolClient } from "../services";
-import { Messages } from "../services/messages";
+import {
+  MessageDelivery,
+  Messages,
+  Services,
+  UserPoolClient,
+} from "../services";
 import { generateTokens } from "../services/tokens";
 import { attributeValue, User } from "../services/userPoolClient";
 
@@ -67,7 +71,7 @@ const verifyMfaChallenge = async (
 
   const code = otp();
   const message = await messages.authentication(code);
-  await messageDelivery(
+  await messageDelivery.deliver(
     user,
     {
       ...smsMfaOption,

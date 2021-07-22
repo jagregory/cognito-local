@@ -3,12 +3,12 @@ import { Triggers } from "./triggers";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
 import { CognitoClient } from "./cognitoClient";
 
-export { CognitoClient } from "./cognitoClient";
-export { UserPoolClient } from "./userPoolClient";
-export {
-  createMessageDelivery,
-  MessageDelivery,
-} from "./messageDelivery/messageDelivery";
+export { CognitoClient, CognitoClientService } from "./cognitoClient";
+export { UserPoolClient, UserPoolClientService } from "./userPoolClient";
+export { Triggers, TriggersService } from "./triggers";
+export { Lambda, LambdaService } from "./lambda";
+export { MessageDelivery } from "./messageDelivery/messageDelivery";
+export { Messages, MessagesService } from "./messages";
 
 export interface Services {
   cognitoClient: CognitoClient;

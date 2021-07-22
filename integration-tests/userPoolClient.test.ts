@@ -1,12 +1,11 @@
+import { MockLogger } from "../src/__tests__/mockLogger";
 import {
   CognitoClient,
-  createCognitoClient,
-} from "../src/services/cognitoClient";
-import { CreateDataStore, createDataStore } from "../src/services/dataStore";
-import {
-  createUserPoolClient,
+  CognitoClientService,
   UserPoolClient,
-} from "../src/services/userPoolClient";
+  UserPoolClientService,
+} from "../src/services";
+import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
 
@@ -22,13 +21,14 @@ describe("User Pool Client", () => {
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
-    cognitoClient = await createCognitoClient(
+    cognitoClient = await CognitoClientService.create(
       {
         Id: "local",
         UsernameAttributes: [],
       },
       tmpCreateDataStore,
-      createUserPoolClient
+      UserPoolClientService.create,
+      MockLogger
     );
   });
 

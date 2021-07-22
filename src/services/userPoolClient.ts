@@ -1,4 +1,4 @@
-import log from "../log";
+import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
 import { CreateDataStore, DataStore } from "./dataStore";
 
@@ -62,6 +62,7 @@ export interface UserPool {
 
 export interface UserPoolClient {
   readonly config: UserPool;
+
   createAppClient(name: string): Promise<AppClient>;
   getUserByUsername(username: string): Promise<User | null>;
   listUsers(): Promise<readonly User[]>;
@@ -71,90 +72,116 @@ export interface UserPoolClient {
 export type CreateUserPoolClient = (
   defaultOptions: UserPool,
   clientsDataStore: DataStore,
-  createDataStore: CreateDataStore
+  createDataStore: CreateDataStore,
+  logger: Logger
 ) => Promise<UserPoolClient>;
 
-export const createUserPoolClient = async (
-  defaultOptions: UserPool,
-  clientsDataStore: DataStore,
-  createDataStore: CreateDataStore
-): Promise<UserPoolClient> => {
-  const dataStore = await createDataStore(defaultOptions.Id, {
-    Users: {},
-    Options: defaultOptions,
-  });
-  const config = await dataStore.get<UserPool>("Options", defaultOptions);
+export class UserPoolClientService implements UserPoolClient {
+  private readonly clientsDataStore: DataStore;
+  private readonly dataStore: DataStore;
+  private readonly logger: Logger;
 
-  return {
-    config,
-    async createAppClient(name) {
-      const id = newId();
-      const appClient: AppClient = {
-        ClientId: id,
-        ClientName: name,
-        UserPoolId: defaultOptions.Id,
-        CreationDate: new Date().getTime(),
-        LastModifiedDate: new Date().getTime(),
-        AllowedOAuthFlowsUserPoolClient: false,
-        RefreshTokenValidity: 30,
-      };
+  public readonly config: UserPool;
 
-      await clientsDataStore.set(["Clients", id], appClient);
+  public static async create(
+    defaultOptions: UserPool,
+    clientsDataStore: DataStore,
+    createDataStore: CreateDataStore,
+    logger: Logger
+  ): Promise<UserPoolClient> {
+    const dataStore = await createDataStore(defaultOptions.Id, {
+      Users: {},
+      Options: defaultOptions,
+    });
+    const config = await dataStore.get<UserPool>("Options", defaultOptions);
 
-      return appClient;
-    },
+    return new UserPoolClientService(
+      clientsDataStore,
+      dataStore,
+      config,
+      logger
+    );
+  }
 
-    async getUserByUsername(username) {
-      log.debug("getUserByUsername", username);
+  public constructor(
+    clientsDataStore: DataStore,
+    dataStore: DataStore,
+    config: UserPool,
+    logger: Logger
+  ) {
+    this.clientsDataStore = clientsDataStore;
+    this.config = config;
+    this.dataStore = dataStore;
+    this.logger = logger;
+  }
 
-      const aliasEmailEnabled = config.UsernameAttributes?.includes("email");
-      const aliasPhoneNumberEnabled = config.UsernameAttributes?.includes(
-        "phone_number"
-      );
+  public async createAppClient(name: string): Promise<AppClient> {
+    const id = newId();
+    const appClient: AppClient = {
+      ClientId: id,
+      ClientName: name,
+      UserPoolId: this.config.Id,
+      CreationDate: new Date().getTime(),
+      LastModifiedDate: new Date().getTime(),
+      AllowedOAuthFlowsUserPoolClient: false,
+      RefreshTokenValidity: 30,
+    };
 
-      const users = await dataStore.get<Record<string, User>>("Users", {});
+    await this.clientsDataStore.set(["Clients", id], appClient);
 
-      for (const user of Object.values(users)) {
-        if (attributesIncludeMatch("sub", username, user.Attributes)) {
-          return user;
-        }
+    return appClient;
+  }
 
-        if (
-          aliasEmailEnabled &&
-          attributesIncludeMatch("email", username, user.Attributes)
-        ) {
-          return user;
-        }
+  public async getUserByUsername(username: string): Promise<User | null> {
+    this.logger.debug("getUserByUsername", username);
 
-        if (
-          aliasPhoneNumberEnabled &&
-          attributesIncludeMatch("phone_number", username, user.Attributes)
-        ) {
-          return user;
-        }
+    const aliasEmailEnabled = this.config.UsernameAttributes?.includes("email");
+    const aliasPhoneNumberEnabled = this.config.UsernameAttributes?.includes(
+      "phone_number"
+    );
+
+    const users = await this.dataStore.get<Record<string, User>>("Users", {});
+
+    for (const user of Object.values(users)) {
+      if (attributesIncludeMatch("sub", username, user.Attributes)) {
+        return user;
       }
 
-      return null;
-    },
+      if (
+        aliasEmailEnabled &&
+        attributesIncludeMatch("email", username, user.Attributes)
+      ) {
+        return user;
+      }
 
-    async listUsers(): Promise<readonly User[]> {
-      log.debug("listUsers");
-      const users = await dataStore.get<Record<string, User>>("Users", {});
+      if (
+        aliasPhoneNumberEnabled &&
+        attributesIncludeMatch("phone_number", username, user.Attributes)
+      ) {
+        return user;
+      }
+    }
 
-      return Object.values(users);
-    },
+    return null;
+  }
 
-    async saveUser(user) {
-      log.debug("saveUser", user);
+  public async listUsers(): Promise<readonly User[]> {
+    this.logger.debug("listUsers");
+    const users = await this.dataStore.get<Record<string, User>>("Users", {});
 
-      const attributes = attributesInclude("sub", user.Attributes)
-        ? user.Attributes
-        : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
+    return Object.values(users);
+  }
 
-      await dataStore.set<User>(`Users.${user.Username}`, {
-        ...user,
-        Attributes: attributes,
-      });
-    },
-  };
-};
+  public async saveUser(user: User): Promise<void> {
+    this.logger.debug("saveUser", user);
+
+    const attributes = attributesInclude("sub", user.Attributes)
+      ? user.Attributes
+      : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
+
+    await this.dataStore.set<User>(`Users.${user.Username}`, {
+      ...user,
+      Attributes: attributes,
+    });
+  }
+}

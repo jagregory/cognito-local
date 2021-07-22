@@ -3,14 +3,17 @@ import fs from "fs";
 import http from "http";
 import { promisify } from "util";
 import { createServer } from "../../src";
-import { MessageDelivery } from "../../src/services";
-import { createCognitoClient } from "../../src/services/cognitoClient";
+import { MockLogger } from "../../src/__tests__/mockLogger";
+import {
+  CognitoClientService,
+  MessageDelivery,
+  MessagesService,
+  Lambda,
+  UserPoolClientService,
+  TriggersService,
+} from "../../src/services";
 import { createDataStore, CreateDataStore } from "../../src/services/dataStore";
-import { Lambda } from "../../src/services/lambda";
-import { createMessages } from "../../src/services/messages";
 import { otp } from "../../src/services/otp";
-import { createTriggers } from "../../src/services/triggers";
-import { createUserPoolClient } from "../../src/services/userPoolClient";
 import { Router } from "../../src/targets/router";
 
 const mkdtemp = promisify(fs.mkdtemp);
@@ -27,32 +30,36 @@ export const withCognitoSdk = (
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
-    const cognitoClient = await createCognitoClient(
+
+    const cognitoClient = await CognitoClientService.create(
       {
         Id: "integration-test",
         UsernameAttributes: [],
       },
       tmpCreateDataStore,
-      createUserPoolClient
+      UserPoolClientService.create,
+      MockLogger
     );
     const mockLambda: jest.Mocked<Lambda> = {
       enabled: jest.fn().mockReturnValue(false),
       invoke: jest.fn(),
     };
-    const triggers = createTriggers({
-      lambda: mockLambda,
-      cognitoClient,
-    });
-    const mockCodeDelivery: jest.MockedFunction<MessageDelivery> = jest.fn();
+    const triggers = new TriggersService(mockLambda, cognitoClient, MockLogger);
+    const mockCodeDelivery: jest.Mocked<MessageDelivery> = {
+      deliver: jest.fn(),
+    };
 
-    const router = Router({
-      cognitoClient,
-      messageDelivery: mockCodeDelivery,
-      messages: createMessages(),
-      otp,
-      triggers,
-    });
-    const server = createServer(router);
+    const router = Router(
+      {
+        cognitoClient,
+        messageDelivery: mockCodeDelivery,
+        messages: new MessagesService(),
+        otp,
+        triggers,
+      },
+      MockLogger
+    );
+    const server = createServer(router, MockLogger);
     httpServer = await server.start({
       port: 0,
     });

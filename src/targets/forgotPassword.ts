@@ -18,7 +18,10 @@ export const ForgotPassword = ({
   messageDelivery,
   messages,
   otp,
-}: Services): ForgotPasswordTarget => async (body) => {
+}: Pick<
+  Services,
+  "cognitoClient" | "messageDelivery" | "messages" | "otp"
+>): ForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
   if (!user) {
@@ -35,7 +38,7 @@ export const ForgotPassword = ({
 
   const code = otp();
   const message = await messages.forgotPassword(code);
-  await messageDelivery(user, deliveryDetails, message);
+  await messageDelivery.deliver(user, deliveryDetails, message);
 
   await userPool.saveUser({
     ...user,

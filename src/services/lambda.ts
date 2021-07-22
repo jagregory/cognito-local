@@ -1,15 +1,9 @@
 import { CognitoUserPoolEvent } from "aws-lambda";
-import * as AWS from "aws-sdk";
+import type { Lambda as LambdaClient } from "aws-sdk";
 import { InvocationResponse } from "aws-sdk/clients/lambda";
-import * as fs from "fs";
 import { UnexpectedLambdaExceptionError } from "../errors";
-import log from "../log";
-
-const awsSdkPackageJson = fs.readFileSync(
-  require.resolve("aws-sdk/package.json"),
-  "utf-8"
-);
-const awsSdkVersion = JSON.parse(awsSdkPackageJson).version;
+import { version as awsSdkVersion } from "aws-sdk/package.json";
+import { Logger } from "../log";
 
 interface UserMigrationEvent {
   userPoolId: string;
@@ -32,35 +26,43 @@ interface PostConfirmationEvent {
 
 export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
 
-export interface Lambda {
-  invoke(
-    lambda: "UserMigration",
-    event: UserMigrationEvent
-  ): Promise<CognitoUserPoolResponse>;
-  invoke(
-    lambda: "PostConfirmation",
-    event: PostConfirmationEvent
-  ): Promise<CognitoUserPoolResponse>;
-  enabled(lambda: "UserMigration"): boolean;
-}
-
 export interface FunctionConfig {
   UserMigration?: string;
   PostConfirmation?: string;
 }
 
-export type CreateLambda = (
-  config: FunctionConfig,
-  lambdaClient: AWS.Lambda
-) => Lambda;
-
-export const createLambda: CreateLambda = (config, lambdaClient) => ({
-  enabled: (lambda) => !!config[lambda],
-  async invoke(
+export interface Lambda {
+  enabled(lambda: keyof FunctionConfig): boolean;
+  invoke(
     trigger: keyof FunctionConfig,
     event: UserMigrationEvent | PostConfirmationEvent
+  ): Promise<CognitoUserPoolResponse>;
+}
+
+export class LambdaService implements Lambda {
+  private readonly config: FunctionConfig;
+  private readonly lambdaClient: LambdaClient;
+  private readonly logger: Logger;
+
+  public constructor(
+    config: FunctionConfig,
+    lambdaClient: LambdaClient,
+    logger: Logger
   ) {
-    const functionName = config[trigger];
+    this.config = config;
+    this.lambdaClient = lambdaClient;
+    this.logger = logger;
+  }
+
+  public enabled(lambda: keyof FunctionConfig): boolean {
+    return !!this.config[lambda];
+  }
+
+  public async invoke(
+    trigger: keyof FunctionConfig,
+    event: UserMigrationEvent | PostConfirmationEvent
+  ): Promise<CognitoUserPoolResponse> {
+    const functionName = this.config[trigger];
     if (!functionName) {
       throw new Error(`${trigger} trigger not configured`);
     }
@@ -86,13 +88,13 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
       lambdaEvent.request.validationData = {};
     }
 
-    log.debug(
+    this.logger.debug(
       `Invoking "${functionName}" with event`,
       JSON.stringify(lambdaEvent, undefined, 2)
     );
     let result: InvocationResponse;
     try {
-      result = await lambdaClient
+      result = await this.lambdaClient
         .invoke({
           FunctionName: functionName,
           InvocationType: "RequestResponse",
@@ -100,11 +102,11 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
         })
         .promise();
     } catch (ex) {
-      log.error(ex);
+      this.logger.error(ex);
       throw new UnexpectedLambdaExceptionError();
     }
 
-    log.debug(
+    this.logger.debug(
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
     );
     if (result.StatusCode === 200) {
@@ -112,8 +114,8 @@ export const createLambda: CreateLambda = (config, lambdaClient) => ({
 
       return parsedPayload.response as CognitoUserPoolResponse;
     } else {
-      console.error(result.FunctionError);
+      this.logger.error(result.FunctionError);
       throw new UnexpectedLambdaExceptionError();
     }
-  },
-});
+  }
+}

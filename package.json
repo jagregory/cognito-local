@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && babel src --extensions \".ts\" --out-dir lib --ignore '**/*.test.ts'",
+    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts') --outdir=lib --platform=node --target=node14",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
@@ -20,13 +20,9 @@
     "semantic-release": "semantic-release"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.0",
-    "@babel/node": "^7.8.7",
-    "@babel/preset-env": "^7.9.5",
-    "@babel/preset-typescript": "^7.9.0",
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
+    "@jest/globals": "^27.0.6",
     "@semantic-release/changelog": "^5.0.1",
     "@semantic-release/git": "^9.0.0",
     "@types/aws-lambda": "^8.10.48",
@@ -40,11 +36,12 @@
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
-    "babel-plugin-inline-json-import": "^0.3.2",
+    "esbuild": "^0.12.15",
+    "esbuild-jest": "^0.5.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "husky": "^4.2.5",
-    "jest": "^25.3.0",
+    "jest": "^27.0.6",
     "jest-date-mock": "^1.0.8",
     "lint-staged": "^10.1.3",
     "nodemon": "^2.0.3",
@@ -92,7 +89,7 @@
     }
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=12"
   },
   "repository": {
     "type": "git",

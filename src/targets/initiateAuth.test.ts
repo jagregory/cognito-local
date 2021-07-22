@@ -6,9 +6,13 @@ import {
   PasswordResetRequiredError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import { CognitoClient, UserPoolClient } from "../services";
-import { Messages } from "../services/messages";
-import { Triggers } from "../services/triggers";
+import {
+  CognitoClient,
+  UserPoolClient,
+  Messages,
+  Triggers,
+  MessageDelivery,
+} from "../services";
 import { User } from "../services/userPoolClient";
 import {
   InitiateAuth,
@@ -23,7 +27,7 @@ describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockMessageDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
@@ -46,7 +50,9 @@ describe("InitiateAuth target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockMessageDelivery = jest.fn();
+    mockMessageDelivery = {
+      deliver: jest.fn(),
+    };
     mockMessages = {
       authentication: jest.fn().mockResolvedValue({
         emailSubject: "Mock message",
@@ -217,7 +223,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockMessageDelivery).toHaveBeenCalledWith(
+            expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,
               {
                 AttributeName: "phone_number",
@@ -310,7 +316,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
             expect(output.Session).toBe("Session");
 
-            expect(mockMessageDelivery).toHaveBeenCalledWith(
+            expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,
               {
                 AttributeName: "phone_number",

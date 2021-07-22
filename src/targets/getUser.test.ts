@@ -1,6 +1,7 @@
 import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { MockLogger } from "../__tests__/mockLogger";
 import { InvalidParameterError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { CognitoClient, UserPoolClient } from "../services";
@@ -30,9 +31,12 @@ describe("GetUser target", () => {
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
 
-    getUser = GetUser({
-      cognitoClient: mockCognitoClient,
-    });
+    getUser = GetUser(
+      {
+        cognitoClient: mockCognitoClient,
+      },
+      MockLogger
+    );
   });
 
   it("parses token get user by sub", async () => {

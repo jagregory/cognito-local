@@ -1,6 +1,7 @@
 import { ResourceNotFoundError } from "../errors";
+import { Logger } from "../log";
 import { AppClient } from "./appClient";
-import { CreateDataStore } from "./dataStore";
+import { CreateDataStore, DataStore } from "./dataStore";
 import {
   CreateUserPoolClient,
   UserPool,
@@ -12,33 +13,66 @@ export interface CognitoClient {
   getUserPoolForClientId(clientId: string): Promise<UserPoolClient>;
 }
 
-export const createCognitoClient = async (
-  userPoolDefaultOptions: UserPool,
-  createDataStore: CreateDataStore,
-  createUserPoolClient: CreateUserPoolClient
-): Promise<CognitoClient> => {
-  const clients = await createDataStore("clients", { Clients: {} });
+export class CognitoClientService implements CognitoClient {
+  private readonly config: UserPool;
+  private readonly clients: DataStore;
+  private readonly createDataStore: CreateDataStore;
+  private readonly createUserPoolClient: CreateUserPoolClient;
+  private readonly logger: Logger;
 
-  return {
-    async getUserPool(userPoolId) {
-      return createUserPoolClient(
-        { ...userPoolDefaultOptions, Id: userPoolId },
-        clients,
-        createDataStore
-      );
-    },
+  public static async create(
+    userPoolDefaultOptions: UserPool,
+    createDataStore: CreateDataStore,
+    createUserPoolClient: CreateUserPoolClient,
+    logger: Logger
+  ): Promise<CognitoClient> {
+    const clients = await createDataStore("clients", { Clients: {} });
 
-    async getUserPoolForClientId(clientId) {
-      const appClient = await clients.get<AppClient>(["Clients", clientId]);
-      if (!appClient) {
-        throw new ResourceNotFoundError();
-      }
+    return new CognitoClientService(
+      userPoolDefaultOptions,
+      clients,
+      createDataStore,
+      createUserPoolClient,
+      logger
+    );
+  }
 
-      return createUserPoolClient(
-        { ...userPoolDefaultOptions, Id: appClient.UserPoolId },
-        clients,
-        createDataStore
-      );
-    },
-  };
-};
+  public constructor(
+    config: UserPool,
+    clients: DataStore,
+    createDataStore: CreateDataStore,
+    createUserPoolClient: CreateUserPoolClient,
+    logger: Logger
+  ) {
+    this.config = config;
+    this.clients = clients;
+    this.createDataStore = createDataStore;
+    this.createUserPoolClient = createUserPoolClient;
+    this.logger = logger;
+  }
+
+  public async getUserPool(userPoolId: string): Promise<UserPoolClient> {
+    return this.createUserPoolClient(
+      { ...this.config, Id: userPoolId },
+      this.clients,
+      this.createDataStore,
+      this.logger
+    );
+  }
+
+  public async getUserPoolForClientId(
+    clientId: string
+  ): Promise<UserPoolClient> {
+    const appClient = await this.clients.get<AppClient>(["Clients", clientId]);
+    if (!appClient) {
+      throw new ResourceNotFoundError();
+    }
+
+    return this.createUserPoolClient(
+      { ...this.config, Id: appClient.UserPoolId },
+      this.clients,
+      this.createDataStore,
+      this.logger
+    );
+  }
+}

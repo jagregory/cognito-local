@@ -16,10 +16,16 @@ const stubMessage = (code: string) =>
     __code: code,
   });
 
-export const createMessages = (): Messages => {
-  return {
-    authentication: stubMessage,
-    forgotPassword: stubMessage,
-    signUp: stubMessage,
-  };
-};
+export class MessagesService implements Messages {
+  public authentication(code: string): Promise<Message> {
+    return stubMessage(code);
+  }
+
+  public async forgotPassword(code: string): Promise<Message> {
+    return stubMessage(code);
+  }
+
+  public signUp(code: string): Promise<Message> {
+    return stubMessage(code);
+  }
+}

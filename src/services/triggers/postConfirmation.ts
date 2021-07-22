@@ -1,4 +1,5 @@
-import { CognitoClient } from "../index";
+import { Logger } from "../../log";
+import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolClient";
 import { ResourceNotFoundError } from "../../errors";
@@ -13,25 +14,28 @@ export type PostConfirmationTrigger = (params: {
   userAttributes: readonly { Name: string; Value: string }[];
 }) => Promise<void>;
 
-export const PostConfirmation = ({
-  lambda,
-  cognitoClient,
-}: {
-  lambda: Lambda;
-  cognitoClient: CognitoClient;
-}): PostConfirmationTrigger => async ({
+export const PostConfirmation = (
+  {
+    lambda,
+    cognitoClient,
+  }: {
+    lambda: Lambda;
+    cognitoClient: CognitoClient;
+  },
+  logger: Logger
+): PostConfirmationTrigger => async ({
   source,
   userPoolId,
   clientId,
   username,
   userAttributes,
 }): Promise<void> => {
-  try {
-    const userPool = await cognitoClient.getUserPoolForClientId(clientId);
-    if (!userPool) {
-      throw new ResourceNotFoundError();
-    }
+  const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+  if (!userPool) {
+    throw new ResourceNotFoundError();
+  }
 
+  try {
     await lambda.invoke("PostConfirmation", {
       userPoolId,
       clientId,
@@ -40,6 +44,6 @@ export const PostConfirmation = ({
       userAttributes: attributesToRecord(userAttributes),
     });
   } catch (ex) {
-    console.error(ex);
+    logger.error(ex);
   }
 };

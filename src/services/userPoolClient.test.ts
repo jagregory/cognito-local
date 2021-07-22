@@ -1,19 +1,18 @@
 import { advanceTo } from "jest-date-mock";
-import { CreateDataStore, DataStore } from "./dataStore";
+import { MockLogger } from "../__tests__/mockLogger";
+import { DataStore } from "./dataStore";
 import {
   attributesFromRecord,
   attributesInclude,
   attributesIncludeMatch,
   attributesToRecord,
-  createUserPoolClient,
   UserAttribute,
   UserPoolClient,
+  UserPoolClientService,
 } from "./userPoolClient";
 
 describe("User Pool Client", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
-  let mockDataStore: jest.Mocked<DataStore>;
-  let createDataStore: jest.MockedFunction<CreateDataStore>;
   let now: Date;
 
   beforeEach(() => {
@@ -25,19 +24,20 @@ describe("User Pool Client", () => {
       get: jest.fn(),
       getRoot: jest.fn(),
     };
-    mockDataStore = {
-      set: jest.fn(),
-      get: jest.fn(),
-      getRoot: jest.fn(),
-    };
-    createDataStore = jest.fn().mockResolvedValue(mockDataStore);
   });
 
   it("creates a database", async () => {
-    await createUserPoolClient(
+    const createDataStore = jest.fn().mockResolvedValue({
+      set: jest.fn(),
+      get: jest.fn(),
+      getRoot: jest.fn(),
+    });
+
+    await UserPoolClientService.create(
       { Id: "local", UsernameAttributes: [] },
       mockClientsDataStore,
-      createDataStore
+      createDataStore,
+      MockLogger
     );
 
     expect(createDataStore).toHaveBeenCalledWith("local", {
@@ -48,10 +48,18 @@ describe("User Pool Client", () => {
 
   describe("createAppClient", () => {
     it("saves an app client", async () => {
-      const userPool = await createUserPoolClient(
+      const userPool = await UserPoolClientService.create(
         { Id: "local", UsernameAttributes: [] },
         mockClientsDataStore,
-        createDataStore
+        () =>
+          Promise.resolve({
+            set: jest.fn(),
+            get: jest
+              .fn()
+              .mockImplementation((key, defaults) => Promise.resolve(defaults)),
+            getRoot: jest.fn(),
+          }),
+        MockLogger
       );
 
       const result = await userPool.createAppClient("clientName");
@@ -76,10 +84,18 @@ describe("User Pool Client", () => {
   describe("saveUser", () => {
     it("saves a user with their username as an additional attribute", async () => {
       const now = new Date().getTime();
-      const userPool = await createUserPoolClient(
+      const set = jest.fn();
+
+      const userPool = await UserPoolClientService.create(
         { Id: "local", UsernameAttributes: [] },
         mockClientsDataStore,
-        createDataStore
+        () =>
+          Promise.resolve({
+            set,
+            get: jest.fn(),
+            getRoot: jest.fn(),
+          }),
+        MockLogger
       );
 
       await userPool.saveUser({
@@ -92,7 +108,7 @@ describe("User Pool Client", () => {
         Enabled: true,
       });
 
-      expect(mockDataStore.set).toHaveBeenCalledWith("Users.1", {
+      expect(set).toHaveBeenCalledWith("Users.1", {
         Username: "1",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
@@ -119,7 +135,7 @@ describe("User Pool Client", () => {
       ({ username_attributes, find_by_email, find_by_phone_number }) => {
         let userPool: UserPoolClient;
 
-        beforeAll(async () => {
+        beforeEach(async () => {
           const options = {
             Id: "local",
             UsernameAttributes: username_attributes,
@@ -139,7 +155,8 @@ describe("User Pool Client", () => {
               Enabled: true,
             },
           };
-          mockDataStore.get.mockImplementation((key) => {
+
+          const get = jest.fn((key) => {
             if (key === "Users") {
               return Promise.resolve(users);
             } else if (key === "Options") {
@@ -148,10 +165,17 @@ describe("User Pool Client", () => {
 
             return Promise.resolve(null);
           });
-          userPool = await createUserPoolClient(
+
+          userPool = await UserPoolClientService.create(
             options,
             mockClientsDataStore,
-            createDataStore
+            () =>
+              Promise.resolve({
+                set: jest.fn(),
+                get,
+                getRoot: jest.fn(),
+              }),
+            MockLogger
           );
         });
 
@@ -227,7 +251,8 @@ describe("User Pool Client", () => {
           Enabled: true,
         },
       };
-      mockDataStore.get.mockImplementation((key) => {
+
+      const get = jest.fn((key) => {
         if (key === "Users") {
           return Promise.resolve(users);
         } else if (key === "Options") {
@@ -236,10 +261,16 @@ describe("User Pool Client", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await createUserPoolClient(
+      userPool = await UserPoolClientService.create(
         options,
         mockClientsDataStore,
-        createDataStore
+        () =>
+          Promise.resolve({
+            set: jest.fn(),
+            get,
+            getRoot: jest.fn(),
+          }),
+        MockLogger
       );
     });
 

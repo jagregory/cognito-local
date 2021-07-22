@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
-import { CognitoClient } from "../index";
+import { CognitoClient } from "../cognitoClient";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
 import {
   attributesFromRecord,

@@ -1,18 +1,20 @@
 import { advanceTo } from "jest-date-mock";
 import { UserNotFoundError } from "../errors";
-import { CognitoClient, UserPoolClient } from "../services";
-import { Messages } from "../services/messages";
-import { Triggers } from "../services/triggers";
+import {
+  CognitoClient,
+  UserPoolClient,
+  Messages,
+  MessageDelivery,
+} from "../services";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
 
 describe("ForgotPassword target", () => {
   let forgotPassword: ForgotPasswordTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockMessageDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
-  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -32,7 +34,9 @@ describe("ForgotPassword target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockMessageDelivery = jest.fn();
+    mockMessageDelivery = {
+      deliver: jest.fn(),
+    };
     mockMessages = {
       authentication: jest.fn(),
       forgotPassword: jest.fn().mockResolvedValue({
@@ -41,18 +45,12 @@ describe("ForgotPassword target", () => {
       signUp: jest.fn(),
     };
     mockOtp = jest.fn().mockReturnValue("1234");
-    mockTriggers = {
-      enabled: jest.fn(),
-      postConfirmation: jest.fn(),
-      userMigration: jest.fn(),
-    };
 
     forgotPassword = ForgotPassword({
       cognitoClient: mockCognitoClient,
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
-      triggers: mockTriggers,
     });
   });
 
@@ -83,7 +81,7 @@ describe("ForgotPassword target", () => {
       Username: "0000-0000",
     });
 
-    expect(mockMessageDelivery).toHaveBeenCalledWith(
+    expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,

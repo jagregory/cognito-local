@@ -1,7 +1,6 @@
 import { advanceBy, advanceTo } from "jest-date-mock";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
-import { CognitoClient, UserPoolClient } from "../services";
-import { Triggers } from "../services/triggers";
+import { CognitoClient, UserPoolClient, Triggers } from "../services";
 import {
   ConfirmForgotPassword,
   ConfirmForgotPasswordTarget,

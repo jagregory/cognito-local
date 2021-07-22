@@ -1,6 +1,6 @@
-import { createCognitoClient } from "../src/services/cognitoClient";
+import { MockLogger } from "../src/__tests__/mockLogger";
+import { CognitoClientService, UserPoolClientService } from "../src/services";
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
-import { createUserPoolClient } from "../src/services/userPoolClient";
 import fs from "fs";
 import { promisify } from "util";
 
@@ -22,13 +22,14 @@ describe("Cognito Client", () => {
   );
 
   it("creates a clients database", async () => {
-    await createCognitoClient(
+    await CognitoClientService.create(
       {
         Id: "local",
         UsernameAttributes: [],
       },
       tmpCreateDataStore,
-      createUserPoolClient
+      UserPoolClientService.create,
+      MockLogger
     );
 
     expect(fs.existsSync(`${path}/clients.json`)).toBe(true);

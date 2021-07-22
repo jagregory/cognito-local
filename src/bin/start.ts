@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-import log from "../log";
+import { ConsoleLogger } from "../log";
 import { createDefaultServer } from "../server";
 
-createDefaultServer()
+const logger = new ConsoleLogger();
+
+createDefaultServer(logger)
   .then((server) => {
     const hostname = process.env.HOST ?? "localhost";
     const port = parseInt(process.env.PORT ?? "9229", 10);
@@ -19,9 +21,9 @@ createDefaultServer()
         ? address
         : `${address.address}:${address.port}`;
 
-    log.info(`Cognito Local running on http://${url}`);
+    logger.info(`Cognito Local running on http://${url}`);
   })
   .catch((err) => {
-    console.error(err);
+    logger.error(err);
     process.exit(1);
   });

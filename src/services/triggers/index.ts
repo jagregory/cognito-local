@@ -1,1 +1,1 @@
-export { Triggers, createTriggers } from "./triggers";
+export { Triggers, TriggersService } from "./triggers";

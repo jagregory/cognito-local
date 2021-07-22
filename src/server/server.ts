@@ -3,7 +3,7 @@ import cors from "cors";
 import express from "express";
 import * as http from "http";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
-import log from "../log";
+import { Logger } from "../log";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 
@@ -20,6 +20,7 @@ export interface Server {
 
 export const createServer = (
   router: Router,
+  logger: Logger,
   options: Partial<ServerOptions> = {}
 ): Server => {
   const app = express();
@@ -62,21 +63,21 @@ export const createServer = (
 
       return res.status(200).json(output);
     } catch (ex) {
-      console.error(`Error handling target: ${target}`, ex);
+      logger.error(`Error handling target: ${target}`, ex);
       if (ex instanceof UnsupportedError) {
         if (options.development) {
-          log.info("======");
-          log.info();
-          log.info("Unsupported target");
-          log.info("");
-          log.info(`x-amz-target: ${xAmzTarget}`);
-          log.info("Body:");
-          log.info(JSON.stringify(req.body, undefined, 2));
-          log.info();
-          log.info("======");
+          logger.info("======");
+          logger.info();
+          logger.info("Unsupported target");
+          logger.info("");
+          logger.info(`x-amz-target: ${xAmzTarget}`);
+          logger.info("Body:");
+          logger.info(JSON.stringify(req.body, undefined, 2));
+          logger.info();
+          logger.info("======");
         }
 
-        return unsupported(ex.message, res);
+        return unsupported(ex.message, res, logger);
       } else if (ex instanceof CognitoError) {
         return res.status(400).json({
           code: ex.code,

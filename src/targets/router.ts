@@ -1,3 +1,4 @@
+import { Logger } from "../log";
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
@@ -31,7 +32,9 @@ export const isSupportedTarget = (name: string): name is TargetName =>
 export type Route = (body: any) => Promise<any>;
 export type Router = (target: string) => Route;
 
-export const Router = (services: Services): Router => (target: string) => {
+export const Router = (services: Services, logger: Logger): Router => (
+  target: string
+) => {
   if (!isSupportedTarget(target)) {
     return () =>
       Promise.reject(
@@ -39,5 +42,5 @@ export const Router = (services: Services): Router => (target: string) => {
       );
   }
 
-  return Targets[target](services);
+  return Targets[target](services, logger);
 };

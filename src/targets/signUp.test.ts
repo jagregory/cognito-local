@@ -1,8 +1,12 @@
 import { advanceTo } from "jest-date-mock";
 import { UsernameExistsError } from "../errors";
-import { CognitoClient, UserPoolClient } from "../services";
-import { Messages } from "../services/messages";
-import { Triggers } from "../services/triggers";
+import {
+  CognitoClient,
+  MessageDelivery,
+  Messages,
+  Triggers,
+  UserPoolClient,
+} from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -11,7 +15,7 @@ describe("SignUp target", () => {
   let signUp: SignUpTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
-  let mockMessageDelivery: jest.Mock;
+  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
@@ -34,7 +38,9 @@ describe("SignUp target", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    mockMessageDelivery = jest.fn();
+    mockMessageDelivery = {
+      deliver: jest.fn(),
+    };
     mockMessages = {
       authentication: jest.fn(),
       forgotPassword: jest.fn(),
@@ -111,7 +117,7 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockMessageDelivery).toHaveBeenCalledWith(
+    expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
       {
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         Enabled: true,

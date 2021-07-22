@@ -1,3 +1,4 @@
+import { MockLogger } from "../../__tests__/mockLogger";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
@@ -27,10 +28,13 @@ describe("PostConfirmation trigger", () => {
       getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
       getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
     };
-    postConfirmation = PostConfirmation({
-      lambda: mockLambda,
-      cognitoClient: mockCognitoClient,
-    });
+    postConfirmation = PostConfirmation(
+      {
+        lambda: mockLambda,
+        cognitoClient: mockCognitoClient,
+      },
+      MockLogger
+    );
   });
 
   describe.each([

@@ -1,5 +1,5 @@
 import { User } from "../userPoolClient";
-import { createMessageDelivery } from "./messageDelivery";
+import { MessageDeliveryService } from "./messageDelivery";
 import { MessageSender } from "./messageSender";
 
 describe("Message Delivery", () => {
@@ -23,9 +23,9 @@ describe("Message Delivery", () => {
         emailSubject: "Subject",
         emailMessage: "Body",
       };
-      const codeDelivery = createMessageDelivery(sender);
+      const messageDelivery = new MessageDeliveryService(sender);
 
-      await codeDelivery(
+      await messageDelivery.deliver(
         user,
         {
           Destination: "example@example.com",
@@ -54,9 +54,9 @@ describe("Message Delivery", () => {
         emailSubject: "Subject",
         emailMessage: "Body",
       };
-      const codeDelivery = createMessageDelivery(sender);
+      const messageDelivery = new MessageDeliveryService(sender);
 
-      await codeDelivery(
+      await messageDelivery.deliver(
         user,
         {
           Destination: "0123445670",

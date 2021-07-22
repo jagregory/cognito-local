@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { InvalidParameterError } from "../errors";
-import log from "../log";
+import { Logger } from "../log";
 import { Services } from "../services";
 import { Token } from "../services/tokens";
 import { MFAOption, UserAttribute } from "../services/userPoolClient";
@@ -17,12 +17,13 @@ interface Output {
 
 export type GetUserTarget = (body: Input) => Promise<Output | null>;
 
-export const GetUser = ({
-  cognitoClient,
-}: Pick<Services, "cognitoClient">): GetUserTarget => async (body) => {
+export const GetUser = (
+  { cognitoClient }: Pick<Services, "cognitoClient">,
+  logger: Logger
+): GetUserTarget => async (body) => {
   const decodedToken = jwt.decode(body.AccessToken) as Token | null;
   if (!decodedToken) {
-    log.info("Unable to decode token");
+    logger.info("Unable to decode token");
     throw new InvalidParameterError();
   }
 

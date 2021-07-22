@@ -1,43 +1,52 @@
-import log from "../log";
-import { createMessageDelivery } from "../services";
+import { Logger } from "../log";
+import {
+  CognitoClientService,
+  LambdaService,
+  MessagesService,
+  TriggersService,
+  UserPoolClientService,
+} from "../services";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { createDataStore } from "../services/dataStore";
-import { createLambda } from "../services/lambda";
-import { createMessages } from "../services/messages";
+import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
 import { otp } from "../services/otp";
-import { createTriggers } from "../services/triggers";
-import { createCognitoClient } from "../services/cognitoClient";
-import { createUserPoolClient } from "../services/userPoolClient";
 import { Router } from "../targets/router";
 import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
 import * as AWS from "aws-sdk";
 
-export const createDefaultServer = async (): Promise<Server> => {
+export const createDefaultServer = async (logger: Logger): Promise<Server> => {
   const config = await loadConfig();
 
-  log.debug("Loaded config:", config);
+  logger.debug("Loaded config:", config);
 
-  const cognitoClient = await createCognitoClient(
+  const cognitoClient = await CognitoClientService.create(
     config.UserPoolDefaults,
     createDataStore,
-    createUserPoolClient
+    UserPoolClientService.create.bind(UserPoolClientService),
+    logger
   );
   const lambdaClient = new AWS.Lambda(config.LambdaClient);
-  const lambda = createLambda(config.TriggerFunctions, lambdaClient);
-  const triggers = createTriggers({
-    lambda,
-    cognitoClient,
-  });
-  const router = Router({
-    cognitoClient,
-    messageDelivery: createMessageDelivery(ConsoleMessageSender),
-    messages: createMessages(),
-    otp,
-    triggers,
-  });
+  const lambda = new LambdaService(
+    config.TriggerFunctions,
+    lambdaClient,
+    logger
+  );
+  const triggers = new TriggersService(lambda, cognitoClient, logger);
+  const router = Router(
+    {
+      cognitoClient,
+      messageDelivery: new MessageDeliveryService(
+        new ConsoleMessageSender(logger)
+      ),
+      messages: new MessagesService(),
+      otp,
+      triggers,
+    },
+    logger
+  );
 
-  return createServer(router, {
+  return createServer(router, logger, {
     development: !!process.env.COGNITO_LOCAL_DEVMODE,
   });
 };

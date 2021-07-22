@@ -1,4 +1,5 @@
-import { createLambda } from "./lambda";
+import { MockLogger } from "../__tests__/mockLogger";
+import { LambdaService } from "./lambda";
 import * as AWS from "aws-sdk";
 
 describe("Lambda function invoker", () => {
@@ -12,18 +13,19 @@ describe("Lambda function invoker", () => {
 
   describe("enabled", () => {
     it("returns true if lambda is configured", () => {
-      const lambda = createLambda(
+      const lambda = new LambdaService(
         {
           UserMigration: "MyLambdaName",
         },
-        mockLambdaClient
+        mockLambdaClient,
+        MockLogger
       );
 
       expect(lambda.enabled("UserMigration")).toBe(true);
     });
 
     it("returns false if lambda is not configured", () => {
-      const lambda = createLambda({}, mockLambdaClient);
+      const lambda = new LambdaService({}, mockLambdaClient, MockLogger);
 
       expect(lambda.enabled("UserMigration")).toBe(false);
     });
@@ -31,7 +33,7 @@ describe("Lambda function invoker", () => {
 
   describe("invoke", () => {
     it("throws if lambda is not configured", async () => {
-      const lambda = createLambda({}, mockLambdaClient);
+      const lambda = new LambdaService({}, mockLambdaClient, MockLogger);
 
       await expect(
         lambda.invoke("UserMigration", {
@@ -54,11 +56,12 @@ describe("Lambda function invoker", () => {
         mockLambdaClient.invoke.mockReturnValue({
           promise: () => response,
         } as any);
-        const lambda = createLambda(
+        const lambda = new LambdaService(
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient
+          mockLambdaClient,
+          MockLogger
         );
 
         await lambda.invoke("UserMigration", {
@@ -100,11 +103,12 @@ describe("Lambda function invoker", () => {
         mockLambdaClient.invoke.mockReturnValue({
           promise: () => response,
         } as any);
-        const lambda = createLambda(
+        const lambda = new LambdaService(
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient
+          mockLambdaClient,
+          MockLogger
         );
 
         const result = await lambda.invoke("UserMigration", {
@@ -127,11 +131,12 @@ describe("Lambda function invoker", () => {
         mockLambdaClient.invoke.mockReturnValue({
           promise: () => response,
         } as any);
-        const lambda = createLambda(
+        const lambda = new LambdaService(
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient
+          mockLambdaClient,
+          MockLogger
         );
 
         const result = await lambda.invoke("UserMigration", {
