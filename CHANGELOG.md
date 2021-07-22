@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/jagregory/cognito-local/compare/v2.1.0...v2.2.0) (2021-07-22)
+
+
+### Features
+
+* **lambda:** limited CustomMessage lambda support ([6880a90](https://github.com/jagregory/cognito-local/commit/6880a90423547162f44832adbc2267cad6890423))
+
 # [2.1.0](https://github.com/jagregory/cognito-local/compare/v2.0.0...v2.1.0) (2020-05-10)
 
 
