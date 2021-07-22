@@ -60,7 +60,7 @@
     "deepmerge": "^4.2.2",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "short-uuid": "^3.1.1",
+    "short-uuid": "^4.2.0",
     "stormdb": "^0.3.0",
     "uuid": "^7.0.3"
   },
