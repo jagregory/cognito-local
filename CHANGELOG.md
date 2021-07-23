@@ -1,3 +1,15 @@
+# [2.3.0](https://github.com/jagregory/cognito-local/compare/v2.2.0...v2.3.0) (2021-07-23)
+
+
+### Bug Fixes
+
+* key setting in the datastore to work with arrays ([d0a2557](https://github.com/jagregory/cognito-local/commit/d0a25572de19b84e8228c1fea9d2ebbe9d40d160))
+
+
+### Features
+
+* **api:** describeUserPoolClient support ([26cf370](https://github.com/jagregory/cognito-local/commit/26cf370d38d83bc922431c68202a25d268402eb7))
+
 # [2.2.0](https://github.com/jagregory/cognito-local/compare/v2.1.0...v2.2.0) (2021-07-22)
 
 
