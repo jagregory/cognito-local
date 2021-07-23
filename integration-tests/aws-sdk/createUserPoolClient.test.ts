@@ -4,7 +4,9 @@ describe(
   "CognitoIdentityServiceProvider.createUserPoolClient",
   withCognitoSdk((Cognito) => {
     it("can create a new app client", async () => {
-      const result = await Cognito()
+      const client = Cognito();
+
+      const result = await client
         .createUserPoolClient({
           ClientName: "test",
           UserPoolId: "test",
@@ -21,6 +23,17 @@ describe(
           RefreshTokenValidity: 30,
           UserPoolId: "test",
         },
+      });
+
+      const createdClient = await client
+        .describeUserPoolClient({
+          ClientId: result.UserPoolClient?.ClientId!,
+          UserPoolId: "test",
+        })
+        .promise();
+
+      expect(createdClient).toEqual({
+        UserPoolClient: result.UserPoolClient,
       });
     });
   })

@@ -9,6 +9,7 @@ import {
 } from "./userPoolClient";
 
 export interface CognitoClient {
+  getAppClient(clientId: string): Promise<AppClient | null>;
   getUserPool(userPoolId: string): Promise<UserPoolClient>;
   getUserPoolForClientId(clientId: string): Promise<UserPoolClient>;
 }
@@ -63,7 +64,7 @@ export class CognitoClientService implements CognitoClient {
   public async getUserPoolForClientId(
     clientId: string
   ): Promise<UserPoolClient> {
-    const appClient = await this.clients.get<AppClient>(["Clients", clientId]);
+    const appClient = await this.getAppClient(clientId);
     if (!appClient) {
       throw new ResourceNotFoundError();
     }
@@ -74,5 +75,9 @@ export class CognitoClientService implements CognitoClient {
       this.createDataStore,
       this.logger
     );
+  }
+
+  public async getAppClient(clientId: string): Promise<AppClient | null> {
+    return this.clients.get(["Clients", clientId]);
   }
 }
