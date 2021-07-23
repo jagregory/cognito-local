@@ -1,0 +1,61 @@
+### This workflow has access to secrets and a read-write token
+name: Publish
+on:
+  workflow_run:
+    branches: [master]
+    types: [completed]
+    workflows: [CI]
+
+jobs:
+  # Why do we need to build here as well as in the main CI pipeline? Because the actions/download-artifact action
+  # doesn't allow you to download artifacts from other workflows, despite GitHub pushing that as the recommended
+  # work-around for Dependabot permissions. See: https://github.com/actions/download-artifact/issues/60
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+      - run: yarn install
+      - run: yarn build
+      - uses: actions/upload-artifact@v1
+        with:
+          name: build
+          path: lib
+
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish
+    needs: build
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+      - run: yarn install
+      - uses: actions/download-artifact@v1
+        with:
+          name: build
+          path: lib
+      - run: yarn semantic-release
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+          DOCKER_REGISTRY_USER: ${{secrets.DOCKERHUB_USERNAME}}
+          DOCKER_REGISTRY_PASSWORD: ${{secrets.DOCKERHUB_TOKEN}}
