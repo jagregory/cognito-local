@@ -4,9 +4,11 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     "@semantic-release/npm",
-    "@codedependant/semantic-release-docker",
     ["@semantic-release/github", {
       "addReleases": "top"
+    }],
+    ["@codedependant/semantic-release-docker", {
+      "dockerLogin": false
     }],
     ["@semantic-release/git", {
       "assets": ["CHANGELOG.md"],
