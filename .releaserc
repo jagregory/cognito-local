@@ -8,7 +8,8 @@
       "addReleases": "top"
     }],
     ["@codedependant/semantic-release-docker", {
-      "dockerLogin": false
+      "dockerLogin": false,
+      "dockerImage": "jagregory/cognito-local"
     }],
     ["@semantic-release/git", {
       "assets": ["CHANGELOG.md"],
