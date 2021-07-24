@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/jagregory/cognito-local/compare/v2.3.0...v2.3.1) (2021-07-24)
+
+
+### Bug Fixes
+
+* auth_time resolution in generated tokens ([f300df4](https://github.com/jagregory/cognito-local/commit/f300df4fb42e6b8f28ed8b83770a5217efa6215f))
+
 # [2.3.0](https://github.com/jagregory/cognito-local/compare/v2.2.0...v2.3.0) (2021-07-23)
 
 
