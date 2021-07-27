@@ -1,6 +1,7 @@
 import { MockLogger } from "../__tests__/mockLogger";
 import { LambdaService } from "./lambda";
 import * as AWS from "aws-sdk";
+import { version } from "aws-sdk/package.json";
 
 describe("Lambda function invoker", () => {
   let mockLambdaClient: jest.Mocked<AWS.Lambda>;
@@ -137,7 +138,7 @@ describe("Lambda function invoker", () => {
           Payload: JSON.stringify({
             version: 0,
             userName: "username",
-            callerContext: { awsSdkVersion: "2.656.0", clientId: "clientId" },
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: "UserMigration_Authentication",
@@ -192,7 +193,7 @@ describe("Lambda function invoker", () => {
           Payload: JSON.stringify({
             version: 0,
             userName: "username",
-            callerContext: { awsSdkVersion: "2.656.0", clientId: "clientId" },
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: source,
