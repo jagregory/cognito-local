@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/jagregory/cognito-local/compare/v2.3.1...v2.3.2) (2021-07-27)
+
+
+### Bug Fixes
+
+* lambda tests to use imported aws-sdk version ([d4a5c82](https://github.com/jagregory/cognito-local/commit/d4a5c82c6037392830ade18253bc3159d8f87619))
+
 ## [2.3.1](https://github.com/jagregory/cognito-local/compare/v2.3.0...v2.3.1) (2021-07-24)
 
 
