@@ -6,6 +6,7 @@ import {
   attributesInclude,
   attributesIncludeMatch,
   attributesToRecord,
+  User,
   UserAttribute,
   UserPoolClient,
   UserPoolClientService,
@@ -82,7 +83,7 @@ describe("User Pool Client", () => {
   });
 
   describe("saveUser", () => {
-    it("saves a user with their username as an additional attribute", async () => {
+    it("saves the user", async () => {
       const now = new Date().getTime();
       const set = jest.fn();
 
@@ -99,21 +100,24 @@ describe("User Pool Client", () => {
       );
 
       await userPool.saveUser({
-        Username: "1",
+        Username: "user-supplied",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
-        Attributes: [{ Name: "email", Value: "example@example.com" }],
+        Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
+          { Name: "email", Value: "example@example.com" },
+        ],
         UserLastModifiedDate: now,
         UserCreateDate: now,
         Enabled: true,
       });
 
-      expect(set).toHaveBeenCalledWith("Users.1", {
-        Username: "1",
+      expect(set).toHaveBeenCalledWith(["Users", "user-supplied"], {
+        Username: "user-supplied",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
         Attributes: [
-          { Name: "sub", Value: "1" },
+          { Name: "sub", Value: "uuid-1234" },
           { Name: "email", Value: "example@example.com" },
         ],
         UserLastModifiedDate: now,
@@ -140,13 +144,13 @@ describe("User Pool Client", () => {
             Id: "local",
             UsernameAttributes: username_attributes,
           };
-          const users = {
-            "1": {
-              Username: "1",
+          const users: Record<string, User> = {
+            "user-supplied": {
+              Username: "user-supplied",
               Password: "hunter3",
               UserStatus: "UNCONFIRMED",
               Attributes: [
-                { Name: "sub", Value: "1" },
+                { Name: "sub", Value: "uuid-1234" },
                 { Name: "email", Value: "example@example.com" },
                 { Name: "phone_number", Value: "0411000111" },
               ],
@@ -161,6 +165,8 @@ describe("User Pool Client", () => {
               return Promise.resolve(users);
             } else if (key === "Options") {
               return Promise.resolve(options);
+            } else if (Array.isArray(key) && key[0] === "Users") {
+              return Promise.resolve(users[key[1]]);
             }
 
             return Promise.resolve(null);
@@ -185,11 +191,11 @@ describe("User Pool Client", () => {
           expect(user).toBeNull();
         });
 
-        it("returns existing user by their sub attribute", async () => {
-          const user = await userPool.getUserByUsername("1");
+        it("returns existing user by their username", async () => {
+          const user = await userPool.getUserByUsername("user-supplied");
 
           expect(user).not.toBeNull();
-          expect(user?.Username).toEqual("1");
+          expect(user?.Username).toEqual("user-supplied");
         });
 
         if (find_by_email) {
@@ -199,7 +205,7 @@ describe("User Pool Client", () => {
             );
 
             expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("1");
+            expect(user?.Username).toEqual("user-supplied");
           });
         } else {
           it("does not return the user by their email", async () => {
@@ -216,7 +222,7 @@ describe("User Pool Client", () => {
             const user = await userPool.getUserByUsername("0411000111");
 
             expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("1");
+            expect(user?.Username).toEqual("user-supplied");
           });
         } else {
           it("does not return the user by their phone number", async () => {

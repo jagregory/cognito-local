@@ -1,4 +1,6 @@
 import { advanceTo } from "jest-date-mock";
+import { MockLogger } from "../__tests__/mockLogger";
+import { UUID } from "../__tests__/patterns";
 import { UsernameExistsError } from "../errors";
 import {
   CognitoClient,
@@ -8,8 +10,6 @@ import {
   UserPoolClient,
 } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
@@ -57,13 +57,16 @@ describe("SignUp target", () => {
       userMigration: jest.fn(),
     };
 
-    signUp = SignUp({
-      cognitoClient: mockCognitoClient,
-      messageDelivery: mockMessageDelivery,
-      messages: mockMessages,
-      otp: mockOtp,
-      triggers: mockTriggers,
-    });
+    signUp = SignUp(
+      {
+        cognitoClient: mockCognitoClient,
+        messageDelivery: mockMessageDelivery,
+        messages: mockMessages,
+        otp: mockOtp,
+        triggers: mockTriggers,
+      },
+      MockLogger
+    );
   });
 
   it("throws if user already exists", async () => {
@@ -74,14 +77,14 @@ describe("SignUp target", () => {
       UserCreateDate: now.getTime(),
       UserLastModifiedDate: now.getTime(),
       UserStatus: "CONFIRMED",
-      Username: "0000-0000",
+      Username: "user-supplied",
     });
 
     await expect(
       signUp({
         ClientId: "clientId",
         Password: "pwd",
-        Username: "0000-0000",
+        Username: "user-supplied",
         UserAttributes: [],
       })
     ).rejects.toBeInstanceOf(UsernameExistsError);
@@ -93,18 +96,24 @@ describe("SignUp target", () => {
     await signUp({
       ClientId: "clientId",
       Password: "pwd",
-      Username: "0000-0000",
-      UserAttributes: [],
+      Username: "user-supplied",
+      UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
     expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
-      Attributes: [],
+      Attributes: [
+        {
+          Name: "sub",
+          Value: expect.stringMatching(UUID),
+        },
+        { Name: "email", Value: "example@example.com" },
+      ],
       Enabled: true,
       Password: "pwd",
       UserCreateDate: now.getTime(),
       UserLastModifiedDate: now.getTime(),
       UserStatus: "UNCONFIRMED",
-      Username: expect.stringMatching(UUID),
+      Username: "user-supplied",
     });
   });
 
@@ -115,19 +124,22 @@ describe("SignUp target", () => {
     await signUp({
       ClientId: "clientId",
       Password: "pwd",
-      Username: "0000-0000",
+      Username: "user-supplied",
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
     expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
       {
-        Attributes: [{ Name: "email", Value: "example@example.com" }],
+        Attributes: [
+          { Name: "sub", Value: expect.stringMatching(UUID) },
+          { Name: "email", Value: "example@example.com" },
+        ],
         Enabled: true,
         Password: "pwd",
         UserCreateDate: now.getTime(),
         UserLastModifiedDate: now.getTime(),
         UserStatus: "UNCONFIRMED",
-        Username: expect.stringMatching(UUID),
+        Username: "user-supplied",
       },
       {
         AttributeName: "email",
@@ -145,19 +157,22 @@ describe("SignUp target", () => {
     await signUp({
       ClientId: "clientId",
       Password: "pwd",
-      Username: "0000-0000",
+      Username: "user-supplied",
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
     expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
-      Attributes: [{ Name: "email", Value: "example@example.com" }],
+      Attributes: [
+        { Name: "sub", Value: expect.stringMatching(UUID) },
+        { Name: "email", Value: "example@example.com" },
+      ],
       ConfirmationCode: "1234",
       Enabled: true,
       Password: "pwd",
       UserCreateDate: now.getTime(),
       UserLastModifiedDate: now.getTime(),
       UserStatus: "UNCONFIRMED",
-      Username: expect.stringMatching(UUID),
+      Username: "user-supplied",
     });
   });
 });

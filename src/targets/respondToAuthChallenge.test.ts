@@ -1,5 +1,6 @@
 import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
+import { UUID } from "../__tests__/patterns";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import { CognitoClient, UserPoolClient } from "../services";
@@ -7,8 +8,6 @@ import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
 } from "./respondToAuthChallenge";
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;

@@ -18,7 +18,6 @@ export const ConfirmSignUp = ({
 ) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
-
   if (!user) {
     throw new NotAuthorizedError();
   }

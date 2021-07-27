@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { User } from "./userPoolClient";
+import { attributeValue, User } from "./userPoolClient";
 
 export interface Token {
   client_id: string;
@@ -23,10 +23,12 @@ export function generateTokens(
   const eventId = uuid.v4();
   const authTime = Math.floor(new Date().getTime() / 1000);
 
+  const sub = attributeValue("sub", user.Attributes);
+
   return {
     AccessToken: jwt.sign(
       {
-        sub: user.Username,
+        sub,
         event_id: eventId,
         token_use: "access",
         scope: "aws.cognito.signin.user.admin", // TODO: scopes
@@ -45,15 +47,13 @@ export function generateTokens(
     ),
     IdToken: jwt.sign(
       {
-        sub: user.Username,
+        sub,
         email_verified: true,
         event_id: eventId,
         token_use: "id",
         auth_time: authTime,
         "cognito:username": user.Username,
-        email: user.Attributes.filter((x) => x.Name === "email").map(
-          (x) => x.Value
-        )[0],
+        email: attributeValue("email", user.Attributes),
       },
       PrivateKey.pem,
       {

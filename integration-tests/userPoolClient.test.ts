@@ -45,7 +45,7 @@ describe("User Pool Client", () => {
   });
 
   describe("saveUser", () => {
-    it("saves a user with their username as an additional attribute", async () => {
+    it("saves the user", async () => {
       const now = new Date().getTime();
       const userPool = await cognitoClient.getUserPool("local");
 
@@ -53,7 +53,10 @@ describe("User Pool Client", () => {
         Username: "1",
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
-        Attributes: [{ Name: "email", Value: "example@example.com" }],
+        Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
+          { Name: "email", Value: "example@example.com" },
+        ],
         UserLastModifiedDate: now,
         UserCreateDate: now,
         Enabled: true,
@@ -69,7 +72,7 @@ describe("User Pool Client", () => {
             Password: "hunter3",
             UserStatus: "UNCONFIRMED",
             Attributes: [
-              { Name: "sub", Value: "1" },
+              { Name: "sub", Value: "uuid-1234" },
               { Name: "email", Value: "example@example.com" },
             ],
             UserLastModifiedDate: now,
@@ -89,7 +92,10 @@ describe("User Pool Client", () => {
         Password: "hunter3",
         UserStatus: "UNCONFIRMED",
         ConfirmationCode: "1234",
-        Attributes: [{ Name: "email", Value: "example@example.com" }],
+        Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
+          { Name: "email", Value: "example@example.com" },
+        ],
         UserLastModifiedDate: now,
         UserCreateDate: now,
         Enabled: true,
@@ -106,7 +112,7 @@ describe("User Pool Client", () => {
             UserStatus: "UNCONFIRMED",
             ConfirmationCode: "1234",
             Attributes: [
-              { Name: "sub", Value: "1" },
+              { Name: "sub", Value: "uuid-1234" },
               { Name: "email", Value: "example@example.com" },
             ],
             UserLastModifiedDate: now,
@@ -120,7 +126,10 @@ describe("User Pool Client", () => {
         Username: "1",
         Password: "hunter3",
         UserStatus: "CONFIRMED",
-        Attributes: [{ Name: "email", Value: "example@example.com" }],
+        Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
+          { Name: "email", Value: "example@example.com" },
+        ],
         UserLastModifiedDate: now,
         UserCreateDate: now,
         Enabled: true,
@@ -136,7 +145,7 @@ describe("User Pool Client", () => {
             Password: "hunter3",
             UserStatus: "CONFIRMED",
             Attributes: [
-              { Name: "sub", Value: "1" },
+              { Name: "sub", Value: "uuid-1234" },
               { Name: "email", Value: "example@example.com" },
             ],
             UserLastModifiedDate: now,
@@ -158,6 +167,7 @@ describe("User Pool Client", () => {
         Password: "hunter2",
         UserStatus: "UNCONFIRMED",
         Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
           { Name: "email", Value: "example@example.com" },
           { Name: "phone_number", Value: "0411000111" },
         ],
@@ -194,6 +204,7 @@ describe("User Pool Client", () => {
         Password: "hunter2",
         UserStatus: "UNCONFIRMED",
         Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
           { Name: "email", Value: "example@example.com" },
           { Name: "phone_number", Value: "0411000111" },
         ],
@@ -206,7 +217,7 @@ describe("User Pool Client", () => {
         Username: "2",
         Password: "password1",
         UserStatus: "UNCONFIRMED",
-        Attributes: [],
+        Attributes: [{ Name: "sub", Value: "uuid-5678" }],
         UserCreateDate: now.getTime(),
         UserLastModifiedDate: now.getTime(),
         Enabled: true,
@@ -222,7 +233,7 @@ describe("User Pool Client", () => {
           Password: "hunter2",
           UserStatus: "UNCONFIRMED",
           Attributes: [
-            { Name: "sub", Value: "1" },
+            { Name: "sub", Value: "uuid-1234" },
             { Name: "email", Value: "example@example.com" },
             { Name: "phone_number", Value: "0411000111" },
           ],
@@ -234,7 +245,7 @@ describe("User Pool Client", () => {
           Username: "2",
           Password: "password1",
           UserStatus: "UNCONFIRMED",
-          Attributes: [{ Name: "sub", Value: "2" }],
+          Attributes: [{ Name: "sub", Value: "uuid-5678" }],
           UserCreateDate: now.getTime(),
           UserLastModifiedDate: now.getTime(),
           Enabled: true,

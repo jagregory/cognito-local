@@ -140,13 +140,14 @@ export class UserPoolClientService implements UserPoolClient {
       "phone_number"
     );
 
+    const userByUsername = await this.dataStore.get<User>(["Users", username]);
+    if (userByUsername) {
+      return userByUsername;
+    }
+
     const users = await this.dataStore.get<Record<string, User>>("Users", {});
 
     for (const user of Object.values(users)) {
-      if (attributesIncludeMatch("sub", username, user.Attributes)) {
-        return user;
-      }
-
       if (
         aliasEmailEnabled &&
         attributesIncludeMatch("email", username, user.Attributes)
@@ -175,13 +176,6 @@ export class UserPoolClientService implements UserPoolClient {
   public async saveUser(user: User): Promise<void> {
     this.logger.debug("saveUser", user);
 
-    const attributes = attributesInclude("sub", user.Attributes)
-      ? user.Attributes
-      : [{ Name: "sub", Value: user.Username }, ...user.Attributes];
-
-    await this.dataStore.set<User>(`Users.${user.Username}`, {
-      ...user,
-      Attributes: attributes,
-    });
+    await this.dataStore.set<User>(["Users", user.Username], user);
   }
 }

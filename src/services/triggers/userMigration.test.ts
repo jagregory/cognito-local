@@ -1,10 +1,9 @@
+import { UUID } from "../../__tests__/patterns";
 import { NotAuthorizedError } from "../../errors";
 import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("UserMigration trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;

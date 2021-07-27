@@ -1,5 +1,6 @@
 import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
+import { UUID } from "../__tests__/patterns";
 import {
   InvalidPasswordError,
   NotAuthorizedError,
@@ -20,8 +21,6 @@ import {
   PasswordVerifierOutput,
   SmsMfaOutput,
 } from "./initiateAuth";
-
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
