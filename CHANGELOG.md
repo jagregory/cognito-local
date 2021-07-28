@@ -1,3 +1,16 @@
+# [3.1.0](https://github.com/jagregory/cognito-local/compare/v3.0.0...v3.1.0) (2021-07-28)
+
+
+### Features
+
+* add more admin features and change password ([6339917](https://github.com/jagregory/cognito-local/commit/63399177ab4dc7b891425f9d4dd5d2756a71c60d))
+* add support for admin commands ([b65a5bf](https://github.com/jagregory/cognito-local/commit/b65a5bf99192e0ef88bac371cb7935a2c8ad299f))
+
+
+### Reverts
+
+* Revert "Merge branch 'furious-luke-master'" ([ad0e928](https://github.com/jagregory/cognito-local/commit/ad0e928385ec10e3dacb212c583a35085d88a4eb))
+
 # [3.0.0](https://github.com/jagregory/cognito-local/compare/v2.3.2...v3.0.0) (2021-07-28)
 
 
