@@ -2,13 +2,11 @@ import deepmerge from "deepmerge";
 import { createDataStore } from "../services/dataStore";
 import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolClient";
-import { TokenConfig } from "../services/tokens";
 
 export interface Config {
   LambdaClient: AWS.Lambda.ClientConfiguration;
   TriggerFunctions: FunctionConfig;
   UserPoolDefaults: UserPool;
-  TokenConfig: TokenConfig;
 }
 
 const defaults: Config = {
@@ -23,9 +21,6 @@ const defaults: Config = {
   UserPoolDefaults: {
     Id: "local",
     UsernameAttributes: ["email"],
-  },
-  TokenConfig: {
-    IssuerDomain: "http://localhost:9229",
   },
 };
 

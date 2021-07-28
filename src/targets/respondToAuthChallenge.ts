@@ -50,7 +50,7 @@ export const RespondToAuthChallenge = ({
   return {
     ChallengeName: body.ChallengeName,
     ChallengeParameters: {},
-    AuthenticationResult: await generateTokens(
+    AuthenticationResult: generateTokens(
       user,
       body.ClientId,
       userPool.config.Id

@@ -6,25 +6,13 @@ import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateUserPoolClient } from "./createUserPoolClient";
 import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
-import { ChangePassword } from "./changePassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListUsers } from "./listUsers";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { SignUp } from "./signUp";
 import { GetUser } from "./getUser";
-import { AdminCreateUser } from "./adminCreateUser";
-import { AdminGetUser } from "./adminGetUser";
-import { AdminDeleteUser } from "./adminDeleteUser";
-import { AdminConfirmSignUp } from "./adminConfirmSignUp";
-import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
 
 export const Targets = {
-  AdminConfirmSignUp,
-  AdminCreateUser,
-  AdminDeleteUser,
-  AdminGetUser,
-  AdminUpdateUserAttributes,
-  ChangePassword,
   ConfirmForgotPassword,
   ConfirmSignUp,
   CreateUserPoolClient,
