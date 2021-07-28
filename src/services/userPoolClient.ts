@@ -17,21 +17,24 @@ export const attributesIncludeMatch = (
   attributeValue: string,
   attributes: readonly UserAttribute[]
 ) =>
-  !!attributes.find(
+  !!(attributes || []).find(
     (x) => x.Name === attributeName && x.Value === attributeValue
   );
 export const attributesInclude = (
   attributeName: string,
   attributes: readonly UserAttribute[]
-) => !!attributes.find((x) => x.Name === attributeName);
+) => !!(attributes || []).find((x) => x.Name === attributeName);
 export const attributeValue = (
   attributeName: string,
   attributes: readonly UserAttribute[]
-) => attributes.find((x) => x.Name === attributeName)?.Value;
+) => (attributes || []).find((x) => x.Name === attributeName)?.Value;
 export const attributesToRecord = (
   attributes: readonly UserAttribute[]
 ): Record<string, string> =>
-  attributes.reduce((acc, attr) => ({ ...acc, [attr.Name]: attr.Value }), {});
+  (attributes || []).reduce(
+    (acc, attr) => ({ ...acc, [attr.Name]: attr.Value }),
+    {}
+  );
 export const attributesFromRecord = (
   attributes: Record<string, string>
 ): readonly UserAttribute[] =>

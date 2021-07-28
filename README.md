@@ -84,6 +84,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |
 | `LambdaClient.endpoint`                    | `string`   | `local`                 |                                                             |
 | `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
+| `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
 | `TriggerFunctions`                         | `object`   | `{}`                    | Trigger name to Function name mapping                       |
 | `TriggerFunctions.CustomMessage`           | `string`   |                         | CustomMessage lambda name                                   |
 | `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation lambda name                                |
@@ -103,6 +104,9 @@ The default config is:
       "secretAccessKey": "local"
     },
     "region": "local"
+  },
+  "TokenConfig": {
+    "IssuerDomain": "http://localhost:9229"
   },
   "TriggerFunctions": {},
   "UserPoolDefaults": {
