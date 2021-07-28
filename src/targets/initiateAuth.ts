@@ -96,14 +96,18 @@ const verifyMfaChallenge = async (
   };
 };
 
-const verifyPasswordChallenge = (
+const verifyPasswordChallenge = async (
   user: User,
   body: Input,
   userPool: UserPoolClient
-): PasswordVerifierOutput => ({
+): Promise<PasswordVerifierOutput> => ({
   ChallengeName: "PASSWORD_VERIFIER",
   ChallengeParameters: {},
-  AuthenticationResult: generateTokens(user, body.ClientId, userPool.config.Id),
+  AuthenticationResult: await generateTokens(
+    user,
+    body.ClientId,
+    userPool.config.Id
+  ),
   Session: body.Session,
 });
 
@@ -161,5 +165,5 @@ export const InitiateAuth = ({
     );
   }
 
-  return verifyPasswordChallenge(user, body, userPool);
+  return await verifyPasswordChallenge(user, body, userPool);
 };

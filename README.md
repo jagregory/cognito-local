@@ -69,19 +69,20 @@ Before starting Cognito Local, create a config file:
 
 You can edit that `.cognito/config.json` and add any of the following settings:
 
-| Setting                                    | Type       | Default     | Description                                                 |
-| ------------------------------------------ | ---------- | ----------- | ----------------------------------------------------------- |
-| `LambdaClient`                             | `object`   |             | Any setting you would pass to the AWS.Lambda Node.js client |
-| `LambdaClient.credentials.accessKeyId`     | `string`   | `local`     |                                                             |
-| `LambdaClient.credentials.secretAccessKey` | `string`   | `local`     |                                                             |
-| `LambdaClient.endpoint`                    | `string`   | `local`     |                                                             |
-| `LambdaClient.region`                      | `string`   | `local`     |                                                             |
-| `TriggerFunctions`                         | `object`   | `{}`        | Trigger name to Function name mapping                       |
-| `TriggerFunctions.UserMigration`           | `string`   |             | User Migration lambda name                                  |
-| `UserPoolDefaults`                         | `object`   |             | Default behaviour to use for the User Pool                  |
-| `UserPoolDefaults.Id`                      | `string`   | `local`     | Default User Pool Id                                        |
-| `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]` | Username alias attributes                                   |
-| `UserPoolDefaults.MfaConfiguration`        | `string`   |             | MFA type                                                    |
+| Setting                                    | Type       | Default                 | Description                                                 |
+| ------------------------------------------ | ---------- | ----------------------- | ----------------------------------------------------------- |
+| `LambdaClient`                             | `object`   |                         | Any setting you would pass to the AWS.Lambda Node.js client |
+| `LambdaClient.credentials.accessKeyId`     | `string`   | `local`                 |                                                             |
+| `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |
+| `LambdaClient.endpoint`                    | `string`   | `local`                 |                                                             |
+| `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
+| `TriggerFunctions`                         | `object`   | `{}`                    | Trigger name to Function name mapping                       |
+| `TriggerFunctions.UserMigration`           | `string`   |                         | User Migration lambda name                                  |
+| `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
+| `UserPoolDefaults.Id`                      | `string`   | `local`                 | Default User Pool Id                                        |
+| `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]`             | Username alias attributes                                   |
+| `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |
+| `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
 
 The default config is:
 
@@ -98,6 +99,9 @@ The default config is:
   "UserPoolDefaults": {
     "Id": "local",
     "UsernameAttributes": ["email"]
+  },
+  "TokenConfig": {
+    "IssuerDomain": "http://localhost:9229"
   }
 }
 ```

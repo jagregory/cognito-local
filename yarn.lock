@@ -6971,7 +6971,6 @@ npm@^6.10.3:
     cmd-shim "^3.0.3"
     columnify "~1.5.4"
     config-chain "^1.1.12"
-    debuglog "*"
     detect-indent "~5.0.0"
     detect-newline "^2.1.0"
     dezalgo "~1.0.3"
@@ -6986,7 +6985,6 @@ npm@^6.10.3:
     has-unicode "~2.0.1"
     hosted-git-info "^2.8.9"
     iferr "^1.0.2"
-    imurmurhash "*"
     infer-owner "^1.0.4"
     inflight "~1.0.6"
     inherits "^2.0.4"
@@ -7005,14 +7003,8 @@ npm@^6.10.3:
     libnpx "^10.2.4"
     lock-verify "^2.1.0"
     lockfile "^1.0.4"
-    lodash._baseindexof "*"
     lodash._baseuniq "~4.6.0"
-    lodash._bindcallback "*"
-    lodash._cacheindexof "*"
-    lodash._createcache "*"
-    lodash._getnative "*"
     lodash.clonedeep "~4.5.0"
-    lodash.restparam "*"
     lodash.union "~4.6.0"
     lodash.uniq "~4.5.0"
     lodash.without "~4.4.0"
@@ -8736,10 +8728,10 @@ static-extend@^0.1.1:
   resolved "https://registry.yarnpkg.com/statuses/-/statuses-1.5.0.tgz#161c7dac177659fd9811f43771fa99381478628c"
   integrity sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=
 
-stormdb@^0.3.0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/stormdb/-/stormdb-0.3.0.tgz#7ecdffbf8f59709508e7126c1d581ea866749476"
-  integrity sha512-cpziMPVMlyizwlkryn5h8FD9rj3RezZ0PAOj2Skj+48Mdv1fJffjOO2xzlGSNisseUVhxRsrfPL/H4P06n3fBQ==
+stormdb@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/stormdb/-/stormdb-0.4.1.tgz#00e0049da6408eacace5a3e97a54cb3fbb035cdd"
+  integrity sha512-syYUq/lhwT82HZSyHFsy1kqV6ibLIJWEg55O2rHfxW87MS16zhIK7tanhfC2Ihz1So5bgZxrqultLIgisGf74w==
 
 stream-combiner2@~1.1.1:
   version "1.1.1"
