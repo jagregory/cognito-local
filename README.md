@@ -2,15 +2,13 @@
 
 ![CI](https://github.com/jagregory/cognito-local/workflows/CI/badge.svg)
 
-An offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
-
-The goal for this project is to be _Good Enough_ for local development use, and that's it. Don't expect it to be
-perfect, because it won't be.
+A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
 ## Features
 
-> At this point in time, assume any features listed below are _partially implemented_ based on @jagregory's personal
-> use-cases. If they don't work for you, please raise an issue.
+> Assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. I've
+> implemented as little of each feature as is necessary to support my own use-case. If anything doesn't work for you,
+> please raise an issue.
 
 - [ConfirmForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html)
 - [ConfirmSignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html)
@@ -26,16 +24,24 @@ perfect, because it won't be.
 Additional supported features:
 
 - JWKs verification
-- User Migration lambda trigger
-- Post Confirmation lambda trigger
-
-## Installation
-
-    yarn add --dev cognito-local
-    # OR
-    npm install --dev cognito-local
+- Partial support for lambda triggers (see below)
 
 ## Usage
+
+### via Docker
+
+    docker run --publish 9229:9229 jagregory/cognito-local:latest
+
+Cognito Local will now be listening on `http://localhost:9229`.
+
+To persist your database between runs, mount the `/app/.cognito` volume to your host machine:
+
+    docker run --publish 9229:9229 --volume $(pwd)/.cognito:/app/.cognito jagregory/cognito-local:latest
+
+### via Node
+
+    npm install --save-dev cognito-local
+    yarn add --dev cognito-local
 
     # if node_modules/.bin is in your $PATH
     cognito-local
@@ -46,7 +52,9 @@ Additional supported features:
 
 Cognito Local will now be listening on `http://localhost:9229`.
 
-You can now update your AWS code to use the local address for Cognito's endpoint. For example, if you're using
+### Updating your application
+
+You will need to update your AWS code to use the local address for Cognito's endpoint. For example, if you're using
 amazon-cognito-identity-js you can update your `CognitoUserPool` usage to override the endpoint:
 
 ```js
@@ -56,7 +64,7 @@ new CognitoUserPool({
 });
 ```
 
-You likely only want to do this when you're running locally on your development machine.
+You only want to do this when you're running locally on your development machine.
 
 ## Configuration
 
@@ -76,13 +84,15 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |
 | `LambdaClient.endpoint`                    | `string`   | `local`                 |                                                             |
 | `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
+| `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
 | `TriggerFunctions`                         | `object`   | `{}`                    | Trigger name to Function name mapping                       |
-| `TriggerFunctions.UserMigration`           | `string`   |                         | User Migration lambda name                                  |
+| `TriggerFunctions.CustomMessage`           | `string`   |                         | CustomMessage lambda name                                   |
+| `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation lambda name                                |
+| `TriggerFunctions.UserMigration`           | `string`   |                         | UserMigration lambda name                                   |
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.Id`                      | `string`   | `local`                 | Default User Pool Id                                        |
-| `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]`             | Username alias attributes                                   |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |
-| `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
+| `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]`             | Username alias attributes                                   |
 
 The default config is:
 
@@ -95,13 +105,13 @@ The default config is:
     },
     "region": "local"
   },
+  "TokenConfig": {
+    "IssuerDomain": "http://localhost:9229"
+  },
   "TriggerFunctions": {},
   "UserPoolDefaults": {
     "Id": "local",
     "UsernameAttributes": ["email"]
-  },
-  "TokenConfig": {
-    "IssuerDomain": "http://localhost:9229"
   }
 }
 ```
@@ -113,6 +123,7 @@ verification in Node for Cognito Local. The easiest way to do this is to run Cog
 `NODE_TLS_REJECT_UNAUTHORIZED` environment variable.
 
     NODE_TLS_REJECT_UNAUTHORIZED=0 cognito-local
+    docker run --env NODE_TLS_REJECT_UNAUTHORIZED=0 ...
 
 ### User Pools and Clients
 
@@ -125,13 +136,10 @@ User Pool Clients are stored in `.cognito/db/clients.json`. You can create new U
 
 ## Known Limitations
 
-Many. Cognito Local only works for my exact use-case.
-
-Issues I know about:
-
+- Many features are missing
 - Users can't be disabled
 - Only `USER_PASSWORD_AUTH` flow is supported
-- Not all Lambda triggers (yet, watch this space)
+- Not all Lambda triggers are supported
 
 ## Multi-factor authentication
 
@@ -158,3 +166,5 @@ For example:
 │                                                       │
 ╰───────────────────────────────────────────────────────╯
 ```
+
+If a Custom Message lambda is configured, the output of the function invocation will be printed in the console too (verbosely!).
