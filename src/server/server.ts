@@ -42,51 +42,56 @@ export const createServer = (
     });
   });
 
-  app.post("/", async (req, res) => {
+  app.post("/", (req, res) => {
     const xAmzTarget = req.headers["x-amz-target"];
 
     if (!xAmzTarget) {
-      return res.status(400).json({ message: "Missing x-amz-target header" });
+      res.status(400).json({ message: "Missing x-amz-target header" });
+      return;
     } else if (xAmzTarget instanceof Array) {
-      return res.status(400).json({ message: "Too many x-amz-target headers" });
+      res.status(400).json({ message: "Too many x-amz-target headers" });
+      return;
     }
 
     const [, target] = xAmzTarget.split(".");
     if (!target) {
-      return res.status(400).json({ message: "Invalid x-amz-target header" });
+      res.status(400).json({ message: "Invalid x-amz-target header" });
+      return;
     }
 
     const route = router(target);
 
-    try {
-      const output = await route(req.body);
+    route(req.body).then(
+      (output) => res.status(200).json(output),
+      (ex) => {
+        logger.error(`Error handling target: ${target}`, ex);
+        if (ex instanceof UnsupportedError) {
+          if (options.development) {
+            logger.info("======");
+            logger.info();
+            logger.info("Unsupported target");
+            logger.info("");
+            logger.info(`x-amz-target: ${xAmzTarget}`);
+            logger.info("Body:");
+            logger.info(JSON.stringify(req.body, undefined, 2));
+            logger.info();
+            logger.info("======");
+          }
 
-      return res.status(200).json(output);
-    } catch (ex) {
-      logger.error(`Error handling target: ${target}`, ex);
-      if (ex instanceof UnsupportedError) {
-        if (options.development) {
-          logger.info("======");
-          logger.info();
-          logger.info("Unsupported target");
-          logger.info("");
-          logger.info(`x-amz-target: ${xAmzTarget}`);
-          logger.info("Body:");
-          logger.info(JSON.stringify(req.body, undefined, 2));
-          logger.info();
-          logger.info("======");
+          unsupported(ex.message, res, logger);
+          return;
+        } else if (ex instanceof CognitoError) {
+          res.status(400).json({
+            code: ex.code,
+            message: ex.message,
+          });
+          return;
+        } else {
+          res.status(500).json(ex);
+          return;
         }
-
-        return unsupported(ex.message, res, logger);
-      } else if (ex instanceof CognitoError) {
-        return res.status(400).json({
-          code: ex.code,
-          message: ex.message,
-        });
-      } else {
-        return res.status(500).json(ex);
       }
-    }
+    );
   });
 
   return {
@@ -104,14 +109,9 @@ export const createServer = (
         const httpServer = app.listen(
           actualOptions.port,
           actualOptions.hostname,
-          (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(httpServer);
-            }
-          }
+          () => resolve(httpServer)
         );
+        httpServer.on("error", reject);
       });
     },
   };
