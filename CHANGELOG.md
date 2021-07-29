@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/jagregory/cognito-local/compare/v3.1.0...v3.1.1) (2021-07-29)
+
+
+### Bug Fixes
+
+* regression for usernames with full stops in ([73cb644](https://github.com/jagregory/cognito-local/commit/73cb644efb431e567b06f0b3b97b689f4b183e21)), closes [#35](https://github.com/jagregory/cognito-local/issues/35)
+
 # [3.1.0](https://github.com/jagregory/cognito-local/compare/v3.0.0...v3.1.0) (2021-07-28)
 
 
