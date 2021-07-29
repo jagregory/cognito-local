@@ -13,7 +13,7 @@
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
-    "start": "COGNITO_LOCAL_DEVMODE=1 babel-node --extensions='.ts' src/bin/start.ts",
+    "start": "COGNITO_LOCAL_DEVMODE=1 ts-node src/bin/start.ts",
     "start:watch": "nodemon",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -49,6 +49,7 @@
     "prettier": "^2.0.4",
     "semantic-release": "^17.4.4",
     "supertest": "^4.0.2",
+    "ts-node": "^10.1.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
