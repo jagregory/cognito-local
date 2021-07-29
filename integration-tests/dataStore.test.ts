@@ -56,10 +56,10 @@ describe("Data Store", () => {
       });
     });
 
-    it("saves a nested value", async () => {
+    it("saves a nested value using array syntax", async () => {
       const dataStore = await createDataStore("example", {}, path);
 
-      await dataStore.set("key.a.b", 1);
+      await dataStore.set(["key", "a", "b"], 1);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -69,6 +69,18 @@ describe("Data Store", () => {
             b: 1,
           },
         },
+      });
+    });
+
+    it("saves a key with dots in as a single key-value pair", async () => {
+      const dataStore = await createDataStore("example", {}, path);
+
+      await dataStore.set("key.a.b", 1);
+
+      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+
+      expect(file).toEqual({
+        "key.a.b": 1,
       });
     });
 

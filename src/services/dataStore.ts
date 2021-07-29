@@ -39,7 +39,7 @@ export const createDataStore: CreateDataStore = async (
     async get(key: string | string[], defaultValue?: unknown) {
       return (
         (await (key instanceof Array ? key : [key])
-          .reduce((acc, k) => acc.get(k), db)
+          .reduce((acc, k) => acc.get([k]), db)
           .value()) ??
         defaultValue ??
         null
@@ -47,7 +47,8 @@ export const createDataStore: CreateDataStore = async (
     },
 
     async set(key, value) {
-      await db.set(key instanceof Array ? key.join(".") : key, value).save();
+      db.setValue(value, key instanceof Array ? key : [key]);
+      await db.save();
     },
   };
 };
