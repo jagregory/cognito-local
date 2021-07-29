@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/jagregory/cognito-local/compare/v3.1.1...v3.1.2) (2021-07-29)
+
+
+### Bug Fixes
+
+* runnable via npx ([4313ebf](https://github.com/jagregory/cognito-local/commit/4313ebf195514917800cfcdb928e914e08335587)), closes [#34](https://github.com/jagregory/cognito-local/issues/34)
+
 ## [3.1.1](https://github.com/jagregory/cognito-local/compare/v3.1.0...v3.1.1) (2021-07-29)
 
 
