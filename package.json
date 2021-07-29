@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts') --outdir=lib --platform=node --target=node14",
+    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts') --outdir=lib --platform=node --target=node14 --format=cjs && cp -r src/keys lib/keys",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
