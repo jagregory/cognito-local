@@ -151,6 +151,10 @@ export class UserPoolClientService implements UserPoolClient {
     const users = await this.dataStore.get<Record<string, User>>("Users", {});
 
     for (const user of Object.values(users)) {
+      if (attributesIncludeMatch("sub", username, user.Attributes)) {
+        return user;
+      }
+
       if (
         aliasEmailEnabled &&
         attributesIncludeMatch("email", username, user.Attributes)

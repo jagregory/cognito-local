@@ -198,6 +198,13 @@ describe("User Pool Client", () => {
           expect(user?.Username).toEqual("user-supplied");
         });
 
+        it("returns existing user by their sub", async () => {
+          const user = await userPool.getUserByUsername("uuid-1234");
+
+          expect(user).not.toBeNull();
+          expect(user?.Username).toEqual("user-supplied");
+        });
+
         if (find_by_email) {
           it("returns existing user by their email", async () => {
             const user = await userPool.getUserByUsername(
