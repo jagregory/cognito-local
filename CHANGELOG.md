@@ -1,3 +1,10 @@
+## [3.1.3](https://github.com/jagregory/cognito-local/compare/v3.1.2...v3.1.3) (2021-10-05)
+
+
+### Bug Fixes
+
+* **api:** users can be queried by their sub ([ae555b8](https://github.com/jagregory/cognito-local/commit/ae555b88e0de24df370a309640a70e124c025392))
+
 ## [3.1.2](https://github.com/jagregory/cognito-local/compare/v3.1.1...v3.1.2) (2021-07-29)
 
 
