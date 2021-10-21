@@ -10,36 +10,36 @@ interface Input {
 
 export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 
-export const ConfirmSignUp = ({
-  cognitoClient,
-  triggers,
-}: Pick<Services, "cognitoClient" | "triggers">): ConfirmSignUpTarget => async (
-  body
-) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  const user = await userPool.getUserByUsername(body.Username);
-  if (!user) {
-    throw new NotAuthorizedError();
-  }
+export const ConfirmSignUp =
+  ({
+    cognitoClient,
+    triggers,
+  }: Pick<Services, "cognitoClient" | "triggers">): ConfirmSignUpTarget =>
+  async (body) => {
+    const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+    const user = await userPool.getUserByUsername(body.Username);
+    if (!user) {
+      throw new NotAuthorizedError();
+    }
 
-  if (user.ConfirmationCode !== body.ConfirmationCode) {
-    throw new CodeMismatchError();
-  }
+    if (user.ConfirmationCode !== body.ConfirmationCode) {
+      throw new CodeMismatchError();
+    }
 
-  await userPool.saveUser({
-    ...user,
-    UserStatus: "CONFIRMED",
-    ConfirmationCode: undefined,
-    UserLastModifiedDate: new Date().getTime(),
-  });
-
-  if (triggers.enabled("PostConfirmation")) {
-    await triggers.postConfirmation({
-      source: "PostConfirmation_ConfirmSignUp",
-      username: user.Username,
-      clientId: body.ClientId,
-      userPoolId: userPool.config.Id,
-      userAttributes: user.Attributes,
+    await userPool.saveUser({
+      ...user,
+      UserStatus: "CONFIRMED",
+      ConfirmationCode: undefined,
+      UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
     });
-  }
-};
+
+    if (triggers.enabled("PostConfirmation")) {
+      await triggers.postConfirmation({
+        source: "PostConfirmation_ConfirmSignUp",
+        username: user.Username,
+        clientId: body.ClientId,
+        userPoolId: userPool.config.Id,
+        userAttributes: user.Attributes,
+      });
+    }
+  };

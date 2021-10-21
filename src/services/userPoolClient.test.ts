@@ -69,8 +69,8 @@ describe("User Pool Client", () => {
         AllowedOAuthFlowsUserPoolClient: false,
         ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
         ClientName: "clientName",
-        CreationDate: now.getTime(),
-        LastModifiedDate: now.getTime(),
+        CreationDate: Math.floor(now.getTime() / 1000),
+        LastModifiedDate: Math.floor(now.getTime() / 1000),
         RefreshTokenValidity: 30,
         UserPoolId: "local",
       });
@@ -84,7 +84,7 @@ describe("User Pool Client", () => {
 
   describe("saveUser", () => {
     it("saves the user", async () => {
-      const now = new Date().getTime();
+      const now = Math.floor(new Date().getTime() / 1000);
       const set = jest.fn();
 
       const userPool = await UserPoolClientService.create(
@@ -154,8 +154,8 @@ describe("User Pool Client", () => {
                 { Name: "email", Value: "example@example.com" },
                 { Name: "phone_number", Value: "0411000111" },
               ],
-              UserLastModifiedDate: new Date().getTime(),
-              UserCreateDate: new Date().getTime(),
+              UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+              UserCreateDate: Math.floor(new Date().getTime() / 1000),
               Enabled: true,
             },
           };
@@ -259,8 +259,8 @@ describe("User Pool Client", () => {
             { Name: "email", Value: "example@example.com" },
             { Name: "phone_number", Value: "0411000111" },
           ],
-          UserLastModifiedDate: new Date().getTime(),
-          UserCreateDate: new Date().getTime(),
+          UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+          UserCreateDate: Math.floor(new Date().getTime() / 1000),
           Enabled: true,
         },
       };

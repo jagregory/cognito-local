@@ -17,58 +17,60 @@ export type UserMigrationTrigger = (params: {
   userAttributes: readonly UserAttribute[];
 }) => Promise<User>;
 
-export const UserMigration = ({
-  lambda,
-  cognitoClient,
-}: {
-  lambda: Lambda;
-  cognitoClient: CognitoClient;
-}): UserMigrationTrigger => async ({
-  userPoolId,
-  clientId,
-  username,
-  password,
-  userAttributes,
-}): Promise<User> => {
-  const userPool = await cognitoClient.getUserPoolForClientId(clientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
+export const UserMigration =
+  ({
+    lambda,
+    cognitoClient,
+  }: {
+    lambda: Lambda;
+    cognitoClient: CognitoClient;
+  }): UserMigrationTrigger =>
+  async ({
+    userPoolId,
+    clientId,
+    username,
+    password,
+    userAttributes,
+  }): Promise<User> => {
+    const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+    if (!userPool) {
+      throw new ResourceNotFoundError();
+    }
 
-  let result: CognitoUserPoolResponse;
+    let result: CognitoUserPoolResponse;
 
-  try {
-    result = await lambda.invoke("UserMigration", {
-      userPoolId,
-      clientId,
-      username,
-      password,
-      triggerSource: "UserMigration_Authentication",
-      userAttributes: attributesToRecord(userAttributes),
-    });
-  } catch (ex) {
-    throw new NotAuthorizedError();
-  }
+    try {
+      result = await lambda.invoke("UserMigration", {
+        userPoolId,
+        clientId,
+        username,
+        password,
+        triggerSource: "UserMigration_Authentication",
+        userAttributes: attributesToRecord(userAttributes),
+      });
+    } catch (ex) {
+      throw new NotAuthorizedError();
+    }
 
-  const user: User = {
-    Attributes: attributesFromRecord(result.userAttributes ?? {}),
-    Enabled: true,
-    Password: password,
-    UserCreateDate: new Date().getTime(),
-    UserLastModifiedDate: new Date().getTime(),
-    Username: uuid.v4(),
-    UserStatus: result.finalUserStatus ?? "CONFIRMED",
+    const user: User = {
+      Attributes: attributesFromRecord(result.userAttributes ?? {}),
+      Enabled: true,
+      Password: password,
+      UserCreateDate: Math.floor(new Date().getTime() / 1000),
+      UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+      Username: uuid.v4(),
+      UserStatus: result.finalUserStatus ?? "CONFIRMED",
+    };
+
+    if (result.forceAliasCreation) {
+      // TODO: do something with aliases?
+    }
+
+    await userPool.saveUser(user);
+
+    if (result.messageAction !== "SUPPRESS") {
+      // TODO: send notification when not suppressed?
+    }
+
+    return user;
   };
-
-  if (result.forceAliasCreation) {
-    // TODO: do something with aliases?
-  }
-
-  await userPool.saveUser(user);
-
-  if (result.messageAction !== "SUPPRESS") {
-    // TODO: send notification when not suppressed?
-  }
-
-  return user;
-};

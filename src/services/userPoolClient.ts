@@ -124,8 +124,8 @@ export class UserPoolClientService implements UserPoolClient {
       ClientId: id,
       ClientName: name,
       UserPoolId: this.config.Id,
-      CreationDate: new Date().getTime(),
-      LastModifiedDate: new Date().getTime(),
+      CreationDate: Math.floor(new Date().getTime() / 1000),
+      LastModifiedDate: Math.floor(new Date().getTime() / 1000),
       AllowedOAuthFlowsUserPoolClient: false,
       RefreshTokenValidity: 30,
     };
@@ -139,9 +139,8 @@ export class UserPoolClientService implements UserPoolClient {
     this.logger.debug("getUserByUsername", username);
 
     const aliasEmailEnabled = this.config.UsernameAttributes?.includes("email");
-    const aliasPhoneNumberEnabled = this.config.UsernameAttributes?.includes(
-      "phone_number"
-    );
+    const aliasPhoneNumberEnabled =
+      this.config.UsernameAttributes?.includes("phone_number");
 
     const userByUsername = await this.dataStore.get<User>(["Users", username]);
     if (userByUsername) {
