@@ -1,3 +1,10 @@
+## [3.1.5](https://github.com/jagregory/cognito-local/compare/v3.1.4...v3.1.5) (2021-11-24)
+
+
+### Bug Fixes
+
+* adminCreateUser correct response ([26aa5a7](https://github.com/jagregory/cognito-local/commit/26aa5a7f9a0dfb3cbd279f16e5e1a751f95aa810)), closes [#38](https://github.com/jagregory/cognito-local/issues/38)
+
 ## [3.1.4](https://github.com/jagregory/cognito-local/compare/v3.1.3...v3.1.4) (2021-11-24)
 
 
