@@ -29,7 +29,7 @@ export const ConfirmForgotPassword = ({
 
   await userPool.saveUser({
     ...user,
-    UserLastModifiedDate: new Date().getTime(),
+    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
     Password: body.Password,

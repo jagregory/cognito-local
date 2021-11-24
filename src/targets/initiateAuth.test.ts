@@ -85,8 +85,8 @@ describe("InitiateAuth target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
       });
 
       await expect(
@@ -109,8 +109,8 @@ describe("InitiateAuth target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
       });
 
       await expect(
@@ -134,8 +134,8 @@ describe("InitiateAuth target", () => {
             Username: "0000-000",
             UserStatus: "CONFIRMED",
             Password: "hunter2",
-            UserLastModifiedDate: new Date().getTime(),
-            UserCreateDate: new Date().getTime(),
+            UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+            UserCreateDate: Math.floor(new Date().getTime() / 1000),
             Enabled: true,
             Attributes: [],
           });
@@ -198,8 +198,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: new Date().getTime(),
-              UserLastModifiedDate: new Date().getTime(),
+              UserCreateDate: Math.floor(new Date().getTime() / 1000),
+              UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
               MFAOptions: [
                 {
                   DeliveryMedium: "SMS",
@@ -250,8 +250,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: new Date().getTime(),
-              UserLastModifiedDate: new Date().getTime(),
+              UserCreateDate: Math.floor(new Date().getTime() / 1000),
+              UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
             });
           });
 
@@ -291,8 +291,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: new Date().getTime(),
-              UserLastModifiedDate: new Date().getTime(),
+              UserCreateDate: Math.floor(new Date().getTime() / 1000),
+              UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
               MFAOptions: [
                 {
                   DeliveryMedium: "SMS",
@@ -346,8 +346,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: new Date().getTime(),
-              UserLastModifiedDate: new Date().getTime(),
+              UserCreateDate: Math.floor(new Date().getTime() / 1000),
+              UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
             });
           });
 
@@ -431,8 +431,8 @@ describe("InitiateAuth target", () => {
             Password: "hunter2",
             Username: "0000-0000",
             Enabled: true,
-            UserCreateDate: new Date().getTime(),
-            UserLastModifiedDate: new Date().getTime(),
+            UserCreateDate: Math.floor(new Date().getTime() / 1000),
+            UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
           });
           const output = (await initiateAuth({
             ClientId: "clientId",

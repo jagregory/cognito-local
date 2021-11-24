@@ -49,8 +49,8 @@ export const SignUp = (
     Attributes: attributes,
     Enabled: true,
     Password: body.Password,
-    UserCreateDate: new Date().getTime(),
-    UserLastModifiedDate: new Date().getTime(),
+    UserCreateDate: Math.floor(new Date().getTime() / 1000),
+    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
     UserStatus: "UNCONFIRMED",
     Username: body.Username,
   };

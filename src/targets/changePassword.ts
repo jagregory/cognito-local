@@ -24,7 +24,7 @@ export const ChangePassword = ({
   await userPool.saveUser({
     ...user,
     Password: ProposedPassword,
-    UserLastModifiedDate: new Date().getTime(),
+    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
   });
   // TODO: Should possibly return something?
   return {};

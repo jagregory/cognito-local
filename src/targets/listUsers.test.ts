@@ -40,8 +40,8 @@ describe("ListUsers target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
         ConfirmationCode: "1234",
       },
       {
@@ -50,8 +50,8 @@ describe("ListUsers target", () => {
         Password: "password1",
         Username: "1111-1111",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
       },
     ]);
 
@@ -66,16 +66,16 @@ describe("ListUsers target", () => {
         UserStatus: "CONFIRMED",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
       },
       {
         Attributes: [],
         UserStatus: "CONFIRMED",
         Username: "1111-1111",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
       },
     ]);
   });

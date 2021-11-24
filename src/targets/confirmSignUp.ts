@@ -30,7 +30,7 @@ export const ConfirmSignUp = ({
     ...user,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserLastModifiedDate: new Date().getTime(),
+    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
   });
 
   if (triggers.enabled("PostConfirmation")) {

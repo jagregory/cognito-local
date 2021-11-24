@@ -66,8 +66,8 @@ describe("RespondToAuthChallenge target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
         MFACode: "1234",
       });
 
@@ -139,8 +139,8 @@ describe("RespondToAuthChallenge target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: new Date().getTime(),
-        UserLastModifiedDate: new Date().getTime(),
+        UserCreateDate: Math.floor(new Date().getTime() / 1000),
+        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
         MFACode: "1234",
       });
 

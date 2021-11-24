@@ -124,8 +124,8 @@ export class UserPoolClientService implements UserPoolClient {
       ClientId: id,
       ClientName: name,
       UserPoolId: this.config.Id,
-      CreationDate: new Date().getTime(),
-      LastModifiedDate: new Date().getTime(),
+      CreationDate: Math.floor(new Date().getTime() / 1000),
+      LastModifiedDate: Math.floor(new Date().getTime() / 1000),
       AllowedOAuthFlowsUserPoolClient: false,
       RefreshTokenValidity: 30,
     };
