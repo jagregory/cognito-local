@@ -1,5 +1,5 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
-import { UserAttribute } from "../services/userPoolClient";
 
 interface Input {
   UserPoolId: string;
@@ -15,7 +15,7 @@ export interface DynamoDBUserRecord {
   UserLastModifiedDate: number;
   Enabled: boolean;
   UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
-  Attributes: readonly UserAttribute[];
+  Attributes: AttributeListType;
 }
 
 interface Output {

@@ -1,19 +1,9 @@
 import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
-import { UserAttribute } from "../services/userPoolClient";
 
 interface Input {
   ClientId: string;
   UserPoolId: string;
-}
-
-export interface DynamoDBUserRecord {
-  Username: string;
-  UserCreateDate: number;
-  UserLastModifiedDate: number;
-  Enabled: boolean;
-  UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
-  Attributes: readonly UserAttribute[];
 }
 
 interface Output {

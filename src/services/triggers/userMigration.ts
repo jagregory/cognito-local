@@ -1,3 +1,4 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
 import { Clock } from "../clock";
@@ -7,7 +8,6 @@ import {
   attributesFromRecord,
   attributesToRecord,
   User,
-  UserAttribute,
 } from "../userPoolClient";
 
 export type UserMigrationTrigger = (params: {
@@ -15,7 +15,7 @@ export type UserMigrationTrigger = (params: {
   clientId: string;
   username: string;
   password: string;
-  userAttributes: readonly UserAttribute[];
+  userAttributes: AttributeListType;
 }) => Promise<User>;
 
 export const UserMigration = ({

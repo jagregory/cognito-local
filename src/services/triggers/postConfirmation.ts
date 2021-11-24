@@ -1,3 +1,4 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../../log";
 import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
@@ -11,7 +12,7 @@ export type PostConfirmationTrigger = (params: {
   userPoolId: string;
   clientId: string;
   username: string;
-  userAttributes: readonly { Name: string; Value: string }[];
+  userAttributes: AttributeListType;
 }) => Promise<void>;
 
 export const PostConfirmation = (

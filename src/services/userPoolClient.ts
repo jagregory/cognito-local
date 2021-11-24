@@ -1,12 +1,8 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
 import { Clock } from "./clock";
 import { CreateDataStore, DataStore } from "./dataStore";
-
-export interface UserAttribute {
-  Name: "sub" | "email" | "phone_number" | "preferred_username" | string;
-  Value: string;
-}
 
 export interface MFAOption {
   DeliveryMedium: "SMS";
@@ -16,29 +12,29 @@ export interface MFAOption {
 export const attributesIncludeMatch = (
   attributeName: string,
   attributeValue: string,
-  attributes: readonly UserAttribute[]
+  attributes: AttributeListType | undefined
 ) =>
-  !!(attributes || []).find(
+  !!(attributes ?? []).find(
     (x) => x.Name === attributeName && x.Value === attributeValue
   );
 export const attributesInclude = (
   attributeName: string,
-  attributes: readonly UserAttribute[]
-) => !!(attributes || []).find((x) => x.Name === attributeName);
+  attributes: AttributeListType | undefined
+) => !!(attributes ?? []).find((x) => x.Name === attributeName);
 export const attributeValue = (
   attributeName: string,
-  attributes: readonly UserAttribute[]
-) => (attributes || []).find((x) => x.Name === attributeName)?.Value;
+  attributes: AttributeListType | undefined
+) => (attributes ?? []).find((x) => x.Name === attributeName)?.Value;
 export const attributesToRecord = (
-  attributes: readonly UserAttribute[]
+  attributes: AttributeListType | undefined
 ): Record<string, string> =>
-  (attributes || []).reduce(
+  (attributes ?? []).reduce(
     (acc, attr) => ({ ...acc, [attr.Name]: attr.Value }),
     {}
   );
 export const attributesFromRecord = (
   attributes: Record<string, string>
-): readonly UserAttribute[] =>
+): AttributeListType =>
   Object.entries(attributes).map(([Name, Value]) => ({ Name, Value }));
 
 export interface User {
@@ -47,7 +43,7 @@ export interface User {
   UserLastModifiedDate: number;
   Enabled: boolean;
   UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
-  Attributes: readonly UserAttribute[];
+  Attributes: AttributeListType;
   MFAOptions?: readonly MFAOption[];
 
   // extra attributes for Cognito Local

@@ -1,4 +1,5 @@
 import { ClockFake } from "../__tests__/clockFake";
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { MockLogger } from "../__tests__/mockLogger";
 import { DataStore } from "./dataStore";
 import {
@@ -7,7 +8,6 @@ import {
   attributesIncludeMatch,
   attributesToRecord,
   User,
-  UserAttribute,
   UserPoolClient,
   UserPoolClientService,
 } from "./userPoolClient";
@@ -303,7 +303,7 @@ describe("User Pool Client", () => {
   });
 
   describe("attributes", () => {
-    const attributes: readonly UserAttribute[] = [
+    const attributes: AttributeListType = [
       { Name: "sub", Value: "uuid" },
       { Name: "email", Value: "example@example.com" },
     ];

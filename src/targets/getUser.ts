@@ -1,9 +1,10 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
 import { InvalidParameterError } from "../errors";
 import { Logger } from "../log";
 import { Services } from "../services";
 import { Token } from "../services/tokens";
-import { MFAOption, UserAttribute } from "../services/userPoolClient";
+import { MFAOption } from "../services/userPoolClient";
 
 interface Input {
   AccessToken: string;
@@ -11,7 +12,7 @@ interface Input {
 
 interface Output {
   Username: string;
-  UserAttributes: readonly UserAttribute[];
+  UserAttributes: AttributeListType;
   MFAOptions?: readonly MFAOption[];
 }
 

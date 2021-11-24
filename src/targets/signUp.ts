@@ -1,3 +1,4 @@
+import { SignUpRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Logger } from "../log";
@@ -9,13 +10,6 @@ import {
   User,
 } from "../services/userPoolClient";
 
-interface Input {
-  ClientId: string;
-  Username: string;
-  Password: string;
-  UserAttributes: readonly { Name: string; Value: string }[];
-}
-
 interface Output {
   UserConfirmed: boolean;
   UserSub: string;
@@ -26,7 +20,7 @@ interface Output {
   };
 }
 
-export type SignUpTarget = (body: Input) => Promise<Output>;
+export type SignUpTarget = (body: SignUpRequest) => Promise<Output>;
 
 export const SignUp = (
   { cognitoClient, clock, messageDelivery, messages, otp }: Services,
@@ -42,8 +36,8 @@ export const SignUp = (
   }
 
   const attributes = attributesInclude("sub", body.UserAttributes)
-    ? body.UserAttributes
-    : [{ Name: "sub", Value: uuid.v4() }, ...body.UserAttributes];
+    ? body.UserAttributes ?? []
+    : [{ Name: "sub", Value: uuid.v4() }, ...(body.UserAttributes ?? [])];
 
   const now = Math.floor(clock.get().getTime() / 1000);
   const user: User = {

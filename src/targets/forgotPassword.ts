@@ -1,6 +1,7 @@
-import { UserNotFoundError } from "../errors";
+import { UnsupportedError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
+import { attributeValue } from "../services/userPoolClient";
 
 interface Input {
   ClientId: string;
@@ -29,12 +30,15 @@ export const ForgotPassword = ({
     throw new UserNotFoundError();
   }
 
+  const userEmail = attributeValue("email", user.Attributes);
+  if (!userEmail) {
+    throw new UnsupportedError("ForgotPassword without email on user");
+  }
+
   const deliveryDetails: DeliveryDetails = {
     AttributeName: "email",
     DeliveryMedium: "EMAIL",
-    Destination: user.Attributes.filter((x) => x.Name === "email").map(
-      (x) => x.Value
-    )[0],
+    Destination: userEmail,
   };
 
   const code = otp();

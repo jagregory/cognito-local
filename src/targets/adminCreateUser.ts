@@ -1,38 +1,31 @@
+import { AdminCreateUserRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
+import { UnsupportedError } from "../errors";
 import { Services } from "../services";
 import { attributesInclude, User } from "../services/userPoolClient";
 
-interface Input {
-  UserPoolId: string;
-  Username: string;
-  TemporaryPassword: string;
-  MessageAction?: string;
-  UserAttributes?: any;
-  DesiredDeliveryMediums?: any;
-}
-
-interface Output {
-  User: User;
-}
-
-export type AdminCreateUserTarget = (body: Input) => Promise<User | null>;
+export type AdminCreateUserTarget = (
+  body: AdminCreateUserRequest
+) => Promise<{ User: User }>;
 
 export const AdminCreateUser = ({
   cognitoClient,
   clock,
-}: Services): AdminCreateUserTarget => async (body) => {
-  const { UserPoolId, Username, TemporaryPassword, UserAttributes } =
-    body || {};
-  const userPool = await cognitoClient.getUserPool(UserPoolId);
+}: Services): AdminCreateUserTarget => async (req) => {
+  if (!req.TemporaryPassword) {
+    throw new UnsupportedError("AdminCreateUser without TemporaryPassword");
+  }
 
-  const attributes = attributesInclude("sub", UserAttributes)
-    ? UserAttributes
-    : [{ Name: "sub", Value: uuid.v4() }, ...UserAttributes];
+  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+
+  const attributes = attributesInclude("sub", req.UserAttributes)
+    ? req.UserAttributes ?? []
+    : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
 
   const now = Math.floor(clock.get().getTime() / 1000);
   const user: User = {
-    Username,
-    Password: TemporaryPassword,
+    Username: req.Username,
+    Password: req.TemporaryPassword,
     Attributes: attributes,
     Enabled: true,
     UserStatus: "CONFIRMED",
@@ -42,6 +35,7 @@ export const AdminCreateUser = ({
   };
 
   await userPool.saveUser(user);
-  // TODO: Shuldn't return password.
-  return user;
+
+  // TODO: Shouldn't return password.
+  return { User: user };
 };

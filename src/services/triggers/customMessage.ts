@@ -1,3 +1,4 @@
+import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../../log";
 import { CognitoClient } from "../index";
 import { Lambda } from "../lambda";
@@ -23,7 +24,7 @@ export type CustomMessageTrigger = (params: {
   clientId: string;
   username: string;
   code: string;
-  userAttributes: readonly { Name: string; Value: string }[];
+  userAttributes: AttributeListType;
 }) => Promise<CustomMessageResponse | null>;
 
 export const CustomMessage = (
