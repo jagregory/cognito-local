@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/jagregory/cognito-local/compare/v3.1.5...v3.2.0) (2021-11-24)
+
+
+### Features
+
+* **api:** createGroup support ([c3dc092](https://github.com/jagregory/cognito-local/commit/c3dc0921ae116a356a9bee39df461795285f7c6b))
+
 ## [3.1.5](https://github.com/jagregory/cognito-local/compare/v3.1.4...v3.1.5) (2021-11-24)
 
 
