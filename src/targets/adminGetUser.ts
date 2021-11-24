@@ -1,29 +1,32 @@
+import {
+  AdminGetUserRequest,
+  AdminGetUserResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { NotAuthorizedError } from "../errors";
 
-interface Input {
-  UserPoolId: string;
-  Username: string;
-}
-
-interface Output {
-  UserStatus: string;
-  UserAttributes: any;
-}
-
-export type AdminGetUserTarget = (body: Input) => Promise<Output | null>;
+export type AdminGetUserTarget = (
+  req: AdminGetUserRequest
+) => Promise<AdminGetUserResponse>;
 
 export const AdminGetUser = ({
   cognitoClient,
-}: Services): AdminGetUserTarget => async (body) => {
-  const { UserPoolId, Username } = body || {};
-  const userPool = await cognitoClient.getUserPool(UserPoolId);
-  const user = await userPool.getUserByUsername(Username);
+}: Services): AdminGetUserTarget => async (req) => {
+  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new NotAuthorizedError();
   }
+
   return {
-    UserStatus: user.UserStatus,
+    Enabled: user.Enabled,
+    MFAOptions: user.MFAOptions,
+    PreferredMfaSetting: undefined,
     UserAttributes: user.Attributes,
+    UserCreateDate: new Date(user.UserCreateDate),
+    UserLastModifiedDate: new Date(user.UserLastModifiedDate),
+    UserMFASettingList: undefined,
+    Username: user.Username,
+    UserStatus: user.UserStatus,
   };
 };

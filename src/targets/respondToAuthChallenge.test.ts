@@ -68,8 +68,8 @@ describe("RespondToAuthChallenge target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: Math.floor(new Date().getTime() / 1000),
-        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+        UserCreateDate: new Date().getTime(),
+        UserLastModifiedDate: new Date().getTime(),
         MFACode: "1234",
       });
 
@@ -87,9 +87,9 @@ describe("RespondToAuthChallenge target", () => {
       expect(output.Session).toBe("Session");
 
       // access token
-      expect(output.AuthenticationResult.AccessToken).toBeDefined();
+      expect(output.AuthenticationResult?.AccessToken).toBeDefined();
       const decodedAccessToken = jwt.decode(
-        output.AuthenticationResult.AccessToken
+        output.AuthenticationResult?.AccessToken ?? ""
       );
       expect(decodedAccessToken).toMatchObject({
         client_id: "clientId",
@@ -103,14 +103,20 @@ describe("RespondToAuthChallenge target", () => {
         jti: expect.stringMatching(UUID),
       });
       expect(
-        jwt.verify(output.AuthenticationResult.AccessToken, PublicKey.pem, {
-          algorithms: ["RS256"],
-        })
+        jwt.verify(
+          output.AuthenticationResult?.AccessToken ?? "",
+          PublicKey.pem,
+          {
+            algorithms: ["RS256"],
+          }
+        )
       ).toBeTruthy();
 
       // id token
-      expect(output.AuthenticationResult.IdToken).toBeDefined();
-      const decodedIdToken = jwt.decode(output.AuthenticationResult.IdToken);
+      expect(output.AuthenticationResult?.IdToken).toBeDefined();
+      const decodedIdToken = jwt.decode(
+        output.AuthenticationResult?.IdToken ?? ""
+      );
       expect(decodedIdToken).toMatchObject({
         aud: "clientId",
         iss: "http://localhost:9229/test",
@@ -123,7 +129,7 @@ describe("RespondToAuthChallenge target", () => {
         email: "example@example.com",
       });
       expect(
-        jwt.verify(output.AuthenticationResult.IdToken, PublicKey.pem, {
+        jwt.verify(output.AuthenticationResult?.IdToken ?? "", PublicKey.pem, {
           algorithms: ["RS256"],
         })
       ).toBeTruthy();
@@ -141,8 +147,8 @@ describe("RespondToAuthChallenge target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: Math.floor(new Date().getTime() / 1000),
-        UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+        UserCreateDate: new Date().getTime(),
+        UserLastModifiedDate: new Date().getTime(),
         MFACode: "1234",
       });
 

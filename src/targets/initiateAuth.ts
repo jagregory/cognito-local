@@ -1,4 +1,9 @@
 import {
+  DeliveryMediumType,
+  InitiateAuthRequest,
+  InitiateAuthResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
@@ -12,52 +17,27 @@ import {
 } from "../services";
 import { Clock } from "../services/clock";
 import { generateTokens } from "../services/tokens";
-import { attributeValue, User } from "../services/userPoolClient";
+import { attributeValue, MFAOption, User } from "../services/userPoolClient";
 
-interface Input {
-  AuthFlow: "USER_PASSWORD_AUTH" | "CUSTOM_AUTH";
-  ClientId: string;
-  AuthParameters: { USERNAME: string; PASSWORD: string };
-  Session: string | null;
-}
-
-export interface SmsMfaOutput {
-  ChallengeName: "SMS_MFA";
-  ChallengeParameters: {
-    CODE_DELIVERY_DELIVERY_MEDIUM: "SMS";
-    CODE_DELIVERY_DESTINATION: string;
-    USER_ID_FOR_SRP: string;
-  };
-  Session: string | null;
-}
-
-export interface PasswordVerifierOutput {
-  ChallengeName: "PASSWORD_VERIFIER";
-  ChallengeParameters: {};
-  Session: string | null;
-  AuthenticationResult: {
-    IdToken: string;
-    AccessToken: string;
-    RefreshToken: string;
-  };
-}
-
-export type Output = SmsMfaOutput | PasswordVerifierOutput;
-
-export type InitiateAuthTarget = (body: Input) => Promise<Output>;
+export type InitiateAuthTarget = (
+  req: InitiateAuthRequest
+) => Promise<InitiateAuthResponse>;
 
 const verifyMfaChallenge = async (
   otp: () => string,
   messages: Messages,
   user: User,
-  body: Input,
+  req: InitiateAuthRequest,
   userPool: UserPoolClient,
   messageDelivery: MessageDelivery
-): Promise<SmsMfaOutput> => {
+): Promise<InitiateAuthResponse> => {
   if (!user.MFAOptions?.length) {
     throw new NotAuthorizedError();
   }
-  const smsMfaOption = user.MFAOptions?.find((x) => x.DeliveryMedium === "SMS");
+  const smsMfaOption = user.MFAOptions?.find(
+    (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
+      x.DeliveryMedium === "SMS"
+  );
   if (!smsMfaOption) {
     throw new UnsupportedError("MFA challenge without SMS");
   }
@@ -75,7 +55,8 @@ const verifyMfaChallenge = async (
   await messageDelivery.deliver(
     user,
     {
-      ...smsMfaOption,
+      DeliveryMedium: smsMfaOption.DeliveryMedium,
+      AttributeName: smsMfaOption.AttributeName,
       Destination: deliveryDestination,
     },
     message
@@ -93,25 +74,23 @@ const verifyMfaChallenge = async (
       CODE_DELIVERY_DESTINATION: deliveryDestination,
       USER_ID_FOR_SRP: user.Username,
     },
-    Session: body.Session,
   };
 };
 
 const verifyPasswordChallenge = async (
   user: User,
-  body: Input,
+  req: InitiateAuthRequest,
   userPool: UserPoolClient,
   clock: Clock
-): Promise<PasswordVerifierOutput> => ({
+): Promise<InitiateAuthResponse> => ({
   ChallengeName: "PASSWORD_VERIFIER",
   ChallengeParameters: {},
   AuthenticationResult: await generateTokens(
     user,
-    body.ClientId,
+    req.ClientId,
     userPool.config.Id,
     clock
   ),
-  Session: body.Session,
 });
 
 export const InitiateAuth = ({
@@ -121,13 +100,16 @@ export const InitiateAuth = ({
   messages,
   otp,
   triggers,
-}: Services): InitiateAuthTarget => async (body) => {
-  if (body.AuthFlow !== "USER_PASSWORD_AUTH") {
-    throw new UnsupportedError(`AuthFlow=${body.AuthFlow}`);
+}: Services): InitiateAuthTarget => async (req) => {
+  if (req.AuthFlow !== "USER_PASSWORD_AUTH") {
+    throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
+  }
+  if (!req.AuthParameters) {
+    throw new UnsupportedError("InitAuth without AuthParameters");
   }
 
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  let user = await userPool.getUserByUsername(body.AuthParameters.USERNAME);
+  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
 
   if (!user && triggers.enabled("UserMigration")) {
     // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
@@ -137,9 +119,9 @@ export const InitiateAuth = ({
     // Cognito creates the user in the user pool.
     user = await triggers.userMigration({
       userPoolId: userPool.config.Id,
-      clientId: body.ClientId,
-      username: body.AuthParameters.USERNAME,
-      password: body.AuthParameters.PASSWORD,
+      clientId: req.ClientId,
+      username: req.AuthParameters.USERNAME,
+      password: req.AuthParameters.PASSWORD,
       userAttributes: [],
     });
   }
@@ -150,7 +132,7 @@ export const InitiateAuth = ({
   if (user.UserStatus === "RESET_REQUIRED") {
     throw new PasswordResetRequiredError();
   }
-  if (user.Password !== body.AuthParameters.PASSWORD) {
+  if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
   }
 
@@ -163,11 +145,11 @@ export const InitiateAuth = ({
       otp,
       messages,
       user,
-      body,
+      req,
       userPool,
       messageDelivery
     );
   }
 
-  return await verifyPasswordChallenge(user, body, userPool, clock);
+  return await verifyPasswordChallenge(user, req, userPool, clock);
 };

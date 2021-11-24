@@ -15,12 +15,7 @@ import {
   MessageDelivery,
 } from "../services";
 import { User } from "../services/userPoolClient";
-import {
-  InitiateAuth,
-  InitiateAuthTarget,
-  PasswordVerifierOutput,
-  SmsMfaOutput,
-} from "./initiateAuth";
+import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
@@ -85,8 +80,8 @@ describe("InitiateAuth target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: Math.floor(now.getTime() / 1000),
-        UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+        UserCreateDate: now.getTime(),
+        UserLastModifiedDate: now.getTime(),
       });
 
       await expect(
@@ -97,7 +92,6 @@ describe("InitiateAuth target", () => {
             USERNAME: "0000-0000",
             PASSWORD: "bad-password",
           },
-          Session: "Session",
         })
       ).rejects.toBeInstanceOf(InvalidPasswordError);
     });
@@ -109,8 +103,8 @@ describe("InitiateAuth target", () => {
         Password: "hunter2",
         Username: "0000-0000",
         Enabled: true,
-        UserCreateDate: Math.floor(now.getTime() / 1000),
-        UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+        UserCreateDate: now.getTime(),
+        UserLastModifiedDate: now.getTime(),
       });
 
       await expect(
@@ -121,7 +115,6 @@ describe("InitiateAuth target", () => {
             USERNAME: "0000-0000",
             PASSWORD: "bad-password",
           },
-          Session: "Session",
         })
       ).rejects.toBeInstanceOf(PasswordResetRequiredError);
     });
@@ -134,26 +127,24 @@ describe("InitiateAuth target", () => {
             Username: "0000-000",
             UserStatus: "CONFIRMED",
             Password: "hunter2",
-            UserLastModifiedDate: Math.floor(now.getTime() / 1000),
-            UserCreateDate: Math.floor(now.getTime() / 1000),
+            UserLastModifiedDate: now.getTime(),
+            UserCreateDate: now.getTime(),
             Enabled: true,
             Attributes: [],
           });
           mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
-          const output = (await initiateAuth({
+          const output = await initiateAuth({
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: "0000-0000",
               PASSWORD: "hunter2",
             },
-            Session: "Session",
-          })) as PasswordVerifierOutput;
+          });
 
           expect(output).toBeDefined();
-          expect(output.Session).toBe("Session");
-          expect(output.AuthenticationResult.AccessToken).toBeDefined();
+          expect(output.AuthenticationResult?.AccessToken).toBeDefined();
         });
       });
 
@@ -170,7 +161,6 @@ describe("InitiateAuth target", () => {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
-              Session: "Session",
             })
           ).rejects.toBeInstanceOf(NotAuthorizedError);
         });
@@ -198,8 +188,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: Math.floor(now.getTime() / 1000),
-              UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+              UserCreateDate: now.getTime(),
+              UserLastModifiedDate: now.getTime(),
               MFAOptions: [
                 {
                   DeliveryMedium: "SMS",
@@ -211,18 +201,16 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            const output = (await initiateAuth({
+            const output = await initiateAuth({
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
-              Session: "Session",
-            })) as SmsMfaOutput;
+            });
 
             expect(output).toBeDefined();
-            expect(output.Session).toBe("Session");
 
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,
@@ -250,8 +238,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: Math.floor(now.getTime() / 1000),
-              UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+              UserCreateDate: now.getTime(),
+              UserLastModifiedDate: now.getTime(),
             });
           });
 
@@ -264,7 +252,6 @@ describe("InitiateAuth target", () => {
                   USERNAME: "0000-0000",
                   PASSWORD: "hunter2",
                 },
-                Session: "Session",
               })
             ).rejects.toBeInstanceOf(NotAuthorizedError);
           });
@@ -291,8 +278,8 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: Math.floor(now.getTime() / 1000),
-              UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+              UserCreateDate: now.getTime(),
+              UserLastModifiedDate: now.getTime(),
               MFAOptions: [
                 {
                   DeliveryMedium: "SMS",
@@ -304,18 +291,16 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            const output = (await initiateAuth({
+            const output = await initiateAuth({
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
-              Session: "Session",
-            })) as SmsMfaOutput;
+            });
 
             expect(output).toBeDefined();
-            expect(output.Session).toBe("Session");
 
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,
@@ -346,29 +331,27 @@ describe("InitiateAuth target", () => {
               Password: "hunter2",
               Username: "0000-0000",
               Enabled: true,
-              UserCreateDate: Math.floor(now.getTime() / 1000),
-              UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+              UserCreateDate: now.getTime(),
+              UserLastModifiedDate: now.getTime(),
             });
           });
 
           it("generates tokens", async () => {
-            const output = (await initiateAuth({
+            const output = await initiateAuth({
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: "0000-0000",
                 PASSWORD: "hunter2",
               },
-              Session: "Session",
-            })) as PasswordVerifierOutput;
+            });
 
             expect(output).toBeDefined();
-            expect(output.Session).toBe("Session");
 
             // access token
-            expect(output.AuthenticationResult.AccessToken).toBeDefined();
+            expect(output.AuthenticationResult?.AccessToken).toBeDefined();
             const decodedAccessToken = jwt.decode(
-              output.AuthenticationResult.AccessToken
+              output.AuthenticationResult?.AccessToken ?? ""
             );
             expect(decodedAccessToken).toMatchObject({
               client_id: "clientId",
@@ -383,7 +366,7 @@ describe("InitiateAuth target", () => {
             });
             expect(
               jwt.verify(
-                output.AuthenticationResult.AccessToken,
+                output.AuthenticationResult?.AccessToken ?? "",
                 PublicKey.pem,
                 {
                   algorithms: ["RS256"],
@@ -392,9 +375,9 @@ describe("InitiateAuth target", () => {
             ).toBeTruthy();
 
             // id token
-            expect(output.AuthenticationResult.IdToken).toBeDefined();
+            expect(output.AuthenticationResult?.IdToken).toBeDefined();
             const decodedIdToken = jwt.decode(
-              output.AuthenticationResult.IdToken
+              output.AuthenticationResult?.IdToken ?? ""
             );
             expect(decodedIdToken).toMatchObject({
               aud: "clientId",
@@ -408,9 +391,13 @@ describe("InitiateAuth target", () => {
               email: "example@example.com",
             });
             expect(
-              jwt.verify(output.AuthenticationResult.IdToken, PublicKey.pem, {
-                algorithms: ["RS256"],
-              })
+              jwt.verify(
+                output.AuthenticationResult?.IdToken ?? "",
+                PublicKey.pem,
+                {
+                  algorithms: ["RS256"],
+                }
+              )
             ).toBeTruthy();
           });
         });
@@ -431,26 +418,24 @@ describe("InitiateAuth target", () => {
             Password: "hunter2",
             Username: "0000-0000",
             Enabled: true,
-            UserCreateDate: Math.floor(now.getTime() / 1000),
-            UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+            UserCreateDate: now.getTime(),
+            UserLastModifiedDate: now.getTime(),
           });
-          const output = (await initiateAuth({
+          const output = await initiateAuth({
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: "0000-0000",
               PASSWORD: "hunter2",
             },
-            Session: "Session",
-          })) as PasswordVerifierOutput;
+          });
 
           expect(output).toBeDefined();
-          expect(output.Session).toBe("Session");
 
           // access token
-          expect(output.AuthenticationResult.AccessToken).toBeDefined();
+          expect(output.AuthenticationResult?.AccessToken).toBeDefined();
           const decodedAccessToken = jwt.decode(
-            output.AuthenticationResult.AccessToken
+            output.AuthenticationResult?.AccessToken ?? ""
           );
           expect(decodedAccessToken).toMatchObject({
             client_id: "clientId",
@@ -464,15 +449,19 @@ describe("InitiateAuth target", () => {
             jti: expect.stringMatching(UUID),
           });
           expect(
-            jwt.verify(output.AuthenticationResult.AccessToken, PublicKey.pem, {
-              algorithms: ["RS256"],
-            })
+            jwt.verify(
+              output.AuthenticationResult?.AccessToken ?? "",
+              PublicKey.pem,
+              {
+                algorithms: ["RS256"],
+              }
+            )
           ).toBeTruthy();
 
           // id token
-          expect(output.AuthenticationResult.IdToken).toBeDefined();
+          expect(output.AuthenticationResult?.IdToken).toBeDefined();
           const decodedIdToken = jwt.decode(
-            output.AuthenticationResult.IdToken
+            output.AuthenticationResult?.IdToken ?? ""
           );
           expect(decodedIdToken).toMatchObject({
             aud: "clientId",
@@ -486,9 +475,13 @@ describe("InitiateAuth target", () => {
             email: "example@example.com",
           });
           expect(
-            jwt.verify(output.AuthenticationResult.IdToken, PublicKey.pem, {
-              algorithms: ["RS256"],
-            })
+            jwt.verify(
+              output.AuthenticationResult?.IdToken ?? "",
+              PublicKey.pem,
+              {
+                algorithms: ["RS256"],
+              }
+            )
           ).toBeTruthy();
         });
       });

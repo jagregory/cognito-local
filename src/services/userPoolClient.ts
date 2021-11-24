@@ -1,4 +1,7 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {
+  AttributeListType,
+  MFAOptionListType,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
 import { Clock } from "./clock";
@@ -22,7 +25,7 @@ export const attributesInclude = (
   attributes: AttributeListType | undefined
 ) => !!(attributes ?? []).find((x) => x.Name === attributeName);
 export const attributeValue = (
-  attributeName: string,
+  attributeName: string | undefined,
   attributes: AttributeListType | undefined
 ) => (attributes ?? []).find((x) => x.Name === attributeName)?.Value;
 export const attributesToRecord = (
@@ -44,7 +47,7 @@ export interface User {
   Enabled: boolean;
   UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
   Attributes: AttributeListType;
-  MFAOptions?: readonly MFAOption[];
+  MFAOptions?: MFAOptionListType;
 
   // extra attributes for Cognito Local
   Password: string;
@@ -123,7 +126,7 @@ export class UserPoolClientService implements UserPoolClient {
 
   public async createAppClient(name: string): Promise<AppClient> {
     const id = newId();
-    const now = Math.floor(this.clock.get().getTime() / 1000);
+    const now = this.clock.get().getTime();
 
     const appClient: AppClient = {
       ClientId: id,

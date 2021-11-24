@@ -53,7 +53,7 @@ export const UserMigration = ({
     throw new NotAuthorizedError();
   }
 
-  const now = Math.floor(clock.get().getTime() / 1000);
+  const now = clock.get().getTime();
   const user: User = {
     Attributes: attributesFromRecord(result.userAttributes ?? {}),
     Enabled: true,

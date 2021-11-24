@@ -1,14 +1,13 @@
+import {
+  ConfirmSignUpRequest,
+  ConfirmSignUpResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 
-interface Input {
-  ClientId: string;
-  Username: string;
-  ConfirmationCode: string;
-  ForceAliasCreation: boolean;
-}
-
-export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
+export type ConfirmSignUpTarget = (
+  req: ConfirmSignUpRequest
+) => Promise<ConfirmSignUpResponse>;
 
 export const ConfirmSignUp = ({
   cognitoClient,
@@ -17,14 +16,14 @@ export const ConfirmSignUp = ({
 }: Pick<
   Services,
   "cognitoClient" | "clock" | "triggers"
->): ConfirmSignUpTarget => async (body) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  const user = await userPool.getUserByUsername(body.Username);
+>): ConfirmSignUpTarget => async (req) => {
+  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new NotAuthorizedError();
   }
 
-  if (user.ConfirmationCode !== body.ConfirmationCode) {
+  if (user.ConfirmationCode !== req.ConfirmationCode) {
     throw new CodeMismatchError();
   }
 
@@ -32,16 +31,18 @@ export const ConfirmSignUp = ({
     ...user,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
+    UserLastModifiedDate: clock.get().getTime(),
   });
 
   if (triggers.enabled("PostConfirmation")) {
     await triggers.postConfirmation({
       source: "PostConfirmation_ConfirmSignUp",
       username: user.Username,
-      clientId: body.ClientId,
+      clientId: req.ClientId,
       userPoolId: userPool.config.Id,
       userAttributes: user.Attributes,
     });
   }
+
+  return {};
 };

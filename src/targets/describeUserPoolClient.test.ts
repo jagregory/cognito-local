@@ -41,8 +41,8 @@ describe("DescribeUserPoolClient target", () => {
     const existingAppClient: AppClient = {
       RefreshTokenValidity: 30,
       AllowedOAuthFlowsUserPoolClient: false,
-      LastModifiedDate: Math.floor(new Date().getTime() / 1000),
-      CreationDate: Math.floor(new Date().getTime() / 1000),
+      LastModifiedDate: new Date().getTime(),
+      CreationDate: new Date().getTime(),
       UserPoolId: "userPoolId",
       ClientId: "abc",
       ClientName: "clientName",
@@ -54,7 +54,13 @@ describe("DescribeUserPoolClient target", () => {
       UserPoolId: "userPoolId",
     });
 
-    expect(result).toEqual({ UserPoolClient: existingAppClient });
+    expect(result).toEqual({
+      UserPoolClient: {
+        ...existingAppClient,
+        CreationDate: new Date(existingAppClient.CreationDate),
+        LastModifiedDate: new Date(existingAppClient.LastModifiedDate),
+      },
+    });
   });
 
   it("throws resource not found for an invalid app client", async () => {

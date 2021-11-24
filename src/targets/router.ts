@@ -43,7 +43,7 @@ export const isSupportedTarget = (name: string): name is TargetName =>
   Object.keys(Targets).includes(name);
 
 // eslint-disable-next-line
-export type Route = (body: any) => Promise<any>;
+export type Route = (req: any) => Promise<any>;
 export type Router = (target: string) => Route;
 
 export const Router = (services: Services, logger: Logger): Router => (

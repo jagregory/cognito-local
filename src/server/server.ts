@@ -60,9 +60,20 @@ export const createServer = (
     }
 
     const route = router(target);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const replacer: (this: any, key: string, value: any) => any = function (
+      key,
+      value
+    ) {
+      if (this[key] instanceof Date) {
+        return Math.floor(this[key].getTime() / 1000);
+      }
+      return value;
+    };
 
     route(req.body).then(
-      (output) => res.status(200).json(output),
+      (output) =>
+        res.status(200).type("json").send(JSON.stringify(output, replacer)),
       (ex) => {
         logger.error(`Error handling target: ${target}`, ex);
         if (ex instanceof UnsupportedError) {

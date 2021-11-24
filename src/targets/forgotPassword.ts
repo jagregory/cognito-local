@@ -1,18 +1,15 @@
+import {
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UnsupportedError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import { attributeValue } from "../services/userPoolClient";
 
-interface Input {
-  ClientId: string;
-  Username: string;
-}
-
-interface Output {
-  CodeDeliveryDetails: DeliveryDetails;
-}
-
-export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
+export type ForgotPasswordTarget = (
+  req: ForgotPasswordRequest
+) => Promise<ForgotPasswordResponse>;
 
 export const ForgotPassword = ({
   cognitoClient,
@@ -23,9 +20,9 @@ export const ForgotPassword = ({
 }: Pick<
   Services,
   "cognitoClient" | "clock" | "messageDelivery" | "messages" | "otp"
->): ForgotPasswordTarget => async (body) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  const user = await userPool.getUserByUsername(body.Username);
+>): ForgotPasswordTarget => async (req) => {
+  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new UserNotFoundError();
   }
@@ -43,7 +40,7 @@ export const ForgotPassword = ({
 
   const code = otp();
   const message = await messages.forgotPassword(
-    body.ClientId,
+    req.ClientId,
     userPool.config.Id,
     user,
     code
@@ -52,7 +49,7 @@ export const ForgotPassword = ({
 
   await userPool.saveUser({
     ...user,
-    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
+    UserLastModifiedDate: clock.get().getTime(),
     ConfirmationCode: code,
   });
 

@@ -1,4 +1,7 @@
-import { SignUpRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {
+  SignUpRequest,
+  SignUpResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Logger } from "../log";
@@ -10,44 +13,34 @@ import {
   User,
 } from "../services/userPoolClient";
 
-interface Output {
-  UserConfirmed: boolean;
-  UserSub: string;
-  CodeDeliveryDetails: {
-    AttributeName?: string;
-    DeliveryMedium?: string;
-    Destination?: string;
-  };
-}
-
-export type SignUpTarget = (body: SignUpRequest) => Promise<Output>;
+export type SignUpTarget = (req: SignUpRequest) => Promise<SignUpResponse>;
 
 export const SignUp = (
   { cognitoClient, clock, messageDelivery, messages, otp }: Services,
   logger: Logger
-): SignUpTarget => async (body) => {
+): SignUpTarget => async (req) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
   // is enabled on the user pool. This will be the default after Feb 2020.
   // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
-  const existingUser = await userPool.getUserByUsername(body.Username);
+  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const existingUser = await userPool.getUserByUsername(req.Username);
   if (existingUser) {
     throw new UsernameExistsError();
   }
 
-  const attributes = attributesInclude("sub", body.UserAttributes)
-    ? body.UserAttributes ?? []
-    : [{ Name: "sub", Value: uuid.v4() }, ...(body.UserAttributes ?? [])];
+  const attributes = attributesInclude("sub", req.UserAttributes)
+    ? req.UserAttributes ?? []
+    : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
 
-  const now = Math.floor(clock.get().getTime() / 1000);
+  const now = clock.get().getTime();
   const user: User = {
     Attributes: attributes,
     Enabled: true,
-    Password: body.Password,
+    Password: req.Password,
     UserCreateDate: now,
     UserLastModifiedDate: now,
     UserStatus: "UNCONFIRMED",
-    Username: body.Username,
+    Username: req.Username,
   };
 
   const email = attributeValue("email", user.Attributes);

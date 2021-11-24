@@ -1,62 +1,29 @@
+import {
+  DescribeUserPoolClientRequest,
+  DescribeUserPoolClientResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
 
-interface Input {
-  ClientId: string;
-  UserPoolId: string;
-}
-
-interface Output {
-  UserPoolClient: {
-    AccessTokenValidity?: number;
-    AllowedOAuthFlows?: ("code" | "implicit" | "client_credentials")[];
-    AllowedOAuthFlowsUserPoolClient?: boolean;
-    AllowedOAuthScopes?: string[];
-    AnalyticsConfiguration?: {
-      ApplicationArn?: string;
-      ApplicationId?: string;
-      ExternalId?: string;
-      RoleArn?: string;
-      UserDataShared?: boolean;
-    };
-    CallbackURLs?: string[];
-    ClientId?: string;
-    ClientName?: string;
-    ClientSecret?: string;
-    CreationDate?: number;
-    DefaultRedirectURI?: string;
-    EnableTokenRevocation?: boolean;
-    ExplicitAuthFlows?: string[];
-    IdTokenValidity?: number;
-    LastModifiedDate?: number;
-    LogoutURLs?: string[];
-    PreventUserExistenceErrors?: "LEGACY" | "ENABLED";
-    ReadAttributes?: string[];
-    RefreshTokenValidity?: number;
-    SupportedIdentityProviders?: string[];
-    TokenValidityUnits?: {
-      AccessToken?: "seconds" | "minutes" | "hours" | "days";
-      IdToken?: "seconds" | "minutes" | "hours" | "days";
-      RefreshToken?: "seconds" | "minutes" | "hours" | "days";
-    };
-    UserPoolId?: string;
-    WriteAttributes?: string[];
-  };
-}
-
-export type DescribeUserPoolClientTarget = (body: Input) => Promise<Output>;
+export type DescribeUserPoolClientTarget = (
+  req: DescribeUserPoolClientRequest
+) => Promise<DescribeUserPoolClientResponse>;
 
 export const DescribeUserPoolClient = ({
   cognitoClient,
 }: Pick<Services, "cognitoClient">): DescribeUserPoolClientTarget => async (
-  body
+  req
 ) => {
-  const client = await cognitoClient.getAppClient(body.ClientId);
-  if (client?.UserPoolId !== body.UserPoolId) {
+  const client = await cognitoClient.getAppClient(req.ClientId);
+  if (client?.UserPoolId !== req.UserPoolId) {
     throw new ResourceNotFoundError();
   }
 
   return {
-    UserPoolClient: client,
+    UserPoolClient: {
+      ...client,
+      CreationDate: new Date(client.CreationDate),
+      LastModifiedDate: new Date(client.LastModifiedDate),
+    },
   };
 };

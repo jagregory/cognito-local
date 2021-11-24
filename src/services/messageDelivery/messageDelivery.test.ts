@@ -9,8 +9,8 @@ describe("Message Delivery", () => {
     Attributes: [],
     Password: "hunter2",
     Enabled: true,
-    UserCreateDate: Math.floor(new Date().getTime() / 1000),
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserCreateDate: new Date().getTime(),
+    UserLastModifiedDate: new Date().getTime(),
   };
 
   describe("when delivery method is EMAIL", () => {

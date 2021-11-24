@@ -1,29 +1,18 @@
-import { CodeMismatchError, NotAuthorizedError } from "../errors";
+import {
+  RespondToAuthChallengeRequest,
+  RespondToAuthChallengeResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {
+  CodeMismatchError,
+  NotAuthorizedError,
+  UnsupportedError,
+} from "../errors";
 import { Services } from "../services";
 import { generateTokens } from "../services/tokens";
 
-interface Input {
-  ChallengeName: "SMS_MFA";
-  ChallengeResponses: {
-    USERNAME: string;
-    SMS_MFA_CODE: string;
-  };
-  ClientId: string;
-  Session: string | null;
-}
-
-interface Output {
-  ChallengeName: string;
-  ChallengeParameters: {};
-  AuthenticationResult: {
-    IdToken: string;
-    AccessToken: string;
-    RefreshToken: string;
-  };
-  Session: string | null;
-}
-
-export type RespondToAuthChallengeTarget = (body: Input) => Promise<Output>;
+export type RespondToAuthChallengeTarget = (
+  req: RespondToAuthChallengeRequest
+) => Promise<RespondToAuthChallengeResponse>;
 
 export const RespondToAuthChallenge = ({
   cognitoClient,
@@ -31,16 +20,22 @@ export const RespondToAuthChallenge = ({
 }: Pick<
   Services,
   "cognitoClient" | "clock"
->): RespondToAuthChallengeTarget => async (body) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
+>): RespondToAuthChallengeTarget => async (req) => {
+  if (!req.ChallengeResponses) {
+    throw new UnsupportedError(
+      "RespondToAuthChallenge without ChallengeResponses"
+    );
+  }
+
+  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(
-    body.ChallengeResponses.USERNAME
+    req.ChallengeResponses.USERNAME
   );
   if (!user) {
     throw new NotAuthorizedError();
   }
 
-  if (user.MFACode !== body.ChallengeResponses.SMS_MFA_CODE) {
+  if (user.MFACode !== req.ChallengeResponses.SMS_MFA_CODE) {
     throw new CodeMismatchError();
   }
 
@@ -50,14 +45,14 @@ export const RespondToAuthChallenge = ({
   });
 
   return {
-    ChallengeName: body.ChallengeName,
+    ChallengeName: req.ChallengeName,
     ChallengeParameters: {},
     AuthenticationResult: await generateTokens(
       user,
-      body.ClientId,
+      req.ClientId,
       userPool.config.Id,
       clock
     ),
-    Session: body.Session,
+    Session: req.Session,
   };
 };

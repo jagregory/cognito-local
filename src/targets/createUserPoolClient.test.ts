@@ -40,8 +40,8 @@ describe("CreateUserPoolClient target", () => {
     const createdAppClient: AppClient = {
       RefreshTokenValidity: 30,
       AllowedOAuthFlowsUserPoolClient: false,
-      LastModifiedDate: Math.floor(new Date().getTime() / 1000),
-      CreationDate: Math.floor(new Date().getTime() / 1000),
+      LastModifiedDate: new Date().getTime(),
+      CreationDate: new Date().getTime(),
       UserPoolId: "userPoolId",
       ClientId: "abc",
       ClientName: "clientName",
@@ -57,6 +57,12 @@ describe("CreateUserPoolClient target", () => {
       "clientName"
     );
 
-    expect(result).toEqual({ UserPoolClient: createdAppClient });
+    expect(result).toEqual({
+      UserPoolClient: {
+        ...createdAppClient,
+        LastModifiedDate: new Date(createdAppClient.LastModifiedDate),
+        CreationDate: new Date(createdAppClient.CreationDate),
+      },
+    });
   });
 });

@@ -1,21 +1,20 @@
+import {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
 import { Services } from "../services";
 import { NotAuthorizedError } from "../errors";
 
-interface Input {
-  AccessToken: string;
-  PreviousPassword: string;
-  ProposedPassword: string;
-}
-
-export type ChangePasswordTarget = (body: Input) => Promise<object | null>;
+export type ChangePasswordTarget = (
+  req: ChangePasswordRequest
+) => Promise<ChangePasswordResponse>;
 
 export const ChangePassword = ({
   cognitoClient,
   clock,
-}: Services): ChangePasswordTarget => async (body) => {
-  const { AccessToken, PreviousPassword, ProposedPassword } = body || {};
-  const claims = jwt.decode(AccessToken) as any;
+}: Services): ChangePasswordTarget => async (req) => {
+  const claims = jwt.decode(req.AccessToken) as any;
   const userPool = await cognitoClient.getUserPoolForClientId(claims.client_id);
   const user = await userPool.getUserByUsername(claims.username);
   if (!user) {
@@ -24,8 +23,8 @@ export const ChangePassword = ({
   // TODO: Should check previous password.
   await userPool.saveUser({
     ...user,
-    Password: ProposedPassword,
-    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
+    Password: req.ProposedPassword,
+    UserLastModifiedDate: clock.get().getTime(),
   });
   // TODO: Should possibly return something?
   return {};

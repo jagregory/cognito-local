@@ -1,12 +1,15 @@
-import { AdminCreateUserRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {
+  AdminCreateUserRequest,
+  AdminCreateUserResponse,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
 import { UnsupportedError } from "../errors";
 import { Services } from "../services";
 import { attributesInclude, User } from "../services/userPoolClient";
 
 export type AdminCreateUserTarget = (
-  body: AdminCreateUserRequest
-) => Promise<{ User: User }>;
+  req: AdminCreateUserRequest
+) => Promise<AdminCreateUserResponse>;
 
 export const AdminCreateUser = ({
   cognitoClient,
@@ -22,7 +25,8 @@ export const AdminCreateUser = ({
     ? req.UserAttributes ?? []
     : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
 
-  const now = Math.floor(clock.get().getTime() / 1000);
+  const now = clock.get();
+
   const user: User = {
     Username: req.Username,
     Password: req.TemporaryPassword,
@@ -30,12 +34,20 @@ export const AdminCreateUser = ({
     Enabled: true,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserCreateDate: now,
-    UserLastModifiedDate: now,
+    UserCreateDate: now.getTime(),
+    UserLastModifiedDate: now.getTime(),
   };
-
   await userPool.saveUser(user);
 
-  // TODO: Shouldn't return password.
-  return { User: user };
+  return {
+    User: {
+      Username: req.Username,
+      Attributes: attributes,
+      Enabled: true,
+      UserStatus: "CONFIRMED",
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
+      MFAOptions: undefined,
+    },
+  };
 };
