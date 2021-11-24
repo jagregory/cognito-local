@@ -4,6 +4,7 @@ import http from "http";
 import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
+import { Logger } from "../../src/log";
 import {
   CognitoClientService,
   MessageDelivery,
@@ -20,7 +21,8 @@ const mkdtemp = promisify(fs.mkdtemp);
 const rmdir = promisify(fs.rmdir);
 
 export const withCognitoSdk = (
-  fn: (cognito: () => AWS.CognitoIdentityServiceProvider) => void
+  fn: (cognito: () => AWS.CognitoIdentityServiceProvider) => void,
+  logger: Logger = MockLogger
 ) => () => {
   let path: string;
   let tmpCreateDataStore: CreateDataStore;
@@ -37,14 +39,14 @@ export const withCognitoSdk = (
         UsernameAttributes: [],
       },
       tmpCreateDataStore,
-      UserPoolClientService.create,
-      MockLogger
+      UserPoolClientService.create.bind(null),
+      logger
     );
     const mockLambda: jest.Mocked<Lambda> = {
       enabled: jest.fn().mockReturnValue(false),
       invoke: jest.fn(),
     };
-    const triggers = new TriggersService(mockLambda, cognitoClient, MockLogger);
+    const triggers = new TriggersService(mockLambda, cognitoClient, logger);
     const mockCodeDelivery: jest.Mocked<MessageDelivery> = {
       deliver: jest.fn(),
     };
@@ -57,9 +59,9 @@ export const withCognitoSdk = (
         otp,
         triggers,
       },
-      MockLogger
+      logger
     );
-    const server = createServer(router, MockLogger);
+    const server = createServer(router, logger);
     httpServer = await server.start({
       port: 0,
     });
