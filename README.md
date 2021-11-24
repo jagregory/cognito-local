@@ -58,6 +58,26 @@ To persist your database between runs, mount the `/app/.cognito` volume to your 
 
 Cognito Local will now be listening on `http://localhost:9229`.
 
+### Using a different port
+
+cognito-local runs on port `9229` by default. If you would like to use a different port, you can set the `PORT`
+environment variable:
+
+`PORT=4000 cognito-local`
+
+If you're running in Docker, you can also rebind the [published ports](https://docs.docker.com/config/containers/container-networking/#published-ports)
+when you run:
+
+`docker run -p4000:9229 jagregory/cognito-local`
+
+Or combine the two approaches by [setting an environment variable](https://docs.docker.com/engine/reference/commandline/run/#set-environment-variables--e---env---env-file)
+when you run:
+
+`docker run -p4000:4000 -e PORT=4000 jagregory/cognito-local`
+
+The same can be done in docker-compose with [environment variables](https://docs.docker.com/compose/environment-variables/#set-environment-variables-in-containers)
+and [port binding](https://docs.docker.com/compose/networking/) in compose.
+
 ### Updating your application
 
 You will need to update your AWS code to use the local address for Cognito's endpoint. For example, if you're using
