@@ -1,3 +1,10 @@
+## [3.1.4](https://github.com/jagregory/cognito-local/compare/v3.1.3...v3.1.4) (2021-11-24)
+
+
+### Bug Fixes
+
+* year out of range ([bc1fb6f](https://github.com/jagregory/cognito-local/commit/bc1fb6fb5b4e8f934784ec41d6246eeabfa28467)), closes [#40](https://github.com/jagregory/cognito-local/issues/40)
+
 ## [3.1.3](https://github.com/jagregory/cognito-local/compare/v3.1.2...v3.1.3) (2021-10-05)
 
 
