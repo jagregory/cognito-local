@@ -10,6 +10,7 @@ import {
   Services,
   UserPoolClient,
 } from "../services";
+import { Clock } from "../services/clock";
 import { generateTokens } from "../services/tokens";
 import { attributeValue, User } from "../services/userPoolClient";
 
@@ -99,22 +100,25 @@ const verifyMfaChallenge = async (
 const verifyPasswordChallenge = async (
   user: User,
   body: Input,
-  userPool: UserPoolClient
+  userPool: UserPoolClient,
+  clock: Clock
 ): Promise<PasswordVerifierOutput> => ({
   ChallengeName: "PASSWORD_VERIFIER",
   ChallengeParameters: {},
   AuthenticationResult: await generateTokens(
     user,
     body.ClientId,
-    userPool.config.Id
+    userPool.config.Id,
+    clock
   ),
   Session: body.Session,
 });
 
 export const InitiateAuth = ({
+  cognitoClient,
+  clock,
   messageDelivery,
   messages,
-  cognitoClient,
   otp,
   triggers,
 }: Services): InitiateAuthTarget => async (body) => {
@@ -165,5 +169,5 @@ export const InitiateAuth = ({
     );
   }
 
-  return await verifyPasswordChallenge(user, body, userPool);
+  return await verifyPasswordChallenge(user, body, userPool, clock);
 };

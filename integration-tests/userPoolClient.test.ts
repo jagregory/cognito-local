@@ -5,6 +5,7 @@ import {
   UserPoolClient,
   UserPoolClientService,
 } from "../src/services";
+import { DateClock } from "../src/services/clock";
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -28,6 +29,7 @@ describe("User Pool Client", () => {
         Id: "local",
         UsernameAttributes: [],
       },
+      new DateClock(),
       tmpCreateDataStore,
       UserPoolClientService.create,
       MockLogger

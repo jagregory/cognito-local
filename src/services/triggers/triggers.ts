@@ -1,4 +1,5 @@
 import { Logger } from "../../log";
+import { Clock } from "../clock";
 import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
@@ -22,12 +23,13 @@ export class TriggersService {
   public readonly postConfirmation: PostConfirmationTrigger;
 
   public constructor(
-    lambda: Lambda,
+    clock: Clock,
     cognitoClient: CognitoClient,
+    lambda: Lambda,
     logger: Logger
   ) {
     this.customMessage = CustomMessage({ lambda, cognitoClient }, logger);
-    this.userMigration = UserMigration({ lambda, cognitoClient });
+    this.userMigration = UserMigration({ clock, lambda, cognitoClient });
     this.postConfirmation = PostConfirmation({ lambda, cognitoClient }, logger);
     this.lambda = lambda;
   }

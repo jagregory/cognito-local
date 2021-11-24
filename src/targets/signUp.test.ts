@@ -1,4 +1,4 @@
-import { advanceTo } from "jest-date-mock";
+import { ClockFake } from "../__tests__/clockFake";
 import { MockLogger } from "../__tests__/mockLogger";
 import { UUID } from "../__tests__/patterns";
 import { UsernameExistsError } from "../errors";
@@ -23,7 +23,6 @@ describe("SignUp target", () => {
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
 
     mockUserPoolClient = {
       config: {
@@ -60,6 +59,7 @@ describe("SignUp target", () => {
     signUp = SignUp(
       {
         cognitoClient: mockCognitoClient,
+        clock: new ClockFake(now),
         messageDelivery: mockMessageDelivery,
         messages: mockMessages,
         otp: mockOtp,

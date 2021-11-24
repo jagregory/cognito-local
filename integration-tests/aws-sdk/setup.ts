@@ -13,6 +13,7 @@ import {
   UserPoolClientService,
   TriggersService,
 } from "../../src/services";
+import { DateClock, Clock } from "../../src/services/clock";
 import { createDataStore, CreateDataStore } from "../../src/services/dataStore";
 import { otp } from "../../src/services/otp";
 import { Router } from "../../src/targets/router";
@@ -22,7 +23,10 @@ const rmdir = promisify(fs.rmdir);
 
 export const withCognitoSdk = (
   fn: (cognito: () => AWS.CognitoIdentityServiceProvider) => void,
-  logger: Logger = MockLogger
+  {
+    logger = MockLogger,
+    clock = new DateClock(),
+  }: { logger?: Logger; clock?: Clock } = {}
 ) => () => {
   let path: string;
   let tmpCreateDataStore: CreateDataStore;
@@ -38,21 +42,28 @@ export const withCognitoSdk = (
         Id: "integration-test",
         UsernameAttributes: [],
       },
+      clock,
       tmpCreateDataStore,
-      UserPoolClientService.create.bind(null),
+      UserPoolClientService.create.bind(UserPoolClientService),
       logger
     );
     const mockLambda: jest.Mocked<Lambda> = {
       enabled: jest.fn().mockReturnValue(false),
       invoke: jest.fn(),
     };
-    const triggers = new TriggersService(mockLambda, cognitoClient, logger);
+    const triggers = new TriggersService(
+      clock,
+      cognitoClient,
+      mockLambda,
+      logger
+    );
     const mockCodeDelivery: jest.Mocked<MessageDelivery> = {
       deliver: jest.fn(),
     };
 
     const router = Router(
       {
+        clock,
         cognitoClient,
         messageDelivery: mockCodeDelivery,
         messages: new MessagesService(triggers),

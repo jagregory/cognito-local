@@ -29,7 +29,7 @@ interface Output {
 export type SignUpTarget = (body: Input) => Promise<Output>;
 
 export const SignUp = (
-  { cognitoClient, messageDelivery, messages, otp }: Services,
+  { cognitoClient, clock, messageDelivery, messages, otp }: Services,
   logger: Logger
 ): SignUpTarget => async (body) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
@@ -45,12 +45,13 @@ export const SignUp = (
     ? body.UserAttributes
     : [{ Name: "sub", Value: uuid.v4() }, ...body.UserAttributes];
 
+  const now = Math.floor(clock.get().getTime() / 1000);
   const user: User = {
     Attributes: attributes,
     Enabled: true,
     Password: body.Password,
-    UserCreateDate: Math.floor(new Date().getTime() / 1000),
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserCreateDate: now,
+    UserLastModifiedDate: now,
     UserStatus: "UNCONFIRMED",
     Username: body.Username,
   };

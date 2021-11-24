@@ -1,6 +1,7 @@
 import { ResourceNotFoundError } from "../errors";
 import { Logger } from "../log";
 import { AppClient } from "./appClient";
+import { Clock } from "./clock";
 import { CreateDataStore, DataStore } from "./dataStore";
 import {
   CreateUserPoolClient,
@@ -15,14 +16,16 @@ export interface CognitoClient {
 }
 
 export class CognitoClientService implements CognitoClient {
-  private readonly config: UserPool;
   private readonly clients: DataStore;
+  private readonly clock: Clock;
+  private readonly config: UserPool;
   private readonly createDataStore: CreateDataStore;
   private readonly createUserPoolClient: CreateUserPoolClient;
   private readonly logger: Logger;
 
   public static async create(
     userPoolDefaultOptions: UserPool,
+    clock: Clock,
     createDataStore: CreateDataStore,
     createUserPoolClient: CreateUserPoolClient,
     logger: Logger
@@ -30,8 +33,9 @@ export class CognitoClientService implements CognitoClient {
     const clients = await createDataStore("clients", { Clients: {} });
 
     return new CognitoClientService(
-      userPoolDefaultOptions,
       clients,
+      clock,
+      userPoolDefaultOptions,
       createDataStore,
       createUserPoolClient,
       logger
@@ -39,14 +43,16 @@ export class CognitoClientService implements CognitoClient {
   }
 
   public constructor(
-    config: UserPool,
     clients: DataStore,
+    clock: Clock,
+    config: UserPool,
     createDataStore: CreateDataStore,
     createUserPoolClient: CreateUserPoolClient,
     logger: Logger
   ) {
-    this.config = config;
     this.clients = clients;
+    this.clock = clock;
+    this.config = config;
     this.createDataStore = createDataStore;
     this.createUserPoolClient = createUserPoolClient;
     this.logger = logger;
@@ -54,9 +60,10 @@ export class CognitoClientService implements CognitoClient {
 
   public async getUserPool(userPoolId: string): Promise<UserPoolClient> {
     return this.createUserPoolClient(
-      { ...this.config, Id: userPoolId },
       this.clients,
+      this.clock,
       this.createDataStore,
+      { ...this.config, Id: userPoolId },
       this.logger
     );
   }
@@ -70,9 +77,10 @@ export class CognitoClientService implements CognitoClient {
     }
 
     return this.createUserPoolClient(
-      { ...this.config, Id: appClient.UserPoolId },
       this.clients,
+      this.clock,
       this.createDataStore,
+      { ...this.config, Id: appClient.UserPoolId },
       this.logger
     );
   }

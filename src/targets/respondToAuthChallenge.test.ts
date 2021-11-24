@@ -1,5 +1,6 @@
 import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
+import { ClockFake } from "../__tests__/clockFake";
 import { UUID } from "../__tests__/patterns";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
@@ -36,6 +37,7 @@ describe("RespondToAuthChallenge target", () => {
 
     respondToAuthChallenge = RespondToAuthChallenge({
       cognitoClient: mockCognitoClient,
+      clock: new ClockFake(now),
     });
   });
 

@@ -15,12 +15,13 @@ export type ForgotPasswordTarget = (body: Input) => Promise<Output>;
 
 export const ForgotPassword = ({
   cognitoClient,
+  clock,
   messageDelivery,
   messages,
   otp,
 }: Pick<
   Services,
-  "cognitoClient" | "messageDelivery" | "messages" | "otp"
+  "cognitoClient" | "clock" | "messageDelivery" | "messages" | "otp"
 >): ForgotPasswordTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
@@ -47,7 +48,7 @@ export const ForgotPassword = ({
 
   await userPool.saveUser({
     ...user,
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
     ConfirmationCode: code,
   });
 

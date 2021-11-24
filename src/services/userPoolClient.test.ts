@@ -1,4 +1,4 @@
-import { advanceTo } from "jest-date-mock";
+import { ClockFake } from "../__tests__/clockFake";
 import { MockLogger } from "../__tests__/mockLogger";
 import { DataStore } from "./dataStore";
 import {
@@ -14,11 +14,12 @@ import {
 
 describe("User Pool Client", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
-  let now: Date;
+  const currentDate = new Date(2020, 1, 2, 3, 4, 5);
+
+  let clock: ClockFake;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
+    clock = new ClockFake(currentDate);
 
     mockClientsDataStore = {
       set: jest.fn(),
@@ -35,9 +36,10 @@ describe("User Pool Client", () => {
     });
 
     await UserPoolClientService.create(
-      { Id: "local", UsernameAttributes: [] },
       mockClientsDataStore,
+      clock,
       createDataStore,
+      { Id: "local", UsernameAttributes: [] },
       MockLogger
     );
 
@@ -50,8 +52,8 @@ describe("User Pool Client", () => {
   describe("createAppClient", () => {
     it("saves an app client", async () => {
       const userPool = await UserPoolClientService.create(
-        { Id: "local", UsernameAttributes: [] },
         mockClientsDataStore,
+        clock,
         () =>
           Promise.resolve({
             set: jest.fn(),
@@ -60,6 +62,7 @@ describe("User Pool Client", () => {
               .mockImplementation((key, defaults) => Promise.resolve(defaults)),
             getRoot: jest.fn(),
           }),
+        { Id: "local", UsernameAttributes: [] },
         MockLogger
       );
 
@@ -69,8 +72,8 @@ describe("User Pool Client", () => {
         AllowedOAuthFlowsUserPoolClient: false,
         ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
         ClientName: "clientName",
-        CreationDate: Math.floor(now.getTime() / 1000),
-        LastModifiedDate: Math.floor(now.getTime() / 1000),
+        CreationDate: Math.floor(currentDate.getTime() / 1000),
+        LastModifiedDate: Math.floor(currentDate.getTime() / 1000),
         RefreshTokenValidity: 30,
         UserPoolId: "local",
       });
@@ -88,14 +91,15 @@ describe("User Pool Client", () => {
       const set = jest.fn();
 
       const userPool = await UserPoolClientService.create(
-        { Id: "local", UsernameAttributes: [] },
         mockClientsDataStore,
+        clock,
         () =>
           Promise.resolve({
             set,
             get: jest.fn(),
             getRoot: jest.fn(),
           }),
+        { Id: "local", UsernameAttributes: [] },
         MockLogger
       );
 
@@ -173,14 +177,15 @@ describe("User Pool Client", () => {
           });
 
           userPool = await UserPoolClientService.create(
-            options,
             mockClientsDataStore,
+            clock,
             () =>
               Promise.resolve({
                 set: jest.fn(),
                 get,
                 getRoot: jest.fn(),
               }),
+            options,
             MockLogger
           );
         });
@@ -275,14 +280,15 @@ describe("User Pool Client", () => {
         return Promise.resolve(null);
       });
       userPool = await UserPoolClientService.create(
-        options,
         mockClientsDataStore,
+        clock,
         () =>
           Promise.resolve({
             set: jest.fn(),
             get,
             getRoot: jest.fn(),
           }),
+        options,
         MockLogger
       );
     });

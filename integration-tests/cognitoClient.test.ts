@@ -1,5 +1,6 @@
 import { MockLogger } from "../src/__tests__/mockLogger";
 import { CognitoClientService, UserPoolClientService } from "../src/services";
+import { DateClock } from "../src/services/clock";
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -10,6 +11,7 @@ const rmdir = promisify(fs.rmdir);
 describe("Cognito Client", () => {
   let path: string;
   let tmpCreateDataStore: CreateDataStore;
+
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
@@ -27,6 +29,7 @@ describe("Cognito Client", () => {
         Id: "local",
         UsernameAttributes: [],
       },
+      new DateClock(),
       tmpCreateDataStore,
       UserPoolClientService.create,
       MockLogger

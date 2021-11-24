@@ -27,9 +27,11 @@ export type RespondToAuthChallengeTarget = (body: Input) => Promise<Output>;
 
 export const RespondToAuthChallenge = ({
   cognitoClient,
-}: Pick<Services, "cognitoClient">): RespondToAuthChallengeTarget => async (
-  body
-) => {
+  clock,
+}: Pick<
+  Services,
+  "cognitoClient" | "clock"
+>): RespondToAuthChallengeTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(
     body.ChallengeResponses.USERNAME
@@ -53,7 +55,8 @@ export const RespondToAuthChallenge = ({
     AuthenticationResult: await generateTokens(
       user,
       body.ClientId,
-      userPool.config.Id
+      userPool.config.Id,
+      clock
     ),
     Session: body.Session,
   };

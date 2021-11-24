@@ -12,10 +12,12 @@ export type ConfirmSignUpTarget = (body: Input) => Promise<void>;
 
 export const ConfirmSignUp = ({
   cognitoClient,
+  clock,
   triggers,
-}: Pick<Services, "cognitoClient" | "triggers">): ConfirmSignUpTarget => async (
-  body
-) => {
+}: Pick<
+  Services,
+  "cognitoClient" | "clock" | "triggers"
+>): ConfirmSignUpTarget => async (body) => {
   const userPool = await cognitoClient.getUserPoolForClientId(body.ClientId);
   const user = await userPool.getUserByUsername(body.Username);
   if (!user) {
@@ -30,7 +32,7 @@ export const ConfirmSignUp = ({
     ...user,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
   });
 
   if (triggers.enabled("PostConfirmation")) {

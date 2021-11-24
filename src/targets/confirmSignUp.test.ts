@@ -1,6 +1,6 @@
-import { advanceBy, advanceTo } from "jest-date-mock";
+import { ClockFake } from "../__tests__/clockFake";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
-import { CognitoClient, UserPoolClient, Triggers } from "../services";
+import { CognitoClient, Triggers, UserPoolClient } from "../services";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
 
 describe("ConfirmSignUp target", () => {
@@ -8,11 +8,12 @@ describe("ConfirmSignUp target", () => {
   let mockCognitoClient: jest.Mocked<CognitoClient>;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockTriggers: jest.Mocked<Triggers>;
-  let now: Date;
+  let clock: ClockFake;
+
+  const originalDate = new Date(2020, 1, 2, 3, 4, 5);
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
+    clock = new ClockFake(originalDate);
 
     mockUserPoolClient = {
       config: {
@@ -37,6 +38,7 @@ describe("ConfirmSignUp target", () => {
 
     confirmSignUp = ConfirmSignUp({
       cognitoClient: mockCognitoClient,
+      clock,
       triggers: mockTriggers,
     });
   });
@@ -60,8 +62,8 @@ describe("ConfirmSignUp target", () => {
       ConfirmationCode: "4567",
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: Math.floor(now.getTime() / 1000),
-      UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+      UserCreateDate: Math.floor(originalDate.getTime() / 1000),
+      UserLastModifiedDate: Math.floor(originalDate.getTime() / 1000),
       UserStatus: "UNCONFIRMED",
       Username: "0000-0000",
     });
@@ -83,15 +85,14 @@ describe("ConfirmSignUp target", () => {
         ConfirmationCode: "4567",
         Enabled: true,
         Password: "pwd",
-        UserCreateDate: Math.floor(now.getTime() / 1000),
-        UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+        UserCreateDate: Math.floor(originalDate.getTime() / 1000),
+        UserLastModifiedDate: Math.floor(originalDate.getTime() / 1000),
         UserStatus: "UNCONFIRMED",
         Username: "0000-0000",
       });
 
       // advance the time so we can see the last modified timestamp change
-      advanceBy(5000);
-      const newNow = new Date();
+      const newNow = clock.advanceBy(5000);
 
       await confirmSignUp({
         ClientId: "clientId",
@@ -105,7 +106,7 @@ describe("ConfirmSignUp target", () => {
         ConfirmationCode: undefined,
         Enabled: true,
         Password: "pwd",
-        UserCreateDate: Math.floor(now.getTime() / 1000),
+        UserCreateDate: Math.floor(originalDate.getTime() / 1000),
         UserLastModifiedDate: Math.floor(newNow.getTime() / 1000),
         UserStatus: "CONFIRMED",
         Username: "0000-0000",
@@ -121,8 +122,8 @@ describe("ConfirmSignUp target", () => {
           ConfirmationCode: "4567",
           Enabled: true,
           Password: "pwd",
-          UserCreateDate: Math.floor(now.getTime() / 1000),
-          UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+          UserCreateDate: Math.floor(originalDate.getTime() / 1000),
+          UserLastModifiedDate: Math.floor(originalDate.getTime() / 1000),
           UserStatus: "UNCONFIRMED",
           Username: "0000-0000",
         });
@@ -158,8 +159,8 @@ describe("ConfirmSignUp target", () => {
           ConfirmationCode: "4567",
           Enabled: true,
           Password: "pwd",
-          UserCreateDate: Math.floor(now.getTime() / 1000),
-          UserLastModifiedDate: Math.floor(now.getTime() / 1000),
+          UserCreateDate: Math.floor(originalDate.getTime() / 1000),
+          UserLastModifiedDate: Math.floor(originalDate.getTime() / 1000),
           UserStatus: "UNCONFIRMED",
           Username: "0000-0000",
         });

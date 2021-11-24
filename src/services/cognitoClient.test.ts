@@ -1,5 +1,6 @@
 import { MockLogger } from "../__tests__/mockLogger";
 import { ResourceNotFoundError } from "../errors";
+import { DateClock } from "./clock";
 import { CognitoClientService } from "./cognitoClient";
 import { CreateDataStore, DataStore } from "./dataStore";
 import { CreateUserPoolClient, UserPoolClient } from "./userPoolClient";
@@ -9,6 +10,7 @@ describe("Cognito Client", () => {
   let mockUserPool: jest.Mocked<UserPoolClient>;
   let createUserPoolClient: jest.MockedFunction<CreateUserPoolClient>;
   let createDataStore: jest.MockedFunction<CreateDataStore>;
+  const clock = new DateClock();
 
   beforeEach(() => {
     mockDataStore = {
@@ -26,6 +28,7 @@ describe("Cognito Client", () => {
     ) as unknown) as CreateDataStore;
     await CognitoClientService.create(
       { Id: "local", UsernameAttributes: [] },
+      clock,
       createDataStore,
       createUserPoolClient,
       MockLogger
@@ -43,6 +46,7 @@ describe("Cognito Client", () => {
     it("creates a user pool by the id specified", async () => {
       const cognitoClient = await CognitoClientService.create(
         { Id: "local", UsernameAttributes: [] },
+        clock,
         createDataStore,
         createUserPoolClient,
         MockLogger
@@ -51,9 +55,10 @@ describe("Cognito Client", () => {
       const userPool = await cognitoClient.getUserPool("testing");
 
       expect(createUserPoolClient).toHaveBeenCalledWith(
-        { Id: "testing", UsernameAttributes: [] },
         mockDataStore,
+        clock,
         createDataStore,
+        { Id: "testing", UsernameAttributes: [] },
         MockLogger
       );
       expect(userPool).toEqual(mockUserPool);
@@ -65,6 +70,7 @@ describe("Cognito Client", () => {
       mockDataStore.get.mockResolvedValue(null);
       const cognitoClient = await CognitoClientService.create(
         { Id: "local", UsernameAttributes: [] },
+        clock,
         createDataStore,
         createUserPoolClient,
         MockLogger
@@ -83,6 +89,7 @@ describe("Cognito Client", () => {
       });
       const cognitoClient = await CognitoClientService.create(
         { Id: "local", UsernameAttributes: [] },
+        clock,
         createDataStore,
         createUserPoolClient,
         MockLogger
@@ -92,9 +99,10 @@ describe("Cognito Client", () => {
 
       expect(mockDataStore.get).toHaveBeenCalledWith(["Clients", "testing"]);
       expect(createUserPoolClient).toHaveBeenCalledWith(
-        { Id: "userPoolId", UsernameAttributes: [] },
         mockDataStore,
+        clock,
         createDataStore,
+        { Id: "userPoolId", UsernameAttributes: [] },
         MockLogger
       );
       expect(userPool).toEqual(mockUserPool);

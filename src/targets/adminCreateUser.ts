@@ -19,6 +19,7 @@ export type AdminCreateUserTarget = (body: Input) => Promise<User | null>;
 
 export const AdminCreateUser = ({
   cognitoClient,
+  clock,
 }: Services): AdminCreateUserTarget => async (body) => {
   const { UserPoolId, Username, TemporaryPassword, UserAttributes } =
     body || {};
@@ -28,6 +29,7 @@ export const AdminCreateUser = ({
     ? UserAttributes
     : [{ Name: "sub", Value: uuid.v4() }, ...UserAttributes];
 
+  const now = Math.floor(clock.get().getTime() / 1000);
   const user: User = {
     Username,
     Password: TemporaryPassword,
@@ -35,9 +37,10 @@ export const AdminCreateUser = ({
     Enabled: true,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserCreateDate: Math.floor(new Date().getTime() / 1000),
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserCreateDate: now,
+    UserLastModifiedDate: now,
   };
+
   await userPool.saveUser(user);
   // TODO: Shuldn't return password.
   return user;

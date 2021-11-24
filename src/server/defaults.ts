@@ -6,6 +6,7 @@ import {
   TriggersService,
   UserPoolClientService,
 } from "../services";
+import { DateClock } from "../services/clock";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { createDataStore } from "../services/dataStore";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
@@ -20,8 +21,11 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
 
   logger.debug("Loaded config:", config);
 
+  const clock = new DateClock();
+
   const cognitoClient = await CognitoClientService.create(
     config.UserPoolDefaults,
+    clock,
     createDataStore,
     UserPoolClientService.create.bind(UserPoolClientService),
     logger
@@ -32,9 +36,10 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
     lambdaClient,
     logger
   );
-  const triggers = new TriggersService(lambda, cognitoClient, logger);
+  const triggers = new TriggersService(clock, cognitoClient, lambda, logger);
   const router = Router(
     {
+      clock,
       cognitoClient,
       messageDelivery: new MessageDeliveryService(
         new ConsoleMessageSender(logger)

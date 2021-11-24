@@ -12,6 +12,7 @@ export type ChangePasswordTarget = (body: Input) => Promise<object | null>;
 
 export const ChangePassword = ({
   cognitoClient,
+  clock,
 }: Services): ChangePasswordTarget => async (body) => {
   const { AccessToken, PreviousPassword, ProposedPassword } = body || {};
   const claims = jwt.decode(AccessToken) as any;
@@ -24,7 +25,7 @@ export const ChangePassword = ({
   await userPool.saveUser({
     ...user,
     Password: ProposedPassword,
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserLastModifiedDate: Math.floor(clock.get().getTime() / 1000),
   });
   // TODO: Should possibly return something?
   return {};

@@ -1,4 +1,4 @@
-import { advanceTo } from "jest-date-mock";
+import { ClockFake } from "../__tests__/clockFake";
 import { UserNotFoundError } from "../errors";
 import {
   CognitoClient,
@@ -19,7 +19,6 @@ describe("ForgotPassword target", () => {
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
 
     mockUserPoolClient = {
       config: {
@@ -49,6 +48,7 @@ describe("ForgotPassword target", () => {
 
     forgotPassword = ForgotPassword({
       cognitoClient: mockCognitoClient,
+      clock: new ClockFake(now),
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,

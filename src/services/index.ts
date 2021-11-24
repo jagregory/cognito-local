@@ -1,3 +1,4 @@
+import { Clock } from "./clock";
 import { Messages } from "./messages";
 import { Triggers } from "./triggers";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
@@ -11,6 +12,7 @@ export { MessageDelivery } from "./messageDelivery/messageDelivery";
 export { Messages, MessagesService } from "./messages";
 
 export interface Services {
+  clock: Clock;
   cognitoClient: CognitoClient;
   messageDelivery: MessageDelivery;
   messages: Messages;

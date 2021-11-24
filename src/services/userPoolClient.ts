@@ -1,5 +1,6 @@
 import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
+import { Clock } from "./clock";
 import { CreateDataStore, DataStore } from "./dataStore";
 
 export interface UserAttribute {
@@ -73,23 +74,26 @@ export interface UserPoolClient {
 }
 
 export type CreateUserPoolClient = (
-  defaultOptions: UserPool,
   clientsDataStore: DataStore,
+  clock: Clock,
   createDataStore: CreateDataStore,
+  defaultOptions: UserPool,
   logger: Logger
 ) => Promise<UserPoolClient>;
 
 export class UserPoolClientService implements UserPoolClient {
   private readonly clientsDataStore: DataStore;
+  private readonly clock: Clock;
   private readonly dataStore: DataStore;
   private readonly logger: Logger;
 
   public readonly config: UserPool;
 
   public static async create(
-    defaultOptions: UserPool,
     clientsDataStore: DataStore,
+    clock: Clock,
     createDataStore: CreateDataStore,
+    defaultOptions: UserPool,
     logger: Logger
   ): Promise<UserPoolClient> {
     const dataStore = await createDataStore(defaultOptions.Id, {
@@ -100,6 +104,7 @@ export class UserPoolClientService implements UserPoolClient {
 
     return new UserPoolClientService(
       clientsDataStore,
+      clock,
       dataStore,
       config,
       logger
@@ -108,24 +113,28 @@ export class UserPoolClientService implements UserPoolClient {
 
   public constructor(
     clientsDataStore: DataStore,
+    clock: Clock,
     dataStore: DataStore,
     config: UserPool,
     logger: Logger
   ) {
     this.clientsDataStore = clientsDataStore;
     this.config = config;
+    this.clock = clock;
     this.dataStore = dataStore;
     this.logger = logger;
   }
 
   public async createAppClient(name: string): Promise<AppClient> {
     const id = newId();
+    const now = Math.floor(this.clock.get().getTime() / 1000);
+
     const appClient: AppClient = {
       ClientId: id,
       ClientName: name,
       UserPoolId: this.config.Id,
-      CreationDate: Math.floor(new Date().getTime() / 1000),
-      LastModifiedDate: Math.floor(new Date().getTime() / 1000),
+      CreationDate: now,
+      LastModifiedDate: now,
       AllowedOAuthFlowsUserPoolClient: false,
       RefreshTokenValidity: 30,
     };

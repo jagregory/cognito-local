@@ -1,5 +1,6 @@
 import { UUID } from "../../__tests__/patterns";
 import { NotAuthorizedError } from "../../errors";
+import { DateClock } from "../clock";
 import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
@@ -32,8 +33,9 @@ describe("UserMigration trigger", () => {
     };
 
     userMigration = UserMigration({
-      lambda: mockLambda,
+      clock: new DateClock(),
       cognitoClient: mockCognitoClient,
+      lambda: mockLambda,
     });
   });
 

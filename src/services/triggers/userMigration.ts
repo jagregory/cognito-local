@@ -1,5 +1,6 @@
 import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
+import { Clock } from "../clock";
 import { CognitoClient } from "../cognitoClient";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
 import {
@@ -20,9 +21,11 @@ export type UserMigrationTrigger = (params: {
 export const UserMigration = ({
   lambda,
   cognitoClient,
+  clock,
 }: {
   lambda: Lambda;
   cognitoClient: CognitoClient;
+  clock: Clock;
 }): UserMigrationTrigger => async ({
   userPoolId,
   clientId,
@@ -50,12 +53,13 @@ export const UserMigration = ({
     throw new NotAuthorizedError();
   }
 
+  const now = Math.floor(clock.get().getTime() / 1000);
   const user: User = {
     Attributes: attributesFromRecord(result.userAttributes ?? {}),
     Enabled: true,
     Password: password,
-    UserCreateDate: Math.floor(new Date().getTime() / 1000),
-    UserLastModifiedDate: Math.floor(new Date().getTime() / 1000),
+    UserCreateDate: now,
+    UserLastModifiedDate: now,
     Username: uuid.v4(),
     UserStatus: result.finalUserStatus ?? "CONFIRMED",
   };
