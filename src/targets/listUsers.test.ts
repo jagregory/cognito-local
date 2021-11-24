@@ -1,30 +1,21 @@
 import { advanceTo } from "jest-date-mock";
-import { CognitoClient, UserPoolClient } from "../services";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { CognitoClient } from "../services";
 import { ListUsers, ListUsersTarget } from "./listUsers";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let now: Date;
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
 
     listUsers = ListUsers({
@@ -33,7 +24,7 @@ describe("ListUsers target", () => {
   });
 
   it("lists users and removes Cognito Local fields", async () => {
-    mockUserPoolClient.listUsers.mockResolvedValue([
+    MockUserPoolClient.listUsers.mockResolvedValue([
       {
         Attributes: [],
         UserStatus: "CONFIRMED",

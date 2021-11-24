@@ -2,34 +2,25 @@ import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import { MockLogger } from "../__tests__/mockLogger";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { CognitoClient, UserPoolClient } from "../services";
+import { CognitoClient } from "../services";
 import { GetUser, GetUserTarget } from "./getUser";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let now: Date;
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
 
     getUser = GetUser(
@@ -41,7 +32,7 @@ describe("GetUser target", () => {
   });
 
   it("parses token get user by sub", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue({
+    MockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [],
       UserStatus: "CONFIRMED",
       Password: "hunter2",
@@ -90,7 +81,7 @@ describe("GetUser target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       getUser({

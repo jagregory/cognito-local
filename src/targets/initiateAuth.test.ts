@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
 import {
   InvalidPasswordError,
@@ -9,7 +10,6 @@ import {
 import PublicKey from "../keys/cognitoLocal.public.json";
 import {
   CognitoClient,
-  UserPoolClient,
   Messages,
   Triggers,
   MessageDelivery,
@@ -20,7 +20,6 @@ import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
@@ -30,19 +29,10 @@ describe("InitiateAuth target", () => {
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
     mockMessageDelivery = {
       deliver: jest.fn(),
@@ -74,7 +64,7 @@ describe("InitiateAuth target", () => {
 
   describe("USER_PASSWORD_AUTH auth flow", () => {
     it("throws if password is incorrect", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue({
+      MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [],
         UserStatus: "CONFIRMED",
         Password: "hunter2",
@@ -97,7 +87,7 @@ describe("InitiateAuth target", () => {
     });
 
     it("throws when user requires reset", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue({
+      MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [],
         UserStatus: "RESET_REQUIRED",
         Password: "hunter2",
@@ -132,7 +122,7 @@ describe("InitiateAuth target", () => {
             Enabled: true,
             Attributes: [],
           });
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+          MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
           const output = await initiateAuth({
             ClientId: "clientId",
@@ -151,7 +141,7 @@ describe("InitiateAuth target", () => {
       describe("when User Migration trigger is disabled", () => {
         it("throws", async () => {
           mockTriggers.enabled.mockReturnValue(false);
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+          MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
           await expect(
             initiateAuth({
@@ -170,7 +160,7 @@ describe("InitiateAuth target", () => {
     describe("when password matches", () => {
       describe("when MFA is ON", () => {
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "ON";
+          MockUserPoolClient.config.MfaConfiguration = "ON";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -197,7 +187,7 @@ describe("InitiateAuth target", () => {
                 },
               ],
             };
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
           });
 
           it("sends MFA code to user", async () => {
@@ -223,7 +213,7 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+            expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
               ...user,
               MFACode: "1234",
             });
@@ -232,7 +222,7 @@ describe("InitiateAuth target", () => {
 
         describe("when user doesn't have MFA configured", () => {
           beforeEach(() => {
-            mockUserPoolClient.getUserByUsername.mockResolvedValue({
+            MockUserPoolClient.getUserByUsername.mockResolvedValue({
               Attributes: [],
               UserStatus: "CONFIRMED",
               Password: "hunter2",
@@ -260,7 +250,7 @@ describe("InitiateAuth target", () => {
 
       describe("when MFA is OPTIONAL", () => {
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "OPTIONAL";
+          MockUserPoolClient.config.MfaConfiguration = "OPTIONAL";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -287,7 +277,7 @@ describe("InitiateAuth target", () => {
                 },
               ],
             };
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
           });
 
           it("sends MFA code to user", async () => {
@@ -313,7 +303,7 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+            expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
               ...user,
               MFACode: "1234",
             });
@@ -322,7 +312,7 @@ describe("InitiateAuth target", () => {
 
         describe("when user doesn't have MFA configured", () => {
           beforeEach(() => {
-            mockUserPoolClient.getUserByUsername.mockResolvedValue({
+            MockUserPoolClient.getUserByUsername.mockResolvedValue({
               Attributes: [
                 { Name: "sub", Value: "0000-0000" },
                 { Name: "email", Value: "example@example.com" },
@@ -405,11 +395,11 @@ describe("InitiateAuth target", () => {
 
       describe("when MFA is OFF", () => {
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "OFF";
+          MockUserPoolClient.config.MfaConfiguration = "OFF";
         });
 
         it("generates tokens", async () => {
-          mockUserPoolClient.getUserByUsername.mockResolvedValue({
+          MockUserPoolClient.getUserByUsername.mockResolvedValue({
             Attributes: [
               { Name: "sub", Value: "0000-0000" },
               { Name: "email", Value: "example@example.com" },

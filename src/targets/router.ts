@@ -3,6 +3,7 @@ import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
+import { CreateGroup } from "./createGroup";
 import { CreateUserPoolClient } from "./createUserPoolClient";
 import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
@@ -27,6 +28,7 @@ export const Targets = {
   ChangePassword,
   ConfirmForgotPassword,
   ConfirmSignUp,
+  CreateGroup,
   CreateUserPoolClient,
   DescribeUserPoolClient,
   ForgotPassword,

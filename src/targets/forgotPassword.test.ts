@@ -1,17 +1,12 @@
 import { ClockFake } from "../__tests__/clockFake";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UserNotFoundError } from "../errors";
-import {
-  CognitoClient,
-  UserPoolClient,
-  Messages,
-  MessageDelivery,
-} from "../services";
+import { CognitoClient, Messages, MessageDelivery } from "../services";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
 
 describe("ForgotPassword target", () => {
   let forgotPassword: ForgotPasswordTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
@@ -20,19 +15,10 @@ describe("ForgotPassword target", () => {
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
     mockMessageDelivery = {
       deliver: jest.fn(),
@@ -56,7 +42,7 @@ describe("ForgotPassword target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       forgotPassword({
@@ -67,7 +53,7 @@ describe("ForgotPassword target", () => {
   });
 
   it("sends a confirmation code to the user's email address", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue({
+    MockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       Enabled: true,
       Password: "hunter2",
@@ -110,7 +96,7 @@ describe("ForgotPassword target", () => {
   });
 
   it("saves the confirmation code on the user for comparison when confirming", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue({
+    MockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       Enabled: true,
       Password: "hunter2",
@@ -125,7 +111,7 @@ describe("ForgotPassword target", () => {
       Username: "0000-0000",
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "1234",
       Enabled: true,

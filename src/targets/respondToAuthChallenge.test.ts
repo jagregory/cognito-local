@@ -1,10 +1,11 @@
 import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import { CognitoClient, UserPoolClient } from "../services";
+import { CognitoClient } from "../services";
 import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
@@ -13,26 +14,16 @@ import {
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let now: Date;
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
 
     respondToAuthChallenge = RespondToAuthChallenge({
@@ -42,7 +33,7 @@ describe("RespondToAuthChallenge target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       respondToAuthChallenge({
@@ -59,7 +50,7 @@ describe("RespondToAuthChallenge target", () => {
 
   describe("when code matches", () => {
     it("generates tokens", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue({
+      MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [
           { Name: "sub", Value: "0000-0000" },
           { Name: "email", Value: "example@example.com" },
@@ -138,7 +129,7 @@ describe("RespondToAuthChallenge target", () => {
 
   describe("when code is incorrect", () => {
     it("throws an error", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue({
+      MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [
           { Name: "sub", Value: "0000-0000" },
           { Name: "email", Value: "example@example.com" },

@@ -10,6 +10,7 @@ import {
   User,
   UserPoolClient,
   UserPoolClientService,
+  Group,
 } from "./userPoolClient";
 
 describe("User Pool Client", () => {
@@ -356,6 +357,94 @@ describe("User Pool Client", () => {
           })
         ).toEqual(attributes);
       });
+    });
+  });
+
+  describe("saveGroup", () => {
+    it("saves the group", async () => {
+      const now = new Date().getTime();
+      const set = jest.fn();
+
+      const userPool = await UserPoolClientService.create(
+        mockClientsDataStore,
+        clock,
+        () =>
+          Promise.resolve({
+            set,
+            get: jest.fn(),
+            getRoot: jest.fn(),
+          }),
+        { Id: "local", UsernameAttributes: [] },
+        MockLogger
+      );
+
+      await userPool.saveGroup({
+        CreationDate: now,
+        Description: "Description",
+        GroupName: "theGroupName",
+        LastModifiedDate: now,
+        Precedence: 1,
+        RoleArn: "ARN",
+      });
+
+      expect(set).toHaveBeenCalledWith(["Groups", "theGroupName"], {
+        CreationDate: now,
+        Description: "Description",
+        GroupName: "theGroupName",
+        LastModifiedDate: now,
+        Precedence: 1,
+        RoleArn: "ARN",
+      });
+    });
+  });
+
+  describe("listGroups", () => {
+    let userPool: UserPoolClient;
+
+    beforeEach(async () => {
+      const options = {
+        Id: "local",
+      };
+      const groups: Record<string, Group> = {
+        theGroupName: {
+          CreationDate: new Date().getTime(),
+          Description: "Description",
+          GroupName: "theGroupName",
+          LastModifiedDate: new Date().getTime(),
+          Precedence: 1,
+          RoleArn: "ARN",
+        },
+      };
+
+      const get = jest.fn((key) => {
+        if (key === "Groups") {
+          return Promise.resolve(groups);
+        } else if (key === "Options") {
+          return Promise.resolve(options);
+        }
+
+        return Promise.resolve(null);
+      });
+      userPool = await UserPoolClientService.create(
+        mockClientsDataStore,
+        clock,
+        () =>
+          Promise.resolve({
+            set: jest.fn(),
+            get,
+            getRoot: jest.fn(),
+          }),
+        options,
+        MockLogger
+      );
+    });
+
+    it("returns existing groups", async () => {
+      const groups = await userPool.listGroups();
+
+      expect(groups).not.toBeNull();
+      expect(groups).toHaveLength(1);
+      expect(groups[0].GroupName).toEqual("theGroupName");
     });
   });
 });

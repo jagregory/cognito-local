@@ -1,4 +1,5 @@
 import { MockLogger } from "../../__tests__/mockLogger";
+import { MockUserPoolClient } from "../../__tests__/mockUserPoolClient";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
@@ -7,7 +8,6 @@ import { CognitoClient } from "../cognitoClient";
 describe("PostConfirmation trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
@@ -15,19 +15,10 @@ describe("PostConfirmation trigger", () => {
       enabled: jest.fn(),
       invoke: jest.fn(),
     };
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
     postConfirmation = PostConfirmation(
       {

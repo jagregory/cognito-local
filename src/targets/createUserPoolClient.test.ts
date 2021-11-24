@@ -1,5 +1,6 @@
 import { advanceTo } from "jest-date-mock";
-import { CognitoClient, UserPoolClient } from "../services";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { CognitoClient } from "../services";
 import { AppClient } from "../services/appClient";
 import {
   CreateUserPoolClient,
@@ -9,26 +10,16 @@ import {
 describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let now: Date;
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
     advanceTo(now);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
 
     createUserPoolClient = CreateUserPoolClient({
@@ -46,14 +37,14 @@ describe("CreateUserPoolClient target", () => {
       ClientId: "abc",
       ClientName: "clientName",
     };
-    mockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
+    MockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
 
     const result = await createUserPoolClient({
       ClientName: "clientName",
       UserPoolId: "userPoolId",
     });
 
-    expect(mockUserPoolClient.createAppClient).toHaveBeenCalledWith(
+    expect(MockUserPoolClient.createAppClient).toHaveBeenCalledWith(
       "clientName"
     );
 

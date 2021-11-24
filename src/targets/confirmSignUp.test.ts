@@ -1,12 +1,12 @@
 import { ClockFake } from "../__tests__/clockFake";
+import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
-import { CognitoClient, Triggers, UserPoolClient } from "../services";
+import { CognitoClient, Triggers } from "../services";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
 
 describe("ConfirmSignUp target", () => {
   let confirmSignUp: ConfirmSignUpTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let mockTriggers: jest.Mocked<Triggers>;
   let clock: ClockFake;
 
@@ -15,19 +15,10 @@ describe("ConfirmSignUp target", () => {
   beforeEach(() => {
     clock = new ClockFake(originalDate);
 
-    mockUserPoolClient = {
-      config: {
-        Id: "test",
-      },
-      createAppClient: jest.fn(),
-      getUserByUsername: jest.fn(),
-      listUsers: jest.fn(),
-      saveUser: jest.fn(),
-    };
     mockCognitoClient = {
       getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(mockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(mockUserPoolClient),
+      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
+      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
     };
     mockTriggers = {
       enabled: jest.fn(),
@@ -44,7 +35,7 @@ describe("ConfirmSignUp target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       confirmSignUp({
@@ -57,7 +48,7 @@ describe("ConfirmSignUp target", () => {
   });
 
   it("throws if confirmation code doesn't match stored value", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue({
+    MockUserPoolClient.getUserByUsername.mockResolvedValue({
       Attributes: [{ Name: "email", Value: "example@example.com" }],
       ConfirmationCode: "4567",
       Enabled: true,
@@ -80,7 +71,7 @@ describe("ConfirmSignUp target", () => {
 
   describe("when code matches", () => {
     it("updates the user's confirmed status", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue({
+      MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: "4567",
         Enabled: true,
@@ -101,7 +92,7 @@ describe("ConfirmSignUp target", () => {
         ForceAliasCreation: false,
       });
 
-      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+      expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
         Attributes: [{ Name: "email", Value: "example@example.com" }],
         ConfirmationCode: undefined,
         Enabled: true,
@@ -117,7 +108,7 @@ describe("ConfirmSignUp target", () => {
       it("invokes the trigger", async () => {
         mockTriggers.enabled.mockReturnValue(true);
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue({
+        MockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           ConfirmationCode: "4567",
           Enabled: true,
@@ -154,7 +145,7 @@ describe("ConfirmSignUp target", () => {
       it("doesn't invoke the trigger", async () => {
         mockTriggers.enabled.mockReturnValue(false);
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue({
+        MockUserPoolClient.getUserByUsername.mockResolvedValue({
           Attributes: [{ Name: "email", Value: "example@example.com" }],
           ConfirmationCode: "4567",
           Enabled: true,
