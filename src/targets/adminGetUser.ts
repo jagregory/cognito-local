@@ -9,9 +9,11 @@ export type AdminGetUserTarget = (
   req: AdminGetUserRequest
 ) => Promise<AdminGetUserResponse>;
 
+type AdminGetUserServices = Pick<Services, "cognitoClient">;
+
 export const AdminGetUser = ({
   cognitoClient,
-}: Services): AdminGetUserTarget => async (req) => {
+}: AdminGetUserServices): AdminGetUserTarget => async (req) => {
   const userPool = await cognitoClient.getUserPool(req.UserPoolId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
