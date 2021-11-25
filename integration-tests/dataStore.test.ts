@@ -41,6 +41,71 @@ describe("Data Store", () => {
     });
   });
 
+  describe("delete", () => {
+    it("deletes a value", async () => {
+      const dataStore = await createDataStore("example", {}, path);
+
+      await dataStore.set("key1", 1);
+      await dataStore.set("key2", 2);
+
+      const fileBefore = JSON.parse(
+        await readFile(path + "/example.json", "utf-8")
+      );
+
+      expect(fileBefore).toEqual({
+        key1: 1,
+        key2: 2,
+      });
+
+      await dataStore.delete("key1");
+
+      const fileAfter = JSON.parse(
+        await readFile(path + "/example.json", "utf-8")
+      );
+
+      expect(fileAfter).toEqual({
+        key2: 2,
+      });
+    });
+
+    it("deletes a nested value using array syntax", async () => {
+      const dataStore = await createDataStore("example", {}, path);
+
+      await dataStore.set(["key", "a", "b"], 1);
+      await dataStore.set(["key", "a", "c"], 2);
+      await dataStore.set("key2", 3);
+
+      const fileBefore = JSON.parse(
+        await readFile(path + "/example.json", "utf-8")
+      );
+
+      expect(fileBefore).toEqual({
+        key: {
+          a: {
+            b: 1,
+            c: 2,
+          },
+        },
+        key2: 3,
+      });
+
+      await dataStore.delete(["key", "a", "b"]);
+
+      const fileAfter = JSON.parse(
+        await readFile(path + "/example.json", "utf-8")
+      );
+
+      expect(fileAfter).toEqual({
+        key: {
+          a: {
+            c: 2,
+          },
+        },
+        key2: 3,
+      });
+    });
+  });
+
   describe("set", () => {
     it("saves a value", async () => {
       const dataStore = await createDataStore("example", {}, path);

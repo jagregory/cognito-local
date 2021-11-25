@@ -3,7 +3,7 @@ import {
   AdminGetUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
-import { NotAuthorizedError } from "../errors";
+import { UserNotFoundError } from "../errors";
 
 export type AdminGetUserTarget = (
   req: AdminGetUserRequest
@@ -15,7 +15,7 @@ export const AdminGetUser = ({
   const userPool = await cognitoClient.getUserPool(req.UserPoolId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
-    throw new NotAuthorizedError();
+    throw new UserNotFoundError("User does not exist");
   }
 
   return {

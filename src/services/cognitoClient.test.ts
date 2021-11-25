@@ -1,3 +1,4 @@
+import { newMockDataStore } from "../__tests__/mockDataStore";
 import { MockLogger } from "../__tests__/mockLogger";
 import { ResourceNotFoundError } from "../errors";
 import { DateClock } from "./clock";
@@ -13,11 +14,7 @@ describe("Cognito Client", () => {
   const clock = new DateClock();
 
   beforeEach(() => {
-    mockDataStore = {
-      set: jest.fn(),
-      get: jest.fn(),
-      getRoot: jest.fn(),
-    };
+    mockDataStore = newMockDataStore();
     createUserPoolClient = jest.fn().mockResolvedValue(mockUserPool);
     createDataStore = jest.fn().mockResolvedValue(mockDataStore);
   });

@@ -32,7 +32,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminAddUserToGroup              | ❌                   |
 | AdminConfirmSignUp               | 🕒 (partial support) |
 | AdminCreateUser                  | 🕒 (partial support) |
-| AdminDeleteUser                  | 🕒 (partial support) |
+| AdminDeleteUser                  | ✅                   |
 | AdminDeleteUserAttributes        | ❌                   |
 | AdminDisableProviderForUser      | ❌                   |
 | AdminDisableUser                 | ❌                   |

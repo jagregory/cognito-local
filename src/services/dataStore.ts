@@ -5,9 +5,10 @@ import { promisify } from "util";
 const mkdir = promisify(fs.mkdir);
 
 export interface DataStore {
-  getRoot<T>(): Promise<T | null>;
+  delete(key: string | string[]): Promise<void>;
   get<T>(key: string | string[]): Promise<T | null>;
   get<T>(key: string | string[], defaultValue: T): Promise<T>;
+  getRoot<T>(): Promise<T | null>;
   set<T>(key: string | string[], value: T): Promise<void>;
 }
 
@@ -32,6 +33,13 @@ export const createDataStore: CreateDataStore = async (
   db.default(defaults);
 
   return {
+    async delete(key: string | string[]) {
+      (key instanceof Array ? key : [key])
+        .reduce((acc, k) => acc.get(k), db)
+        .delete();
+      await db.save();
+    },
+
     async getRoot() {
       return (await db.value()) ?? null;
     },

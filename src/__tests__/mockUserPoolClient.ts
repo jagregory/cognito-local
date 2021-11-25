@@ -7,11 +7,12 @@ export const MockUserPoolClient = {
   createAppClient: jest.fn() as jest.MockedFunction<
     UserPoolClient["createAppClient"]
   >,
+  deleteUser: jest.fn() as jest.MockedFunction<UserPoolClient["deleteUser"]>,
   getUserByUsername: jest.fn() as jest.MockedFunction<
     UserPoolClient["getUserByUsername"]
   >,
-  listUsers: jest.fn() as jest.MockedFunction<UserPoolClient["listUsers"]>,
-  saveUser: jest.fn() as jest.MockedFunction<UserPoolClient["saveUser"]>,
   listGroups: jest.fn() as jest.MockedFunction<UserPoolClient["listGroups"]>,
+  listUsers: jest.fn() as jest.MockedFunction<UserPoolClient["listUsers"]>,
   saveGroup: jest.fn() as jest.MockedFunction<UserPoolClient["saveGroup"]>,
+  saveUser: jest.fn() as jest.MockedFunction<UserPoolClient["saveUser"]>,
 };

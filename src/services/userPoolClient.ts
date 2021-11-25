@@ -98,11 +98,12 @@ export interface UserPoolClient {
   readonly config: UserPool;
 
   createAppClient(name: string): Promise<AppClient>;
+  deleteUser(user: User): Promise<void>;
   getUserByUsername(username: string): Promise<User | null>;
-  listUsers(): Promise<readonly User[]>;
-  saveUser(user: User): Promise<void>;
   listGroups(): Promise<readonly Group[]>;
+  listUsers(): Promise<readonly User[]>;
   saveGroup(group: Group): Promise<void>;
+  saveUser(user: User): Promise<void>;
 }
 
 export type CreateUserPoolClient = (
@@ -174,6 +175,10 @@ export class UserPoolClientService implements UserPoolClient {
     await this.clientsDataStore.set(["Clients", id], appClient);
 
     return appClient;
+  }
+
+  public async deleteUser(user: User): Promise<void> {
+    await this.dataStore.delete(["Users", user.Username]);
   }
 
   public async getUserByUsername(username: string): Promise<User | null> {

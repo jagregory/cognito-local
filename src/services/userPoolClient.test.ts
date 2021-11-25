@@ -1,5 +1,6 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { newMockDataStore } from "../__tests__/mockDataStore";
 import { MockLogger } from "../__tests__/mockLogger";
 import { DataStore } from "./dataStore";
 import {
@@ -12,6 +13,7 @@ import {
   UserPoolClientService,
   Group,
 } from "./userPoolClient";
+import * as TDB from "../__tests__/testDataBuilder";
 
 describe("User Pool Client", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
@@ -22,19 +24,11 @@ describe("User Pool Client", () => {
   beforeEach(() => {
     clock = new ClockFake(currentDate);
 
-    mockClientsDataStore = {
-      set: jest.fn(),
-      get: jest.fn(),
-      getRoot: jest.fn(),
-    };
+    mockClientsDataStore = newMockDataStore();
   });
 
   it("creates a database", async () => {
-    const createDataStore = jest.fn().mockResolvedValue({
-      set: jest.fn(),
-      get: jest.fn(),
-      getRoot: jest.fn(),
-    });
+    const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
 
     await UserPoolClientService.create(
       mockClientsDataStore,
@@ -52,17 +46,13 @@ describe("User Pool Client", () => {
 
   describe("createAppClient", () => {
     it("saves an app client", async () => {
+      const ds = newMockDataStore();
+      ds.get.mockImplementation((key, defaults) => Promise.resolve(defaults));
+
       const userPool = await UserPoolClientService.create(
         mockClientsDataStore,
         clock,
-        () =>
-          Promise.resolve({
-            set: jest.fn(),
-            get: jest
-              .fn()
-              .mockImplementation((key, defaults) => Promise.resolve(defaults)),
-            getRoot: jest.fn(),
-          }),
+        () => Promise.resolve(ds),
         { Id: "local", UsernameAttributes: [] },
         MockLogger
       );
@@ -87,52 +77,55 @@ describe("User Pool Client", () => {
   });
 
   describe("saveUser", () => {
+    const user = TDB.user();
+
     it("saves the user", async () => {
-      const now = new Date().getTime();
-      const set = jest.fn();
+      const ds = newMockDataStore();
 
       const userPool = await UserPoolClientService.create(
         mockClientsDataStore,
         clock,
-        () =>
-          Promise.resolve({
-            set,
-            get: jest.fn(),
-            getRoot: jest.fn(),
-          }),
+        () => Promise.resolve(ds),
         { Id: "local", UsernameAttributes: [] },
         MockLogger
       );
 
-      await userPool.saveUser({
-        Username: "user-supplied",
-        Password: "hunter3",
-        UserStatus: "UNCONFIRMED",
-        Attributes: [
-          { Name: "sub", Value: "uuid-1234" },
-          { Name: "email", Value: "example@example.com" },
-        ],
-        UserLastModifiedDate: now,
-        UserCreateDate: now,
-        Enabled: true,
-      });
+      await userPool.saveUser(user);
 
-      expect(set).toHaveBeenCalledWith(["Users", "user-supplied"], {
-        Username: "user-supplied",
-        Password: "hunter3",
-        UserStatus: "UNCONFIRMED",
-        Attributes: [
-          { Name: "sub", Value: "uuid-1234" },
-          { Name: "email", Value: "example@example.com" },
-        ],
-        UserLastModifiedDate: now,
-        UserCreateDate: now,
-        Enabled: true,
-      });
+      expect(ds.set).toHaveBeenCalledWith(["Users", user.Username], user);
+    });
+  });
+
+  describe("deleteUser", () => {
+    const user = TDB.user();
+
+    it("deletes the user", async () => {
+      const ds = newMockDataStore();
+
+      const userPool = await UserPoolClientService.create(
+        mockClientsDataStore,
+        clock,
+        () => Promise.resolve(ds),
+        { Id: "local", UsernameAttributes: [] },
+        MockLogger
+      );
+
+      await userPool.deleteUser(user);
+
+      expect(ds.delete).toHaveBeenCalledWith(["Users", user.Username]);
     });
   });
 
   describe("getUserByUsername", () => {
+    const user = TDB.user({
+      Username: "1",
+      Attributes: [
+        { Name: "sub", Value: "uuid-1234" },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0411000111" },
+      ],
+    });
+
     describe.each`
       username_attributes          | find_by_email | find_by_phone_number
       ${[]}                        | ${false}      | ${false}
@@ -150,22 +143,11 @@ describe("User Pool Client", () => {
             UsernameAttributes: username_attributes,
           };
           const users: Record<string, User> = {
-            "user-supplied": {
-              Username: "user-supplied",
-              Password: "hunter3",
-              UserStatus: "UNCONFIRMED",
-              Attributes: [
-                { Name: "sub", Value: "uuid-1234" },
-                { Name: "email", Value: "example@example.com" },
-                { Name: "phone_number", Value: "0411000111" },
-              ],
-              UserLastModifiedDate: new Date().getTime(),
-              UserCreateDate: new Date().getTime(),
-              Enabled: true,
-            },
+            [user.Username]: user,
           };
 
-          const get = jest.fn((key) => {
+          const ds = newMockDataStore();
+          ds.get.mockImplementation((key) => {
             if (key === "Users") {
               return Promise.resolve(users);
             } else if (key === "Options") {
@@ -180,12 +162,7 @@ describe("User Pool Client", () => {
           userPool = await UserPoolClientService.create(
             mockClientsDataStore,
             clock,
-            () =>
-              Promise.resolve({
-                set: jest.fn(),
-                get,
-                getRoot: jest.fn(),
-              }),
+            () => Promise.resolve(ds),
             options,
             MockLogger
           );
@@ -198,50 +175,46 @@ describe("User Pool Client", () => {
         });
 
         it("returns existing user by their username", async () => {
-          const user = await userPool.getUserByUsername("user-supplied");
+          const foundUser = await userPool.getUserByUsername(user.Username);
 
-          expect(user).not.toBeNull();
-          expect(user?.Username).toEqual("user-supplied");
+          expect(foundUser).toEqual(user);
         });
 
         it("returns existing user by their sub", async () => {
-          const user = await userPool.getUserByUsername("uuid-1234");
+          const foundUser = await userPool.getUserByUsername("uuid-1234");
 
-          expect(user).not.toBeNull();
-          expect(user?.Username).toEqual("user-supplied");
+          expect(foundUser).toEqual(user);
         });
 
         if (find_by_email) {
           it("returns existing user by their email", async () => {
-            const user = await userPool.getUserByUsername(
+            const foundUser = await userPool.getUserByUsername(
               "example@example.com"
             );
 
-            expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("user-supplied");
+            expect(foundUser).toEqual(foundUser);
           });
         } else {
           it("does not return the user by their email", async () => {
-            const user = await userPool.getUserByUsername(
+            const foundUser = await userPool.getUserByUsername(
               "example@example.com"
             );
 
-            expect(user).toBeNull();
+            expect(foundUser).toBeNull();
           });
         }
 
         if (find_by_phone_number) {
           it("returns existing user by their phone number", async () => {
-            const user = await userPool.getUserByUsername("0411000111");
+            const foundUser = await userPool.getUserByUsername("0411000111");
 
-            expect(user).not.toBeNull();
-            expect(user?.Username).toEqual("user-supplied");
+            expect(foundUser).toEqual(user);
           });
         } else {
           it("does not return the user by their phone number", async () => {
-            const user = await userPool.getUserByUsername("0411000111");
+            const foundUser = await userPool.getUserByUsername("0411000111");
 
-            expect(user).toBeNull();
+            expect(foundUser).toBeNull();
           });
         }
       }
@@ -249,29 +222,27 @@ describe("User Pool Client", () => {
   });
 
   describe("listUsers", () => {
+    const user1 = TDB.user({
+      Username: "1",
+    });
+    const user2 = TDB.user({
+      Username: "2",
+    });
+
     let userPool: UserPoolClient;
 
     beforeEach(async () => {
       const options = {
         Id: "local",
       };
+
       const users = {
-        "1": {
-          Username: "1",
-          Password: "hunter3",
-          UserStatus: "UNCONFIRMED",
-          Attributes: [
-            { Name: "sub", Value: "1" },
-            { Name: "email", Value: "example@example.com" },
-            { Name: "phone_number", Value: "0411000111" },
-          ],
-          UserLastModifiedDate: new Date().getTime(),
-          UserCreateDate: new Date().getTime(),
-          Enabled: true,
-        },
+        [user1.Username]: user1,
+        [user2.Username]: user2,
       };
 
-      const get = jest.fn((key) => {
+      const ds = newMockDataStore();
+      ds.get.mockImplementation((key) => {
         if (key === "Users") {
           return Promise.resolve(users);
         } else if (key === "Options") {
@@ -283,12 +254,7 @@ describe("User Pool Client", () => {
       userPool = await UserPoolClientService.create(
         mockClientsDataStore,
         clock,
-        () =>
-          Promise.resolve({
-            set: jest.fn(),
-            get,
-            getRoot: jest.fn(),
-          }),
+        () => Promise.resolve(ds),
         options,
         MockLogger
       );
@@ -298,8 +264,7 @@ describe("User Pool Client", () => {
       const users = await userPool.listUsers();
 
       expect(users).not.toBeNull();
-      expect(users).toHaveLength(1);
-      expect(users[0].Username).toEqual("1");
+      expect(users).toEqual([user1, user2]);
     });
   });
 
@@ -363,17 +328,12 @@ describe("User Pool Client", () => {
   describe("saveGroup", () => {
     it("saves the group", async () => {
       const now = new Date().getTime();
-      const set = jest.fn();
+      const ds = newMockDataStore();
 
       const userPool = await UserPoolClientService.create(
         mockClientsDataStore,
         clock,
-        () =>
-          Promise.resolve({
-            set,
-            get: jest.fn(),
-            getRoot: jest.fn(),
-          }),
+        () => Promise.resolve(ds),
         { Id: "local", UsernameAttributes: [] },
         MockLogger
       );
@@ -387,7 +347,7 @@ describe("User Pool Client", () => {
         RoleArn: "ARN",
       });
 
-      expect(set).toHaveBeenCalledWith(["Groups", "theGroupName"], {
+      expect(ds.set).toHaveBeenCalledWith(["Groups", "theGroupName"], {
         CreationDate: now,
         Description: "Description",
         GroupName: "theGroupName",
@@ -416,7 +376,8 @@ describe("User Pool Client", () => {
         },
       };
 
-      const get = jest.fn((key) => {
+      const ds = newMockDataStore();
+      ds.get.mockImplementation((key) => {
         if (key === "Groups") {
           return Promise.resolve(groups);
         } else if (key === "Options") {
@@ -428,12 +389,7 @@ describe("User Pool Client", () => {
       userPool = await UserPoolClientService.create(
         mockClientsDataStore,
         clock,
-        () =>
-          Promise.resolve({
-            set: jest.fn(),
-            get,
-            getRoot: jest.fn(),
-          }),
+        () => Promise.resolve(ds),
         options,
         MockLogger
       );
