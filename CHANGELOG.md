@@ -1,3 +1,26 @@
+# [3.3.0](https://github.com/jagregory/cognito-local/compare/v3.2.0...v3.3.0) (2021-11-25)
+
+
+### Bug Fixes
+
+* **api:** adminCreateUser defaults status to FORCE_CHANGE_PASSWORD ([4996aa4](https://github.com/jagregory/cognito-local/commit/4996aa418395db8fcd477fb3c26047ed21a1d4ce))
+* **api:** adminCreateUser handles duplicate users ([7529971](https://github.com/jagregory/cognito-local/commit/752997144479f66168023604ee326e48c3e31fb3))
+* **api:** initiateAuth throws when missing AuthParameters ([d1eb240](https://github.com/jagregory/cognito-local/commit/d1eb240329dca39dcda4a8d080b94cec8822b331))
+* **api:** respondToAuthChallenge throws if missing ChallengeResponses ([5e5aa36](https://github.com/jagregory/cognito-local/commit/5e5aa36740cff3cf37ec316e8a206e5a84f3022f))
+* **lambda:** forgotPassword invokes CustomMessage lambda ([79f43ef](https://github.com/jagregory/cognito-local/commit/79f43ef39830a33a012961cf2a37acf398bff1fd))
+
+
+### Features
+
+* **api:** adminDeleteUser full support ([58f33e2](https://github.com/jagregory/cognito-local/commit/58f33e20a312be8631279c1963a8cac39e3bbfda))
+* **api:** adminGetUser full support ([a6fc4c8](https://github.com/jagregory/cognito-local/commit/a6fc4c834fb8f00b2fc068dbb368d2884880c584))
+* **api:** deleteUser full support ([0a753b2](https://github.com/jagregory/cognito-local/commit/0a753b2301582a76f810a628582dc60d4f3a5ae3))
+* **api:** initiateAuth handles FORCE_CHANGE_PASSWORD ([6703ea9](https://github.com/jagregory/cognito-local/commit/6703ea9a126852c921da9f23571c9ad776edc53b))
+* **api:** listGroups support ([252ee96](https://github.com/jagregory/cognito-local/commit/252ee96f36a6ba9cd5456e3a4a8bc83341296ca5))
+* **api:** respondToAuthChallenge supports NEW_PASSWORD_REQUIRED ([6a75fea](https://github.com/jagregory/cognito-local/commit/6a75feae1ddc6122f35d7d3feee6a6a880e8d064))
+* **lambda:** support for CustomMessage_Authentication ([dfb6fdf](https://github.com/jagregory/cognito-local/commit/dfb6fdffeda3e0519a0c7aba520ab718d6449cd9))
+* **lambda:** support for CustomMessage_SignUp ([ce69ea7](https://github.com/jagregory/cognito-local/commit/ce69ea79d64f173bce43cb6d1bed340ba66ebf98))
+
 # [3.2.0](https://github.com/jagregory/cognito-local/compare/v3.1.5...v3.2.0) (2021-11-24)
 
 
