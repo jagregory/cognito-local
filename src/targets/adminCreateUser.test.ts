@@ -1,8 +1,10 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
+import { UsernameExistsError } from "../errors";
 import { CognitoClient } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
+import * as TDB from "../__tests__/testDataBuilder";
 
 describe("AdminCreateUser target", () => {
   let adminCreateUser: AdminCreateUserTarget;
@@ -52,7 +54,21 @@ describe("AdminCreateUser target", () => {
   it.todo("can create an alias to an existing user");
   it.todo("can resend the welcome message");
   it.todo("can suppress the welcome message");
-  it.todo("handles creating a duplicate user");
+
+  it("handles creating a duplicate user", async () => {
+    const existingUser = TDB.user();
+    MockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+
+    await expect(
+      adminCreateUser({
+        TemporaryPassword: "pwd",
+        UserAttributes: existingUser.Attributes,
+        Username: existingUser.Username,
+        UserPoolId: "test",
+      })
+    ).rejects.toEqual(new UsernameExistsError());
+  });
+
   it.todo("invokes the PreSignIn lambda");
   it.todo("saves a user with a generated temporary password");
   it.todo("sends a welcome message to the user");

@@ -3,7 +3,7 @@ import {
   AdminCreateUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
-import { UnsupportedError } from "../errors";
+import { UnsupportedError, UsernameExistsError } from "../errors";
 import { Services } from "../services";
 import { attributesInclude, User } from "../services/userPoolClient";
 
@@ -22,6 +22,12 @@ export const AdminCreateUser = ({
   }
 
   const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const existingUser = await userPool.getUserByUsername(req.Username);
+  if (existingUser && req.MessageAction === "RESEND") {
+    throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
+  } else if (existingUser) {
+    throw new UsernameExistsError();
+  }
 
   const attributes = attributesInclude("sub", req.UserAttributes)
     ? req.UserAttributes ?? []
@@ -41,7 +47,7 @@ export const AdminCreateUser = ({
   };
   await userPool.saveUser(user);
 
-  // TODO: should handle existing users
+  // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
   // TODO: should send a message unless MessageAction=="SUPPRESS"
   // TODO: support MessageAction=="RESEND"
   // TODO: should generate a TemporaryPassword if one isn't set
