@@ -1,3 +1,11 @@
+# [3.4.0](https://github.com/jagregory/cognito-local/compare/v3.3.0...v3.4.0) (2021-11-25)
+
+
+### Features
+
+* **api:** adminSetUserPassword support ([1707257](https://github.com/jagregory/cognito-local/commit/1707257cc39bc2621b5b77520e61cc32c0ba5998))
+* **lambda:** post authentication lambda support ([b75ca6b](https://github.com/jagregory/cognito-local/commit/b75ca6b70b91e09cf27d2ec2c56e1480b1818304))
+
 # [3.3.0](https://github.com/jagregory/cognito-local/compare/v3.2.0...v3.3.0) (2021-11-25)
 
 
