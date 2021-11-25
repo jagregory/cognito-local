@@ -178,5 +178,17 @@ export const InitiateAuth = ({
     );
   }
 
-  return await verifyPasswordChallenge(user, req, userPool, clock);
+  const result = await verifyPasswordChallenge(user, req, userPool, clock);
+
+  if (triggers.enabled("PostAuthentication")) {
+    await triggers.postAuthentication({
+      clientId: req.ClientId,
+      source: "PostAuthentication_Authentication",
+      userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId: userPool.config.Id,
+    });
+  }
+
+  return result;
 };

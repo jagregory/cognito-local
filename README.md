@@ -171,27 +171,27 @@ cognito-local how to connect to your local Lambda server:
 
 #### Supported Lambda Triggers
 
-| Trigger                     | Operation             | Support |
-| --------------------------- | --------------------- | ------- |
-| CreateAuthChallenge         | \*                    | ❌      |
-| CustomEmailSender           | \*                    | ❌      |
-| CustomMessage               | AdminCreateUser       | ❌      |
-| CustomMessage               | Authentication        | ✅      |
-| CustomMessage               | ForgotPassword        | ✅      |
-| CustomMessage               | ResendCode            | ❌      |
-| CustomMessage               | SignUp                | ✅      |
-| CustomMessage               | UpdateUserAttribute   | ❌      |
-| CustomMessage               | VerifyUserAttribute   | ❌      |
-| DefineAuthChallenge         | \*                    | ❌      |
-| PostAuthentication          | \*                    | ❌      |
-| PostConfirmation            | ConfirmForgotPassword | ✅      |
-| PostConfirmation            | ConfirmSignUp         | ✅      |
-| PreAuthentication           | \*                    | ❌      |
-| PreSignUp                   | \*                    | ❌      |
-| PreTokenGeneration          | \*                    | ❌      |
-| UserMigration               | Authentication        | ✅      |
-| UserMigration               | ForgotPassword        | ❌      |
-| VerifyAuthChallengeResponse | \*                    | ❌      |
+| Trigger                     | Operation                         | Support |
+| --------------------------- | --------------------------------- | ------- |
+| CreateAuthChallenge         | \*                                | ❌      |
+| CustomEmailSender           | \*                                | ❌      |
+| CustomMessage               | AdminCreateUser                   | ❌      |
+| CustomMessage               | Authentication                    | ✅      |
+| CustomMessage               | ForgotPassword                    | ✅      |
+| CustomMessage               | ResendCode                        | ❌      |
+| CustomMessage               | SignUp                            | ✅      |
+| CustomMessage               | UpdateUserAttribute               | ❌      |
+| CustomMessage               | VerifyUserAttribute               | ❌      |
+| DefineAuthChallenge         | \*                                | ❌      |
+| PostAuthentication          | PostAuthentication_Authentication | ✅      |
+| PostConfirmation            | ConfirmForgotPassword             | ✅      |
+| PostConfirmation            | ConfirmSignUp                     | ✅      |
+| PreAuthentication           | \*                                | ❌      |
+| PreSignUp                   | \*                                | ❌      |
+| PreTokenGeneration          | \*                                | ❌      |
+| UserMigration               | Authentication                    | ✅      |
+| UserMigration               | ForgotPassword                    | ❌      |
+| VerifyAuthChallengeResponse | \*                                | ❌      |
 
 #### Known limitations
 

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
 import {
@@ -9,7 +10,7 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import { UserPoolClient } from "../services";
+import { Triggers, UserPoolClient } from "../services";
 import { attributeValue } from "../services/userPoolClient";
 import {
   RespondToAuthChallenge,
@@ -22,14 +23,17 @@ const currentDate = new Date();
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
   let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockTriggers: jest.Mocked<Triggers>;
   let clock: ClockFake;
 
   beforeEach(() => {
     clock = new ClockFake(currentDate);
     mockUserPoolClient = newMockUserPoolClient();
+    mockTriggers = newMockTriggers();
     respondToAuthChallenge = RespondToAuthChallenge({
       cognitoClient: newMockCognitoClient(mockUserPoolClient),
       clock,
+      triggers: mockTriggers,
     });
   });
 
@@ -95,10 +99,12 @@ describe("RespondToAuthChallenge target", () => {
       MFACode: "1234",
     });
 
+    beforeEach(() => {
+      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    });
+
     describe("when code matches", () => {
       it("updates the user and removes the MFACode", async () => {
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
-
         const newDate = clock.advanceBy(1200);
 
         await respondToAuthChallenge({
@@ -119,8 +125,6 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       it("generates tokens", async () => {
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
-
         const output = await respondToAuthChallenge({
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
@@ -185,6 +189,32 @@ describe("RespondToAuthChallenge target", () => {
           )
         ).toBeTruthy();
       });
+
+      describe("when Post Authentication trigger is enabled", () => {
+        it("does invokes the trigger", async () => {
+          mockTriggers.enabled.mockImplementation(
+            (trigger) => trigger === "PostAuthentication"
+          );
+
+          await respondToAuthChallenge({
+            ClientId: "clientId",
+            ChallengeName: "SMS_MFA",
+            ChallengeResponses: {
+              USERNAME: user.Username,
+              SMS_MFA_CODE: "1234",
+            },
+            Session: "Session",
+          });
+
+          expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
+            clientId: "clientId",
+            source: "PostAuthentication_Authentication",
+            userAttributes: user.Attributes,
+            username: user.Username,
+            userPoolId: "test",
+          });
+        });
+      });
     });
 
     describe("when code is incorrect", () => {
@@ -209,9 +239,11 @@ describe("RespondToAuthChallenge target", () => {
   describe("ChallengeName=NEW_PASSWORD_REQUIRED", () => {
     const user = TDB.user();
 
-    it("throws if NEW_PASSWORD missing", async () => {
+    beforeEach(() => {
       mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    });
 
+    it("throws if NEW_PASSWORD missing", async () => {
       await expect(
         respondToAuthChallenge({
           ClientId: "clientId",
@@ -227,8 +259,6 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("updates the user's password and status", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
-
       const newDate = clock.advanceBy(1200);
 
       await respondToAuthChallenge({
@@ -250,8 +280,6 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("generates tokens", async () => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
-
       const output = await respondToAuthChallenge({
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
@@ -311,6 +339,32 @@ describe("RespondToAuthChallenge target", () => {
           algorithms: ["RS256"],
         })
       ).toBeTruthy();
+    });
+
+    describe("when Post Authentication trigger is enabled", () => {
+      it("does invokes the trigger", async () => {
+        mockTriggers.enabled.mockImplementation(
+          (trigger) => trigger === "PostAuthentication"
+        );
+
+        await respondToAuthChallenge({
+          ClientId: "clientId",
+          ChallengeName: "NEW_PASSWORD_REQUIRED",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+            NEW_PASSWORD: "foo",
+          },
+          Session: "Session",
+        });
+
+        expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
+          clientId: "clientId",
+          source: "PostAuthentication_Authentication",
+          userAttributes: user.Attributes,
+          username: user.Username,
+          userPoolId: "test",
+        });
+      });
     });
   });
 });

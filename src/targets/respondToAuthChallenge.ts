@@ -15,13 +15,18 @@ export type RespondToAuthChallengeTarget = (
   req: RespondToAuthChallengeRequest
 ) => Promise<RespondToAuthChallengeResponse>;
 
-export const RespondToAuthChallenge = ({
-  cognitoClient,
-  clock,
-}: Pick<
+type RespondToAuthChallengeService = Pick<
   Services,
-  "cognitoClient" | "clock"
->): RespondToAuthChallengeTarget => async (req) => {
+  "cognitoClient" | "clock" | "triggers"
+>;
+
+export const RespondToAuthChallenge = ({
+  clock,
+  cognitoClient,
+  triggers,
+}: RespondToAuthChallengeService): RespondToAuthChallengeTarget => async (
+  req
+) => {
   if (!req.ChallengeResponses) {
     throw new InvalidParameterError(
       "Missing required parameter challenge responses"
@@ -70,6 +75,16 @@ export const RespondToAuthChallenge = ({
     throw new UnsupportedError(
       `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`
     );
+  }
+
+  if (triggers.enabled("PostAuthentication")) {
+    await triggers.postAuthentication({
+      clientId: req.ClientId,
+      source: "PostAuthentication_Authentication",
+      userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId: userPool.config.Id,
+    });
   }
 
   return {

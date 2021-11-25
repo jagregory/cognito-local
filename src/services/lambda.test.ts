@@ -153,6 +153,55 @@ describe("Lambda function invoker", () => {
       });
     });
 
+    describe.each`
+      trigger                 | source
+      ${"PostAuthentication"} | ${"PostAuthentication_Authentication"}
+      ${"PostConfirmation"}   | ${"PostConfirmation_ConfirmSignUp"}
+      ${"PostConfirmation"}   | ${"PostConfirmation_ConfirmForgotPassword"}
+    `("$source", ({ trigger, source }) => {
+      it("invokes the lambda", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "some": "json" }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            [trigger]: "MyLambdaName",
+          },
+          mockLambdaClient,
+          MockLogger
+        );
+
+        await lambda.invoke(trigger, {
+          clientId: "clientId",
+          triggerSource: source,
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {},
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyLambdaName",
+          InvocationType: "RequestResponse",
+          Payload: JSON.stringify({
+            version: 0,
+            userName: "username",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: source,
+            request: {
+              userAttributes: {},
+            },
+            response: {},
+          }),
+        });
+      });
+    });
+
     describe.each([
       "CustomMessage_SignUp",
       "CustomMessage_AdminCreateUser",

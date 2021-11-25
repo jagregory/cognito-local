@@ -202,6 +202,25 @@ describe("InitiateAuth target", () => {
               MFACode: "1234",
             });
           });
+
+          describe("when Post Authentication trigger is enabled", () => {
+            it("does not invoke the trigger", async () => {
+              mockTriggers.enabled.mockImplementation(
+                (trigger) => trigger === "PostAuthentication"
+              );
+
+              await initiateAuth({
+                ClientId: "clientId",
+                AuthFlow: "USER_PASSWORD_AUTH",
+                AuthParameters: {
+                  USERNAME: user.Username,
+                  PASSWORD: user.Password,
+                },
+              });
+
+              expect(mockTriggers.postAuthentication).not.toHaveBeenCalled();
+            });
+          });
         });
 
         describe("when user doesn't have MFA configured", () => {
@@ -286,6 +305,25 @@ describe("InitiateAuth target", () => {
               MFACode: "1234",
             });
           });
+
+          describe("when Post Authentication trigger is enabled", () => {
+            it("does not invoke the trigger", async () => {
+              mockTriggers.enabled.mockImplementation(
+                (trigger) => trigger === "PostAuthentication"
+              );
+
+              await initiateAuth({
+                ClientId: "clientId",
+                AuthFlow: "USER_PASSWORD_AUTH",
+                AuthParameters: {
+                  USERNAME: user.Username,
+                  PASSWORD: user.Password,
+                },
+              });
+
+              expect(mockTriggers.postAuthentication).not.toHaveBeenCalled();
+            });
+          });
         });
 
         describe("when user doesn't have MFA configured", () => {
@@ -365,14 +403,14 @@ describe("InitiateAuth target", () => {
       });
 
       describe("when MFA is OFF", () => {
+        const user = TDB.user();
+
         beforeEach(() => {
           mockUserPoolClient.config.MfaConfiguration = "OFF";
+          mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
         });
 
         it("generates tokens", async () => {
-          const user = TDB.user();
-
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
           const output = await initiateAuth({
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
@@ -436,17 +474,44 @@ describe("InitiateAuth target", () => {
             )
           ).toBeTruthy();
         });
+
+        describe("when Post Authentication trigger is enabled", () => {
+          it("invokes the trigger", async () => {
+            mockTriggers.enabled.mockImplementation(
+              (trigger) => trigger === "PostAuthentication"
+            );
+
+            await initiateAuth({
+              ClientId: "clientId",
+              AuthFlow: "USER_PASSWORD_AUTH",
+              AuthParameters: {
+                USERNAME: user.Username,
+                PASSWORD: user.Password,
+              },
+            });
+
+            expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
+              clientId: "clientId",
+              source: "PostAuthentication_Authentication",
+              userAttributes: user.Attributes,
+              username: user.Username,
+              userPoolId: "test",
+            });
+          });
+        });
       });
     });
 
     describe("when user status is FORCE_CHANGE_PASSWORD", () => {
-      it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {
-        const user = TDB.user({
-          UserStatus: "FORCE_CHANGE_PASSWORD",
-        });
+      const user = TDB.user({
+        UserStatus: "FORCE_CHANGE_PASSWORD",
+      });
 
+      beforeEach(() => {
         mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      });
 
+      it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {
         const response = await initiateAuth({
           ClientId: "clientId",
           AuthFlow: "USER_PASSWORD_AUTH",
@@ -464,6 +529,25 @@ describe("InitiateAuth target", () => {
             userAttributes: JSON.stringify(attributesToRecord(user.Attributes)),
           },
           Session: expect.stringMatching(UUID),
+        });
+      });
+
+      describe("when Post Authentication trigger is enabled", () => {
+        it("does not invoke the trigger", async () => {
+          mockTriggers.enabled.mockImplementation(
+            (trigger) => trigger === "PostAuthentication"
+          );
+
+          await initiateAuth({
+            ClientId: "clientId",
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: user.Username,
+              PASSWORD: user.Password,
+            },
+          });
+
+          expect(mockTriggers.postAuthentication).not.toHaveBeenCalled();
         });
       });
     });

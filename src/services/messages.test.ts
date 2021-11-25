@@ -1,16 +1,16 @@
+import { newMockTriggers } from "../__tests__/mockTriggers";
 import { MessagesService } from "./messages";
-import { Triggers } from "./triggers";
 import * as TDB from "../__tests__/testDataBuilder";
+import { Triggers } from "./triggers";
 
 describe("messages service", () => {
-  const mockTriggers: jest.Mocked<Triggers> = {
-    customMessage: jest.fn(),
-    enabled: jest.fn(),
-    postConfirmation: jest.fn(),
-    userMigration: jest.fn(),
-  };
+  let mockTriggers: jest.Mocked<Triggers>;
 
   const user = TDB.user();
+
+  beforeEach(() => {
+    mockTriggers = newMockTriggers();
+  });
 
   describe("authentication", () => {
     describe("CustomMessage lambda is configured", () => {
