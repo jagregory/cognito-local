@@ -9,6 +9,7 @@ import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { ChangePassword } from "./changePassword";
 import { InitiateAuth } from "./initiateAuth";
+import { ListGroups } from "./listGroups";
 import { ListUsers } from "./listUsers";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { SignUp } from "./signUp";
@@ -34,6 +35,7 @@ export const Targets = {
   ForgotPassword,
   GetUser,
   InitiateAuth,
+  ListGroups,
   ListUsers,
   RespondToAuthChallenge,
   SignUp,
