@@ -45,7 +45,11 @@ export interface User {
   UserCreateDate: number;
   UserLastModifiedDate: number;
   Enabled: boolean;
-  UserStatus: "CONFIRMED" | "UNCONFIRMED" | "RESET_REQUIRED";
+  UserStatus:
+    | "CONFIRMED"
+    | "FORCE_CHANGE_PASSWORD"
+    | "RESET_REQUIRED"
+    | "UNCONFIRMED";
   Attributes: AttributeListType;
   MFAOptions?: MFAOptionListType;
 

@@ -34,7 +34,7 @@ export const AdminCreateUser = ({
     Password: req.TemporaryPassword,
     Attributes: attributes,
     Enabled: true,
-    UserStatus: "CONFIRMED",
+    UserStatus: "FORCE_CHANGE_PASSWORD",
     ConfirmationCode: undefined,
     UserCreateDate: now.getTime(),
     UserLastModifiedDate: now.getTime(),
@@ -44,7 +44,6 @@ export const AdminCreateUser = ({
   // TODO: should handle existing users
   // TODO: should send a message unless MessageAction=="SUPPRESS"
   // TODO: support MessageAction=="RESEND"
-  // TODO: UserStatus should default to FORCE_CHANGE_PASSWORD
   // TODO: should generate a TemporaryPassword if one isn't set
   // TODO: support ForceAliasCreation
   // TODO: support PreSignIn lambda and ValidationData
@@ -54,7 +53,7 @@ export const AdminCreateUser = ({
       Username: req.Username,
       Attributes: attributes,
       Enabled: true,
-      UserStatus: "CONFIRMED",
+      UserStatus: "FORCE_CHANGE_PASSWORD",
       UserCreateDate: now,
       UserLastModifiedDate: now,
       MFAOptions: undefined,

@@ -36,7 +36,7 @@ describe(
             Enabled: true,
             UserCreateDate: roundedDate,
             UserLastModifiedDate: roundedDate,
-            UserStatus: "CONFIRMED",
+            UserStatus: "FORCE_CHANGE_PASSWORD",
             Username: "abc",
           },
         });

@@ -27,7 +27,7 @@ describe(
             Enabled: true,
             UserCreateDate: createUserResult.User?.UserCreateDate,
             UserLastModifiedDate: createUserResult.User?.UserLastModifiedDate,
-            UserStatus: "CONFIRMED",
+            UserStatus: "FORCE_CHANGE_PASSWORD",
             Username: "abc",
           },
         ],

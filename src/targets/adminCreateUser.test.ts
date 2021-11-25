@@ -44,7 +44,7 @@ describe("AdminCreateUser target", () => {
       Password: "pwd",
       UserCreateDate: now.getTime(),
       UserLastModifiedDate: now.getTime(),
-      UserStatus: "CONFIRMED", // TODO: this is wrong
+      UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
     });
   });
