@@ -26,28 +26,109 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 ## Supported Features
 
-> Assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. I've
-> implemented as little of each feature as is necessary to support my own use-case. If anything doesn't work for you,
-> please raise an issue.
-
-- [AdminConfirmSignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminConfirmSignUp.html) (community contributed, incomplete)
-- [AdminCreateUser](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html) (community contributed, incomplete)
-- [AdminDeleteUser](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminDeleteUser.html) (community contributed, incomplete)
-- [AdminGetUser](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminGetUser.html) (community contributed, incomplete)
-- [AdminUpdateUserAttributes](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminUpdateUserAttributes.html) (community contributed, incomplete)
-- [ChangePassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ChangePassword.html) (community contributed, incomplete)
-- [ConfirmForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html)
-- [ConfirmSignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html)
-- [CreateGroup](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html)
-- [CreateUserPoolClient](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html)
-- [DescribeUserPoolClient](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPoolClient.html)
-- [ForgotPassword](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html)
-- [GetUser](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GetUser.html)
-- [InitiateAuth](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html)
-- [ListGroups](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListGroups.html)
-- [ListUsers](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ListUsers.html)
-- [RespondToAuthChallenge](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_RespondToAuthChallenge.html)
-- [SignUp](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html)
+| Feature                          | Support              |
+| -------------------------------- | -------------------- |
+| AddCustomAttributes              | ❌                   |
+| AdminAddUserToGroup              | ❌                   |
+| AdminConfirmSignUp               | 🕒 (partial support) |
+| AdminCreateUser                  | 🕒 (partial support) |
+| AdminDeleteUser                  | 🕒 (partial support) |
+| AdminDeleteUserAttributes        | ❌                   |
+| AdminDisableProviderForUser      | ❌                   |
+| AdminDisableUser                 | ❌                   |
+| AdminEnableUser                  | ❌                   |
+| AdminForgetDevice                | ❌                   |
+| AdminGetDevice                   | ❌                   |
+| AdminGetUser                     | 🕒 (partial support) |
+| AdminInitiateAuth                | ❌                   |
+| AdminLinkProviderForUser         | ❌                   |
+| AdminListDevices                 | ❌                   |
+| AdminListGroupsForUser           | ❌                   |
+| AdminListUserAuthEvents          | ❌                   |
+| AdminRemoveUserFromGroup         | ❌                   |
+| AdminResetUserPassword           | ❌                   |
+| AdminRespondToAuthChallenge      | ❌                   |
+| AdminSetUserMFAPreference        | ❌                   |
+| AdminSetUserPassword             | ❌                   |
+| AdminSetUserSettings             | ❌                   |
+| AdminUpdateAuthEventFeedback     | ❌                   |
+| AdminUpdateDeviceStatus          | ❌                   |
+| AdminUpdateUserAttributes        | 🕒 (partial support) |
+| AdminUserGlobalSignOut           | ❌                   |
+| AssociateSoftwareToken           | ❌                   |
+| ChangePassword                   | 🕒 (partial support) |
+| ConfirmDevice                    | ❌                   |
+| ConfirmForgotPassword            | 🕒 (partial support) |
+| ConfirmSignUp                    | 🕒 (partial support) |
+| CreateGroup                      | ✅                   |
+| CreateIdentityProvider           | ❌                   |
+| CreateResourceServer             | ❌                   |
+| CreateUserImportJob              | ❌                   |
+| CreateUserPool                   | ❌                   |
+| CreateUserPoolClient             | 🕒 (partial support) |
+| CreateUserPoolDomain             | ❌                   |
+| DeleteGroup                      | ❌                   |
+| DeleteIdentityProvider           | ❌                   |
+| DeleteResourceServer             | ❌                   |
+| DeleteUser                       | ❌                   |
+| DeleteUserAttributes             | ❌                   |
+| DeleteUserPool                   | ❌                   |
+| DeleteUserPoolClient             | ❌                   |
+| DeleteUserPoolDomain             | ❌                   |
+| DescribeIdentityProvider         | ❌                   |
+| DescribeResourceServer           | ❌                   |
+| DescribeRiskConfiguration        | ❌                   |
+| DescribeUserImportJob            | ❌                   |
+| DescribeUserPool                 | ❌                   |
+| DescribeUserPoolClient           | ✅                   |
+| DescribeUserPoolDomain           | ❌                   |
+| ForgetDevice                     | ❌                   |
+| ForgotPassword                   | 🕒 (partial support) |
+| GetCSVHeader                     | ❌                   |
+| GetDevice                        | ❌                   |
+| GetGroup                         | ❌                   |
+| GetIdentityProviderByIdentifier  | ❌                   |
+| GetSigningCertificate            | ❌                   |
+| GetUICustomization               | ❌                   |
+| GetUser                          | ✅                   |
+| GetUserAttributeVerificationCode | ❌                   |
+| GetUserPoolMfaConfig             | ❌                   |
+| GlobalSignOut                    | ❌                   |
+| InitiateAuth                     | 🕒 (partial support) |
+| ListDevices                      | ❌                   |
+| ListGroups                       | 🕒 (partial support) |
+| ListIdentityProviders            | ❌                   |
+| ListResourceServers              | ❌                   |
+| ListTagsForResource              | ❌                   |
+| ListUserImportJobs               | ❌                   |
+| ListUserPoolClients              | ❌                   |
+| ListUserPools                    | ❌                   |
+| ListUsers                        | 🕒 (partial support) |
+| ListUsersInGroup                 | ❌                   |
+| ResendConfirmationCode           | ❌                   |
+| RespondToAuthChallenge           | 🕒 (partial support) |
+| RevokeToken                      | ❌                   |
+| SetRiskConfiguration             | ❌                   |
+| SetUICustomization               | ❌                   |
+| SetUserMFAPreference             | ❌                   |
+| SetUserPoolMfaConfig             | ❌                   |
+| SetUserSettings                  | ❌                   |
+| SignUp                           | 🕒 (partial support) |
+| StartUserImportJob               | ❌                   |
+| StopUserImportJob                | ❌                   |
+| TagResource                      | ❌                   |
+| UntagResource                    | ❌                   |
+| UpdateAuthEventFeedback          | ❌                   |
+| UpdateDeviceStatus               | ❌                   |
+| UpdateGroup                      | ❌                   |
+| UpdateIdentityProvider           | ❌                   |
+| UpdateResourceServer             | ❌                   |
+| UpdateUserAttributes             | ❌                   |
+| UpdateUserPool                   | ❌                   |
+| UpdateUserPoolClient             | ❌                   |
+| UpdateUserPoolDomain             | ❌                   |
+| VerifySoftwareToken              | ❌                   |
+| VerifyUserAttribute              | ❌                   |
 
 Additional supported features:
 
