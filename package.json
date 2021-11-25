@@ -46,6 +46,7 @@
     "jest": "^27.0.6",
     "jest-date-mock": "^1.0.8",
     "lint-staged": "^10.1.3",
+    "markdown-toc": "^1.2.0",
     "nodemon": "^2.0.3",
     "prettier": "^2.0.4",
     "semantic-release": "^17.4.4",
@@ -83,7 +84,8 @@
       "eslint --fix",
       "tsc --esModuleInterop --resolveJsonModule --noEmit",
       "prettier --write"
-    ]
+    ],
+    "README.md": "markdown-toc -i --bullets=-"
   },
   "husky": {
     "hooks": {

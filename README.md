@@ -4,6 +4,23 @@
 
 A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
+<!-- toc -->
+
+- [Features](#features)
+- [Usage](#usage)
+  - [via Docker](#via-docker)
+  - [via Node](#via-node)
+  - [Using a different port](#using-a-different-port)
+  - [Updating your application](#updating-your-application)
+- [Configuration](#configuration)
+  - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
+  - [User Pools and Clients](#user-pools-and-clients)
+- [Known Limitations](#known-limitations)
+- [Multi-factor authentication](#multi-factor-authentication)
+- [Confirmation codes](#confirmation-codes)
+
+<!-- tocstop -->
+
 ## Features
 
 > Assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. I've
