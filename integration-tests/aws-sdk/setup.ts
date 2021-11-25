@@ -15,7 +15,7 @@ import {
   TriggersService,
   UserPoolServiceImpl,
 } from "../../src/services";
-import { createDataStore, CreateDataStore } from "../../src/services/dataStore";
+import { createDataStore } from "../../src/services/dataStore";
 import { otp } from "../../src/services/otp";
 import { Router } from "../../src/targets/router";
 
@@ -29,22 +29,21 @@ export const withCognitoSdk = (
     clock = new DateClock(),
   }: { logger?: Logger; clock?: Clock } = {}
 ) => () => {
-  let path: string;
-  let tmpCreateDataStore: CreateDataStore;
+  let dataDirectory: string;
   let httpServer: http.Server;
   let cognitoSdk: AWS.CognitoIdentityServiceProvider;
 
   beforeEach(async () => {
-    path = await mkdtemp("/tmp/cognito-local:");
-    tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
+    dataDirectory = await mkdtemp("/tmp/cognito-local:");
 
     const cognitoClient = await CognitoServiceImpl.create(
+      dataDirectory,
       {
         Id: "integration-test",
         UsernameAttributes: [],
       },
       clock,
-      tmpCreateDataStore,
+      createDataStore,
       UserPoolServiceImpl.create.bind(UserPoolServiceImpl),
       logger
     );
@@ -98,7 +97,7 @@ export const withCognitoSdk = (
 
   afterEach((done) => {
     httpServer.close(() => {
-      rmdir(path, {
+      rmdir(dataDirectory, {
         recursive: true,
       }).then(done, done);
     });

@@ -20,21 +20,28 @@ type UserPoolDefaultConfig = Omit<UserPool, "Id">;
 export class CognitoServiceImpl implements CognitoService {
   private readonly clients: DataStore;
   private readonly clock: Clock;
-  private readonly userPoolDefaultConfig: UserPoolDefaultConfig;
   private readonly createDataStore: CreateDataStore;
   private readonly createUserPoolClient: CreateUserPoolService;
+  private readonly dataDirectory: string;
   private readonly logger: Logger;
+  private readonly userPoolDefaultConfig: UserPoolDefaultConfig;
 
   public static async create(
+    dataDirectory: string,
     userPoolDefaultConfig: UserPool,
     clock: Clock,
     createDataStore: CreateDataStore,
     createUserPoolClient: CreateUserPoolService,
     logger: Logger
   ): Promise<CognitoService> {
-    const clients = await createDataStore("clients", { Clients: {} });
+    const clients = await createDataStore(
+      "clients",
+      { Clients: {} },
+      dataDirectory
+    );
 
     return new CognitoServiceImpl(
+      dataDirectory,
       clients,
       clock,
       userPoolDefaultConfig,
@@ -45,6 +52,7 @@ export class CognitoServiceImpl implements CognitoService {
   }
 
   public constructor(
+    dataDirectory: string,
     clients: DataStore,
     clock: Clock,
     userPoolDefaultConfig: UserPoolDefaultConfig,
@@ -54,14 +62,16 @@ export class CognitoServiceImpl implements CognitoService {
   ) {
     this.clients = clients;
     this.clock = clock;
-    this.userPoolDefaultConfig = userPoolDefaultConfig;
     this.createDataStore = createDataStore;
     this.createUserPoolClient = createUserPoolClient;
+    this.dataDirectory = dataDirectory;
     this.logger = logger;
+    this.userPoolDefaultConfig = userPoolDefaultConfig;
   }
 
   public async getUserPool(userPoolId: string): Promise<UserPoolService> {
     return this.createUserPoolClient(
+      this.dataDirectory,
       this.clients,
       this.clock,
       this.createDataStore,
@@ -79,6 +89,7 @@ export class CognitoServiceImpl implements CognitoService {
     }
 
     return this.createUserPoolClient(
+      this.dataDirectory,
       this.clients,
       this.clock,
       this.createDataStore,

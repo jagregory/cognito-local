@@ -107,6 +107,7 @@ export interface UserPoolService {
 }
 
 export type CreateUserPoolService = (
+  dataDirectory: string,
   clientsDataStore: DataStore,
   clock: Clock,
   createDataStore: CreateDataStore,
@@ -123,16 +124,21 @@ export class UserPoolServiceImpl implements UserPoolService {
   public readonly config: UserPool;
 
   public static async create(
+    dataDirectory: string,
     clientsDataStore: DataStore,
     clock: Clock,
     createDataStore: CreateDataStore,
     defaultOptions: UserPool,
     logger: Logger
   ): Promise<UserPoolService> {
-    const dataStore = await createDataStore(defaultOptions.Id, {
-      Users: {},
-      Options: defaultOptions,
-    });
+    const dataStore = await createDataStore(
+      defaultOptions.Id,
+      {
+        Users: {},
+        Options: defaultOptions,
+      },
+      dataDirectory
+    );
     const config = await dataStore.get<UserPool>("Options", defaultOptions);
 
     return new UserPoolServiceImpl(

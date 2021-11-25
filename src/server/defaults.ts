@@ -24,6 +24,7 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
   const clock = new DateClock();
 
   const cognitoClient = await CognitoServiceImpl.create(
+    ".cognito/db",
     config.UserPoolDefaults,
     clock,
     createDataStore,

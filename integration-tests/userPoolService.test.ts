@@ -6,7 +6,7 @@ import {
   UserPoolService,
   UserPoolServiceImpl,
 } from "../src/services";
-import { CreateDataStore, createDataStore } from "../src/services/dataStore";
+import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
 
@@ -17,27 +17,26 @@ const rmdir = promisify(fs.rmdir);
 const validUsernameExamples = ["ExampleUsername", "example.username"];
 
 describe("User Pool Service", () => {
-  let path: string;
-  let tmpCreateDataStore: CreateDataStore;
+  let dataDirectory: string;
   let cognitoClient: CognitoService;
 
   beforeEach(async () => {
-    path = await mkdtemp("/tmp/cognito-local:");
-    tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
+    dataDirectory = await mkdtemp("/tmp/cognito-local:");
     cognitoClient = await CognitoServiceImpl.create(
+      dataDirectory,
       {
         Id: "local",
         UsernameAttributes: [],
       },
       new DateClock(),
-      tmpCreateDataStore,
+      createDataStore,
       UserPoolServiceImpl.create,
       MockLogger
     );
   });
 
   afterEach(() =>
-    rmdir(path, {
+    rmdir(dataDirectory, {
       recursive: true,
     })
   );
@@ -45,7 +44,7 @@ describe("User Pool Service", () => {
   it("creates a database", async () => {
     await cognitoClient.getUserPool("local");
 
-    expect(fs.existsSync(path + "/local.json")).toBe(true);
+    expect(fs.existsSync(dataDirectory + "/local.json")).toBe(true);
   });
 
   describe("saveUser", () => {
@@ -67,7 +66,9 @@ describe("User Pool Service", () => {
           Enabled: true,
         });
 
-        const file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
+        const file = JSON.parse(
+          await readFile(dataDirectory + "/local.json", "utf-8")
+        );
 
         expect(file).toEqual({
           Options: { Id: "local", UsernameAttributes: [] },
@@ -106,7 +107,9 @@ describe("User Pool Service", () => {
           Enabled: true,
         });
 
-        let file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
+        let file = JSON.parse(
+          await readFile(dataDirectory + "/local.json", "utf-8")
+        );
 
         expect(file).toEqual({
           Options: { Id: "local", UsernameAttributes: [] },
@@ -140,7 +143,9 @@ describe("User Pool Service", () => {
           Enabled: true,
         });
 
-        file = JSON.parse(await readFile(path + "/local.json", "utf-8"));
+        file = JSON.parse(
+          await readFile(dataDirectory + "/local.json", "utf-8")
+        );
 
         expect(file).toEqual({
           Options: { Id: "local", UsernameAttributes: [] },

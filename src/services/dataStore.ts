@@ -15,13 +15,13 @@ export interface DataStore {
 export type CreateDataStore = (
   id: string,
   defaults: object,
-  directory?: string
+  directory: string
 ) => Promise<DataStore>;
 
 export const createDataStore: CreateDataStore = async (
   id,
   defaults,
-  directory = ".cognito/db"
+  directory
 ): Promise<DataStore> => {
   await mkdir(directory, { recursive: true });
   const engine = new StormDB.localFileEngine(`${directory}/${id}.json`, {

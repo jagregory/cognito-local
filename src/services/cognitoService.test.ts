@@ -24,6 +24,7 @@ describe("Cognito Service", () => {
       () => mockDataStore
     ) as unknown) as CreateDataStore;
     await CognitoServiceImpl.create(
+      "data-directory",
       { Id: "local", UsernameAttributes: [] },
       clock,
       createDataStore,
@@ -31,9 +32,13 @@ describe("Cognito Service", () => {
       MockLogger
     );
 
-    expect(createDataStore).toHaveBeenCalledWith("clients", {
-      Clients: {},
-    });
+    expect(createDataStore).toHaveBeenCalledWith(
+      "clients",
+      {
+        Clients: {},
+      },
+      "data-directory"
+    );
   });
 
   describe("getUserPool", () => {
@@ -42,6 +47,7 @@ describe("Cognito Service", () => {
     // continue. This may change in a later release.
     it("creates a user pool by the id specified", async () => {
       const cognitoClient = await CognitoServiceImpl.create(
+        "data-directory",
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,
@@ -52,6 +58,7 @@ describe("Cognito Service", () => {
       const userPool = await cognitoClient.getUserPool("testing");
 
       expect(createUserPoolClient).toHaveBeenCalledWith(
+        "data-directory",
         mockDataStore,
         clock,
         createDataStore,
@@ -66,6 +73,7 @@ describe("Cognito Service", () => {
     it("throws if client isn't registered", async () => {
       mockDataStore.get.mockResolvedValue(null);
       const cognitoClient = await CognitoServiceImpl.create(
+        "data-directory",
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,
@@ -85,6 +93,7 @@ describe("Cognito Service", () => {
         UserPoolId: "userPoolId",
       });
       const cognitoClient = await CognitoServiceImpl.create(
+        "data-directory",
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,
@@ -96,6 +105,7 @@ describe("Cognito Service", () => {
 
       expect(mockDataStore.get).toHaveBeenCalledWith(["Clients", "testing"]);
       expect(createUserPoolClient).toHaveBeenCalledWith(
+        "data-directory",
         mockDataStore,
         clock,
         createDataStore,

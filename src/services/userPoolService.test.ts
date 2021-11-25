@@ -31,6 +31,7 @@ describe("User Pool Service", () => {
     const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
 
     await UserPoolServiceImpl.create(
+      "data-directory",
       mockClientsDataStore,
       clock,
       createDataStore,
@@ -38,10 +39,14 @@ describe("User Pool Service", () => {
       MockLogger
     );
 
-    expect(createDataStore).toHaveBeenCalledWith("local", {
-      Options: { Id: "local", UsernameAttributes: [] },
-      Users: {},
-    });
+    expect(createDataStore).toHaveBeenCalledWith(
+      "local",
+      {
+        Options: { Id: "local", UsernameAttributes: [] },
+        Users: {},
+      },
+      "data-directory"
+    );
   });
 
   describe("createAppClient", () => {
@@ -50,6 +55,7 @@ describe("User Pool Service", () => {
       ds.get.mockImplementation((key, defaults) => Promise.resolve(defaults));
 
       const userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -83,6 +89,7 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -103,6 +110,7 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -160,6 +168,7 @@ describe("User Pool Service", () => {
           });
 
           userPool = await UserPoolServiceImpl.create(
+            "data-directory",
             mockClientsDataStore,
             clock,
             () => Promise.resolve(ds),
@@ -252,6 +261,7 @@ describe("User Pool Service", () => {
         return Promise.resolve(null);
       });
       userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -331,6 +341,7 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -387,6 +398,7 @@ describe("User Pool Service", () => {
         return Promise.resolve(null);
       });
       userPool = await UserPoolServiceImpl.create(
+        "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
