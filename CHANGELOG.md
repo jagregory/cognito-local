@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/jagregory/cognito-local/compare/v3.4.0...v3.5.0) (2021-11-25)
+
+
+### Features
+
+* **api:** listUserPools full support ([d2e5324](https://github.com/jagregory/cognito-local/commit/d2e53249395112c723bc02b1e0ca0dcc2910c896))
+
 # [3.4.0](https://github.com/jagregory/cognito-local/compare/v3.3.0...v3.4.0) (2021-11-25)
 
 
