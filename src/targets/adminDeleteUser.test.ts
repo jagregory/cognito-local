@@ -1,38 +1,38 @@
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
-import { UserPoolClient } from "../services";
+import { UserPoolService } from "../services";
 import { AdminDeleteUser, AdminDeleteUserTarget } from "./adminDeleteUser";
 
 describe("AdminDeleteUser target", () => {
   let adminDeleteUser: AdminDeleteUserTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     adminDeleteUser = AdminDeleteUser({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
     });
   });
 
   it("deletes the user", async () => {
     const existingUser = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     await adminDeleteUser({
       Username: existingUser.Username,
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolClient.deleteUser).toHaveBeenCalledWith(existingUser);
+    expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(existingUser);
   });
 
   it("handles trying to delete an invalid user", async () => {
     const existingUser = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       adminDeleteUser({

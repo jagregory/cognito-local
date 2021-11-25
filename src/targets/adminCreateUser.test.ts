@@ -1,22 +1,22 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UsernameExistsError } from "../errors";
-import { UserPoolClient } from "../services";
+import { UserPoolService } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
 
 const originalDate = new Date();
 
 describe("AdminCreateUser target", () => {
   let adminCreateUser: AdminCreateUserTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     adminCreateUser = AdminCreateUser({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(originalDate),
     });
   });
@@ -29,7 +29,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       Attributes: [
         {
           Name: "sub",
@@ -52,7 +52,7 @@ describe("AdminCreateUser target", () => {
 
   it("handles creating a duplicate user", async () => {
     const existingUser = TDB.user();
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     await expect(
       adminCreateUser({

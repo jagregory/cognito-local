@@ -4,38 +4,40 @@ import { AppClient } from "./appClient";
 import { Clock } from "./clock";
 import { CreateDataStore, DataStore } from "./dataStore";
 import {
-  CreateUserPoolClient,
+  CreateUserPoolService,
   UserPool,
-  UserPoolClient,
-} from "./userPoolClient";
+  UserPoolService,
+} from "./userPoolService";
 
-export interface CognitoClient {
+export interface CognitoService {
   getAppClient(clientId: string): Promise<AppClient | null>;
-  getUserPool(userPoolId: string): Promise<UserPoolClient>;
-  getUserPoolForClientId(clientId: string): Promise<UserPoolClient>;
+  getUserPool(userPoolId: string): Promise<UserPoolService>;
+  getUserPoolForClientId(clientId: string): Promise<UserPoolService>;
 }
 
-export class CognitoClientService implements CognitoClient {
+type UserPoolDefaultConfig = Omit<UserPool, "Id">;
+
+export class CognitoServiceImpl implements CognitoService {
   private readonly clients: DataStore;
   private readonly clock: Clock;
-  private readonly config: UserPool;
+  private readonly userPoolDefaultConfig: UserPoolDefaultConfig;
   private readonly createDataStore: CreateDataStore;
-  private readonly createUserPoolClient: CreateUserPoolClient;
+  private readonly createUserPoolClient: CreateUserPoolService;
   private readonly logger: Logger;
 
   public static async create(
-    userPoolDefaultOptions: UserPool,
+    userPoolDefaultConfig: UserPool,
     clock: Clock,
     createDataStore: CreateDataStore,
-    createUserPoolClient: CreateUserPoolClient,
+    createUserPoolClient: CreateUserPoolService,
     logger: Logger
-  ): Promise<CognitoClient> {
+  ): Promise<CognitoService> {
     const clients = await createDataStore("clients", { Clients: {} });
 
-    return new CognitoClientService(
+    return new CognitoServiceImpl(
       clients,
       clock,
-      userPoolDefaultOptions,
+      userPoolDefaultConfig,
       createDataStore,
       createUserPoolClient,
       logger
@@ -45,32 +47,32 @@ export class CognitoClientService implements CognitoClient {
   public constructor(
     clients: DataStore,
     clock: Clock,
-    config: UserPool,
+    userPoolDefaultConfig: UserPoolDefaultConfig,
     createDataStore: CreateDataStore,
-    createUserPoolClient: CreateUserPoolClient,
+    createUserPoolClient: CreateUserPoolService,
     logger: Logger
   ) {
     this.clients = clients;
     this.clock = clock;
-    this.config = config;
+    this.userPoolDefaultConfig = userPoolDefaultConfig;
     this.createDataStore = createDataStore;
     this.createUserPoolClient = createUserPoolClient;
     this.logger = logger;
   }
 
-  public async getUserPool(userPoolId: string): Promise<UserPoolClient> {
+  public async getUserPool(userPoolId: string): Promise<UserPoolService> {
     return this.createUserPoolClient(
       this.clients,
       this.clock,
       this.createDataStore,
-      { ...this.config, Id: userPoolId },
+      { ...this.userPoolDefaultConfig, Id: userPoolId },
       this.logger
     );
   }
 
   public async getUserPoolForClientId(
     clientId: string
-  ): Promise<UserPoolClient> {
+  ): Promise<UserPoolService> {
     const appClient = await this.getAppClient(clientId);
     if (!appClient) {
       throw new ResourceNotFoundError();
@@ -80,7 +82,7 @@ export class CognitoClientService implements CognitoClient {
       this.clients,
       this.clock,
       this.createDataStore,
-      { ...this.config, Id: appClient.UserPoolId },
+      { ...this.userPoolDefaultConfig, Id: appClient.UserPoolId },
       this.logger
     );
   }

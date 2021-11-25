@@ -1,6 +1,6 @@
-import { UserPoolClient } from "../services";
+import { UserPoolService } from "../services";
 
-export const newMockUserPoolClient = (): jest.Mocked<UserPoolClient> => ({
+export const newMockUserPoolService = (): jest.Mocked<UserPoolService> => ({
   config: {
     Id: "test",
   },

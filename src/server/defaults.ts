@@ -1,12 +1,12 @@
 import { Logger } from "../log";
 import {
-  CognitoClientService,
+  CognitoServiceImpl,
+  DateClock,
   LambdaService,
   MessagesService,
   TriggersService,
-  UserPoolClientService,
+  UserPoolServiceImpl,
 } from "../services";
-import { DateClock } from "../services/clock";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { createDataStore } from "../services/dataStore";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
@@ -23,11 +23,11 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
 
   const clock = new DateClock();
 
-  const cognitoClient = await CognitoClientService.create(
+  const cognitoClient = await CognitoServiceImpl.create(
     config.UserPoolDefaults,
     clock,
     createDataStore,
-    UserPoolClientService.create.bind(UserPoolClientService),
+    UserPoolServiceImpl.create.bind(UserPoolServiceImpl),
     logger
   );
   const lambdaClient = new AWS.Lambda(config.LambdaClient);
@@ -40,7 +40,7 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
   const router = Router(
     {
       clock,
-      cognitoClient,
+      cognito: cognitoClient,
       messageDelivery: new MessageDeliveryService(
         new ConsoleMessageSender(logger)
       ),

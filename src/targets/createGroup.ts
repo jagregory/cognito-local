@@ -3,19 +3,19 @@ import {
   CreateGroupResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
-import { Group } from "../services/userPoolClient";
+import { Group } from "../services/userPoolService";
 
 export type CreateGroupTarget = (
   body: CreateGroupRequest
 ) => Promise<CreateGroupResponse>;
 
-type CreateGroupServices = Pick<Services, "clock" | "cognitoClient">;
+type CreateGroupServices = Pick<Services, "clock" | "cognito">;
 
 export const CreateGroup = ({
-  cognitoClient,
+  cognito,
   clock,
 }: CreateGroupServices): CreateGroupTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const userPool = await cognito.getUserPool(req.UserPoolId);
 
   const now = clock.get().getTime();
   const group: Group = {

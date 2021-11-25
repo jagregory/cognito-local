@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import {
   CodeMismatchError,
@@ -10,8 +10,8 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import { Triggers, UserPoolClient } from "../services";
-import { attributeValue } from "../services/userPoolClient";
+import { Triggers, UserPoolService } from "../services";
+import { attributeValue } from "../services/userPoolService";
 import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
@@ -22,23 +22,23 @@ const currentDate = new Date();
 
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockTriggers: jest.Mocked<Triggers>;
   let clock: ClockFake;
 
   beforeEach(() => {
     clock = new ClockFake(currentDate);
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockTriggers = newMockTriggers();
     respondToAuthChallenge = RespondToAuthChallenge({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock,
       triggers: mockTriggers,
     });
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       respondToAuthChallenge({
@@ -100,7 +100,7 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     beforeEach(() => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
     });
 
     describe("when code matches", () => {
@@ -117,7 +117,7 @@ describe("RespondToAuthChallenge target", () => {
           Session: "Session",
         });
 
-        expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
           ...user,
           MFACode: undefined,
           UserLastModifiedDate: newDate.getTime(),
@@ -219,7 +219,7 @@ describe("RespondToAuthChallenge target", () => {
 
     describe("when code is incorrect", () => {
       it("throws an error", async () => {
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await expect(
           respondToAuthChallenge({
@@ -240,7 +240,7 @@ describe("RespondToAuthChallenge target", () => {
     const user = TDB.user();
 
     beforeEach(() => {
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
     });
 
     it("throws if NEW_PASSWORD missing", async () => {
@@ -271,7 +271,7 @@ describe("RespondToAuthChallenge target", () => {
         Session: "Session",
       });
 
-      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
         ...user,
         Password: "foo",
         UserLastModifiedDate: newDate.getTime(),

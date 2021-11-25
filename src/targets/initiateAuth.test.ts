@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import * as TDB from "../__tests__/testDataBuilder";
 import {
@@ -18,18 +18,18 @@ import {
   MessageDelivery,
   Messages,
   Triggers,
-  UserPoolClient,
+  UserPoolService,
 } from "../services";
 import {
   attributesToRecord,
   attributeValue,
   User,
-} from "../services/userPoolClient";
+} from "../services/userPoolService";
 import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
@@ -39,7 +39,7 @@ describe("InitiateAuth target", () => {
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
 
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
     mockMessages.authentication.mockResolvedValue({
@@ -48,7 +48,7 @@ describe("InitiateAuth target", () => {
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = newMockTriggers();
     initiateAuth = InitiateAuth({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
@@ -72,7 +72,7 @@ describe("InitiateAuth target", () => {
     it("throws if password is incorrect", async () => {
       const user = TDB.user();
 
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       await expect(
         initiateAuth({
@@ -91,7 +91,7 @@ describe("InitiateAuth target", () => {
         UserStatus: "RESET_REQUIRED",
       });
 
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       await expect(
         initiateAuth({
@@ -112,7 +112,7 @@ describe("InitiateAuth target", () => {
 
           mockTriggers.enabled.mockReturnValue(true);
           mockTriggers.userMigration.mockResolvedValue(user);
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
           const output = await initiateAuth({
             ClientId: "clientId",
@@ -131,7 +131,7 @@ describe("InitiateAuth target", () => {
       describe("when User Migration trigger is disabled", () => {
         it("throws", async () => {
           mockTriggers.enabled.mockReturnValue(false);
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
           await expect(
             initiateAuth({
@@ -150,7 +150,7 @@ describe("InitiateAuth target", () => {
     describe("when password matches", () => {
       describe("when MFA is ON", () => {
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "ON";
+          mockUserPoolService.config.MfaConfiguration = "ON";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -171,7 +171,7 @@ describe("InitiateAuth target", () => {
                 },
               ],
             });
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            mockUserPoolService.getUserByUsername.mockResolvedValue(user);
           });
 
           it("sends MFA code to user", async () => {
@@ -197,7 +197,7 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
               ...user,
               MFACode: "1234",
             });
@@ -227,7 +227,7 @@ describe("InitiateAuth target", () => {
           const user = TDB.user({ MFAOptions: undefined });
 
           beforeEach(() => {
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            mockUserPoolService.getUserByUsername.mockResolvedValue(user);
           });
 
           it("throws an exception", async () => {
@@ -247,7 +247,7 @@ describe("InitiateAuth target", () => {
 
       describe("when MFA is OPTIONAL", () => {
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "OPTIONAL";
+          mockUserPoolService.config.MfaConfiguration = "OPTIONAL";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -268,7 +268,7 @@ describe("InitiateAuth target", () => {
                 },
               ],
             });
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            mockUserPoolService.getUserByUsername.mockResolvedValue(user);
           });
 
           it("sends MFA code to user", async () => {
@@ -300,7 +300,7 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
               ...user,
               MFACode: "1234",
             });
@@ -332,7 +332,7 @@ describe("InitiateAuth target", () => {
           });
 
           beforeEach(() => {
-            mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+            mockUserPoolService.getUserByUsername.mockResolvedValue(user);
           });
 
           it("generates tokens", async () => {
@@ -406,8 +406,8 @@ describe("InitiateAuth target", () => {
         const user = TDB.user();
 
         beforeEach(() => {
-          mockUserPoolClient.config.MfaConfiguration = "OFF";
-          mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+          mockUserPoolService.config.MfaConfiguration = "OFF";
+          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
         });
 
         it("generates tokens", async () => {
@@ -508,7 +508,7 @@ describe("InitiateAuth target", () => {
       });
 
       beforeEach(() => {
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
       });
 
       it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {

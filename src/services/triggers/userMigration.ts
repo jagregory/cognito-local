@@ -2,13 +2,13 @@ import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovide
 import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
 import { Clock } from "../clock";
-import { CognitoClient } from "../cognitoClient";
+import { CognitoService } from "../cognitoService";
 import { CognitoUserPoolResponse, Lambda } from "../lambda";
 import {
   attributesFromRecord,
   attributesToRecord,
   User,
-} from "../userPoolClient";
+} from "../userPoolService";
 
 export type UserMigrationTrigger = (params: {
   userPoolId: string;
@@ -24,7 +24,7 @@ export const UserMigration = ({
   clock,
 }: {
   lambda: Lambda;
-  cognitoClient: CognitoClient;
+  cognitoClient: CognitoService;
   clock: Clock;
 }): UserMigrationTrigger => async ({
   userPoolId,

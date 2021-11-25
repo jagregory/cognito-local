@@ -1,7 +1,7 @@
 import boxen from "boxen";
 import { Logger } from "../../log";
 import { Message } from "../messages";
-import { User } from "../userPoolClient";
+import { User } from "../userPoolService";
 import { MessageSender } from "./messageSender";
 
 export class ConsoleMessageSender implements MessageSender {

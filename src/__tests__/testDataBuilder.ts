@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { Group, User } from "../services/userPoolClient";
+import { Group, User } from "../services/userPoolService";
 
 export const id = (prefix: string, number?: number) =>
   `${prefix}${number ?? Math.floor(Math.random() * 100000)}`;

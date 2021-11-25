@@ -6,14 +6,15 @@ import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
 import { Logger } from "../../src/log";
 import {
-  CognitoClientService,
+  Clock,
+  CognitoServiceImpl,
+  DateClock,
+  Lambda,
   MessageDelivery,
   MessagesService,
-  Lambda,
-  UserPoolClientService,
   TriggersService,
+  UserPoolServiceImpl,
 } from "../../src/services";
-import { DateClock, Clock } from "../../src/services/clock";
 import { createDataStore, CreateDataStore } from "../../src/services/dataStore";
 import { otp } from "../../src/services/otp";
 import { Router } from "../../src/targets/router";
@@ -37,14 +38,14 @@ export const withCognitoSdk = (
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
 
-    const cognitoClient = await CognitoClientService.create(
+    const cognitoClient = await CognitoServiceImpl.create(
       {
         Id: "integration-test",
         UsernameAttributes: [],
       },
       clock,
       tmpCreateDataStore,
-      UserPoolClientService.create.bind(UserPoolClientService),
+      UserPoolServiceImpl.create.bind(UserPoolServiceImpl),
       logger
     );
     const mockLambda: jest.Mocked<Lambda> = {
@@ -64,7 +65,7 @@ export const withCognitoSdk = (
     const router = Router(
       {
         clock,
-        cognitoClient,
+        cognito: cognitoClient,
         messageDelivery: mockCodeDelivery,
         messages: new MessagesService(triggers),
         otp,

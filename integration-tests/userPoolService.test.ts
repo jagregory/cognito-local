@@ -1,11 +1,11 @@
 import { MockLogger } from "../src/__tests__/mockLogger";
 import {
-  CognitoClient,
-  CognitoClientService,
-  UserPoolClient,
-  UserPoolClientService,
+  CognitoService,
+  CognitoServiceImpl,
+  DateClock,
+  UserPoolService,
+  UserPoolServiceImpl,
 } from "../src/services";
-import { DateClock } from "../src/services/clock";
 import { CreateDataStore, createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -16,22 +16,22 @@ const rmdir = promisify(fs.rmdir);
 
 const validUsernameExamples = ["ExampleUsername", "example.username"];
 
-describe("User Pool Client", () => {
+describe("User Pool Service", () => {
   let path: string;
   let tmpCreateDataStore: CreateDataStore;
-  let cognitoClient: CognitoClient;
+  let cognitoClient: CognitoService;
 
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
     tmpCreateDataStore = (id, defaults) => createDataStore(id, defaults, path);
-    cognitoClient = await CognitoClientService.create(
+    cognitoClient = await CognitoServiceImpl.create(
       {
         Id: "local",
         UsernameAttributes: [],
       },
       new DateClock(),
       tmpCreateDataStore,
-      UserPoolClientService.create,
+      UserPoolServiceImpl.create,
       MockLogger
     );
   });
@@ -165,7 +165,7 @@ describe("User Pool Client", () => {
 
   describe("getUserByUsername", () => {
     describe.each(validUsernameExamples)("with username %s", (username) => {
-      let userPool: UserPoolClient;
+      let userPool: UserPoolService;
       beforeAll(async () => {
         userPool = await cognitoClient.getUserPool("local");
 
@@ -200,7 +200,7 @@ describe("User Pool Client", () => {
   });
 
   describe("listUsers", () => {
-    let userPool: UserPoolClient;
+    let userPool: UserPoolService;
     let now: Date;
 
     beforeAll(async () => {

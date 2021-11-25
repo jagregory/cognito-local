@@ -11,23 +11,23 @@ import {
   attributesInclude,
   attributeValue,
   User,
-} from "../services/userPoolClient";
+} from "../services/userPoolService";
 
 export type SignUpTarget = (req: SignUpRequest) => Promise<SignUpResponse>;
 
 type SignUpServices = Pick<
   Services,
-  "cognitoClient" | "clock" | "messages" | "messageDelivery" | "otp"
+  "cognito" | "clock" | "messages" | "messageDelivery" | "otp"
 >;
 
 export const SignUp = (
-  { cognitoClient, clock, messageDelivery, messages, otp }: SignUpServices,
+  { cognito, clock, messageDelivery, messages, otp }: SignUpServices,
   logger: Logger
 ): SignUpTarget => async (req) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors
   // is enabled on the user pool. This will be the default after Feb 2020.
   // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   const existingUser = await userPool.getUserByUsername(req.Username);
   if (existingUser) {
     throw new UsernameExistsError();

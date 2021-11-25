@@ -1,8 +1,8 @@
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../../log";
-import { CognitoClient } from "../index";
+import { CognitoService } from "../index";
 import { Lambda } from "../lambda";
-import { attributesToRecord } from "../userPoolClient";
+import { attributesToRecord } from "../userPoolService";
 import { ResourceNotFoundError } from "../../errors";
 
 interface CustomMessageResponse {
@@ -33,7 +33,7 @@ export const CustomMessage = (
     cognitoClient,
   }: {
     lambda: Lambda;
-    cognitoClient: CognitoClient;
+    cognitoClient: CognitoService;
   },
   logger: Logger
 ): CustomMessageTrigger => async ({

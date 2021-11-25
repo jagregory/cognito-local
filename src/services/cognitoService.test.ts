@@ -2,14 +2,14 @@ import { newMockDataStore } from "../__tests__/mockDataStore";
 import { MockLogger } from "../__tests__/mockLogger";
 import { ResourceNotFoundError } from "../errors";
 import { DateClock } from "./clock";
-import { CognitoClientService } from "./cognitoClient";
+import { CognitoServiceImpl } from "./cognitoService";
 import { CreateDataStore, DataStore } from "./dataStore";
-import { CreateUserPoolClient, UserPoolClient } from "./userPoolClient";
+import { CreateUserPoolService, UserPoolService } from "./userPoolService";
 
-describe("Cognito Client", () => {
+describe("Cognito Service", () => {
   let mockDataStore: jest.Mocked<DataStore>;
-  let mockUserPool: jest.Mocked<UserPoolClient>;
-  let createUserPoolClient: jest.MockedFunction<CreateUserPoolClient>;
+  let mockUserPool: jest.Mocked<UserPoolService>;
+  let createUserPoolClient: jest.MockedFunction<CreateUserPoolService>;
   let createDataStore: jest.MockedFunction<CreateDataStore>;
   const clock = new DateClock();
 
@@ -23,7 +23,7 @@ describe("Cognito Client", () => {
     const createDataStore = (jest.fn(
       () => mockDataStore
     ) as unknown) as CreateDataStore;
-    await CognitoClientService.create(
+    await CognitoServiceImpl.create(
       { Id: "local", UsernameAttributes: [] },
       clock,
       createDataStore,
@@ -41,7 +41,7 @@ describe("Cognito Client", () => {
     // used that doesn't exist we just create it and allow the operation to
     // continue. This may change in a later release.
     it("creates a user pool by the id specified", async () => {
-      const cognitoClient = await CognitoClientService.create(
+      const cognitoClient = await CognitoServiceImpl.create(
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,
@@ -65,7 +65,7 @@ describe("Cognito Client", () => {
   describe("getUserPoolForClientId", () => {
     it("throws if client isn't registered", async () => {
       mockDataStore.get.mockResolvedValue(null);
-      const cognitoClient = await CognitoClientService.create(
+      const cognitoClient = await CognitoServiceImpl.create(
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,
@@ -84,7 +84,7 @@ describe("Cognito Client", () => {
       mockDataStore.get.mockResolvedValue({
         UserPoolId: "userPoolId",
       });
-      const cognitoClient = await CognitoClientService.create(
+      const cognitoClient = await CognitoServiceImpl.create(
         { Id: "local", UsernameAttributes: [] },
         clock,
         createDataStore,

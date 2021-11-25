@@ -15,7 +15,7 @@ import {
   MessageDelivery,
   Messages,
   Services,
-  UserPoolClient,
+  UserPoolService,
 } from "../services";
 import { Clock } from "../services/clock";
 import { generateTokens } from "../services/tokens";
@@ -24,7 +24,7 @@ import {
   attributeValue,
   MFAOption,
   User,
-} from "../services/userPoolClient";
+} from "../services/userPoolService";
 
 export type InitiateAuthTarget = (
   req: InitiateAuthRequest
@@ -35,7 +35,7 @@ const verifyMfaChallenge = async (
   messages: Messages,
   user: User,
   req: InitiateAuthRequest,
-  userPool: UserPoolClient,
+  userPool: UserPoolService,
   messageDelivery: MessageDelivery
 ): Promise<InitiateAuthResponse> => {
   if (!user.MFAOptions?.length) {
@@ -92,7 +92,7 @@ const verifyMfaChallenge = async (
 const verifyPasswordChallenge = async (
   user: User,
   req: InitiateAuthRequest,
-  userPool: UserPoolClient,
+  userPool: UserPoolService,
   clock: Clock
 ): Promise<InitiateAuthResponse> => ({
   ChallengeName: "PASSWORD_VERIFIER",
@@ -116,7 +116,7 @@ const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
 });
 
 export const InitiateAuth = ({
-  cognitoClient,
+  cognito,
   clock,
   messageDelivery,
   messages,
@@ -132,7 +132,7 @@ export const InitiateAuth = ({
     );
   }
 
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
 
   if (!user && triggers.enabled("UserMigration")) {

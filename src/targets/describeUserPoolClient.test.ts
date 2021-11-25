@@ -1,7 +1,7 @@
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { ResourceNotFoundError } from "../errors";
-import { CognitoClient } from "../services";
+import { CognitoService } from "../services";
 import { AppClient } from "../services/appClient";
 import {
   DescribeUserPoolClient,
@@ -10,13 +10,12 @@ import {
 
 describe("DescribeUserPoolClient target", () => {
   let describeUserPoolClient: DescribeUserPoolClientTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockCognitoService: jest.Mocked<CognitoService>;
 
   beforeEach(() => {
-    const mockUserPoolClient = newMockUserPoolClient();
-    mockCognitoClient = newMockCognitoClient(mockUserPoolClient);
+    mockCognitoService = newMockCognitoService(newMockUserPoolService());
     describeUserPoolClient = DescribeUserPoolClient({
-      cognitoClient: mockCognitoClient,
+      cognito: mockCognitoService,
     });
   });
 
@@ -30,7 +29,7 @@ describe("DescribeUserPoolClient target", () => {
       ClientId: "abc",
       ClientName: "clientName",
     };
-    mockCognitoClient.getAppClient.mockResolvedValue(existingAppClient);
+    mockCognitoService.getAppClient.mockResolvedValue(existingAppClient);
 
     const result = await describeUserPoolClient({
       ClientId: "abc",
@@ -47,7 +46,7 @@ describe("DescribeUserPoolClient target", () => {
   });
 
   it("throws resource not found for an invalid app client", async () => {
-    mockCognitoClient.getAppClient.mockResolvedValue(null);
+    mockCognitoService.getAppClient.mockResolvedValue(null);
 
     await expect(
       describeUserPoolClient({

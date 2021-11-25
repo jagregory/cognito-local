@@ -10,11 +10,9 @@ export type DescribeUserPoolClientTarget = (
 ) => Promise<DescribeUserPoolClientResponse>;
 
 export const DescribeUserPoolClient = ({
-  cognitoClient,
-}: Pick<Services, "cognitoClient">): DescribeUserPoolClientTarget => async (
-  req
-) => {
-  const client = await cognitoClient.getAppClient(req.ClientId);
+  cognito,
+}: Pick<Services, "cognito">): DescribeUserPoolClientTarget => async (req) => {
+  const client = await cognito.getAppClient(req.ClientId);
   if (client?.UserPoolId !== req.UserPoolId) {
     throw new ResourceNotFoundError();
   }

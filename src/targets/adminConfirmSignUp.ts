@@ -10,9 +10,9 @@ export type AdminConfirmSignUpTarget = (
 ) => Promise<AdminConfirmSignUpResponse>;
 
 export const AdminConfirmSignUp = ({
-  cognitoClient,
+  cognito,
 }: Services): AdminConfirmSignUpTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const userPool = await cognito.getUserPool(req.UserPoolId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new NotAuthorizedError();

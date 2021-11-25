@@ -1,5 +1,5 @@
 import { UUID } from "../../src/__tests__/patterns";
-import { attributeValue } from "../../src/services/userPoolClient";
+import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
 
 describe(

@@ -11,7 +11,7 @@ import { Token } from "../services/tokens";
 export type GetUserTarget = (req: GetUserRequest) => Promise<GetUserResponse>;
 
 export const GetUser = (
-  { cognitoClient }: Pick<Services, "cognitoClient">,
+  { cognito }: Pick<Services, "cognito">,
   logger: Logger
 ): GetUserTarget => async (req) => {
   const decodedToken = jwt.decode(req.AccessToken) as Token | null;
@@ -20,9 +20,7 @@ export const GetUser = (
     throw new InvalidParameterError();
   }
 
-  const userPool = await cognitoClient.getUserPoolForClientId(
-    decodedToken.client_id
-  );
+  const userPool = await cognito.getUserPoolForClientId(decodedToken.client_id);
   const user = await userPool.getUserByUsername(decodedToken.sub);
   if (!user) {
     throw new UserNotFoundError();

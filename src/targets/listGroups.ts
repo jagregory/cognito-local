@@ -8,15 +8,15 @@ export type ListGroupsTarget = (
   req: ListGroupsRequest
 ) => Promise<ListGroupsResponse>;
 
-type ListGroupServices = Pick<Services, "cognitoClient">;
+type ListGroupServices = Pick<Services, "cognito">;
 
 export const ListGroups = ({
-  cognitoClient,
+  cognito,
 }: ListGroupServices): ListGroupsTarget => async (req) => {
   // TODO: Limit support
   // TODO: PaginationToken support
 
-  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const userPool = await cognito.getUserPool(req.UserPoolId);
   const groups = await userPool.listGroups();
 
   return {

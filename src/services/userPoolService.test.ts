@@ -9,13 +9,13 @@ import {
   attributesIncludeMatch,
   attributesToRecord,
   User,
-  UserPoolClient,
-  UserPoolClientService,
+  UserPoolService,
+  UserPoolServiceImpl,
   Group,
-} from "./userPoolClient";
+} from "./userPoolService";
 import * as TDB from "../__tests__/testDataBuilder";
 
-describe("User Pool Client", () => {
+describe("User Pool Service", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
   const currentDate = new Date(2020, 1, 2, 3, 4, 5);
 
@@ -30,7 +30,7 @@ describe("User Pool Client", () => {
   it("creates a database", async () => {
     const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
 
-    await UserPoolClientService.create(
+    await UserPoolServiceImpl.create(
       mockClientsDataStore,
       clock,
       createDataStore,
@@ -49,7 +49,7 @@ describe("User Pool Client", () => {
       const ds = newMockDataStore();
       ds.get.mockImplementation((key, defaults) => Promise.resolve(defaults));
 
-      const userPool = await UserPoolClientService.create(
+      const userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -82,7 +82,7 @@ describe("User Pool Client", () => {
     it("saves the user", async () => {
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolClientService.create(
+      const userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -102,7 +102,7 @@ describe("User Pool Client", () => {
     it("deletes the user", async () => {
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolClientService.create(
+      const userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -135,7 +135,7 @@ describe("User Pool Client", () => {
     `(
       "$username_attributes username attributes",
       ({ username_attributes, find_by_email, find_by_phone_number }) => {
-        let userPool: UserPoolClient;
+        let userPool: UserPoolService;
 
         beforeEach(async () => {
           const options = {
@@ -159,7 +159,7 @@ describe("User Pool Client", () => {
             return Promise.resolve(null);
           });
 
-          userPool = await UserPoolClientService.create(
+          userPool = await UserPoolServiceImpl.create(
             mockClientsDataStore,
             clock,
             () => Promise.resolve(ds),
@@ -229,7 +229,7 @@ describe("User Pool Client", () => {
       Username: "2",
     });
 
-    let userPool: UserPoolClient;
+    let userPool: UserPoolService;
 
     beforeEach(async () => {
       const options = {
@@ -251,7 +251,7 @@ describe("User Pool Client", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await UserPoolClientService.create(
+      userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -330,7 +330,7 @@ describe("User Pool Client", () => {
       const now = new Date().getTime();
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolClientService.create(
+      const userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
@@ -359,7 +359,7 @@ describe("User Pool Client", () => {
   });
 
   describe("listGroups", () => {
-    let userPool: UserPoolClient;
+    let userPool: UserPoolService;
 
     beforeEach(async () => {
       const options = {
@@ -386,7 +386,7 @@ describe("User Pool Client", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await UserPoolClientService.create(
+      userPool = await UserPoolServiceImpl.create(
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),

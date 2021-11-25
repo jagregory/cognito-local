@@ -1,8 +1,8 @@
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../../log";
-import { CognitoClient } from "../cognitoClient";
+import { CognitoService } from "../cognitoService";
 import { Lambda } from "../lambda";
-import { attributesToRecord } from "../userPoolClient";
+import { attributesToRecord } from "../userPoolService";
 import { ResourceNotFoundError } from "../../errors";
 
 export type PostConfirmationTrigger = (params: {
@@ -21,7 +21,7 @@ export const PostConfirmation = (
     cognitoClient,
   }: {
     lambda: Lambda;
-    cognitoClient: CognitoClient;
+    cognitoClient: CognitoService;
   },
   logger: Logger
 ): PostConfirmationTrigger => async ({

@@ -1,18 +1,18 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { MockLogger } from "../__tests__/mockLogger";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UsernameExistsError } from "../errors";
-import { MessageDelivery, Messages, UserPoolClient } from "../services";
+import { MessageDelivery, Messages, UserPoolService } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
@@ -21,7 +21,7 @@ describe("SignUp target", () => {
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
 
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
     mockMessages.signUp.mockResolvedValue({
@@ -30,7 +30,7 @@ describe("SignUp target", () => {
     mockOtp = jest.fn();
     signUp = SignUp(
       {
-        cognitoClient: newMockCognitoClient(mockUserPoolClient),
+        cognito: newMockCognitoService(mockUserPoolService),
         clock: new ClockFake(now),
         messageDelivery: mockMessageDelivery,
         messages: mockMessages,
@@ -43,7 +43,7 @@ describe("SignUp target", () => {
   it("throws if user already exists", async () => {
     const user = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
       signUp({
@@ -56,7 +56,7 @@ describe("SignUp target", () => {
   });
 
   it("saves a new user", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await signUp({
       ClientId: "clientId",
@@ -65,7 +65,7 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       Attributes: [
         {
           Name: "sub",
@@ -83,7 +83,7 @@ describe("SignUp target", () => {
   });
 
   it("sends a confirmation code to the user's email address", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
     mockOtp.mockReturnValue("1234");
 
     await signUp({
@@ -124,7 +124,7 @@ describe("SignUp target", () => {
   });
 
   it("saves the confirmation code on the user for comparison when confirming", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
     mockOtp.mockReturnValue("1234");
 
     await signUp({
@@ -134,7 +134,7 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       Attributes: [
         { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },

@@ -1,9 +1,9 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
-import { Triggers, UserPoolClient } from "../services";
+import { Triggers, UserPoolService } from "../services";
 import {
   ConfirmForgotPassword,
   ConfirmForgotPasswordTarget,
@@ -14,7 +14,7 @@ const currentDate = new Date();
 
 describe("ConfirmForgotPassword target", () => {
   let confirmForgotPassword: ConfirmForgotPasswordTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockTriggers: jest.Mocked<Triggers>;
 
   let clock: ClockFake;
@@ -22,17 +22,17 @@ describe("ConfirmForgotPassword target", () => {
   beforeEach(() => {
     clock = new ClockFake(currentDate);
 
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockTriggers = newMockTriggers();
     confirmForgotPassword = ConfirmForgotPassword({
       clock,
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       triggers: mockTriggers,
     });
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       confirmForgotPassword({
@@ -50,7 +50,7 @@ describe("ConfirmForgotPassword target", () => {
       UserStatus: "UNCONFIRMED",
     });
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
       confirmForgotPassword({
@@ -69,7 +69,7 @@ describe("ConfirmForgotPassword target", () => {
         UserStatus: "UNCONFIRMED",
       });
 
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       // advance the time so we can see the last modified timestamp change
       const newNow = clock.advanceBy(5000);
@@ -81,7 +81,7 @@ describe("ConfirmForgotPassword target", () => {
         Password: "newPassword",
       });
 
-      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
         ...user,
         ConfirmationCode: undefined,
         Password: "newPassword",
@@ -99,7 +99,7 @@ describe("ConfirmForgotPassword target", () => {
           UserStatus: "UNCONFIRMED",
         });
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await confirmForgotPassword({
           ClientId: "clientId",
@@ -127,7 +127,7 @@ describe("ConfirmForgotPassword target", () => {
           UserStatus: "UNCONFIRMED",
         });
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await confirmForgotPassword({
           ClientId: "clientId",

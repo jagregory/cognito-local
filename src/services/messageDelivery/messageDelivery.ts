@@ -1,5 +1,5 @@
 import { Message } from "../messages";
-import { User } from "../userPoolClient";
+import { User } from "../userPoolService";
 import { MessageSender } from "./messageSender";
 
 export type DeliveryDetails =

@@ -1,6 +1,6 @@
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { UserPoolClient } from "../services";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { UserPoolService } from "../services";
 import { AppClient } from "../services/appClient";
 import {
   CreateUserPoolClient,
@@ -9,12 +9,12 @@ import {
 
 describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     createUserPoolClient = CreateUserPoolClient({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
     });
   });
 
@@ -28,14 +28,14 @@ describe("CreateUserPoolClient target", () => {
       ClientId: "abc",
       ClientName: "clientName",
     };
-    mockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
+    mockUserPoolService.createAppClient.mockResolvedValue(createdAppClient);
 
     const result = await createUserPoolClient({
       ClientName: "clientName",
       UserPoolId: "userPoolId",
     });
 
-    expect(mockUserPoolClient.createAppClient).toHaveBeenCalledWith(
+    expect(mockUserPoolService.createAppClient).toHaveBeenCalledWith(
       "clientName"
     );
 

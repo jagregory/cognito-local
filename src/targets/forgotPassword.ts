@@ -5,7 +5,7 @@ import {
 import { UnsupportedError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
-import { attributeValue } from "../services/userPoolClient";
+import { attributeValue } from "../services/userPoolService";
 
 export type ForgotPasswordTarget = (
   req: ForgotPasswordRequest
@@ -13,17 +13,17 @@ export type ForgotPasswordTarget = (
 
 type ForgotPasswordServices = Pick<
   Services,
-  "cognitoClient" | "clock" | "messageDelivery" | "messages" | "otp"
+  "cognito" | "clock" | "messageDelivery" | "messages" | "otp"
 >;
 
 export const ForgotPassword = ({
-  cognitoClient,
+  cognito,
   clock,
   messageDelivery,
   messages,
   otp,
 }: ForgotPasswordServices): ForgotPasswordTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new UserNotFoundError();

@@ -1,6 +1,6 @@
 import { Logger } from "../../log";
 import { Clock } from "../clock";
-import { CognitoClient } from "../cognitoClient";
+import { CognitoService } from "../cognitoService";
 import { Lambda } from "../lambda";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
 import {
@@ -34,7 +34,7 @@ export class TriggersService {
 
   public constructor(
     clock: Clock,
-    cognitoClient: CognitoClient,
+    cognitoClient: CognitoService,
     lambda: Lambda,
     logger: Logger
   ) {

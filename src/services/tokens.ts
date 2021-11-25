@@ -3,7 +3,7 @@ import * as uuid from "uuid";
 import { loadConfig } from "../server/config";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { Clock } from "./clock";
-import { attributeValue, User } from "./userPoolClient";
+import { attributeValue, User } from "./userPoolService";
 
 export interface TokenConfig {
   IssuerDomain?: string;

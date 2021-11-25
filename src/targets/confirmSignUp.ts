@@ -10,14 +10,14 @@ export type ConfirmSignUpTarget = (
 ) => Promise<ConfirmSignUpResponse>;
 
 export const ConfirmSignUp = ({
-  cognitoClient,
+  cognito,
   clock,
   triggers,
 }: Pick<
   Services,
-  "cognitoClient" | "clock" | "triggers"
+  "cognito" | "clock" | "triggers"
 >): ConfirmSignUpTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new NotAuthorizedError();

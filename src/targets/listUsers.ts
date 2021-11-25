@@ -9,9 +9,9 @@ export type ListUsersTarget = (
 ) => Promise<ListUsersResponse>;
 
 export const ListUsers = ({
-  cognitoClient,
-}: Pick<Services, "cognitoClient">): ListUsersTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  cognito,
+}: Pick<Services, "cognito">): ListUsersTarget => async (req) => {
+  const userPool = await cognito.getUserPool(req.UserPoolId);
   const users = await userPool.listUsers();
 
   // TODO: support AttributesToGet

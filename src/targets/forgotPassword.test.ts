@@ -1,23 +1,23 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UserNotFoundError } from "../errors";
-import { MessageDelivery, Messages, UserPoolClient } from "../services";
-import { attributeValue } from "../services/userPoolClient";
+import { MessageDelivery, Messages, UserPoolService } from "../services";
+import { attributeValue } from "../services/userPoolService";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
 import * as TDB from "../__tests__/testDataBuilder";
 
 describe("ForgotPassword target", () => {
   let forgotPassword: ForgotPasswordTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
     mockMessages.forgotPassword.mockResolvedValue({
@@ -25,7 +25,7 @@ describe("ForgotPassword target", () => {
     });
     mockOtp = jest.fn().mockReturnValue("1234");
     forgotPassword = ForgotPassword({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(new Date()),
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
@@ -34,7 +34,7 @@ describe("ForgotPassword target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       forgotPassword({
@@ -47,7 +47,7 @@ describe("ForgotPassword target", () => {
   it("sends a confirmation code to the user's email address", async () => {
     const user = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     const result = await forgotPassword({
       ClientId: "clientId",
@@ -76,14 +76,14 @@ describe("ForgotPassword target", () => {
   it("saves the confirmation code on the user for comparison when confirming", async () => {
     const user = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await forgotPassword({
       ClientId: "clientId",
       Username: user.Username,
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...user,
       ConfirmationCode: "1234",
     });

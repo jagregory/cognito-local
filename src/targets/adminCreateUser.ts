@@ -5,7 +5,7 @@ import {
 import uuid from "uuid";
 import { UnsupportedError, UsernameExistsError } from "../errors";
 import { Services } from "../services";
-import { attributesInclude, User } from "../services/userPoolClient";
+import { attributesInclude, User } from "../services/userPoolService";
 
 export type AdminCreateUserTarget = (
   req: AdminCreateUserRequest
@@ -13,15 +13,15 @@ export type AdminCreateUserTarget = (
 
 export const AdminCreateUser = ({
   clock,
-  cognitoClient,
-}: Pick<Services, "clock" | "cognitoClient">): AdminCreateUserTarget => async (
+  cognito,
+}: Pick<Services, "clock" | "cognito">): AdminCreateUserTarget => async (
   req
 ) => {
   if (!req.TemporaryPassword) {
     throw new UnsupportedError("AdminCreateUser without TemporaryPassword");
   }
 
-  const userPool = await cognitoClient.getUserPool(req.UserPoolId);
+  const userPool = await cognito.getUserPool(req.UserPoolId);
   const existingUser = await userPool.getUserByUsername(req.Username);
   if (existingUser && req.MessageAction === "RESEND") {
     throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");

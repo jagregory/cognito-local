@@ -17,12 +17,12 @@ export type RespondToAuthChallengeTarget = (
 
 type RespondToAuthChallengeService = Pick<
   Services,
-  "cognitoClient" | "clock" | "triggers"
+  "cognito" | "clock" | "triggers"
 >;
 
 export const RespondToAuthChallenge = ({
   clock,
-  cognitoClient,
+  cognito,
   triggers,
 }: RespondToAuthChallengeService): RespondToAuthChallengeTarget => async (
   req
@@ -39,7 +39,7 @@ export const RespondToAuthChallenge = ({
     throw new InvalidParameterError("Missing required parameter Session");
   }
 
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(
     req.ChallengeResponses.USERNAME
   );

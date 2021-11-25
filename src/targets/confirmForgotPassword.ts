@@ -10,14 +10,14 @@ export type ConfirmForgotPasswordTarget = (
 ) => Promise<ConfirmForgotPasswordResponse>;
 
 export const ConfirmForgotPassword = ({
-  cognitoClient,
+  cognito,
   clock,
   triggers,
 }: Pick<
   Services,
-  "cognitoClient" | "clock" | "triggers"
+  "cognito" | "clock" | "triggers"
 >): ConfirmForgotPasswordTarget => async (req) => {
-  const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
+  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {
     throw new UserNotFoundError();

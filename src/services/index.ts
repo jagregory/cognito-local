@@ -2,10 +2,11 @@ import { Clock } from "./clock";
 import { Messages } from "./messages";
 import { Triggers } from "./triggers";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
-import { CognitoClient } from "./cognitoClient";
+import { CognitoService } from "./cognitoService";
 
-export { CognitoClient, CognitoClientService } from "./cognitoClient";
-export { UserPoolClient, UserPoolClientService } from "./userPoolClient";
+export { Clock, DateClock } from "./clock";
+export { CognitoService, CognitoServiceImpl } from "./cognitoService";
+export { UserPoolService, UserPoolServiceImpl } from "./userPoolService";
 export { Triggers, TriggersService } from "./triggers";
 export { Lambda, LambdaService } from "./lambda";
 export { MessageDelivery } from "./messageDelivery/messageDelivery";
@@ -13,7 +14,7 @@ export { Messages, MessagesService } from "./messages";
 
 export interface Services {
   clock: Clock;
-  cognitoClient: CognitoClient;
+  cognito: CognitoService;
   messageDelivery: MessageDelivery;
   messages: Messages;
   otp: () => string;

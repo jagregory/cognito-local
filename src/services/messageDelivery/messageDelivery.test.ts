@@ -1,4 +1,4 @@
-import { User } from "../userPoolClient";
+import { User } from "../userPoolService";
 import { MessageDeliveryService } from "./messageDelivery";
 import { MessageSender } from "./messageSender";
 

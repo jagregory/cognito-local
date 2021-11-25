@@ -1,7 +1,7 @@
 import deepmerge from "deepmerge";
 import { createDataStore } from "../services/dataStore";
 import { FunctionConfig } from "../services/lambda";
-import { UserPool } from "../services/userPoolClient";
+import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokens";
 
 export interface Config {

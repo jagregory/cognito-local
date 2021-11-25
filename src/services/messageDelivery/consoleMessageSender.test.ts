@@ -1,5 +1,5 @@
 import { MockLogger } from "../../__tests__/mockLogger";
-import { attributeValue } from "../userPoolClient";
+import { attributeValue } from "../userPoolService";
 import { ConsoleMessageSender } from "./consoleMessageSender";
 import * as TDB from "../../__tests__/testDataBuilder";
 

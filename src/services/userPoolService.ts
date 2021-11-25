@@ -94,7 +94,7 @@ export interface UserPool {
   MfaConfiguration?: "OFF" | "ON" | "OPTIONAL";
 }
 
-export interface UserPoolClient {
+export interface UserPoolService {
   readonly config: UserPool;
 
   createAppClient(name: string): Promise<AppClient>;
@@ -106,15 +106,15 @@ export interface UserPoolClient {
   saveUser(user: User): Promise<void>;
 }
 
-export type CreateUserPoolClient = (
+export type CreateUserPoolService = (
   clientsDataStore: DataStore,
   clock: Clock,
   createDataStore: CreateDataStore,
   defaultOptions: UserPool,
   logger: Logger
-) => Promise<UserPoolClient>;
+) => Promise<UserPoolService>;
 
-export class UserPoolClientService implements UserPoolClient {
+export class UserPoolServiceImpl implements UserPoolService {
   private readonly clientsDataStore: DataStore;
   private readonly clock: Clock;
   private readonly dataStore: DataStore;
@@ -128,14 +128,14 @@ export class UserPoolClientService implements UserPoolClient {
     createDataStore: CreateDataStore,
     defaultOptions: UserPool,
     logger: Logger
-  ): Promise<UserPoolClient> {
+  ): Promise<UserPoolService> {
     const dataStore = await createDataStore(defaultOptions.Id, {
       Users: {},
       Options: defaultOptions,
     });
     const config = await dataStore.get<UserPool>("Options", defaultOptions);
 
-    return new UserPoolClientService(
+    return new UserPoolServiceImpl(
       clientsDataStore,
       clock,
       dataStore,

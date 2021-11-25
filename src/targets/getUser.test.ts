@@ -1,24 +1,24 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { MockLogger } from "../__tests__/mockLogger";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolClient } from "../services";
-import { attributeValue } from "../services/userPoolClient";
+import { UserPoolService } from "../services";
+import { attributeValue } from "../services/userPoolService";
 import { GetUser, GetUserTarget } from "./getUser";
 import * as TDB from "../__tests__/testDataBuilder";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     getUser = GetUser(
       {
-        cognitoClient: newMockCognitoClient(mockUserPoolClient),
+        cognito: newMockCognitoService(mockUserPoolService),
       },
       MockLogger
     );
@@ -27,7 +27,7 @@ describe("GetUser target", () => {
   it("parses token get user by sub", async () => {
     const user = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     const output = await getUser({
       AccessToken: jwt.sign(
@@ -67,7 +67,7 @@ describe("GetUser target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       getUser({

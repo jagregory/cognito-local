@@ -1,34 +1,34 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import * as TDB from "../__tests__/testDataBuilder";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
-import { Triggers, UserPoolClient } from "../services";
+import { Triggers, UserPoolService } from "../services";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
 
 const originalDate = new Date();
 
 describe("ConfirmSignUp target", () => {
   let confirmSignUp: ConfirmSignUpTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockTriggers: jest.Mocked<Triggers>;
   let clock: ClockFake;
 
   beforeEach(() => {
     clock = new ClockFake(originalDate);
 
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     mockTriggers = newMockTriggers();
     confirmSignUp = ConfirmSignUp({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock,
       triggers: mockTriggers,
     });
   });
 
   it("throws if user doesn't exist", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       confirmSignUp({
@@ -46,7 +46,7 @@ describe("ConfirmSignUp target", () => {
       UserStatus: "UNCONFIRMED",
     });
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
       confirmSignUp({
@@ -64,7 +64,7 @@ describe("ConfirmSignUp target", () => {
         UserStatus: "UNCONFIRMED",
       });
 
-      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       // advance the time so we can see the last modified timestamp change
       const newNow = clock.advanceBy(5000);
@@ -75,7 +75,7 @@ describe("ConfirmSignUp target", () => {
         ConfirmationCode: "4567",
       });
 
-      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
         ...user,
         ConfirmationCode: undefined,
         UserLastModifiedDate: newNow.getTime(),
@@ -92,7 +92,7 @@ describe("ConfirmSignUp target", () => {
           UserStatus: "UNCONFIRMED",
         });
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await confirmSignUp({
           ClientId: "clientId",
@@ -120,7 +120,7 @@ describe("ConfirmSignUp target", () => {
           UserStatus: "UNCONFIRMED",
         });
 
-        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await confirmSignUp({
           ClientId: "clientId",

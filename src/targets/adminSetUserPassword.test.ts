@@ -1,9 +1,9 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
-import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
-import { UserPoolClient } from "../services";
+import { UserPoolService } from "../services";
 import {
   AdminSetUserPassword,
   AdminSetUserPasswordTarget,
@@ -11,14 +11,14 @@ import {
 
 describe("AdminSetUser target", () => {
   let adminSetUserPassword: AdminSetUserPasswordTarget;
-  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
-    mockUserPoolClient = newMockUserPoolClient();
+    mockUserPoolService = newMockUserPoolService();
     clock = new ClockFake(new Date());
     adminSetUserPassword = AdminSetUserPassword({
-      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      cognito: newMockCognitoService(mockUserPoolService),
       clock,
     });
   });
@@ -26,7 +26,7 @@ describe("AdminSetUser target", () => {
   it("sets a new temporary password by default", async () => {
     const existingUser = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
@@ -36,7 +36,7 @@ describe("AdminSetUser target", () => {
       Password: "newPassword",
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate.getTime(),
@@ -47,7 +47,7 @@ describe("AdminSetUser target", () => {
   it("sets a new temporary password explicitly", async () => {
     const existingUser = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
@@ -58,7 +58,7 @@ describe("AdminSetUser target", () => {
       Permanent: false,
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate.getTime(),
@@ -69,7 +69,7 @@ describe("AdminSetUser target", () => {
   it("sets a permanent temporary password", async () => {
     const existingUser = TDB.user();
 
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
@@ -80,7 +80,7 @@ describe("AdminSetUser target", () => {
       Permanent: true,
     });
 
-    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate.getTime(),
@@ -89,7 +89,7 @@ describe("AdminSetUser target", () => {
   });
 
   it("handles trying to set a password for an invalid user", async () => {
-    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       adminSetUserPassword({

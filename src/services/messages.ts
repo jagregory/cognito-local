@@ -1,5 +1,5 @@
 import { Triggers } from "./triggers";
-import { User } from "./userPoolClient";
+import { User } from "./userPoolService";
 
 export interface Message {
   __code?: string; // not really part of the message, but we pass it around for convenience logging to the console
