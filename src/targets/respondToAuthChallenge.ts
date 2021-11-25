@@ -27,6 +27,12 @@ export const RespondToAuthChallenge = ({
       "Missing required parameter challenge responses"
     );
   }
+  if (!req.ChallengeResponses.USERNAME) {
+    throw new InvalidParameterError("Missing required parameter USERNAME");
+  }
+  if (!req.Session) {
+    throw new InvalidParameterError("Missing required parameter Session");
+  }
 
   const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(
@@ -36,17 +42,37 @@ export const RespondToAuthChallenge = ({
     throw new NotAuthorizedError();
   }
 
-  if (user.MFACode !== req.ChallengeResponses.SMS_MFA_CODE) {
-    throw new CodeMismatchError();
+  if (req.ChallengeName === "SMS_MFA") {
+    if (user.MFACode !== req.ChallengeResponses.SMS_MFA_CODE) {
+      throw new CodeMismatchError();
+    }
+
+    await userPool.saveUser({
+      ...user,
+      MFACode: undefined,
+      UserLastModifiedDate: clock.get().getTime(),
+    });
+  } else if (req.ChallengeName === "NEW_PASSWORD_REQUIRED") {
+    if (!req.ChallengeResponses.NEW_PASSWORD) {
+      throw new InvalidParameterError(
+        "Missing required parameter NEW_PASSWORD"
+      );
+    }
+
+    // TODO: validate the password?
+    await userPool.saveUser({
+      ...user,
+      Password: req.ChallengeResponses.NEW_PASSWORD,
+      UserLastModifiedDate: clock.get().getTime(),
+      UserStatus: "CONFIRMED",
+    });
+  } else {
+    throw new UnsupportedError(
+      `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`
+    );
   }
 
-  await userPool.saveUser({
-    ...user,
-    MFACode: undefined,
-  });
-
   return {
-    ChallengeName: req.ChallengeName,
     ChallengeParameters: {},
     AuthenticationResult: await generateTokens(
       user,
@@ -54,6 +80,5 @@ export const RespondToAuthChallenge = ({
       userPool.config.Id,
       clock
     ),
-    Session: req.Session,
   };
 };
