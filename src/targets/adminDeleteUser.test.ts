@@ -1,42 +1,38 @@
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { UserNotFoundError } from "../errors";
-import { CognitoClient } from "../services";
-import { AdminDeleteUser, AdminDeleteUserTarget } from "./adminDeleteUser";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import * as TDB from "../__tests__/testDataBuilder";
+import { UserNotFoundError } from "../errors";
+import { UserPoolClient } from "../services";
+import { AdminDeleteUser, AdminDeleteUserTarget } from "./adminDeleteUser";
 
 describe("AdminDeleteUser target", () => {
   let adminDeleteUser: AdminDeleteUserTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     adminDeleteUser = AdminDeleteUser({
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
     });
   });
 
   it("deletes the user", async () => {
     const existingUser = TDB.user();
 
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
 
     await adminDeleteUser({
       Username: existingUser.Username,
       UserPoolId: "test",
     });
 
-    expect(MockUserPoolClient.deleteUser).toHaveBeenCalledWith(existingUser);
+    expect(mockUserPoolClient.deleteUser).toHaveBeenCalledWith(existingUser);
   });
 
   it("handles trying to delete an invalid user", async () => {
     const existingUser = TDB.user();
 
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       adminDeleteUser({

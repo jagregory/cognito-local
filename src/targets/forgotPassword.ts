@@ -11,16 +11,18 @@ export type ForgotPasswordTarget = (
   req: ForgotPasswordRequest
 ) => Promise<ForgotPasswordResponse>;
 
+type ForgotPasswordServices = Pick<
+  Services,
+  "cognitoClient" | "clock" | "messageDelivery" | "messages" | "otp"
+>;
+
 export const ForgotPassword = ({
   cognitoClient,
   clock,
   messageDelivery,
   messages,
   otp,
-}: Pick<
-  Services,
-  "cognitoClient" | "clock" | "messageDelivery" | "messages" | "otp"
->): ForgotPasswordTarget => async (req) => {
+}: ForgotPasswordServices): ForgotPasswordTarget => async (req) => {
   const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);
   const user = await userPool.getUserByUsername(req.Username);
   if (!user) {

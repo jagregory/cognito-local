@@ -2,23 +2,22 @@ import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
 import { MockLogger } from "../__tests__/mockLogger";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { CognitoClient } from "../services";
+import { UserPoolClient } from "../services";
 import { DeleteUser, DeleteUserTarget } from "./deleteUser";
-import * as TDB from "../__tests__/testDataBuilder";
 
 describe("DeleteUser target", () => {
   let deleteUser: DeleteUserTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    mockCognitoClient = newMockCognitoClient();
-
+    mockUserPoolClient = newMockUserPoolClient();
     deleteUser = DeleteUser(
       {
-        cognitoClient: mockCognitoClient,
+        cognitoClient: newMockCognitoClient(mockUserPoolClient),
       },
       MockLogger
     );
@@ -27,7 +26,7 @@ describe("DeleteUser target", () => {
   it("parses token get user by sub", async () => {
     const user = TDB.user();
 
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
     await deleteUser({
       AccessToken: jwt.sign(
@@ -51,7 +50,7 @@ describe("DeleteUser target", () => {
       ),
     });
 
-    expect(MockUserPoolClient.deleteUser).toHaveBeenCalledWith(user);
+    expect(mockUserPoolClient.deleteUser).toHaveBeenCalledWith(user);
   });
 
   it("throws if token isn't valid", async () => {
@@ -63,7 +62,7 @@ describe("DeleteUser target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       deleteUser({

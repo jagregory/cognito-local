@@ -1,42 +1,25 @@
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { CognitoClient } from "../services";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { UserPoolClient } from "../services";
 import { ListGroups, ListGroupsTarget } from "./listGroups";
+import * as TDB from "../__tests__/testDataBuilder";
 
 describe("ListGroups target", () => {
   let listGroups: ListGroupsTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     listGroups = ListGroups({
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
     });
   });
 
   it("lists groups", async () => {
-    MockUserPoolClient.listGroups.mockResolvedValue([
-      {
-        CreationDate: now.getTime(),
-        Description: "Description",
-        GroupName: "abc",
-        LastModifiedDate: now.getTime(),
-        Precedence: 1,
-        RoleArn: "ARN",
-      },
-      {
-        CreationDate: now.getTime(),
-        GroupName: "def",
-        LastModifiedDate: now.getTime(),
-      },
-    ]);
+    const group1 = TDB.group();
+    const group2 = TDB.group();
+
+    mockUserPoolClient.listGroups.mockResolvedValue([group1, group2]);
 
     const output = await listGroups({
       UserPoolId: "userPoolId",
@@ -45,18 +28,15 @@ describe("ListGroups target", () => {
     expect(output).toBeDefined();
     expect(output.Groups).toEqual([
       {
-        CreationDate: now,
-        Description: "Description",
-        GroupName: "abc",
-        LastModifiedDate: now,
-        Precedence: 1,
-        RoleArn: "ARN",
+        CreationDate: new Date(group1.CreationDate),
+        GroupName: group1.GroupName,
+        LastModifiedDate: new Date(group1.LastModifiedDate),
         UserPoolId: "userPoolId",
       },
       {
-        CreationDate: now,
-        GroupName: "def",
-        LastModifiedDate: now,
+        CreationDate: new Date(group2.CreationDate),
+        GroupName: group2.GroupName,
+        LastModifiedDate: new Date(group2.LastModifiedDate),
         UserPoolId: "userPoolId",
       },
     ]);

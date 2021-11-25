@@ -1,4 +1,5 @@
 import { MockLogger } from "../../__tests__/mockLogger";
+import { attributeValue } from "../userPoolClient";
 import { ConsoleMessageSender } from "./consoleMessageSender";
 import * as TDB from "../../__tests__/testDataBuilder";
 
@@ -19,7 +20,7 @@ describe("consoleMessageSender", () => {
       });
 
       expect(mockLog.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Username:\s+Username/)
+        expect.stringMatching(new RegExp(`Username:\\s+${user.Username}`))
       );
       expect(mockLog.info).toHaveBeenCalledWith(
         expect.stringMatching(/Destination:\s+example@example.com/)

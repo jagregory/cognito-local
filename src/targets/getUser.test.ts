@@ -1,59 +1,45 @@
-import { advanceTo } from "jest-date-mock";
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
 import { MockLogger } from "../__tests__/mockLogger";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { CognitoClient } from "../services";
+import { UserPoolClient } from "../services";
+import { attributeValue } from "../services/userPoolClient";
 import { GetUser, GetUserTarget } from "./getUser";
+import * as TDB from "../__tests__/testDataBuilder";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     getUser = GetUser(
       {
-        cognitoClient: mockCognitoClient,
+        cognitoClient: newMockCognitoClient(mockUserPoolClient),
       },
       MockLogger
     );
   });
 
   it("parses token get user by sub", async () => {
-    MockUserPoolClient.getUserByUsername.mockResolvedValue({
-      Attributes: [],
-      UserStatus: "CONFIRMED",
-      Password: "hunter2",
-      Username: "0000-0000",
-      Enabled: true,
-      UserCreateDate: new Date().getTime(),
-      UserLastModifiedDate: new Date().getTime(),
-      ConfirmationCode: "1234",
-    });
+    const user = TDB.user();
+
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
     const output = await getUser({
       AccessToken: jwt.sign(
         {
-          sub: "0000-0000",
+          sub: attributeValue("sub", user.Attributes),
           event_id: "0",
           token_use: "access",
           scope: "aws.cognito.signin.user.admin",
           auth_time: new Date(),
           jti: uuid.v4(),
           client_id: "test",
-          username: "0000-0000",
+          username: user.Username,
         },
         PrivateKey.pem,
         {
@@ -67,8 +53,8 @@ describe("GetUser target", () => {
 
     expect(output).toBeDefined();
     expect(output).toEqual({
-      UserAttributes: [],
-      Username: "0000-0000",
+      UserAttributes: user.Attributes,
+      Username: user.Username,
     });
   });
 
@@ -81,7 +67,7 @@ describe("GetUser target", () => {
   });
 
   it("throws if user doesn't exist", async () => {
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       getUser({

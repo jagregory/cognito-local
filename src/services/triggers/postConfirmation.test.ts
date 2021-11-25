@@ -1,29 +1,23 @@
+import { newMockCognitoClient } from "../../__tests__/mockCognitoClient";
+import { newMockLambda } from "../../__tests__/mockLambda";
 import { MockLogger } from "../../__tests__/mockLogger";
-import { MockUserPoolClient } from "../../__tests__/mockUserPoolClient";
+import { newMockUserPoolClient } from "../../__tests__/mockUserPoolClient";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
-import { CognitoClient } from "../cognitoClient";
 
 describe("PostConfirmation trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
-    mockLambda = {
-      enabled: jest.fn(),
-      invoke: jest.fn(),
-    };
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
+    mockLambda = newMockLambda();
+    mockUserPoolClient = newMockUserPoolClient();
     postConfirmation = PostConfirmation(
       {
         lambda: mockLambda,
-        cognitoClient: mockCognitoClient,
+        cognitoClient: newMockCognitoClient(mockUserPoolClient),
       },
       MockLogger
     );

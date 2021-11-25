@@ -1,5 +1,5 @@
-import { advanceTo } from "jest-date-mock";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { ResourceNotFoundError } from "../errors";
 import { CognitoClient } from "../services";
 import { AppClient } from "../services/appClient";
@@ -11,18 +11,10 @@ import {
 describe("DescribeUserPoolClient target", () => {
   let describeUserPoolClient: DescribeUserPoolClientTarget;
   let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    const mockUserPoolClient = newMockUserPoolClient();
+    mockCognitoClient = newMockCognitoClient(mockUserPoolClient);
     describeUserPoolClient = DescribeUserPoolClient({
       cognitoClient: mockCognitoClient,
     });

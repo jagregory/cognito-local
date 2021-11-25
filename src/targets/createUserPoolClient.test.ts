@@ -1,6 +1,6 @@
-import { advanceTo } from "jest-date-mock";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { CognitoClient } from "../services";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { UserPoolClient } from "../services";
 import { AppClient } from "../services/appClient";
 import {
   CreateUserPoolClient,
@@ -9,21 +9,12 @@ import {
 
 describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     createUserPoolClient = CreateUserPoolClient({
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
     });
   });
 
@@ -37,14 +28,14 @@ describe("CreateUserPoolClient target", () => {
       ClientId: "abc",
       ClientName: "clientName",
     };
-    MockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
+    mockUserPoolClient.createAppClient.mockResolvedValue(createdAppClient);
 
     const result = await createUserPoolClient({
       ClientName: "clientName",
       UserPoolId: "userPoolId",
     });
 
-    expect(MockUserPoolClient.createAppClient).toHaveBeenCalledWith(
+    expect(mockUserPoolClient.createAppClient).toHaveBeenCalledWith(
       "clientName"
     );
 

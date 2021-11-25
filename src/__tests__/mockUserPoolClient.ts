@@ -1,18 +1,14 @@
 import { UserPoolClient } from "../services";
 
-export const MockUserPoolClient = {
+export const newMockUserPoolClient = (): jest.Mocked<UserPoolClient> => ({
   config: {
     Id: "test",
-  } as Record<string, string>,
-  createAppClient: jest.fn() as jest.MockedFunction<
-    UserPoolClient["createAppClient"]
-  >,
-  deleteUser: jest.fn() as jest.MockedFunction<UserPoolClient["deleteUser"]>,
-  getUserByUsername: jest.fn() as jest.MockedFunction<
-    UserPoolClient["getUserByUsername"]
-  >,
-  listGroups: jest.fn() as jest.MockedFunction<UserPoolClient["listGroups"]>,
-  listUsers: jest.fn() as jest.MockedFunction<UserPoolClient["listUsers"]>,
-  saveGroup: jest.fn() as jest.MockedFunction<UserPoolClient["saveGroup"]>,
-  saveUser: jest.fn() as jest.MockedFunction<UserPoolClient["saveUser"]>,
-};
+  },
+  createAppClient: jest.fn(),
+  deleteUser: jest.fn(),
+  getUserByUsername: jest.fn(),
+  listGroups: jest.fn(),
+  listUsers: jest.fn(),
+  saveGroup: jest.fn(),
+  saveUser: jest.fn(),
+});

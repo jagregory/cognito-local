@@ -1,28 +1,23 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
-import { UsernameExistsError } from "../errors";
-import { CognitoClient } from "../services";
-import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
 import * as TDB from "../__tests__/testDataBuilder";
+import { UsernameExistsError } from "../errors";
+import { UserPoolClient } from "../services";
+import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
+
+const originalDate = new Date();
 
 describe("AdminCreateUser target", () => {
   let adminCreateUser: AdminCreateUserTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     adminCreateUser = AdminCreateUser({
-      cognitoClient: mockCognitoClient,
-      clock: new ClockFake(now),
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
+      clock: new ClockFake(originalDate),
     });
   });
 
@@ -34,7 +29,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
       Attributes: [
         {
           Name: "sub",
@@ -44,8 +39,8 @@ describe("AdminCreateUser target", () => {
       ],
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: now.getTime(),
-      UserLastModifiedDate: now.getTime(),
+      UserCreateDate: originalDate.getTime(),
+      UserLastModifiedDate: originalDate.getTime(),
       UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
     });
@@ -57,7 +52,7 @@ describe("AdminCreateUser target", () => {
 
   it("handles creating a duplicate user", async () => {
     const existingUser = TDB.user();
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(existingUser);
 
     await expect(
       adminCreateUser({

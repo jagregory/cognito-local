@@ -1,31 +1,24 @@
-import { MockUserPoolClient } from "../../__tests__/mockUserPoolClient";
+import { newMockCognitoClient } from "../../__tests__/mockCognitoClient";
+import { newMockLambda } from "../../__tests__/mockLambda";
+import { newMockUserPoolClient } from "../../__tests__/mockUserPoolClient";
 import { UUID } from "../../__tests__/patterns";
 import { NotAuthorizedError } from "../../errors";
 import { DateClock } from "../clock";
-import { CognitoClient } from "../cognitoClient";
 import { Lambda } from "../lambda";
 import { UserPoolClient } from "../userPoolClient";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
 
 describe("UserMigration trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let userMigration: UserMigrationTrigger;
 
   beforeEach(() => {
-    mockLambda = {
-      enabled: jest.fn(),
-      invoke: jest.fn(),
-    };
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockLambda = newMockLambda();
+    mockUserPoolClient = newMockUserPoolClient();
     userMigration = UserMigration({
       clock: new DateClock(),
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
       lambda: mockLambda,
     });
   });

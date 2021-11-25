@@ -1,42 +1,24 @@
 import { ClockFake } from "../__tests__/clockFake";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { CognitoClient } from "../services";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { UserPoolClient } from "../services";
 import { CreateGroup, CreateGroupTarget } from "./createGroup";
+
+const originalDate = new Date();
 
 describe("CreateGroup target", () => {
   let createGroup: CreateGroupTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let clock: ClockFake;
-
-  const originalDate = new Date(2020, 1, 2, 3, 4, 5);
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    clock = new ClockFake(originalDate);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     createGroup = CreateGroup({
-      clock,
-      cognitoClient: mockCognitoClient,
+      clock: new ClockFake(originalDate),
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
     });
   });
 
   it("creates a group", async () => {
-    MockUserPoolClient.getUserByUsername.mockResolvedValue({
-      Attributes: [{ Name: "email", Value: "example@example.com" }],
-      ConfirmationCode: "4567",
-      Enabled: true,
-      Password: "pwd",
-      UserCreateDate: originalDate.getTime(),
-      UserLastModifiedDate: originalDate.getTime(),
-      UserStatus: "UNCONFIRMED",
-      Username: "0000-0000",
-    });
-
     await createGroup({
       Description: "Description",
       GroupName: "theGroupName",
@@ -45,7 +27,7 @@ describe("CreateGroup target", () => {
       UserPoolId: "test",
     });
 
-    expect(MockUserPoolClient.saveGroup).toHaveBeenCalledWith({
+    expect(mockUserPoolClient.saveGroup).toHaveBeenCalledWith({
       CreationDate: originalDate.getTime(),
       Description: "Description",
       GroupName: "theGroupName",

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
 import {
   CodeMismatchError,
@@ -8,43 +9,39 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import { CognitoClient } from "../services";
+import { UserPoolClient } from "../services";
+import { attributeValue } from "../services/userPoolClient";
 import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
 } from "./respondToAuthChallenge";
-import { User } from "../services/userPoolClient";
+import * as TDB from "../__tests__/testDataBuilder";
 
 const currentDate = new Date();
 
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
   let clock: ClockFake;
 
   beforeEach(() => {
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
     clock = new ClockFake(currentDate);
+    mockUserPoolClient = newMockUserPoolClient();
     respondToAuthChallenge = RespondToAuthChallenge({
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
       clock,
     });
   });
 
   it("throws if user doesn't exist", async () => {
-    MockUserPoolClient.getUserByUsername.mockResolvedValue(null);
+    mockUserPoolClient.getUserByUsername.mockResolvedValue(null);
 
     await expect(
       respondToAuthChallenge({
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
-          USERNAME: "0000-0000",
+          USERNAME: "username",
           SMS_MFA_CODE: "1234",
         },
         Session: "Session",
@@ -94,22 +91,13 @@ describe("RespondToAuthChallenge target", () => {
   });
 
   describe("ChallengeName=SMS_MFA", () => {
-    const user: User = {
-      Attributes: [
-        { Name: "sub", Value: "0000-0000" },
-        { Name: "email", Value: "example@example.com" },
-      ],
-      UserStatus: "CONFIRMED",
-      Password: "hunter2",
-      Username: "0000-0000",
-      Enabled: true,
-      UserCreateDate: currentDate.getTime(),
-      UserLastModifiedDate: currentDate.getTime(),
+    const user = TDB.user({
       MFACode: "1234",
-    };
+    });
+
     describe("when code matches", () => {
       it("updates the user and removes the MFACode", async () => {
-        MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
         const newDate = clock.advanceBy(1200);
 
@@ -117,13 +105,13 @@ describe("RespondToAuthChallenge target", () => {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
-            USERNAME: "0000-0000",
+            USERNAME: user.Username,
             SMS_MFA_CODE: "1234",
           },
           Session: "Session",
         });
 
-        expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
+        expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
           ...user,
           MFACode: undefined,
           UserLastModifiedDate: newDate.getTime(),
@@ -131,13 +119,13 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       it("generates tokens", async () => {
-        MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
         const output = await respondToAuthChallenge({
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
-            USERNAME: "0000-0000",
+            USERNAME: user.Username,
             SMS_MFA_CODE: "1234",
           },
           Session: "Session",
@@ -153,9 +141,9 @@ describe("RespondToAuthChallenge target", () => {
         expect(decodedAccessToken).toMatchObject({
           client_id: "clientId",
           iss: "http://localhost:9229/test",
-          sub: "0000-0000",
+          sub: attributeValue("sub", user.Attributes),
           token_use: "access",
-          username: "0000-0000",
+          username: user.Username,
           event_id: expect.stringMatching(UUID),
           scope: "aws.cognito.signin.user.admin", // TODO: scopes
           auth_time: Math.floor(clock.get().getTime() / 1000),
@@ -179,13 +167,13 @@ describe("RespondToAuthChallenge target", () => {
         expect(decodedIdToken).toMatchObject({
           aud: "clientId",
           iss: "http://localhost:9229/test",
-          sub: "0000-0000",
+          sub: attributeValue("sub", user.Attributes),
           token_use: "id",
-          "cognito:username": "0000-0000",
+          "cognito:username": user.Username,
           email_verified: true,
           event_id: expect.stringMatching(UUID),
           auth_time: Math.floor(clock.get().getTime() / 1000),
-          email: "example@example.com",
+          email: attributeValue("email", user.Attributes),
         });
         expect(
           jwt.verify(
@@ -201,14 +189,14 @@ describe("RespondToAuthChallenge target", () => {
 
     describe("when code is incorrect", () => {
       it("throws an error", async () => {
-        MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+        mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
         await expect(
           respondToAuthChallenge({
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
             ChallengeResponses: {
-              USERNAME: "0000-0000",
+              USERNAME: user.Username,
               SMS_MFA_CODE: "4321",
             },
             Session: "Session",
@@ -219,28 +207,17 @@ describe("RespondToAuthChallenge target", () => {
   });
 
   describe("ChallengeName=NEW_PASSWORD_REQUIRED", () => {
-    const user: User = {
-      Attributes: [
-        { Name: "sub", Value: "0000-0000" },
-        { Name: "email", Value: "example@example.com" },
-      ],
-      UserStatus: "FORCE_CHANGE_PASSWORD",
-      Password: "hunter2",
-      Username: "0000-0000",
-      Enabled: true,
-      UserCreateDate: currentDate.getTime(),
-      UserLastModifiedDate: currentDate.getTime(),
-    };
+    const user = TDB.user();
 
     it("throws if NEW_PASSWORD missing", async () => {
-      MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
       await expect(
         respondToAuthChallenge({
           ClientId: "clientId",
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
-            USERNAME: "0000-0000",
+            USERNAME: user.Username,
           },
           Session: "session",
         })
@@ -250,7 +227,7 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("updates the user's password and status", async () => {
-      MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
       const newDate = clock.advanceBy(1200);
 
@@ -258,13 +235,13 @@ describe("RespondToAuthChallenge target", () => {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
-          USERNAME: "0000-0000",
+          USERNAME: user.Username,
           NEW_PASSWORD: "foo",
         },
         Session: "Session",
       });
 
-      expect(MockUserPoolClient.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolClient.saveUser).toHaveBeenCalledWith({
         ...user,
         Password: "foo",
         UserLastModifiedDate: newDate.getTime(),
@@ -273,13 +250,13 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("generates tokens", async () => {
-      MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolClient.getUserByUsername.mockResolvedValue(user);
 
       const output = await respondToAuthChallenge({
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
-          USERNAME: "0000-0000",
+          USERNAME: user.Username,
           NEW_PASSWORD: "foo",
         },
         Session: "Session",
@@ -295,9 +272,9 @@ describe("RespondToAuthChallenge target", () => {
       expect(decodedAccessToken).toMatchObject({
         client_id: "clientId",
         iss: "http://localhost:9229/test",
-        sub: "0000-0000",
+        sub: attributeValue("sub", user.Attributes),
         token_use: "access",
-        username: "0000-0000",
+        username: user.Username,
         event_id: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin", // TODO: scopes
         auth_time: Math.floor(clock.get().getTime() / 1000),
@@ -321,13 +298,13 @@ describe("RespondToAuthChallenge target", () => {
       expect(decodedIdToken).toMatchObject({
         aud: "clientId",
         iss: "http://localhost:9229/test",
-        sub: "0000-0000",
+        sub: attributeValue("sub", user.Attributes),
         token_use: "id",
-        "cognito:username": "0000-0000",
+        "cognito:username": user.Username,
         email_verified: true,
         event_id: expect.stringMatching(UUID),
         auth_time: Math.floor(clock.get().getTime() / 1000),
-        email: "example@example.com",
+        email: attributeValue("email", user.Attributes),
       });
       expect(
         jwt.verify(output.AuthenticationResult?.IdToken ?? "", PublicKey.pem, {

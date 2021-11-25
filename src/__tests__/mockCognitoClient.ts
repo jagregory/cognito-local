@@ -1,8 +1,9 @@
-import { CognitoClient } from "../services";
-import { MockUserPoolClient } from "./mockUserPoolClient";
+import { CognitoClient, UserPoolClient } from "../services";
 
-export const newMockCognitoClient = (): jest.Mocked<CognitoClient> => ({
+export const newMockCognitoClient = (
+  userPoolClient: UserPoolClient
+): jest.Mocked<CognitoClient> => ({
   getAppClient: jest.fn(),
-  getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-  getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
+  getUserPool: jest.fn().mockResolvedValue(userPoolClient),
+  getUserPoolForClientId: jest.fn().mockResolvedValue(userPoolClient),
 });

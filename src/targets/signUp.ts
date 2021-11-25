@@ -15,8 +15,13 @@ import {
 
 export type SignUpTarget = (req: SignUpRequest) => Promise<SignUpResponse>;
 
+type SignUpServices = Pick<
+  Services,
+  "cognitoClient" | "clock" | "messages" | "messageDelivery" | "otp"
+>;
+
 export const SignUp = (
-  { cognitoClient, clock, messageDelivery, messages, otp }: Services,
+  { cognitoClient, clock, messageDelivery, messages, otp }: SignUpServices,
   logger: Logger
 ): SignUpTarget => async (req) => {
   // TODO: This should behave differently depending on if PreventUserExistenceErrors

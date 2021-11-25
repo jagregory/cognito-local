@@ -1,50 +1,25 @@
-import { advanceTo } from "jest-date-mock";
-import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
-import { CognitoClient } from "../services";
+import { newMockCognitoClient } from "../__tests__/mockCognitoClient";
+import { newMockUserPoolClient } from "../__tests__/mockUserPoolClient";
+import { UserPoolClient } from "../services";
 import { ListUsers, ListUsersTarget } from "./listUsers";
+import * as TDB from "../__tests__/testDataBuilder";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;
-  let mockCognitoClient: jest.Mocked<CognitoClient>;
-  let now: Date;
+  let mockUserPoolClient: jest.Mocked<UserPoolClient>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-    advanceTo(now);
-
-    mockCognitoClient = {
-      getAppClient: jest.fn(),
-      getUserPool: jest.fn().mockResolvedValue(MockUserPoolClient),
-      getUserPoolForClientId: jest.fn().mockResolvedValue(MockUserPoolClient),
-    };
-
+    mockUserPoolClient = newMockUserPoolClient();
     listUsers = ListUsers({
-      cognitoClient: mockCognitoClient,
+      cognitoClient: newMockCognitoClient(mockUserPoolClient),
     });
   });
 
   it("lists users and removes Cognito Local fields", async () => {
-    MockUserPoolClient.listUsers.mockResolvedValue([
-      {
-        Attributes: [],
-        UserStatus: "CONFIRMED",
-        Password: "hunter2",
-        Username: "0000-0000",
-        Enabled: true,
-        UserCreateDate: now.getTime(),
-        UserLastModifiedDate: now.getTime(),
-        ConfirmationCode: "1234",
-      },
-      {
-        Attributes: [],
-        UserStatus: "CONFIRMED",
-        Password: "password1",
-        Username: "1111-1111",
-        Enabled: true,
-        UserCreateDate: now.getTime(),
-        UserLastModifiedDate: now.getTime(),
-      },
-    ]);
+    const user1 = TDB.user();
+    const user2 = TDB.user();
+
+    mockUserPoolClient.listUsers.mockResolvedValue([user1, user2]);
 
     const output = await listUsers({
       UserPoolId: "userPoolId",
@@ -53,20 +28,20 @@ describe("ListUsers target", () => {
     expect(output).toBeDefined();
     expect(output.Users).toEqual([
       {
-        Attributes: [],
-        UserStatus: "CONFIRMED",
-        Username: "0000-0000",
-        Enabled: true,
-        UserCreateDate: now,
-        UserLastModifiedDate: now,
+        Attributes: user1.Attributes,
+        Enabled: user1.Enabled,
+        UserCreateDate: new Date(user1.UserCreateDate),
+        UserLastModifiedDate: new Date(user1.UserLastModifiedDate),
+        UserStatus: user1.UserStatus,
+        Username: user1.Username,
       },
       {
-        Attributes: [],
-        UserStatus: "CONFIRMED",
-        Username: "1111-1111",
-        Enabled: true,
-        UserCreateDate: now,
-        UserLastModifiedDate: now,
+        Attributes: user2.Attributes,
+        Enabled: user2.Enabled,
+        UserCreateDate: new Date(user2.UserCreateDate),
+        UserLastModifiedDate: new Date(user2.UserLastModifiedDate),
+        UserStatus: user2.UserStatus,
+        Username: user2.Username,
       },
     ]);
   });
