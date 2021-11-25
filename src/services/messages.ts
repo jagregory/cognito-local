@@ -41,7 +41,7 @@ export class MessagesService implements Messages {
     user: User,
     code: string
   ): Promise<Message> {
-    if (this.triggers.enabled("PostConfirmation")) {
+    if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage({
         clientId,
         code,

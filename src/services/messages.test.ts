@@ -18,7 +18,9 @@ describe("messages service", () => {
     describe("CustomMessage lambda is configured", () => {
       describe("lambda returns a custom message", () => {
         it("returns the custom message and code", async () => {
-          mockTriggers.enabled.mockReturnValue(true);
+          mockTriggers.enabled.mockImplementation((name) => {
+            return name === "CustomMessage";
+          });
           mockTriggers.customMessage.mockResolvedValue({
             smsMessage: "sms",
             emailSubject: "email subject",
@@ -44,7 +46,9 @@ describe("messages service", () => {
 
       describe("lambda does not return a custom message", () => {
         it("returns just the code", async () => {
-          mockTriggers.enabled.mockReturnValue(true);
+          mockTriggers.enabled.mockImplementation((name) => {
+            return name === "CustomMessage";
+          });
           mockTriggers.customMessage.mockResolvedValue(null);
 
           const messages = new MessagesService(mockTriggers);
