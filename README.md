@@ -6,7 +6,10 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 <!-- toc -->
 
-- [Features](#features)
+- [Supported Features](#supported-features)
+  - [Lambda triggers](#lambda-triggers)
+    - [Supported Lambda Triggers](#supported-lambda-triggers)
+    - [Known limitations](#known-limitations)
 - [Usage](#usage)
   - [via Docker](#via-docker)
   - [via Node](#via-node)
@@ -21,7 +24,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 <!-- tocstop -->
 
-## Features
+## Supported Features
 
 > Assume any features listed below are _partially implemented_ based on @jagregory's personal use-cases. I've
 > implemented as little of each feature as is necessary to support my own use-case. If anything doesn't work for you,
@@ -49,7 +52,70 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 Additional supported features:
 
 - JWKs verification
-- Partial support for lambda triggers (see below)
+
+### Lambda triggers
+
+cognito-local can emulate Cognito's [Lambda Triggers](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)
+by either invoking a real Lambda in an AWS account or a Lambda running on your local machine (via any tool which
+supports the `LambdaInvoke` functionality, for example
+[serverless-offline](https://github.com/dherault/serverless-offline)).
+
+To configure a Lambda Trigger, modify your [configuration file](#configuration) to include a `TriggerFunctions` object
+with a key for the Trigger and the value as your Lambda function name.
+
+```json
+{
+  "TriggerFunctions": {
+    "CustomMessage": "my-function-name"
+  }
+}
+```
+
+If you're using local invoke, you will also need to modify the `LambdaClient.endpoint` configuration to tell
+cognito-local how to connect to your local Lambda server:
+
+```json
+{
+  "LambdaClient": {
+    "endpoint": "http://host:port"
+  },
+  "TriggerFunctions": {
+    "CustomMessage": "my-local-function-name"
+  }
+}
+```
+
+> If you're running cognito-local in Docker and your local Lambda functions on your host, you may need to use the Docker
+> local networking hostname as your endpoint. For example, on my Mac I use `http://host.docker.internal:3002`.
+
+#### Supported Lambda Triggers
+
+| Trigger                     | Operation             | Support |
+| --------------------------- | --------------------- | ------- |
+| CreateAuthChallenge         | \*                    | ❌      |
+| CustomEmailSender           | \*                    | ❌      |
+| CustomMessage               | AdminCreateUser       | ❌      |
+| CustomMessage               | Authentication        | ✅      |
+| CustomMessage               | ForgotPassword        | ✅      |
+| CustomMessage               | ResendCode            | ❌      |
+| CustomMessage               | SignUp                | ❌      |
+| CustomMessage               | UpdateUserAttribute   | ❌      |
+| CustomMessage               | VerifyUserAttribute   | ❌      |
+| DefineAuthChallenge         | \*                    | ❌      |
+| PostAuthentication          | \*                    | ❌      |
+| PostConfirmation            | ConfirmForgotPassword | ✅      |
+| PostConfirmation            | ConfirmSignUp         | ✅      |
+| PreAuthentication           | \*                    | ❌      |
+| PreSignUp                   | \*                    | ❌      |
+| PreTokenGeneration          | \*                    | ❌      |
+| UserMigration               | Authentication        | ✅      |
+| UserMigration               | ForgotPassword        | ❌      |
+| VerifyAuthChallengeResponse | \*                    | ❌      |
+
+#### Known limitations
+
+1. Incomplete support for triggers
+2. Triggers can only be configured globally and not per-pool
 
 ## Usage
 
@@ -114,7 +180,7 @@ You only want to do this when you're running locally on your development machine
 ## Configuration
 
 You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda
-triggers, you will definitely need to override `LambdaClient.endpoint` at a minimum.
+triggers with local Lambdas, you will definitely need to override `LambdaClient.endpoint` at a minimum.
 
 Before starting Cognito Local, create a config file:
 
