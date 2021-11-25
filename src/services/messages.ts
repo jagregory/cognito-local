@@ -21,7 +21,12 @@ export interface Messages {
     user: User,
     code: string
   ): Promise<Message>;
-  signUp(code: string): Promise<Message>;
+  signUp(
+    clientId: string,
+    userPoolId: string,
+    user: User,
+    code: string
+  ): Promise<Message>;
 }
 
 const stubMessage = (code: string) =>
@@ -92,7 +97,31 @@ export class MessagesService implements Messages {
     };
   }
 
-  public signUp(code: string): Promise<Message> {
-    return stubMessage(code);
+  public async signUp(
+    clientId: string,
+    userPoolId: string,
+    user: User,
+    code: string
+  ): Promise<Message> {
+    if (this.triggers.enabled("CustomMessage")) {
+      const message = await this.triggers.customMessage({
+        clientId,
+        code,
+        source: "CustomMessage_SignUp",
+        userAttributes: user.Attributes,
+        username: user.Username,
+        userPoolId,
+      });
+
+      return {
+        __code: code,
+        ...message,
+      };
+    }
+
+    // TODO: What should the default message be?
+    return {
+      __code: code,
+    };
   }
 }

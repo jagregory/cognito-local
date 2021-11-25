@@ -56,7 +56,12 @@ export const SignUp = (
   };
 
   const code = otp();
-  const message = await messages.signUp(code);
+  const message = await messages.signUp(
+    req.ClientId,
+    userPool.config.Id,
+    user,
+    code
+  );
   await messageDelivery.deliver(user, deliveryDetails, message);
 
   await userPool.saveUser({

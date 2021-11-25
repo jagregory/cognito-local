@@ -118,19 +118,27 @@ describe("SignUp target", () => {
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
+    const createdUser = {
+      Attributes: [
+        { Name: "sub", Value: expect.stringMatching(UUID) },
+        { Name: "email", Value: "example@example.com" },
+      ],
+      Enabled: true,
+      Password: "pwd",
+      UserCreateDate: now.getTime(),
+      UserLastModifiedDate: now.getTime(),
+      UserStatus: "UNCONFIRMED",
+      Username: "user-supplied",
+    };
+
+    expect(mockMessages.signUp).toHaveBeenCalledWith(
+      "clientId",
+      "test",
+      createdUser,
+      "1234"
+    );
     expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-      {
-        Attributes: [
-          { Name: "sub", Value: expect.stringMatching(UUID) },
-          { Name: "email", Value: "example@example.com" },
-        ],
-        Enabled: true,
-        Password: "pwd",
-        UserCreateDate: now.getTime(),
-        UserLastModifiedDate: now.getTime(),
-        UserStatus: "UNCONFIRMED",
-        Username: "user-supplied",
-      },
+      createdUser,
       {
         AttributeName: "email",
         DeliveryMedium: "EMAIL",
