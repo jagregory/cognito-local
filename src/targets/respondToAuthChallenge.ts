@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
   CodeMismatchError,
+  InvalidParameterError,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
@@ -22,8 +23,8 @@ export const RespondToAuthChallenge = ({
   "cognitoClient" | "clock"
 >): RespondToAuthChallengeTarget => async (req) => {
   if (!req.ChallengeResponses) {
-    throw new UnsupportedError(
-      "RespondToAuthChallenge without ChallengeResponses"
+    throw new InvalidParameterError(
+      "Missing required parameter challenge responses"
     );
   }
 

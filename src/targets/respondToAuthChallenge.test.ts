@@ -3,7 +3,11 @@ import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
 import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
-import { CodeMismatchError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  InvalidParameterError,
+  NotAuthorizedError,
+} from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import { CognitoClient } from "../services";
 import {
@@ -46,6 +50,19 @@ describe("RespondToAuthChallenge target", () => {
         Session: "Session",
       })
     ).rejects.toBeInstanceOf(NotAuthorizedError);
+  });
+
+  it("throws if ChallengeResponses missing", async () => {
+    await expect(
+      respondToAuthChallenge({
+        ClientId: "clientId",
+        ChallengeName: "SMS_MFA",
+      })
+    ).rejects.toEqual(
+      new InvalidParameterError(
+        "Missing required parameter challenge responses"
+      )
+    );
   });
 
   describe("when code matches", () => {
