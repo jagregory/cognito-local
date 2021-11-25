@@ -1,5 +1,4 @@
 import {
-  AttributeListType,
   GetUserRequest,
   GetUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -8,17 +7,6 @@ import { InvalidParameterError, UserNotFoundError } from "../errors";
 import { Logger } from "../log";
 import { Services } from "../services";
 import { Token } from "../services/tokens";
-import { MFAOption } from "../services/userPoolClient";
-
-interface Input {
-  AccessToken: string;
-}
-
-interface Output {
-  Username: string;
-  UserAttributes: AttributeListType;
-  MFAOptions?: readonly MFAOption[];
-}
 
 export type GetUserTarget = (req: GetUserRequest) => Promise<GetUserResponse>;
 

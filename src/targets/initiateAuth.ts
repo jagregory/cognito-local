@@ -4,6 +4,7 @@ import {
   InitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
+  InvalidParameterError,
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
@@ -110,7 +111,9 @@ export const InitiateAuth = ({
     throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
   }
   if (!req.AuthParameters) {
-    throw new UnsupportedError("InitAuth without AuthParameters");
+    throw new InvalidParameterError(
+      "Missing required parameter authParameters"
+    );
   }
 
   const userPool = await cognitoClient.getUserPoolForClientId(req.ClientId);

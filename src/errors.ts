@@ -64,8 +64,8 @@ export class UnexpectedLambdaExceptionError extends CognitoError {
 }
 
 export class InvalidParameterError extends CognitoError {
-  public constructor() {
-    super("InvalidParameterException", "Invalid parameter");
+  public constructor(message = "Invalid parameter") {
+    super("InvalidParameterException", message);
   }
 }
 

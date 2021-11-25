@@ -3,6 +3,7 @@ import { ClockFake } from "../__tests__/clockFake";
 import { MockUserPoolClient } from "../__tests__/mockUserPoolClient";
 import { UUID } from "../__tests__/patterns";
 import {
+  InvalidParameterError,
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
@@ -63,6 +64,17 @@ describe("InitiateAuth target", () => {
   });
 
   describe("USER_PASSWORD_AUTH auth flow", () => {
+    it("throws if AuthParameters not provided", async () => {
+      await expect(
+        initiateAuth({
+          ClientId: "clientId",
+          AuthFlow: "USER_PASSWORD_AUTH",
+        })
+      ).rejects.toEqual(
+        new InvalidParameterError("Missing required parameter authParameters")
+      );
+    });
+
     it("throws if password is incorrect", async () => {
       MockUserPoolClient.getUserByUsername.mockResolvedValue({
         Attributes: [],
