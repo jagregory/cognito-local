@@ -12,6 +12,7 @@ import { ForgotPassword } from "./forgotPassword";
 import { ChangePassword } from "./changePassword";
 import { InitiateAuth } from "./initiateAuth";
 import { ListGroups } from "./listGroups";
+import { ListUserPools } from "./listUserPools";
 import { ListUsers } from "./listUsers";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { SignUp } from "./signUp";
@@ -41,6 +42,7 @@ export const Targets = {
   InitiateAuth,
   ListGroups,
   ListUsers,
+  ListUserPools,
   RespondToAuthChallenge,
   SignUp,
 };

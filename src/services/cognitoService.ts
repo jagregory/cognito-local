@@ -1,3 +1,4 @@
+import * as path from "path";
 import { ResourceNotFoundError } from "../errors";
 import { Logger } from "../log";
 import { AppClient } from "./appClient";
@@ -8,11 +9,18 @@ import {
   UserPool,
   UserPoolService,
 } from "./userPoolService";
+import fs from "fs";
+import { promisify } from "util";
+
+const readdir = promisify(fs.readdir);
+
+const CLIENTS_DATABASE_NAME = "clients";
 
 export interface CognitoService {
   getAppClient(clientId: string): Promise<AppClient | null>;
   getUserPool(userPoolId: string): Promise<UserPoolService>;
   getUserPoolForClientId(clientId: string): Promise<UserPoolService>;
+  listUserPools(): Promise<readonly UserPool[]>;
 }
 
 type UserPoolDefaultConfig = Omit<UserPool, "Id">;
@@ -35,7 +43,7 @@ export class CognitoServiceImpl implements CognitoService {
     logger: Logger
   ): Promise<CognitoService> {
     const clients = await createDataStore(
-      "clients",
+      CLIENTS_DATABASE_NAME,
       { Clients: {} },
       dataDirectory
     );
@@ -100,5 +108,27 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async getAppClient(clientId: string): Promise<AppClient | null> {
     return this.clients.get(["Clients", clientId]);
+  }
+
+  public async listUserPools(): Promise<readonly UserPool[]> {
+    const entries = await readdir(this.dataDirectory, { withFileTypes: true });
+
+    return Promise.all(
+      entries
+        .filter(
+          (x) =>
+            x.isFile() &&
+            path.extname(x.name) === ".json" &&
+            path.basename(x.name, path.extname(x.name)) !==
+              CLIENTS_DATABASE_NAME
+        )
+        .map(async (x) => {
+          const userPool = await this.getUserPool(
+            path.basename(x.name, path.extname(x.name))
+          );
+
+          return userPool.config;
+        })
+    );
   }
 }

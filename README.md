@@ -96,14 +96,14 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | GlobalSignOut                    | ❌                   |
 | InitiateAuth                     | 🕒 (partial support) |
 | ListDevices                      | ❌                   |
-| ListGroups                       | 🕒 (partial support) |
+| ListGroups                       | ✅¹                  |
 | ListIdentityProviders            | ❌                   |
 | ListResourceServers              | ❌                   |
 | ListTagsForResource              | ❌                   |
 | ListUserImportJobs               | ❌                   |
 | ListUserPoolClients              | ❌                   |
-| ListUserPools                    | ❌                   |
-| ListUsers                        | 🕒 (partial support) |
+| ListUserPools                    | ✅¹                  |
+| ListUsers                        | ✅¹                  |
 | ListUsersInGroup                 | ❌                   |
 | ResendConfirmationCode           | ❌                   |
 | RespondToAuthChallenge           | 🕒 (partial support) |
@@ -129,6 +129,8 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UpdateUserPoolDomain             | ❌                   |
 | VerifySoftwareToken              | ❌                   |
 | VerifyUserAttribute              | ❌                   |
+
+> ¹ does not support pagination or query filters, all results and attributes will be returned in the first request.
 
 Additional supported features:
 

@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { Group, User } from "../services/userPoolService";
+import { Group, User, UserPool } from "../services/userPoolService";
 
 export const id = (prefix: string, number?: number) =>
   `${prefix}${number ?? Math.floor(Math.random() * 100000)}`;
@@ -27,4 +27,10 @@ export const user = (partial?: Partial<User>): User => ({
   UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date().getTime(),
   Username: partial?.Username ?? id("User"),
   UserStatus: partial?.UserStatus ?? "CONFIRMED",
+});
+
+export const userPool = (partial?: Partial<UserPool>): UserPool => ({
+  Id: partial?.Id ?? id("UserPool"),
+  MfaConfiguration: partial?.MfaConfiguration ?? undefined,
+  UsernameAttributes: partial?.UsernameAttributes ?? undefined,
 });
