@@ -1,6 +1,7 @@
 import { Logger } from "../log";
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
+import { AdminSetUserPassword } from "./adminSetUserPassword";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateGroup } from "./createGroup";
@@ -26,6 +27,7 @@ export const Targets = {
   AdminCreateUser,
   AdminDeleteUser,
   AdminGetUser,
+  AdminSetUserPassword,
   AdminUpdateUserAttributes,
   ChangePassword,
   ConfirmForgotPassword,

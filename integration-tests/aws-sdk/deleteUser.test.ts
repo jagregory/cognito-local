@@ -18,7 +18,7 @@ describe(
         .promise();
 
       // create a user
-      const createUserResponse = await client
+      await client
         .adminCreateUser({
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -26,10 +26,15 @@ describe(
           UserPoolId: "test",
         })
         .promise();
-      const userSub = attributeValue(
-        "sub",
-        createUserResponse.User?.Attributes
-      );
+
+      await client
+        .adminSetUserPassword({
+          Password: "newPassword",
+          Permanent: true,
+          Username: "abc",
+          UserPoolId: "test",
+        })
+        .promise();
 
       // attempt to login
       const initAuthResponse = await client
@@ -38,30 +43,15 @@ describe(
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
             USERNAME: "abc",
-            PASSWORD: "def",
+            PASSWORD: "newPassword",
           },
-        })
-        .promise();
-
-      // change their password on first login
-      // TODO: replace this with adminSetPassword when it's supported
-      const respondToAuthChallengeResult = await client
-        .respondToAuthChallenge({
-          ChallengeName: "NEW_PASSWORD_REQUIRED",
-          Session: initAuthResponse.Session,
-          ChallengeResponses: {
-            USERNAME: "abc",
-            NEW_PASSWORD: "new_password",
-          },
-          ClientId: upc.UserPoolClient?.ClientId!,
         })
         .promise();
 
       // delete the user with their token
       await client
         .deleteUser({
-          AccessToken: respondToAuthChallengeResult.AuthenticationResult
-            ?.AccessToken!,
+          AccessToken: initAuthResponse.AuthenticationResult?.AccessToken!,
         })
         .promise();
 
