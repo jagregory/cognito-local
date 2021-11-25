@@ -12,9 +12,11 @@ export type AdminCreateUserTarget = (
 ) => Promise<AdminCreateUserResponse>;
 
 export const AdminCreateUser = ({
-  cognitoClient,
   clock,
-}: Services): AdminCreateUserTarget => async (req) => {
+  cognitoClient,
+}: Pick<Services, "clock" | "cognitoClient">): AdminCreateUserTarget => async (
+  req
+) => {
   if (!req.TemporaryPassword) {
     throw new UnsupportedError("AdminCreateUser without TemporaryPassword");
   }
@@ -38,6 +40,14 @@ export const AdminCreateUser = ({
     UserLastModifiedDate: now.getTime(),
   };
   await userPool.saveUser(user);
+
+  // TODO: should handle existing users
+  // TODO: should send a message unless MessageAction=="SUPPRESS"
+  // TODO: support MessageAction=="RESEND"
+  // TODO: UserStatus should default to FORCE_CHANGE_PASSWORD
+  // TODO: should generate a TemporaryPassword if one isn't set
+  // TODO: support ForceAliasCreation
+  // TODO: support PreSignIn lambda and ValidationData
 
   return {
     User: {
