@@ -9,7 +9,12 @@ export interface Message {
 }
 
 export interface Messages {
-  authentication(code: string): Promise<Message>;
+  authentication(
+    clientId: string,
+    userPoolId: string,
+    user: User,
+    code: string
+  ): Promise<Message>;
   forgotPassword(
     clientId: string,
     userPoolId: string,
@@ -31,8 +36,32 @@ export class MessagesService implements Messages {
     this.triggers = triggers;
   }
 
-  public authentication(code: string): Promise<Message> {
-    return stubMessage(code);
+  public async authentication(
+    clientId: string,
+    userPoolId: string,
+    user: User,
+    code: string
+  ): Promise<Message> {
+    if (this.triggers.enabled("CustomMessage")) {
+      const message = await this.triggers.customMessage({
+        clientId,
+        code,
+        source: "CustomMessage_Authentication",
+        userAttributes: user.Attributes,
+        username: user.Username,
+        userPoolId,
+      });
+
+      return {
+        __code: code,
+        ...message,
+      };
+    }
+
+    // TODO: What should the default message be?
+    return {
+      __code: code,
+    };
   }
 
   public async forgotPassword(

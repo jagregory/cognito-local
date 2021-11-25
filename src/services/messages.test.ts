@@ -12,7 +12,96 @@ describe("messages service", () => {
 
   const user = TDB.user();
 
-  it.todo("authentication");
+  describe("authentication", () => {
+    describe("CustomMessage lambda is configured", () => {
+      describe("lambda returns a custom message", () => {
+        it("returns the custom message and code", async () => {
+          mockTriggers.enabled.mockImplementation((name) => {
+            return name === "CustomMessage";
+          });
+          mockTriggers.customMessage.mockResolvedValue({
+            smsMessage: "sms",
+            emailSubject: "email subject",
+            emailMessage: "email",
+          });
+
+          const messages = new MessagesService(mockTriggers);
+          const message = await messages.authentication(
+            "clientId",
+            "userPoolId",
+            user,
+            "1234"
+          );
+
+          expect(message).toMatchObject({
+            __code: "1234",
+            smsMessage: "sms",
+            emailSubject: "email subject",
+            emailMessage: "email",
+          });
+
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+            clientId: "clientId",
+            code: "1234",
+            source: "CustomMessage_Authentication",
+            userAttributes: user.Attributes,
+            userPoolId: "userPoolId",
+            username: user.Username,
+          });
+        });
+      });
+
+      describe("lambda does not return a custom message", () => {
+        it("returns just the code", async () => {
+          mockTriggers.enabled.mockImplementation((name) => {
+            return name === "CustomMessage";
+          });
+          mockTriggers.customMessage.mockResolvedValue(null);
+
+          const messages = new MessagesService(mockTriggers);
+          const message = await messages.authentication(
+            "clientId",
+            "userPoolId",
+            user,
+            "1234"
+          );
+
+          expect(message).toMatchObject({
+            __code: "1234",
+          });
+
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+            clientId: "clientId",
+            code: "1234",
+            source: "CustomMessage_Authentication",
+            userAttributes: user.Attributes,
+            userPoolId: "userPoolId",
+            username: user.Username,
+          });
+        });
+      });
+    });
+
+    describe("CustomMessage lambda is not configured", () => {
+      it("returns just the code", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const messages = new MessagesService(mockTriggers);
+        const message = await messages.authentication(
+          "clientId",
+          "userPoolId",
+          user,
+          "1234"
+        );
+
+        expect(message).toMatchObject({
+          __code: "1234",
+        });
+
+        expect(mockTriggers.customMessage).not.toHaveBeenCalled();
+      });
+    });
+  });
 
   describe("forgotPassword", () => {
     describe("CustomMessage lambda is configured", () => {
@@ -41,6 +130,15 @@ describe("messages service", () => {
             emailSubject: "email subject",
             emailMessage: "email",
           });
+
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+            clientId: "clientId",
+            code: "1234",
+            source: "CustomMessage_ForgotPassword",
+            userAttributes: user.Attributes,
+            userPoolId: "userPoolId",
+            username: user.Username,
+          });
         });
       });
 
@@ -62,6 +160,15 @@ describe("messages service", () => {
           expect(message).toMatchObject({
             __code: "1234",
           });
+
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+            clientId: "clientId",
+            code: "1234",
+            source: "CustomMessage_ForgotPassword",
+            userAttributes: user.Attributes,
+            userPoolId: "userPoolId",
+            username: user.Username,
+          });
         });
       });
     });
@@ -81,6 +188,8 @@ describe("messages service", () => {
         expect(message).toMatchObject({
           __code: "1234",
         });
+
+        expect(mockTriggers.customMessage).not.toHaveBeenCalled();
       });
     });
   });

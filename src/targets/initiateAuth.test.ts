@@ -292,6 +292,12 @@ describe("InitiateAuth target", () => {
 
             expect(output).toBeDefined();
 
+            expect(mockMessages.authentication).toHaveBeenCalledWith(
+              "clientId",
+              "test",
+              user,
+              "1234"
+            );
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,
               {

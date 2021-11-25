@@ -51,7 +51,12 @@ const verifyMfaChallenge = async (
   }
 
   const code = otp();
-  const message = await messages.authentication(code);
+  const message = await messages.authentication(
+    req.ClientId,
+    userPool.config.Id,
+    user,
+    code
+  );
   await messageDelivery.deliver(
     user,
     {
