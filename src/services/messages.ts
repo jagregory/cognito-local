@@ -29,11 +29,6 @@ export interface Messages {
   ): Promise<Message>;
 }
 
-const stubMessage = (code: string) =>
-  Promise.resolve({
-    __code: code,
-  });
-
 export class MessagesService implements Messages {
   private readonly triggers: Triggers;
 

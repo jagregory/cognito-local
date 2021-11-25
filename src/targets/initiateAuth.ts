@@ -3,6 +3,7 @@ import {
   InitiateAuthRequest,
   InitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { v4 } from "uuid";
 import {
   InvalidParameterError,
   InvalidPasswordError,
@@ -18,7 +19,12 @@ import {
 } from "../services";
 import { Clock } from "../services/clock";
 import { generateTokens } from "../services/tokens";
-import { attributeValue, MFAOption, User } from "../services/userPoolClient";
+import {
+  attributesToRecord,
+  attributeValue,
+  MFAOption,
+  User,
+} from "../services/userPoolClient";
 
 export type InitiateAuthTarget = (
   req: InitiateAuthRequest
@@ -99,6 +105,16 @@ const verifyPasswordChallenge = async (
   ),
 });
 
+const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
+  ChallengeName: "NEW_PASSWORD_REQUIRED",
+  ChallengeParameters: {
+    USER_ID_FOR_SRP: user.Username,
+    requiredAttributes: JSON.stringify([]),
+    userAttributes: JSON.stringify(attributesToRecord(user.Attributes)),
+  },
+  Session: v4(),
+});
+
 export const InitiateAuth = ({
   cognitoClient,
   clock,
@@ -139,6 +155,9 @@ export const InitiateAuth = ({
   }
   if (user.UserStatus === "RESET_REQUIRED") {
     throw new PasswordResetRequiredError();
+  }
+  if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+    return newPasswordChallenge(user);
   }
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();

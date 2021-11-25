@@ -494,5 +494,44 @@ describe("InitiateAuth target", () => {
         });
       });
     });
+
+    describe("when user status is FORCE_CHANGE_PASSWORD", () => {
+      it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {
+        const user: User = {
+          Attributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "true" },
+          ],
+          UserStatus: "FORCE_CHANGE_PASSWORD",
+          Password: "hunter2",
+          Username: "0000-0000",
+          Enabled: true,
+          UserCreateDate: now.getTime(),
+          UserLastModifiedDate: now.getTime(),
+        };
+
+        MockUserPoolClient.getUserByUsername.mockResolvedValue(user);
+
+        const response = await initiateAuth({
+          ClientId: "clientId",
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: {
+            USERNAME: "0000-0000",
+            PASSWORD: "bad-password",
+          },
+        });
+
+        expect(response).toEqual({
+          ChallengeName: "NEW_PASSWORD_REQUIRED",
+          ChallengeParameters: {
+            USER_ID_FOR_SRP: user.Username,
+            requiredAttributes: "[]",
+            userAttributes:
+              '{"email":"example@example.com","email_verified":"true"}',
+          },
+          Session: expect.stringMatching(UUID),
+        });
+      });
+    });
   });
 });
