@@ -22,8 +22,8 @@ export const ListUsers = ({
   return {
     Users: users.map((user) => ({
       Username: user.Username,
-      UserCreateDate: new Date(user.UserCreateDate),
-      UserLastModifiedDate: new Date(user.UserLastModifiedDate),
+      UserCreateDate: user.UserCreateDate,
+      UserLastModifiedDate: user.UserLastModifiedDate,
       Enabled: user.Enabled,
       UserStatus: user.UserStatus,
       Attributes: user.Attributes,

@@ -24,8 +24,8 @@ export const ChangePassword = ({
   await userPool.saveUser({
     ...user,
     Password: req.ProposedPassword,
-    UserLastModifiedDate: clock.get().getTime(),
+    UserLastModifiedDate: clock.get(),
   });
-  // TODO: Should possibly return something?
+
   return {};
 };

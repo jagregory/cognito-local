@@ -17,7 +17,7 @@ export const CreateGroup = ({
 }: CreateGroupServices): CreateGroupTarget => async (req) => {
   const userPool = await cognito.getUserPool(req.UserPoolId);
 
-  const now = clock.get().getTime();
+  const now = clock.get();
   const group: Group = {
     CreationDate: now,
     Description: req.Description,
@@ -31,10 +31,10 @@ export const CreateGroup = ({
 
   return {
     Group: {
-      CreationDate: new Date(group.CreationDate),
+      CreationDate: group.CreationDate,
       Description: group.Description,
       GroupName: group.GroupName,
-      LastModifiedDate: new Date(group.LastModifiedDate),
+      LastModifiedDate: group.LastModifiedDate,
       Precedence: group.Precedence,
       RoleArn: group.RoleArn,
       UserPoolId: req.UserPoolId,

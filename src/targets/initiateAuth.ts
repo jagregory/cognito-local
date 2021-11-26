@@ -12,12 +12,12 @@ import {
   UnsupportedError,
 } from "../errors";
 import {
+  Clock,
   MessageDelivery,
   Messages,
   Services,
   UserPoolService,
 } from "../services";
-import { Clock } from "../services/clock";
 import { generateTokens } from "../services/tokens";
 import {
   attributesToRecord,

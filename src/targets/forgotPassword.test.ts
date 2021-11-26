@@ -9,6 +9,8 @@ import { attributeValue } from "../services/userPoolService";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
 import * as TDB from "../__tests__/testDataBuilder";
 
+const currentDate = new Date();
+
 describe("ForgotPassword target", () => {
   let forgotPassword: ForgotPasswordTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
@@ -26,7 +28,7 @@ describe("ForgotPassword target", () => {
     mockOtp = jest.fn().mockReturnValue("1234");
     forgotPassword = ForgotPassword({
       cognito: newMockCognitoService(mockUserPoolService),
-      clock: new ClockFake(new Date()),
+      clock: new ClockFake(currentDate),
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
@@ -85,6 +87,7 @@ describe("ForgotPassword target", () => {
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...user,
+      UserLastModifiedDate: currentDate,
       ConfirmationCode: "1234",
     });
   });

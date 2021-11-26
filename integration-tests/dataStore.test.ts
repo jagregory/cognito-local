@@ -1,3 +1,4 @@
+import StormDB from "stormdb";
 import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -121,6 +122,34 @@ describe("Data Store", () => {
       });
     });
 
+    it("saves a date value", async () => {
+      const dataStore = await createDataStore("example", {}, path);
+
+      const date = new Date();
+
+      await dataStore.set("SomethingDate", date);
+
+      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+
+      expect(file).toEqual({
+        SomethingDate: date.toISOString(),
+      });
+    });
+
+    it("fails to save a date value with the wrong type", async () => {
+      const dataStore = await createDataStore("example", {}, path);
+
+      const date = new Date();
+
+      await expect(
+        dataStore.set("SomethingDate", date.getTime())
+      ).rejects.toEqual(
+        new Error(
+          "Serialize: Expected SomethingDate field to contain a Date, received a number"
+        )
+      );
+    });
+
     it("saves a nested value using array syntax", async () => {
       const dataStore = await createDataStore("example", {}, path);
 
@@ -215,6 +244,38 @@ describe("Data Store", () => {
       const result = await dataStore.get("key");
 
       expect(result).toEqual(1);
+    });
+
+    it("returns a date value", async () => {
+      const dataStore1 = await createDataStore("example", {}, path);
+
+      const date = new Date();
+
+      await dataStore1.set("SomethingDate", date);
+
+      // use a separate datastore to avoid caching
+      const dataStore2 = await createDataStore("example", {}, path);
+      const result = await dataStore2.get("SomethingDate");
+
+      expect(result).toEqual(date);
+    });
+
+    it("returns a date value stored as a number", async () => {
+      // write the date as number directly with Storm, to avoid our validation of Date types
+      const engine = new StormDB.localFileEngine(`${path}/example.json`, {
+        async: true,
+      });
+      const db = new StormDB(engine);
+
+      const date = new Date();
+
+      db.set("SomethingDate", date.getTime());
+      await db.save();
+
+      const dataStore = await createDataStore("example", {}, path);
+      const result = await dataStore.get("SomethingDate");
+
+      expect(result).toEqual(date);
     });
   });
 });

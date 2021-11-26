@@ -20,8 +20,8 @@ export const DescribeUserPoolClient = ({
   return {
     UserPoolClient: {
       ...client,
-      CreationDate: new Date(client.CreationDate),
-      LastModifiedDate: new Date(client.LastModifiedDate),
+      CreationDate: client.CreationDate,
+      LastModifiedDate: client.LastModifiedDate,
     },
   };
 };

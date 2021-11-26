@@ -42,8 +42,8 @@ export const AdminCreateUser = ({
     Enabled: true,
     UserStatus: "FORCE_CHANGE_PASSWORD",
     ConfirmationCode: undefined,
-    UserCreateDate: now.getTime(),
-    UserLastModifiedDate: now.getTime(),
+    UserCreateDate: now,
+    UserLastModifiedDate: now,
   };
   await userPool.saveUser(user);
 

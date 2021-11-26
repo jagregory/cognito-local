@@ -24,7 +24,7 @@ export const AdminSetUserPassword = ({
   await userPool.saveUser({
     ...user,
     Password: req.Password,
-    UserLastModifiedDate: clock.get().getTime(),
+    UserLastModifiedDate: clock.get(),
     UserStatus: req.Permanent ? "CONFIRMED" : "FORCE_CHANGE_PASSWORD",
   });
 

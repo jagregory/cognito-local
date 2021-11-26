@@ -17,8 +17,8 @@ export const CreateUserPoolClient = ({
   return {
     UserPoolClient: {
       ...appClient,
-      CreationDate: new Date(appClient.CreationDate),
-      LastModifiedDate: new Date(appClient.LastModifiedDate),
+      CreationDate: appClient.CreationDate,
+      LastModifiedDate: appClient.LastModifiedDate,
     },
   };
 };

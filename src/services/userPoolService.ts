@@ -42,8 +42,8 @@ export const attributesFromRecord = (
 
 export interface User {
   Username: string;
-  UserCreateDate: number;
-  UserLastModifiedDate: number;
+  UserCreateDate: Date;
+  UserLastModifiedDate: Date;
   Enabled: boolean;
   UserStatus:
     | "CONFIRMED"
@@ -79,11 +79,11 @@ export interface Group {
   /**
    * The date the group was last modified.
    */
-  LastModifiedDate: number;
+  LastModifiedDate: Date;
   /**
    * The date the group was created.
    */
-  CreationDate: number;
+  CreationDate: Date;
 }
 
 type UsernameAttribute = "email" | "phone_number";
@@ -166,7 +166,7 @@ export class UserPoolServiceImpl implements UserPoolService {
 
   public async createAppClient(name: string): Promise<AppClient> {
     const id = newId();
-    const now = this.clock.get().getTime();
+    const now = this.clock.get();
 
     const appClient: AppClient = {
       ClientId: id,

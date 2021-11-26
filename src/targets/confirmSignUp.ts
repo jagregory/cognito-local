@@ -31,7 +31,7 @@ export const ConfirmSignUp = ({
     ...user,
     UserStatus: "CONFIRMED",
     ConfirmationCode: undefined,
-    UserLastModifiedDate: clock.get().getTime(),
+    UserLastModifiedDate: clock.get(),
   });
 
   if (triggers.enabled("PostConfirmation")) {

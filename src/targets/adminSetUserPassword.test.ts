@@ -39,7 +39,7 @@ describe("AdminSetUser target", () => {
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
-      UserLastModifiedDate: newDate.getTime(),
+      UserLastModifiedDate: newDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
     });
   });
@@ -61,7 +61,7 @@ describe("AdminSetUser target", () => {
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
-      UserLastModifiedDate: newDate.getTime(),
+      UserLastModifiedDate: newDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
     });
   });
@@ -83,7 +83,7 @@ describe("AdminSetUser target", () => {
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
       ...existingUser,
       Password: "newPassword",
-      UserLastModifiedDate: newDate.getTime(),
+      UserLastModifiedDate: newDate,
       UserStatus: "CONFIRMED",
     });
   });

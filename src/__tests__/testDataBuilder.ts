@@ -5,10 +5,10 @@ export const id = (prefix: string, number?: number) =>
   `${prefix}${number ?? Math.floor(Math.random() * 100000)}`;
 
 export const group = (partial?: Partial<Group>): Group => ({
-  CreationDate: partial?.CreationDate ?? new Date().getTime(),
+  CreationDate: partial?.CreationDate ?? new Date(),
   Description: partial?.Description ?? undefined,
   GroupName: partial?.GroupName ?? id("Group"),
-  LastModifiedDate: partial?.LastModifiedDate ?? new Date().getTime(),
+  LastModifiedDate: partial?.LastModifiedDate ?? new Date(),
   Precedence: partial?.Precedence ?? undefined,
   RoleArn: partial?.RoleArn ?? undefined,
 });
@@ -23,8 +23,8 @@ export const user = (partial?: Partial<User>): User => ({
   MFACode: partial?.MFACode ?? undefined,
   MFAOptions: partial?.MFAOptions ?? undefined,
   Password: partial?.Password ?? "Password123!",
-  UserCreateDate: partial?.UserCreateDate ?? new Date().getTime(),
-  UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date().getTime(),
+  UserCreateDate: partial?.UserCreateDate ?? new Date(),
+  UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date(),
   Username: partial?.Username ?? id("User"),
   UserStatus: partial?.UserStatus ?? "CONFIRMED",
 });

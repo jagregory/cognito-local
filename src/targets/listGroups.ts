@@ -21,10 +21,10 @@ export const ListGroups = ({
 
   return {
     Groups: groups.map((group) => ({
-      CreationDate: new Date(group.CreationDate),
+      CreationDate: group.CreationDate,
       Description: group.Description,
       GroupName: group.GroupName,
-      LastModifiedDate: new Date(group.LastModifiedDate),
+      LastModifiedDate: group.LastModifiedDate,
       Precedence: group.Precedence,
       RoleArn: group.RoleArn,
       UserPoolId: req.UserPoolId,

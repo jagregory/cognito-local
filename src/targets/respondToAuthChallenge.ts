@@ -55,7 +55,7 @@ export const RespondToAuthChallenge = ({
     await userPool.saveUser({
       ...user,
       MFACode: undefined,
-      UserLastModifiedDate: clock.get().getTime(),
+      UserLastModifiedDate: clock.get(),
     });
   } else if (req.ChallengeName === "NEW_PASSWORD_REQUIRED") {
     if (!req.ChallengeResponses.NEW_PASSWORD) {
@@ -68,7 +68,7 @@ export const RespondToAuthChallenge = ({
     await userPool.saveUser({
       ...user,
       Password: req.ChallengeResponses.NEW_PASSWORD,
-      UserLastModifiedDate: clock.get().getTime(),
+      UserLastModifiedDate: clock.get(),
       UserStatus: "CONFIRMED",
     });
   } else {

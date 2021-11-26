@@ -50,7 +50,7 @@ describe("User Pool Service", () => {
   describe("saveUser", () => {
     describe.each(validUsernameExamples)("with username %s", (username) => {
       it("saves the user", async () => {
-        const now = new Date().getTime();
+        const now = new Date();
         const userPool = await cognitoClient.getUserPool("local");
 
         await userPool.saveUser({
@@ -81,8 +81,8 @@ describe("User Pool Service", () => {
                 { Name: "sub", Value: "uuid-1234" },
                 { Name: "email", Value: "example@example.com" },
               ],
-              UserLastModifiedDate: now,
-              UserCreateDate: now,
+              UserLastModifiedDate: now.toISOString(),
+              UserCreateDate: now.toISOString(),
               Enabled: true,
             },
           },
@@ -90,7 +90,7 @@ describe("User Pool Service", () => {
       });
 
       it("updates a user", async () => {
-        const now = new Date().getTime();
+        const now = new Date();
         const userPool = await cognitoClient.getUserPool("local");
 
         await userPool.saveUser({
@@ -123,8 +123,8 @@ describe("User Pool Service", () => {
                 { Name: "sub", Value: "uuid-1234" },
                 { Name: "email", Value: "example@example.com" },
               ],
-              UserLastModifiedDate: now,
-              UserCreateDate: now,
+              UserLastModifiedDate: now.toISOString(),
+              UserCreateDate: now.toISOString(),
               Enabled: true,
             },
           },
@@ -158,8 +158,8 @@ describe("User Pool Service", () => {
                 { Name: "sub", Value: "uuid-1234" },
                 { Name: "email", Value: "example@example.com" },
               ],
-              UserLastModifiedDate: now,
-              UserCreateDate: now,
+              UserLastModifiedDate: now.toISOString(),
+              UserCreateDate: now.toISOString(),
               Enabled: true,
             },
           },
@@ -183,8 +183,8 @@ describe("User Pool Service", () => {
             { Name: "email", Value: "example@example.com" },
             { Name: "phone_number", Value: "0411000111" },
           ],
-          UserCreateDate: new Date().getTime(),
-          UserLastModifiedDate: new Date().getTime(),
+          UserCreateDate: new Date(),
+          UserLastModifiedDate: new Date(),
           Enabled: true,
         });
       });
@@ -221,8 +221,8 @@ describe("User Pool Service", () => {
           { Name: "email", Value: "example@example.com" },
           { Name: "phone_number", Value: "0411000111" },
         ],
-        UserCreateDate: now.getTime(),
-        UserLastModifiedDate: now.getTime(),
+        UserCreateDate: now,
+        UserLastModifiedDate: now,
         Enabled: true,
       });
 
@@ -231,8 +231,8 @@ describe("User Pool Service", () => {
         Password: "password1",
         UserStatus: "UNCONFIRMED",
         Attributes: [{ Name: "sub", Value: "uuid-5678" }],
-        UserCreateDate: now.getTime(),
-        UserLastModifiedDate: now.getTime(),
+        UserCreateDate: now,
+        UserLastModifiedDate: now,
         Enabled: true,
       });
     });
@@ -250,8 +250,8 @@ describe("User Pool Service", () => {
             { Name: "email", Value: "example@example.com" },
             { Name: "phone_number", Value: "0411000111" },
           ],
-          UserCreateDate: now.getTime(),
-          UserLastModifiedDate: now.getTime(),
+          UserCreateDate: now,
+          UserLastModifiedDate: now,
           Enabled: true,
         },
         {
@@ -259,8 +259,8 @@ describe("User Pool Service", () => {
           Password: "password1",
           UserStatus: "UNCONFIRMED",
           Attributes: [{ Name: "sub", Value: "uuid-5678" }],
-          UserCreateDate: now.getTime(),
-          UserLastModifiedDate: now.getTime(),
+          UserCreateDate: now,
+          UserLastModifiedDate: now,
           Enabled: true,
         },
       ]);

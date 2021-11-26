@@ -85,7 +85,7 @@ describe("ConfirmForgotPassword target", () => {
         ...user,
         ConfirmationCode: undefined,
         Password: "newPassword",
-        UserLastModifiedDate: newNow.getTime(),
+        UserLastModifiedDate: newNow,
         UserStatus: "CONFIRMED",
       });
     });

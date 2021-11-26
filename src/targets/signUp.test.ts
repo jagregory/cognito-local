@@ -75,8 +75,8 @@ describe("SignUp target", () => {
       ],
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: now.getTime(),
-      UserLastModifiedDate: now.getTime(),
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
     });
@@ -100,8 +100,8 @@ describe("SignUp target", () => {
       ],
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: now.getTime(),
-      UserLastModifiedDate: now.getTime(),
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
     };
@@ -142,8 +142,8 @@ describe("SignUp target", () => {
       ConfirmationCode: "1234",
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: now.getTime(),
-      UserLastModifiedDate: now.getTime(),
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
     });

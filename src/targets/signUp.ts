@@ -37,7 +37,7 @@ export const SignUp = (
     ? req.UserAttributes ?? []
     : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
 
-  const now = clock.get().getTime();
+  const now = clock.get();
   const user: User = {
     Attributes: attributes,
     Enabled: true,

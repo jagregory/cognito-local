@@ -120,7 +120,7 @@ describe("RespondToAuthChallenge target", () => {
         expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
           ...user,
           MFACode: undefined,
-          UserLastModifiedDate: newDate.getTime(),
+          UserLastModifiedDate: newDate,
         });
       });
 
@@ -274,7 +274,7 @@ describe("RespondToAuthChallenge target", () => {
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
         ...user,
         Password: "foo",
-        UserLastModifiedDate: newDate.getTime(),
+        UserLastModifiedDate: newDate,
         UserStatus: "CONFIRMED",
       });
     });

@@ -53,7 +53,7 @@ export const UserMigration = ({
     throw new NotAuthorizedError();
   }
 
-  const now = clock.get().getTime();
+  const now = clock.get();
   const user: User = {
     Attributes: attributesFromRecord(result.userAttributes ?? {}),
     Enabled: true,

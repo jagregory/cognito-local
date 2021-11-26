@@ -78,7 +78,7 @@ describe("ConfirmSignUp target", () => {
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
         ...user,
         ConfirmationCode: undefined,
-        UserLastModifiedDate: newNow.getTime(),
+        UserLastModifiedDate: newNow,
         UserStatus: "CONFIRMED",
       });
     });

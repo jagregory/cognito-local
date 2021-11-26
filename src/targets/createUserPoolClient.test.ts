@@ -22,8 +22,8 @@ describe("CreateUserPoolClient target", () => {
     const createdAppClient: AppClient = {
       RefreshTokenValidity: 30,
       AllowedOAuthFlowsUserPoolClient: false,
-      LastModifiedDate: new Date().getTime(),
-      CreationDate: new Date().getTime(),
+      LastModifiedDate: new Date(),
+      CreationDate: new Date(),
       UserPoolId: "userPoolId",
       ClientId: "abc",
       ClientName: "clientName",

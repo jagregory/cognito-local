@@ -69,8 +69,8 @@ describe("User Pool Service", () => {
         AllowedOAuthFlowsUserPoolClient: false,
         ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
         ClientName: "clientName",
-        CreationDate: currentDate.getTime(),
-        LastModifiedDate: currentDate.getTime(),
+        CreationDate: currentDate,
+        LastModifiedDate: currentDate,
         RefreshTokenValidity: 30,
         UserPoolId: "local",
       });
@@ -337,7 +337,7 @@ describe("User Pool Service", () => {
 
   describe("saveGroup", () => {
     it("saves the group", async () => {
-      const now = new Date().getTime();
+      const now = new Date();
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
@@ -378,10 +378,10 @@ describe("User Pool Service", () => {
       };
       const groups: Record<string, Group> = {
         theGroupName: {
-          CreationDate: new Date().getTime(),
+          CreationDate: new Date(),
           Description: "Description",
           GroupName: "theGroupName",
-          LastModifiedDate: new Date().getTime(),
+          LastModifiedDate: new Date(),
           Precedence: 1,
           RoleArn: "ARN",
         },

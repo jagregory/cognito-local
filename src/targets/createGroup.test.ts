@@ -28,10 +28,10 @@ describe("CreateGroup target", () => {
     });
 
     expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith({
-      CreationDate: originalDate.getTime(),
+      CreationDate: originalDate,
       Description: "Description",
       GroupName: "theGroupName",
-      LastModifiedDate: originalDate.getTime(),
+      LastModifiedDate: originalDate,
       Precedence: 1,
       RoleArn: "ARN",
     });

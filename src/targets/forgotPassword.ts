@@ -51,7 +51,7 @@ export const ForgotPassword = ({
 
   await userPool.saveUser({
     ...user,
-    UserLastModifiedDate: clock.get().getTime(),
+    UserLastModifiedDate: clock.get(),
     ConfirmationCode: code,
   });
 

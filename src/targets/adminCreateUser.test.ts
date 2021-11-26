@@ -39,8 +39,8 @@ describe("AdminCreateUser target", () => {
       ],
       Enabled: true,
       Password: "pwd",
-      UserCreateDate: originalDate.getTime(),
-      UserLastModifiedDate: originalDate.getTime(),
+      UserCreateDate: originalDate,
+      UserLastModifiedDate: originalDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
     });
