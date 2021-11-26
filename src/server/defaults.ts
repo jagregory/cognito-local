@@ -20,7 +20,7 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
   const configDirectory = ".cognito";
   const dataDirectory = `${configDirectory}/db`;
 
-  const config = await loadConfig(configDirectory);
+  const config = await loadConfig(configDirectory, createDataStore);
 
   logger.debug("Loaded config:", config);
 

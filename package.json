@@ -34,6 +34,7 @@
     "@types/express": "^4.17.13",
     "@types/jest": "^25.2.1",
     "@types/jsonwebtoken": "^8.3.9",
+    "@types/lodash.mergewith": "^4.6.6",
     "@types/supertest": "^2.0.8",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
@@ -60,9 +61,9 @@
     "boxen": "^4.2.0",
     "cors": "^2.8.5",
     "debug": "^4.1.1",
-    "deepmerge": "^4.2.2",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
+    "lodash.mergewith": "^4.6.2",
     "short-uuid": "^4.2.0",
     "stormdb": "^0.4.1",
     "uuid": "^7.0.3"

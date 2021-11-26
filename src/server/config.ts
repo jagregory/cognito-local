@@ -1,8 +1,8 @@
-import deepmerge from "deepmerge";
-import { createDataStore } from "../services/dataStore";
+import { CreateDataStore } from "../services/dataStore";
 import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokens";
+import mergeWith from "lodash.mergewith";
 
 export type UserPoolDefaults = Omit<
   UserPool,
@@ -34,14 +34,20 @@ export const DefaultConfig: Config = {
   },
 };
 
-export const loadConfig = async (configDirectory: string): Promise<Config> => {
-  const dataStore = await createDataStore(
-    "config",
-    DefaultConfig,
-    configDirectory
-  );
+export const loadConfig = async (
+  configDirectory: string,
+  createDataStore: CreateDataStore
+): Promise<Config> => {
+  const dataStore = await createDataStore("config", {}, configDirectory);
 
   const config = await dataStore.getRoot<Config>();
 
-  return deepmerge(DefaultConfig, config ?? {});
+  return mergeWith({}, DefaultConfig, config ?? {}, function customizer(
+    objValue,
+    srcValue
+  ) {
+    if (Array.isArray(srcValue)) {
+      return srcValue;
+    }
+  });
 };
