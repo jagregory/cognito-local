@@ -26,13 +26,6 @@ describe("ListUserPools target", () => {
     });
 
     expect(output).toBeDefined();
-    expect(output.UserPools).toEqual([
-      {
-        Id: userPool1.Id,
-      },
-      {
-        Id: userPool2.Id,
-      },
-    ]);
+    expect(output.UserPools).toEqual([userPool1, userPool2]);
   });
 });

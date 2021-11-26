@@ -24,10 +24,7 @@ describe("User Pool Service", () => {
     dataDirectory = await mkdtemp("/tmp/cognito-local:");
     cognitoClient = await CognitoServiceImpl.create(
       dataDirectory,
-      {
-        Id: "local",
-        UsernameAttributes: [],
-      },
+      {},
       new DateClock(),
       createDataStore,
       UserPoolServiceImpl.create,
@@ -70,21 +67,18 @@ describe("User Pool Service", () => {
           await readFile(dataDirectory + "/local.json", "utf-8")
         );
 
-        expect(file).toEqual({
-          Options: { Id: "local", UsernameAttributes: [] },
-          Users: {
-            [username]: {
-              Username: username,
-              Password: "hunter3",
-              UserStatus: "UNCONFIRMED",
-              Attributes: [
-                { Name: "sub", Value: "uuid-1234" },
-                { Name: "email", Value: "example@example.com" },
-              ],
-              UserLastModifiedDate: now.toISOString(),
-              UserCreateDate: now.toISOString(),
-              Enabled: true,
-            },
+        expect(file.Users).toEqual({
+          [username]: {
+            Username: username,
+            Password: "hunter3",
+            UserStatus: "UNCONFIRMED",
+            Attributes: [
+              { Name: "sub", Value: "uuid-1234" },
+              { Name: "email", Value: "example@example.com" },
+            ],
+            UserLastModifiedDate: now.toISOString(),
+            UserCreateDate: now.toISOString(),
+            Enabled: true,
           },
         });
       });
@@ -111,22 +105,19 @@ describe("User Pool Service", () => {
           await readFile(dataDirectory + "/local.json", "utf-8")
         );
 
-        expect(file).toEqual({
-          Options: { Id: "local", UsernameAttributes: [] },
-          Users: {
-            [username]: {
-              Username: username,
-              Password: "hunter3",
-              UserStatus: "UNCONFIRMED",
-              ConfirmationCode: "1234",
-              Attributes: [
-                { Name: "sub", Value: "uuid-1234" },
-                { Name: "email", Value: "example@example.com" },
-              ],
-              UserLastModifiedDate: now.toISOString(),
-              UserCreateDate: now.toISOString(),
-              Enabled: true,
-            },
+        expect(file.Users).toEqual({
+          [username]: {
+            Username: username,
+            Password: "hunter3",
+            UserStatus: "UNCONFIRMED",
+            ConfirmationCode: "1234",
+            Attributes: [
+              { Name: "sub", Value: "uuid-1234" },
+              { Name: "email", Value: "example@example.com" },
+            ],
+            UserLastModifiedDate: now.toISOString(),
+            UserCreateDate: now.toISOString(),
+            Enabled: true,
           },
         });
 
@@ -147,21 +138,18 @@ describe("User Pool Service", () => {
           await readFile(dataDirectory + "/local.json", "utf-8")
         );
 
-        expect(file).toEqual({
-          Options: { Id: "local", UsernameAttributes: [] },
-          Users: {
-            [username]: {
-              Username: username,
-              Password: "hunter3",
-              UserStatus: "CONFIRMED",
-              Attributes: [
-                { Name: "sub", Value: "uuid-1234" },
-                { Name: "email", Value: "example@example.com" },
-              ],
-              UserLastModifiedDate: now.toISOString(),
-              UserCreateDate: now.toISOString(),
-              Enabled: true,
-            },
+        expect(file.Users).toEqual({
+          [username]: {
+            Username: username,
+            Password: "hunter3",
+            UserStatus: "CONFIRMED",
+            Attributes: [
+              { Name: "sub", Value: "uuid-1234" },
+              { Name: "email", Value: "example@example.com" },
+            ],
+            UserLastModifiedDate: now.toISOString(),
+            UserCreateDate: now.toISOString(),
+            Enabled: true,
           },
         });
       });

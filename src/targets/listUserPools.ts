@@ -3,6 +3,7 @@ import {
   ListUserPoolsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
+import { UserPool } from "../services/userPoolService";
 
 export type ListUserPoolsTarget = (
   req: ListUserPoolsRequest
@@ -16,12 +17,9 @@ export const ListUserPools = ({
   // TODO: NextToken support
   // TODO: MaxResults support
 
-  const userPools = await cognito.listUserPools();
+  const userPools = (await cognito.listUserPools()) as UserPool[];
 
   return {
-    UserPools: userPools.map((x) => ({
-      Id: x.Id,
-      // TODO: support more attributes on UserPool
-    })),
+    UserPools: userPools,
   };
 };

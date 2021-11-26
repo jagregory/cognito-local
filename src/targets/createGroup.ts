@@ -6,7 +6,7 @@ import { Services } from "../services";
 import { Group } from "../services/userPoolService";
 
 export type CreateGroupTarget = (
-  body: CreateGroupRequest
+  req: CreateGroupRequest
 ) => Promise<CreateGroupResponse>;
 
 type CreateGroupServices = Pick<Services, "clock" | "cognito">;

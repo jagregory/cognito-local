@@ -26,6 +26,17 @@ describe("Data Store", () => {
     expect(fs.existsSync(path + "/example.json")).toBe(true);
   });
 
+  it("creates a named database with the defaults persisted", async () => {
+    await createDataStore("example", { DefaultValue: true }, path);
+
+    expect(fs.existsSync(path + "/example.json")).toBe(true);
+
+    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    expect(file).toEqual({
+      DefaultValue: true,
+    });
+  });
+
   it("saves the default objects when a save occurs", async () => {
     const dataStore = await createDataStore(
       "example",

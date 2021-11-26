@@ -38,10 +38,7 @@ export const withCognitoSdk = (
 
     const cognitoClient = await CognitoServiceImpl.create(
       dataDirectory,
-      {
-        Id: "integration-test",
-        UsernameAttributes: [],
-      },
+      {},
       clock,
       createDataStore,
       UserPoolServiceImpl.create.bind(UserPoolServiceImpl),

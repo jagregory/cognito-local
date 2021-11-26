@@ -69,6 +69,7 @@ export const createDataStore: CreateDataStore = async (
   const db = new StormDB(engine);
 
   db.default(defaults);
+  await db.save();
 
   return {
     async delete(key: string | string[]) {

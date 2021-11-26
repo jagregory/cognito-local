@@ -2,7 +2,7 @@ import { newMockDataStore } from "../__tests__/mockDataStore";
 import { MockLogger } from "../__tests__/mockLogger";
 import { ResourceNotFoundError } from "../errors";
 import { DateClock } from "./clock";
-import { CognitoServiceImpl } from "./cognitoService";
+import { CognitoServiceImpl, USER_POOL_AWS_DEFAULTS } from "./cognitoService";
 import { CreateDataStore, DataStore } from "./dataStore";
 import { CreateUserPoolService, UserPoolService } from "./userPoolService";
 
@@ -25,7 +25,7 @@ describe("Cognito Service", () => {
     ) as unknown) as CreateDataStore;
     await CognitoServiceImpl.create(
       "data-directory",
-      { Id: "local", UsernameAttributes: [] },
+      {},
       clock,
       createDataStore,
       createUserPoolClient,
@@ -48,7 +48,7 @@ describe("Cognito Service", () => {
     it("creates a user pool by the id specified", async () => {
       const cognitoClient = await CognitoServiceImpl.create(
         "data-directory",
-        { Id: "local", UsernameAttributes: [] },
+        { UsernameAttributes: [] },
         clock,
         createDataStore,
         createUserPoolClient,
@@ -62,7 +62,7 @@ describe("Cognito Service", () => {
         mockDataStore,
         clock,
         createDataStore,
-        { Id: "testing", UsernameAttributes: [] },
+        { ...USER_POOL_AWS_DEFAULTS, Id: "testing", UsernameAttributes: [] },
         MockLogger
       );
       expect(userPool).toEqual(mockUserPool);
@@ -74,7 +74,7 @@ describe("Cognito Service", () => {
       mockDataStore.get.mockResolvedValue(null);
       const cognitoClient = await CognitoServiceImpl.create(
         "data-directory",
-        { Id: "local", UsernameAttributes: [] },
+        {},
         clock,
         createDataStore,
         createUserPoolClient,
@@ -94,7 +94,7 @@ describe("Cognito Service", () => {
       });
       const cognitoClient = await CognitoServiceImpl.create(
         "data-directory",
-        { Id: "local", UsernameAttributes: [] },
+        { UsernameAttributes: [] },
         clock,
         createDataStore,
         createUserPoolClient,
@@ -109,7 +109,7 @@ describe("Cognito Service", () => {
         mockDataStore,
         clock,
         createDataStore,
-        { Id: "userPoolId", UsernameAttributes: [] },
+        { ...USER_POOL_AWS_DEFAULTS, Id: "userPoolId", UsernameAttributes: [] },
         MockLogger
       );
       expect(userPool).toEqual(mockUserPool);

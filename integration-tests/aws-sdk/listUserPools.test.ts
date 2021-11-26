@@ -6,27 +6,19 @@ describe(
     it("lists user pools", async () => {
       const client = Cognito();
 
-      // TODO: refactor this when we support createUserPool
-      // right now we're relying on pools being created on-demand when a user is created
       await client
-        .adminCreateUser({
-          Username: "abc",
-          UserPoolId: "test-1",
-          TemporaryPassword: "TemporaryPassword", // TODO: shouldn't need to supply this
+        .createUserPool({
+          PoolName: "test-1",
         })
         .promise();
       await client
-        .adminCreateUser({
-          Username: "abc",
-          UserPoolId: "test-2",
-          TemporaryPassword: "TemporaryPassword", // TODO: shouldn't need to supply this
+        .createUserPool({
+          PoolName: "test-2",
         })
         .promise();
       await client
-        .adminCreateUser({
-          Username: "abc",
-          UserPoolId: "test-3",
-          TemporaryPassword: "TemporaryPassword", // TODO: shouldn't need to supply this
+        .createUserPool({
+          PoolName: "test-3",
         })
         .promise();
 
@@ -36,9 +28,13 @@ describe(
         })
         .promise();
 
-      expect(result).toEqual({
-        UserPools: [{ Id: "test-1" }, { Id: "test-2" }, { Id: "test-3" }],
-      });
+      expect(result.UserPools).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ Name: "test-1" }),
+          expect.objectContaining({ Name: "test-2" }),
+          expect.objectContaining({ Name: "test-3" }),
+        ])
+      );
     });
   })
 );

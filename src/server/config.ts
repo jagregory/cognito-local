@@ -4,10 +4,15 @@ import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokens";
 
+export type UserPoolDefaults = Omit<
+  UserPool,
+  "Id" | "CreationDate" | "LastModifiedDate"
+>;
+
 export interface Config {
   LambdaClient: AWS.Lambda.ClientConfiguration;
   TriggerFunctions: FunctionConfig;
-  UserPoolDefaults: UserPool;
+  UserPoolDefaults: UserPoolDefaults;
   TokenConfig: TokenConfig;
 }
 
@@ -21,7 +26,6 @@ const defaults: Config = {
   },
   TriggerFunctions: {},
   UserPoolDefaults: {
-    Id: "local",
     UsernameAttributes: ["email"],
   },
   TokenConfig: {

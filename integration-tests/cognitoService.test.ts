@@ -4,6 +4,7 @@ import {
   DateClock,
   UserPoolServiceImpl,
 } from "../src/services";
+import { USER_POOL_AWS_DEFAULTS } from "../src/services/cognitoService";
 import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -27,10 +28,7 @@ describe("Cognito Service", () => {
   it("creates a clients database", async () => {
     await CognitoServiceImpl.create(
       dataDirectory,
-      {
-        Id: "local",
-        UsernameAttributes: [],
-      },
+      {},
       new DateClock(),
       createDataStore,
       UserPoolServiceImpl.create,
@@ -43,10 +41,7 @@ describe("Cognito Service", () => {
   it("creates a user pool database", async () => {
     const cognitoService = await CognitoServiceImpl.create(
       dataDirectory,
-      {
-        Id: "local",
-        UsernameAttributes: [],
-      },
+      {},
       new DateClock(),
       createDataStore,
       UserPoolServiceImpl.create,
@@ -61,10 +56,7 @@ describe("Cognito Service", () => {
   it("lists multiple user pools", async () => {
     const cognitoService = await CognitoServiceImpl.create(
       dataDirectory,
-      {
-        Id: "local",
-        UsernameAttributes: [],
-      },
+      {},
       new DateClock(),
       createDataStore,
       UserPoolServiceImpl.create,
@@ -81,9 +73,9 @@ describe("Cognito Service", () => {
 
     const pools = await cognitoService.listUserPools();
     expect(pools).toEqual([
-      { Id: "test-pool-1", UsernameAttributes: [] },
-      { Id: "test-pool-2", UsernameAttributes: [] },
-      { Id: "test-pool-3", UsernameAttributes: [] },
+      { ...USER_POOL_AWS_DEFAULTS, Id: "test-pool-1" },
+      { ...USER_POOL_AWS_DEFAULTS, Id: "test-pool-2" },
+      { ...USER_POOL_AWS_DEFAULTS, Id: "test-pool-3" },
     ]);
   });
 });

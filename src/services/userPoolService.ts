@@ -1,6 +1,7 @@
 import {
   AttributeListType,
   MFAOptionListType,
+  UserPoolType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
@@ -86,13 +87,10 @@ export interface Group {
   CreationDate: Date;
 }
 
-type UsernameAttribute = "email" | "phone_number";
-
-export interface UserPool {
+// just use the types from the sdk, but make Id required
+export type UserPool = UserPoolType & {
   Id: string;
-  UsernameAttributes?: UsernameAttribute[];
-  MfaConfiguration?: "OFF" | "ON" | "OPTIONAL";
-}
+};
 
 export interface UserPoolService {
   readonly config: UserPool;
