@@ -32,6 +32,7 @@ export async function generateTokens(
   const sub = attributeValue("sub", user.Attributes);
   const config = await loadConfig();
 
+  const issuer = `${config.TokenConfig.IssuerDomain}/${userPoolId}`;
   return {
     AccessToken: jwt.sign(
       {
@@ -47,7 +48,7 @@ export async function generateTokens(
       PrivateKey.pem,
       {
         algorithm: "RS256",
-        issuer: `${config.TokenConfig.IssuerDomain}/${userPoolId}`,
+        issuer,
         expiresIn: "24h",
         keyid: "CognitoLocal",
       }
@@ -65,8 +66,7 @@ export async function generateTokens(
       PrivateKey.pem,
       {
         algorithm: "RS256",
-        // TODO: this needs to match the actual host/port we started the server on
-        issuer: `http://localhost:9229/${userPoolId}`,
+        issuer,
         expiresIn: "24h",
         audience: clientId,
         keyid: "CognitoLocal",

@@ -29,6 +29,7 @@ const defaults: Config = {
     UsernameAttributes: ["email"],
   },
   TokenConfig: {
+    // TODO: this needs to match the actual host/port we started the server on
     IssuerDomain: "http://localhost:9229",
   },
 };
