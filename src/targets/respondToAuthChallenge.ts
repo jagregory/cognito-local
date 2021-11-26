@@ -17,12 +17,13 @@ export type RespondToAuthChallengeTarget = (
 
 type RespondToAuthChallengeService = Pick<
   Services,
-  "cognito" | "clock" | "triggers"
+  "clock" | "cognito" | "config" | "triggers"
 >;
 
 export const RespondToAuthChallenge = ({
   clock,
   cognito,
+  config,
   triggers,
 }: RespondToAuthChallengeService): RespondToAuthChallengeTarget => async (
   req
@@ -89,10 +90,11 @@ export const RespondToAuthChallenge = ({
 
   return {
     ChallengeParameters: {},
-    AuthenticationResult: await generateTokens(
+    AuthenticationResult: generateTokens(
       user,
       req.ClientId,
       userPool.config.Id,
+      config.TokenConfig,
       clock
     ),
   };

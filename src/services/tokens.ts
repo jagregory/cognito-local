@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { loadConfig } from "../server/config";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { Clock } from "./clock";
 import { attributeValue, User } from "./userPoolService";
@@ -21,18 +20,18 @@ export interface Token {
   jti: string;
 }
 
-export async function generateTokens(
+export function generateTokens(
   user: User,
   clientId: string,
   userPoolId: string,
+  tokenConfig: TokenConfig,
   clock: Clock
 ) {
   const eventId = uuid.v4();
   const authTime = Math.floor(clock.get().getTime() / 1000);
   const sub = attributeValue("sub", user.Attributes);
-  const config = await loadConfig();
 
-  const issuer = `${config.TokenConfig.IssuerDomain}/${userPoolId}`;
+  const issuer = `${tokenConfig.IssuerDomain}/${userPoolId}`;
   return {
     AccessToken: jwt.sign(
       {

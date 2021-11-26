@@ -14,6 +14,7 @@ import {
   PasswordResetRequiredError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import { DefaultConfig } from "../server/config";
 import {
   MessageDelivery,
   Messages,
@@ -48,8 +49,14 @@ describe("InitiateAuth target", () => {
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = newMockTriggers();
     initiateAuth = InitiateAuth({
-      cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),
+      cognito: newMockCognitoService(mockUserPoolService),
+      config: {
+        ...DefaultConfig,
+        TokenConfig: {
+          IssuerDomain: "http://issuer-domain",
+        },
+      },
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
@@ -354,7 +361,7 @@ describe("InitiateAuth target", () => {
             );
             expect(decodedAccessToken).toMatchObject({
               client_id: "clientId",
-              iss: "http://localhost:9229/test",
+              iss: "http://issuer-domain/test",
               sub: attributeValue("sub", user.Attributes),
               token_use: "access",
               username: user.Username,
@@ -380,7 +387,7 @@ describe("InitiateAuth target", () => {
             );
             expect(decodedIdToken).toMatchObject({
               aud: "clientId",
-              iss: "http://localhost:9229/test",
+              iss: "http://issuer-domain/test",
               sub: attributeValue("sub", user.Attributes),
               token_use: "id",
               "cognito:username": user.Username,
@@ -429,7 +436,7 @@ describe("InitiateAuth target", () => {
           );
           expect(decodedAccessToken).toMatchObject({
             client_id: "clientId",
-            iss: "http://localhost:9229/test",
+            iss: "http://issuer-domain/test",
             sub: attributeValue("sub", user.Attributes),
             token_use: "access",
             username: user.Username,
@@ -455,7 +462,7 @@ describe("InitiateAuth target", () => {
           );
           expect(decodedIdToken).toMatchObject({
             aud: "clientId",
-            iss: "http://localhost:9229/test",
+            iss: "http://issuer-domain/test",
             sub: attributeValue("sub", user.Attributes),
             token_use: "id",
             "cognito:username": user.Username,

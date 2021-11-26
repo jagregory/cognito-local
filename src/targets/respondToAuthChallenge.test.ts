@@ -10,6 +10,7 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import { DefaultConfig } from "../server/config";
 import { Triggers, UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
 import {
@@ -31,8 +32,14 @@ describe("RespondToAuthChallenge target", () => {
     mockUserPoolService = newMockUserPoolService();
     mockTriggers = newMockTriggers();
     respondToAuthChallenge = RespondToAuthChallenge({
-      cognito: newMockCognitoService(mockUserPoolService),
       clock,
+      cognito: newMockCognitoService(mockUserPoolService),
+      config: {
+        ...DefaultConfig,
+        TokenConfig: {
+          IssuerDomain: "http://issuer-domain",
+        },
+      },
       triggers: mockTriggers,
     });
   });
@@ -144,7 +151,7 @@ describe("RespondToAuthChallenge target", () => {
         );
         expect(decodedAccessToken).toMatchObject({
           client_id: "clientId",
-          iss: "http://localhost:9229/test",
+          iss: "http://issuer-domain/test",
           sub: attributeValue("sub", user.Attributes),
           token_use: "access",
           username: user.Username,
@@ -170,7 +177,7 @@ describe("RespondToAuthChallenge target", () => {
         );
         expect(decodedIdToken).toMatchObject({
           aud: "clientId",
-          iss: "http://localhost:9229/test",
+          iss: "http://issuer-domain/test",
           sub: attributeValue("sub", user.Attributes),
           token_use: "id",
           "cognito:username": user.Username,
@@ -299,7 +306,7 @@ describe("RespondToAuthChallenge target", () => {
       );
       expect(decodedAccessToken).toMatchObject({
         client_id: "clientId",
-        iss: "http://localhost:9229/test",
+        iss: "http://issuer-domain/test",
         sub: attributeValue("sub", user.Attributes),
         token_use: "access",
         username: user.Username,
@@ -325,7 +332,7 @@ describe("RespondToAuthChallenge target", () => {
       );
       expect(decodedIdToken).toMatchObject({
         aud: "clientId",
-        iss: "http://localhost:9229/test",
+        iss: "http://issuer-domain/test",
         sub: attributeValue("sub", user.Attributes),
         token_use: "id",
         "cognito:username": user.Username,

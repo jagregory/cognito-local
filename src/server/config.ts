@@ -16,7 +16,7 @@ export interface Config {
   TokenConfig: TokenConfig;
 }
 
-const defaults: Config = {
+export const DefaultConfig: Config = {
   LambdaClient: {
     credentials: {
       accessKeyId: "local",
@@ -34,10 +34,14 @@ const defaults: Config = {
   },
 };
 
-export const loadConfig = async (): Promise<Config> => {
-  const dataStore = await createDataStore("config", defaults, ".cognito");
+export const loadConfig = async (configDirectory: string): Promise<Config> => {
+  const dataStore = await createDataStore(
+    "config",
+    DefaultConfig,
+    configDirectory
+  );
 
   const config = await dataStore.getRoot<Config>();
 
-  return deepmerge(defaults, config ?? {});
+  return deepmerge(DefaultConfig, config ?? {});
 };

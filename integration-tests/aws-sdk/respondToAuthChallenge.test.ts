@@ -1,5 +1,3 @@
-import { UUID } from "../../src/__tests__/patterns";
-import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -15,7 +13,7 @@ describe(
         })
         .promise();
 
-      const createUserResponse = await client
+      await client
         .adminCreateUser({
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -23,10 +21,6 @@ describe(
           UserPoolId: "test",
         })
         .promise();
-      const userSub = attributeValue(
-        "sub",
-        createUserResponse.User?.Attributes
-      );
 
       const initiateAuthResponse = await client
         .initiateAuth({

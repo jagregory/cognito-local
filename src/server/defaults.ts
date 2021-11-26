@@ -17,14 +17,17 @@ import { createServer, Server } from "./server";
 import * as AWS from "aws-sdk";
 
 export const createDefaultServer = async (logger: Logger): Promise<Server> => {
-  const config = await loadConfig();
+  const configDirectory = ".cognito";
+  const dataDirectory = `${configDirectory}/db`;
+
+  const config = await loadConfig(configDirectory);
 
   logger.debug("Loaded config:", config);
 
   const clock = new DateClock();
 
   const cognitoClient = await CognitoServiceImpl.create(
-    ".cognito/db",
+    dataDirectory,
     config.UserPoolDefaults,
     clock,
     createDataStore,
@@ -42,6 +45,7 @@ export const createDefaultServer = async (logger: Logger): Promise<Server> => {
     {
       clock,
       cognito: cognitoClient,
+      config,
       messageDelivery: new MessageDeliveryService(
         new ConsoleMessageSender(logger)
       ),

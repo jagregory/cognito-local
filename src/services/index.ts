@@ -1,3 +1,4 @@
+import { Config } from "../server/config";
 import { Clock } from "./clock";
 import { Messages } from "./messages";
 import { Triggers } from "./triggers";
@@ -15,6 +16,7 @@ export { Messages, MessagesService } from "./messages";
 export interface Services {
   clock: Clock;
   cognito: CognitoService;
+  config: Config;
   messageDelivery: MessageDelivery;
   messages: Messages;
   otp: () => string;

@@ -18,7 +18,7 @@ import {
   Services,
   UserPoolService,
 } from "../services";
-import { generateTokens } from "../services/tokens";
+import { generateTokens, TokenConfig } from "../services/tokens";
 import {
   attributesToRecord,
   attributeValue,
@@ -89,18 +89,20 @@ const verifyMfaChallenge = async (
   };
 };
 
-const verifyPasswordChallenge = async (
+const verifyPasswordChallenge = (
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
+  tokenConfig: TokenConfig,
   clock: Clock
-): Promise<InitiateAuthResponse> => ({
+): InitiateAuthResponse => ({
   ChallengeName: "PASSWORD_VERIFIER",
   ChallengeParameters: {},
-  AuthenticationResult: await generateTokens(
+  AuthenticationResult: generateTokens(
     user,
     req.ClientId,
     userPool.config.Id,
+    tokenConfig,
     clock
   ),
 });
@@ -117,6 +119,7 @@ const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
 
 export const InitiateAuth = ({
   cognito,
+  config,
   clock,
   messageDelivery,
   messages,
@@ -178,7 +181,13 @@ export const InitiateAuth = ({
     );
   }
 
-  const result = await verifyPasswordChallenge(user, req, userPool, clock);
+  const result = verifyPasswordChallenge(
+    user,
+    req,
+    userPool,
+    config.TokenConfig,
+    clock
+  );
 
   if (triggers.enabled("PostAuthentication")) {
     await triggers.postAuthentication({

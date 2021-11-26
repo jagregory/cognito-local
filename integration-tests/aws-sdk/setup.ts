@@ -5,6 +5,7 @@ import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
 import { Logger } from "../../src/log";
+import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
   CognitoServiceImpl,
@@ -62,6 +63,7 @@ export const withCognitoSdk = (
       {
         clock,
         cognito: cognitoClient,
+        config: DefaultConfig,
         messageDelivery: mockCodeDelivery,
         messages: new MessagesService(triggers),
         otp,
