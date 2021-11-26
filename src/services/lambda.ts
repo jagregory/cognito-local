@@ -8,8 +8,8 @@ import { Logger } from "../log";
 interface CustomMessageEvent {
   userPoolId: string;
   clientId: string;
-  username: string;
-  code: string;
+  codeParameter: string;
+  usernameParameter: string;
   userAttributes: Record<string, string>;
   triggerSource:
     | "CustomMessage_SignUp"
@@ -111,7 +111,6 @@ export class LambdaService implements Lambda {
 
     const lambdaEvent: CognitoUserPoolEvent = {
       version: 0, // TODO: how do we know what this is?
-      userName: event.username,
       callerContext: {
         awsSdkVersion,
         clientId: event.clientId,
@@ -137,8 +136,12 @@ export class LambdaService implements Lambda {
       event.triggerSource === "CustomMessage_VerifyUserAttribute" ||
       event.triggerSource === "CustomMessage_Authentication"
     ) {
-      lambdaEvent.request.usernameParameter = event.username;
-      lambdaEvent.request.codeParameter = event.code;
+      lambdaEvent.request.usernameParameter = event.usernameParameter;
+      lambdaEvent.request.codeParameter = event.codeParameter;
+    }
+
+    if ("username" in event) {
+      lambdaEvent.userName = event.username;
     }
 
     this.logger.debug(

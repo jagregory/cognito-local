@@ -137,7 +137,6 @@ describe("Lambda function invoker", () => {
           InvocationType: "RequestResponse",
           Payload: JSON.stringify({
             version: 0,
-            userName: "username",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -148,6 +147,7 @@ describe("Lambda function invoker", () => {
               validationData: {},
             },
             response: {},
+            userName: "username",
           }),
         });
       });
@@ -188,7 +188,6 @@ describe("Lambda function invoker", () => {
           InvocationType: "RequestResponse",
           Payload: JSON.stringify({
             version: 0,
-            userName: "username",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -197,6 +196,7 @@ describe("Lambda function invoker", () => {
               userAttributes: {},
             },
             response: {},
+            userName: "username",
           }),
         });
       });
@@ -229,10 +229,10 @@ describe("Lambda function invoker", () => {
 
         await lambda.invoke("CustomMessage", {
           clientId: "clientId",
-          code: "1234",
+          codeParameter: "{####}",
           triggerSource: source,
           userAttributes: {},
-          username: "username",
+          usernameParameter: "{username}",
           userPoolId: "userPoolId",
         });
 
@@ -241,15 +241,14 @@ describe("Lambda function invoker", () => {
           InvocationType: "RequestResponse",
           Payload: JSON.stringify({
             version: 0,
-            userName: "username",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: source,
             request: {
               userAttributes: {},
-              usernameParameter: "username",
-              codeParameter: "1234",
+              usernameParameter: "{username}",
+              codeParameter: "{####}",
             },
             response: {},
           }),

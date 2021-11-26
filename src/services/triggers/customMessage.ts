@@ -5,6 +5,9 @@ import { Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
 import { ResourceNotFoundError } from "../../errors";
 
+const AWS_USERNAME_PARAMETER = "{username}";
+const AWS_CODE_PARAMETER = "{####}";
+
 interface CustomMessageResponse {
   emailMessage?: string;
   emailSubject?: string;
@@ -52,17 +55,21 @@ export const CustomMessage = (
   try {
     const response = await lambda.invoke("CustomMessage", {
       clientId,
-      code,
+      codeParameter: AWS_CODE_PARAMETER,
       triggerSource: source,
       userAttributes: attributesToRecord(userAttributes),
-      username,
+      usernameParameter: AWS_USERNAME_PARAMETER,
       userPoolId,
     });
 
     return {
-      emailMessage: response.emailMessage,
+      emailMessage: response.emailMessage
+        ?.replace(AWS_CODE_PARAMETER, code)
+        .replace(AWS_USERNAME_PARAMETER, username),
       emailSubject: response.emailSubject,
-      smsMessage: response.smsMessage,
+      smsMessage: response.smsMessage
+        ?.replace(AWS_CODE_PARAMETER, code)
+        .replace(AWS_USERNAME_PARAMETER, username),
     };
   } catch (ex) {
     logger.error(ex);

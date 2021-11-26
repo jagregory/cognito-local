@@ -41,11 +41,11 @@ describe("CustomMessage trigger", () => {
   });
 
   describe("when lambda invoke succeeds", () => {
-    it("saves user with attributes from response", async () => {
+    it("returns a message with the code and username interpolated", async () => {
       mockLambda.invoke.mockResolvedValue({
-        emailMessage: "email message",
+        emailMessage: "hi {username} your code is {####}. via email",
         emailSubject: "email subject",
-        smsMessage: "sms message",
+        smsMessage: "hi {username} your code is {####}. via sms",
       });
 
       const message = await customMessage({
@@ -59,17 +59,21 @@ describe("CustomMessage trigger", () => {
 
       expect(mockLambda.invoke).toHaveBeenCalledWith("CustomMessage", {
         clientId: "clientId",
-        code: "1234",
+        codeParameter: "{####}",
         triggerSource: "CustomMessage_ForgotPassword",
         userAttributes: {},
-        username: "example@example.com",
+        usernameParameter: "{username}",
         userPoolId: "userPoolId",
       });
 
       expect(message).not.toBeNull();
-      expect(message?.emailMessage).toEqual("email message");
+      expect(message?.emailMessage).toEqual(
+        "hi example@example.com your code is 1234. via email"
+      );
       expect(message?.emailSubject).toEqual("email subject");
-      expect(message?.smsMessage).toEqual("sms message");
+      expect(message?.smsMessage).toEqual(
+        "hi example@example.com your code is 1234. via sms"
+      );
     });
   });
 });
