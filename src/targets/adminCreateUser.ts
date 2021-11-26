@@ -3,6 +3,7 @@ import {
   AdminCreateUserResponse,
   DeliveryMediumListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import shortUUID from "short-uuid";
 import uuid from "uuid";
 import {
   InvalidParameterError,
@@ -21,6 +22,10 @@ import {
   attributeValue,
   User,
 } from "../services/userPoolService";
+
+const generator = shortUUID(
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!"
+);
 
 export type AdminCreateUserTarget = (
   req: AdminCreateUserRequest
@@ -93,10 +98,6 @@ export const AdminCreateUser = ({
   messageDelivery,
   messages,
 }: AdminCreateUserServices): AdminCreateUserTarget => async (req) => {
-  if (!req.TemporaryPassword) {
-    throw new UnsupportedError("AdminCreateUser without TemporaryPassword");
-  }
-
   const userPool = await cognito.getUserPool(req.UserPoolId);
   const existingUser = await userPool.getUserByUsername(req.Username);
   if (existingUser && req.MessageAction === "RESEND") {
@@ -111,9 +112,12 @@ export const AdminCreateUser = ({
 
   const now = clock.get();
 
+  const temporaryPassword =
+    req.TemporaryPassword ?? generator.new().slice(0, 6);
+
   const user: User = {
     Username: req.Username,
-    Password: req.TemporaryPassword,
+    Password: temporaryPassword,
     Attributes: attributes,
     Enabled: true,
     UserStatus: "FORCE_CHANGE_PASSWORD",
@@ -132,7 +136,7 @@ export const AdminCreateUser = ({
 
   await deliverWelcomeMessage(
     req,
-    req.TemporaryPassword,
+    temporaryPassword,
     user,
     messages,
     userPool,

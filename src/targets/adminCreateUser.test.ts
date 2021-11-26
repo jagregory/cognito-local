@@ -58,6 +58,34 @@ describe("AdminCreateUser target", () => {
     });
   });
 
+  it("saves a new user with a generated temporary password", async () => {
+    await adminCreateUser({
+      UserAttributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+      ],
+      Username: "user-supplied",
+      UserPoolId: "test",
+    });
+
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+      Attributes: [
+        {
+          Name: "sub",
+          Value: expect.stringMatching(UUID),
+        },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+      ],
+      Enabled: true,
+      Password: expect.stringMatching(/^[A-Za-z0-9!]{6}$/),
+      UserCreateDate: originalDate,
+      UserLastModifiedDate: originalDate,
+      UserStatus: "FORCE_CHANGE_PASSWORD",
+      Username: "user-supplied",
+    });
+  });
+
   describe("messages", () => {
     describe("DesiredDeliveryMediums=EMAIL", () => {
       it("sends a welcome email to the user", async () => {
@@ -326,5 +354,4 @@ describe("AdminCreateUser target", () => {
   });
 
   it.todo("invokes the PreSignIn lambda");
-  it.todo("saves a user with a generated temporary password");
 });

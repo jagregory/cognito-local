@@ -20,9 +20,6 @@ describe(
             UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
             Username: "abc",
             UserPoolId: "test",
-
-            // TODO: shouldn't need to supply this
-            TemporaryPassword: "TemporaryPassword",
           })
           .promise();
 
