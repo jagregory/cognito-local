@@ -1,22 +1,98 @@
 import {
   AdminCreateUserRequest,
   AdminCreateUserResponse,
+  DeliveryMediumListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
-import { UnsupportedError, UsernameExistsError } from "../errors";
-import { Services } from "../services";
-import { attributesInclude, User } from "../services/userPoolService";
+import {
+  InvalidParameterError,
+  UnsupportedError,
+  UsernameExistsError,
+} from "../errors";
+import {
+  MessageDelivery,
+  Messages,
+  Services,
+  UserPoolService,
+} from "../services";
+import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
+import {
+  attributesInclude,
+  attributeValue,
+  User,
+} from "../services/userPoolService";
 
 export type AdminCreateUserTarget = (
   req: AdminCreateUserRequest
 ) => Promise<AdminCreateUserResponse>;
 
+type AdminCreateUserServices = Pick<
+  Services,
+  "clock" | "cognito" | "messageDelivery" | "messages"
+>;
+
+const selectAppropriateDeliveryMethod = (
+  desiredDeliveryMediums: DeliveryMediumListType,
+  user: User
+): DeliveryDetails | null => {
+  if (desiredDeliveryMediums.includes("SMS")) {
+    const phoneNumber = attributeValue("phone_number", user.Attributes);
+    if (phoneNumber) {
+      return {
+        AttributeName: "phone_number",
+        DeliveryMedium: "SMS",
+        Destination: phoneNumber,
+      };
+    }
+  }
+
+  if (desiredDeliveryMediums.includes("EMAIL")) {
+    const email = attributeValue("email", user.Attributes);
+    if (email) {
+      return {
+        AttributeName: "email",
+        DeliveryMedium: "EMAIL",
+        Destination: email,
+      };
+    }
+  }
+
+  return null;
+};
+
+const deliverWelcomeMessage = async (
+  req: AdminCreateUserRequest,
+  temporaryPassword: string,
+  user: User,
+  messages: Messages,
+  userPool: UserPoolService,
+  messageDelivery: MessageDelivery
+) => {
+  const deliveryDetails = selectAppropriateDeliveryMethod(
+    req.DesiredDeliveryMediums ?? ["SMS"],
+    user
+  );
+  if (!deliveryDetails) {
+    // TODO: I don't know what the real error message should be for this
+    throw new InvalidParameterError(
+      "User has no attribute matching desired delivery mediums"
+    );
+  }
+
+  const message = await messages.adminCreateUser(
+    userPool.config.Id,
+    user,
+    temporaryPassword
+  );
+  await messageDelivery.deliver(user, deliveryDetails, message);
+};
+
 export const AdminCreateUser = ({
   clock,
   cognito,
-}: Pick<Services, "clock" | "cognito">): AdminCreateUserTarget => async (
-  req
-) => {
+  messageDelivery,
+  messages,
+}: AdminCreateUserServices): AdminCreateUserTarget => async (req) => {
   if (!req.TemporaryPassword) {
     throw new UnsupportedError("AdminCreateUser without TemporaryPassword");
   }
@@ -53,6 +129,15 @@ export const AdminCreateUser = ({
   // TODO: should generate a TemporaryPassword if one isn't set
   // TODO: support ForceAliasCreation
   // TODO: support PreSignIn lambda and ValidationData
+
+  await deliverWelcomeMessage(
+    req,
+    req.TemporaryPassword,
+    user,
+    messages,
+    userPool,
+    messageDelivery
+  );
 
   return {
     User: {

@@ -177,7 +177,7 @@ cognito-local how to connect to your local Lambda server:
 | --------------------------- | --------------------------------- | ------- |
 | CreateAuthChallenge         | \*                                | ❌      |
 | CustomEmailSender           | \*                                | ❌      |
-| CustomMessage               | AdminCreateUser                   | ❌      |
+| CustomMessage               | AdminCreateUser                   | ✅      |
 | CustomMessage               | Authentication                    | ✅      |
 | CustomMessage               | ForgotPassword                    | ✅      |
 | CustomMessage               | ResendCode                        | ❌      |

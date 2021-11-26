@@ -43,6 +43,7 @@ describe(
 
       const createUserResponse = await client
         .adminCreateUser({
+          DesiredDeliveryMediums: ["EMAIL"],
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",

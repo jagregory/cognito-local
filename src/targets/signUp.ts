@@ -48,6 +48,7 @@ export const SignUp = (
     Username: req.Username,
   };
 
+  // TODO: Use User Pool AutoVerifiedAttributes to determine which method to use to contact the user
   const email = attributeValue("email", user.Attributes);
   if (!email) {
     logger.error("Email required for code delivery");

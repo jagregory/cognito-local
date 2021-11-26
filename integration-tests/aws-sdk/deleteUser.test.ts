@@ -1,6 +1,4 @@
-import { UUID } from "../../src/__tests__/patterns";
 import { UserNotFoundError } from "../../src/errors";
-import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -20,6 +18,7 @@ describe(
       // create a user
       await client
         .adminCreateUser({
+          DesiredDeliveryMediums: ["EMAIL"],
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",

@@ -17,6 +17,7 @@ describe(
 
         const createUserResult = await client
           .adminCreateUser({
+            UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
             Username: "abc",
             UserPoolId: "test",
 
@@ -32,6 +33,7 @@ describe(
                 Name: "sub",
                 Value: expect.stringMatching(UUID),
               },
+              { Name: "phone_number", Value: "0400000000" },
             ],
             Enabled: true,
             UserCreateDate: roundedDate,

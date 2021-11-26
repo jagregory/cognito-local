@@ -8,9 +8,12 @@ describe(
 
       const createUserResult = await client
         .adminCreateUser({
+          UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
           Username: "abc",
           UserPoolId: "test",
-          TemporaryPassword: "TemporaryPassword", // TODO: shouldn't need to supply this
+
+          // TODO: shouldn't need to supply this
+          TemporaryPassword: "TemporaryPassword",
         })
         .promise();
 

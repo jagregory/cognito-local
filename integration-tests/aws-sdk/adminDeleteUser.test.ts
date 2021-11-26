@@ -19,6 +19,7 @@ describe(
         // create the user
         const createUserResult = await client
           .adminCreateUser({
+            UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
             Username: "abc",
             UserPoolId: "test",
 
