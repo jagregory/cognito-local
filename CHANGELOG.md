@@ -1,3 +1,20 @@
+# [3.6.0](https://github.com/jagregory/cognito-local/compare/v3.5.0...v3.6.0) (2021-11-27)
+
+
+### Bug Fixes
+
+* **config:** arrays in config couldn't be overwritten ([7526a0a](https://github.com/jagregory/cognito-local/commit/7526a0aa4410420933b750bf08a912306dbca059))
+* **lambda:** customMessage uses code and username parameters ([084c253](https://github.com/jagregory/cognito-local/commit/084c2539126214ef1bc6e5d94b2a007b79c2f49a))
+* **tokens:** id token not using issuer config ([c488810](https://github.com/jagregory/cognito-local/commit/c4888103ac0d14b529c4ac3a83c3006765ae6b84))
+
+
+### Features
+
+* **api:** adminCreateUser can generate a temporary password ([c0eea4f](https://github.com/jagregory/cognito-local/commit/c0eea4f0ad0d1352b1a0cdfcaa43f29a3afc69f2))
+* **api:** adminCreateUser delivers welcome message ([d49aa80](https://github.com/jagregory/cognito-local/commit/d49aa8052bdd4605bdb79c697dc359116bdcfadf))
+* **api:** createUserPool full support ([e5c08dc](https://github.com/jagregory/cognito-local/commit/e5c08dcb297cf75eaf07ffdda42a0addc8d4453e))
+* **api:** signUp delivers message using auto verified attributes ([64280e8](https://github.com/jagregory/cognito-local/commit/64280e851d7f9b18345f51cf51d7798687d5189c))
+
 # [3.5.0](https://github.com/jagregory/cognito-local/compare/v3.4.0...v3.5.0) (2021-11-25)
 
 
