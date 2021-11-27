@@ -66,7 +66,7 @@
     "jsonwebtoken": "^8.5.1",
     "lodash.mergewith": "^4.6.2",
     "short-uuid": "^4.2.0",
-    "stormdb": "^0.4.1",
+    "stormdb": "^0.5.2",
     "uuid": "^7.0.3"
   },
   "nodemonConfig": {
