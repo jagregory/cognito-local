@@ -1,3 +1,10 @@
+## [3.7.1](https://github.com/jagregory/cognito-local/compare/v3.7.0...v3.7.1) (2021-11-29)
+
+
+### Bug Fixes
+
+* **deps:** fix breaking change in stormdb ([dbed898](https://github.com/jagregory/cognito-local/commit/dbed8989153375ce0c48888650f0aea49feb096c))
+
 # [3.7.0](https://github.com/jagregory/cognito-local/compare/v3.6.0...v3.7.0) (2021-11-29)
 
 
