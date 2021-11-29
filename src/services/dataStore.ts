@@ -75,7 +75,7 @@ export const createDataStore: CreateDataStore = async (
     async delete(key: string | string[]) {
       (key instanceof Array ? key : [key])
         .reduce((acc, k) => acc.get(k), db)
-        .delete();
+        .delete(false);
       await db.save();
     },
 
