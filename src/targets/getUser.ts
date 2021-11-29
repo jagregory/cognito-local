@@ -10,30 +10,31 @@ import { Token } from "../services/tokens";
 
 export type GetUserTarget = (req: GetUserRequest) => Promise<GetUserResponse>;
 
-export const GetUser = (
-  { cognito }: Pick<Services, "cognito">,
-  logger: Logger
-): GetUserTarget => async (req) => {
-  const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-  if (!decodedToken) {
-    logger.info("Unable to decode token");
-    throw new InvalidParameterError();
-  }
+export const GetUser =
+  ({ cognito }: Pick<Services, "cognito">, logger: Logger): GetUserTarget =>
+  async (req) => {
+    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
+    if (!decodedToken) {
+      logger.info("Unable to decode token");
+      throw new InvalidParameterError();
+    }
 
-  const userPool = await cognito.getUserPoolForClientId(decodedToken.client_id);
-  const user = await userPool.getUserByUsername(decodedToken.sub);
-  if (!user) {
-    throw new UserNotFoundError();
-  }
+    const userPool = await cognito.getUserPoolForClientId(
+      decodedToken.client_id
+    );
+    const user = await userPool.getUserByUsername(decodedToken.sub);
+    if (!user) {
+      throw new UserNotFoundError();
+    }
 
-  const output: GetUserResponse = {
-    Username: user.Username,
-    UserAttributes: user.Attributes,
+    const output: GetUserResponse = {
+      Username: user.Username,
+      UserAttributes: user.Attributes,
+    };
+
+    if (user.MFAOptions) {
+      output.MFAOptions = user.MFAOptions;
+    }
+
+    return output;
   };
-
-  if (user.MFAOptions) {
-    output.MFAOptions = user.MFAOptions;
-  }
-
-  return output;
-};

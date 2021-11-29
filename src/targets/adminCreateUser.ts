@@ -93,66 +93,68 @@ const deliverWelcomeMessage = async (
   await messageDelivery.deliver(user, deliveryDetails, message);
 };
 
-export const AdminCreateUser = ({
-  clock,
-  cognito,
-  messageDelivery,
-  messages,
-}: AdminCreateUserServices): AdminCreateUserTarget => async (req) => {
-  const userPool = await cognito.getUserPool(req.UserPoolId);
-  const existingUser = await userPool.getUserByUsername(req.Username);
-  if (existingUser && req.MessageAction === "RESEND") {
-    throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
-  } else if (existingUser) {
-    throw new UsernameExistsError();
-  }
-
-  const attributes = attributesInclude("sub", req.UserAttributes)
-    ? req.UserAttributes ?? []
-    : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
-
-  const now = clock.get();
-
-  const temporaryPassword =
-    req.TemporaryPassword ?? generator.new().slice(0, 6);
-
-  const user: User = {
-    Username: req.Username,
-    Password: temporaryPassword,
-    Attributes: attributes,
-    Enabled: true,
-    UserStatus: "FORCE_CHANGE_PASSWORD",
-    ConfirmationCode: undefined,
-    UserCreateDate: now,
-    UserLastModifiedDate: now,
-  };
-  await userPool.saveUser(user);
-
-  // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
-  // TODO: should send a message unless MessageAction=="SUPPRESS"
-  // TODO: support MessageAction=="RESEND"
-  // TODO: should generate a TemporaryPassword if one isn't set
-  // TODO: support ForceAliasCreation
-  // TODO: support PreSignIn lambda and ValidationData
-
-  await deliverWelcomeMessage(
-    req,
-    temporaryPassword,
-    user,
+export const AdminCreateUser =
+  ({
+    clock,
+    cognito,
+    messageDelivery,
     messages,
-    userPool,
-    messageDelivery
-  );
+  }: AdminCreateUserServices): AdminCreateUserTarget =>
+  async (req) => {
+    const userPool = await cognito.getUserPool(req.UserPoolId);
+    const existingUser = await userPool.getUserByUsername(req.Username);
+    if (existingUser && req.MessageAction === "RESEND") {
+      throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
+    } else if (existingUser) {
+      throw new UsernameExistsError();
+    }
 
-  return {
-    User: {
+    const attributes = attributesInclude("sub", req.UserAttributes)
+      ? req.UserAttributes ?? []
+      : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
+
+    const now = clock.get();
+
+    const temporaryPassword =
+      req.TemporaryPassword ?? generator.new().slice(0, 6);
+
+    const user: User = {
       Username: req.Username,
+      Password: temporaryPassword,
       Attributes: attributes,
       Enabled: true,
       UserStatus: "FORCE_CHANGE_PASSWORD",
+      ConfirmationCode: undefined,
       UserCreateDate: now,
       UserLastModifiedDate: now,
-      MFAOptions: undefined,
-    },
+    };
+    await userPool.saveUser(user);
+
+    // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
+    // TODO: should send a message unless MessageAction=="SUPPRESS"
+    // TODO: support MessageAction=="RESEND"
+    // TODO: should generate a TemporaryPassword if one isn't set
+    // TODO: support ForceAliasCreation
+    // TODO: support PreSignIn lambda and ValidationData
+
+    await deliverWelcomeMessage(
+      req,
+      temporaryPassword,
+      user,
+      messages,
+      userPool,
+      messageDelivery
+    );
+
+    return {
+      User: {
+        Username: req.Username,
+        Attributes: attributes,
+        Enabled: true,
+        UserStatus: "FORCE_CHANGE_PASSWORD",
+        UserCreateDate: now,
+        UserLastModifiedDate: now,
+        MFAOptions: undefined,
+      },
+    };
   };
-};

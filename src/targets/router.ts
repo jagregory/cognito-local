@@ -58,15 +58,15 @@ export const isSupportedTarget = (name: string): name is TargetName =>
 export type Route = (req: any) => Promise<any>;
 export type Router = (target: string) => Route;
 
-export const Router = (services: Services, logger: Logger): Router => (
-  target: string
-) => {
-  if (!isSupportedTarget(target)) {
-    return () =>
-      Promise.reject(
-        new UnsupportedError(`Unsupported x-amz-target header "${target}"`)
-      );
-  }
+export const Router =
+  (services: Services, logger: Logger): Router =>
+  (target: string) => {
+    if (!isSupportedTarget(target)) {
+      return () =>
+        Promise.reject(
+          new UnsupportedError(`Unsupported x-amz-target header "${target}"`)
+        );
+    }
 
-  return Targets[target](services, logger);
-};
+    return Targets[target](services, logger);
+  };

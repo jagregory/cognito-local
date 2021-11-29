@@ -189,9 +189,8 @@ export class UserPoolServiceImpl implements UserPoolService {
     this.logger.debug("getUserByUsername", username);
 
     const aliasEmailEnabled = this.config.UsernameAttributes?.includes("email");
-    const aliasPhoneNumberEnabled = this.config.UsernameAttributes?.includes(
-      "phone_number"
-    );
+    const aliasPhoneNumberEnabled =
+      this.config.UsernameAttributes?.includes("phone_number");
 
     const userByUsername = await this.dataStore.get<User>(["Users", username]);
     if (userByUsername) {

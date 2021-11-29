@@ -42,12 +42,14 @@ export const loadConfig = async (
 
   const config = await dataStore.getRoot<Config>();
 
-  return mergeWith({}, DefaultConfig, config ?? {}, function customizer(
-    objValue,
-    srcValue
-  ) {
-    if (Array.isArray(srcValue)) {
-      return srcValue;
+  return mergeWith(
+    {},
+    DefaultConfig,
+    config ?? {},
+    function customizer(objValue, srcValue) {
+      if (Array.isArray(srcValue)) {
+        return srcValue;
+      }
     }
-  });
+  );
 };

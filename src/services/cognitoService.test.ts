@@ -20,9 +20,9 @@ describe("Cognito Service", () => {
   });
 
   it("creates a database for clients", async () => {
-    const createDataStore = (jest.fn(
+    const createDataStore = jest.fn(
       () => mockDataStore
-    ) as unknown) as CreateDataStore;
+    ) as unknown as CreateDataStore;
     await CognitoServiceImpl.create(
       "data-directory",
       {},

@@ -8,16 +8,16 @@ export type AdminDeleteUserTarget = (
 
 type AdminDeleteUserServices = Pick<Services, "cognito">;
 
-export const AdminDeleteUser = ({
-  cognito,
-}: AdminDeleteUserServices): AdminDeleteUserTarget => async (req) => {
-  const userPool = await cognito.getUserPool(req.UserPoolId);
-  const user = await userPool.getUserByUsername(req.Username);
-  if (!user) {
-    throw new UserNotFoundError("User does not exist");
-  }
+export const AdminDeleteUser =
+  ({ cognito }: AdminDeleteUserServices): AdminDeleteUserTarget =>
+  async (req) => {
+    const userPool = await cognito.getUserPool(req.UserPoolId);
+    const user = await userPool.getUserByUsername(req.Username);
+    if (!user) {
+      throw new UserNotFoundError("User does not exist");
+    }
 
-  await userPool.deleteUser(user);
+    await userPool.deleteUser(user);
 
-  return {};
-};
+    return {};
+  };

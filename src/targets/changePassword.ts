@@ -10,22 +10,21 @@ export type ChangePasswordTarget = (
   req: ChangePasswordRequest
 ) => Promise<ChangePasswordResponse>;
 
-export const ChangePassword = ({
-  cognito,
-  clock,
-}: Services): ChangePasswordTarget => async (req) => {
-  const claims = jwt.decode(req.AccessToken) as any;
-  const userPool = await cognito.getUserPoolForClientId(claims.client_id);
-  const user = await userPool.getUserByUsername(claims.username);
-  if (!user) {
-    throw new NotAuthorizedError();
-  }
-  // TODO: Should check previous password.
-  await userPool.saveUser({
-    ...user,
-    Password: req.ProposedPassword,
-    UserLastModifiedDate: clock.get(),
-  });
+export const ChangePassword =
+  ({ cognito, clock }: Services): ChangePasswordTarget =>
+  async (req) => {
+    const claims = jwt.decode(req.AccessToken) as any;
+    const userPool = await cognito.getUserPoolForClientId(claims.client_id);
+    const user = await userPool.getUserByUsername(claims.username);
+    if (!user) {
+      throw new NotAuthorizedError();
+    }
+    // TODO: Should check previous password.
+    await userPool.saveUser({
+      ...user,
+      Password: req.ProposedPassword,
+      UserLastModifiedDate: clock.get(),
+    });
 
-  return {};
-};
+    return {};
+  };

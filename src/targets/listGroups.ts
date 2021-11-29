@@ -10,24 +10,24 @@ export type ListGroupsTarget = (
 
 type ListGroupServices = Pick<Services, "cognito">;
 
-export const ListGroups = ({
-  cognito,
-}: ListGroupServices): ListGroupsTarget => async (req) => {
-  // TODO: Limit support
-  // TODO: PaginationToken support
+export const ListGroups =
+  ({ cognito }: ListGroupServices): ListGroupsTarget =>
+  async (req) => {
+    // TODO: Limit support
+    // TODO: PaginationToken support
 
-  const userPool = await cognito.getUserPool(req.UserPoolId);
-  const groups = await userPool.listGroups();
+    const userPool = await cognito.getUserPool(req.UserPoolId);
+    const groups = await userPool.listGroups();
 
-  return {
-    Groups: groups.map((group) => ({
-      CreationDate: group.CreationDate,
-      Description: group.Description,
-      GroupName: group.GroupName,
-      LastModifiedDate: group.LastModifiedDate,
-      Precedence: group.Precedence,
-      RoleArn: group.RoleArn,
-      UserPoolId: req.UserPoolId,
-    })),
+    return {
+      Groups: groups.map((group) => ({
+        CreationDate: group.CreationDate,
+        Description: group.Description,
+        GroupName: group.GroupName,
+        LastModifiedDate: group.LastModifiedDate,
+        Precedence: group.Precedence,
+        RoleArn: group.RoleArn,
+        UserPoolId: req.UserPoolId,
+      })),
+    };
   };
-};

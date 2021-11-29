@@ -90,61 +90,63 @@ const deliverWelcomeMessage = async (
   return deliveryDetails;
 };
 
-export const SignUp = ({
-  clock,
-  cognito,
-  messageDelivery,
-  messages,
-  otp,
-}: SignUpServices): SignUpTarget => async (req) => {
-  // TODO: This should behave differently depending on if PreventUserExistenceErrors
-  // is enabled on the user pool. This will be the default after Feb 2020.
-  // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
-  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-  const existingUser = await userPool.getUserByUsername(req.Username);
-  if (existingUser) {
-    throw new UsernameExistsError();
-  }
-
-  const attributes = attributesInclude("sub", req.UserAttributes)
-    ? req.UserAttributes ?? []
-    : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
-
-  const now = clock.get();
-  const user: User = {
-    Attributes: attributes,
-    Enabled: true,
-    Password: req.Password,
-    UserCreateDate: now,
-    UserLastModifiedDate: now,
-    UserStatus: "UNCONFIRMED",
-    Username: req.Username,
-  };
-
-  // TODO: call PreSignUp trigger
-  // TODO: do we also need a UserMigration call in here?
-  // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
-
-  const code = otp();
-
-  const deliveryDetails = await deliverWelcomeMessage(
-    code,
-    req.ClientId,
-    user,
-    userPool,
-    messages,
+export const SignUp =
+  ({
+    clock,
+    cognito,
     messageDelivery,
-    req.ClientMetadata
-  );
+    messages,
+    otp,
+  }: SignUpServices): SignUpTarget =>
+  async (req) => {
+    // TODO: This should behave differently depending on if PreventUserExistenceErrors
+    // is enabled on the user pool. This will be the default after Feb 2020.
+    // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
+    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
+    const existingUser = await userPool.getUserByUsername(req.Username);
+    if (existingUser) {
+      throw new UsernameExistsError();
+    }
 
-  await userPool.saveUser({
-    ...user,
-    ConfirmationCode: code,
-  });
+    const attributes = attributesInclude("sub", req.UserAttributes)
+      ? req.UserAttributes ?? []
+      : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
 
-  return {
-    CodeDeliveryDetails: deliveryDetails ?? undefined,
-    UserConfirmed: user.UserStatus === "CONFIRMED",
-    UserSub: attributeValue("sub", attributes) as string,
+    const now = clock.get();
+    const user: User = {
+      Attributes: attributes,
+      Enabled: true,
+      Password: req.Password,
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
+      UserStatus: "UNCONFIRMED",
+      Username: req.Username,
+    };
+
+    // TODO: call PreSignUp trigger
+    // TODO: do we also need a UserMigration call in here?
+    // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
+
+    const code = otp();
+
+    const deliveryDetails = await deliverWelcomeMessage(
+      code,
+      req.ClientId,
+      user,
+      userPool,
+      messages,
+      messageDelivery,
+      req.ClientMetadata
+    );
+
+    await userPool.saveUser({
+      ...user,
+      ConfirmationCode: code,
+    });
+
+    return {
+      CodeDeliveryDetails: deliveryDetails ?? undefined,
+      UserConfirmed: user.UserStatus === "CONFIRMED",
+      UserSub: attributeValue("sub", attributes) as string,
+    };
   };
-};

@@ -9,19 +9,19 @@ export type DescribeUserPoolClientTarget = (
   req: DescribeUserPoolClientRequest
 ) => Promise<DescribeUserPoolClientResponse>;
 
-export const DescribeUserPoolClient = ({
-  cognito,
-}: Pick<Services, "cognito">): DescribeUserPoolClientTarget => async (req) => {
-  const client = await cognito.getAppClient(req.ClientId);
-  if (client?.UserPoolId !== req.UserPoolId) {
-    throw new ResourceNotFoundError();
-  }
+export const DescribeUserPoolClient =
+  ({ cognito }: Pick<Services, "cognito">): DescribeUserPoolClientTarget =>
+  async (req) => {
+    const client = await cognito.getAppClient(req.ClientId);
+    if (client?.UserPoolId !== req.UserPoolId) {
+      throw new ResourceNotFoundError();
+    }
 
-  return {
-    UserPoolClient: {
-      ...client,
-      CreationDate: client.CreationDate,
-      LastModifiedDate: client.LastModifiedDate,
-    },
+    return {
+      UserPoolClient: {
+        ...client,
+        CreationDate: client.CreationDate,
+        LastModifiedDate: client.LastModifiedDate,
+      },
+    };
   };
-};

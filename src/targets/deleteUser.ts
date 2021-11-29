@@ -9,23 +9,24 @@ export type DeleteUserTarget = (req: DeleteUserRequest) => Promise<{}>;
 
 type DeleteUserServices = Pick<Services, "cognito">;
 
-export const DeleteUser = (
-  { cognito }: DeleteUserServices,
-  logger: Logger
-): DeleteUserTarget => async (req) => {
-  const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-  if (!decodedToken) {
-    logger.info("Unable to decode token");
-    throw new InvalidParameterError();
-  }
+export const DeleteUser =
+  ({ cognito }: DeleteUserServices, logger: Logger): DeleteUserTarget =>
+  async (req) => {
+    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
+    if (!decodedToken) {
+      logger.info("Unable to decode token");
+      throw new InvalidParameterError();
+    }
 
-  const userPool = await cognito.getUserPoolForClientId(decodedToken.client_id);
-  const user = await userPool.getUserByUsername(decodedToken.sub);
-  if (!user) {
-    throw new NotAuthorizedError();
-  }
+    const userPool = await cognito.getUserPoolForClientId(
+      decodedToken.client_id
+    );
+    const user = await userPool.getUserByUsername(decodedToken.sub);
+    if (!user) {
+      throw new NotAuthorizedError();
+    }
 
-  await userPool.deleteUser(user);
+    await userPool.deleteUser(user);
 
-  return {};
-};
+    return {};
+  };

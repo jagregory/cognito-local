@@ -16,49 +16,51 @@ type ForgotPasswordServices = Pick<
   "cognito" | "clock" | "messageDelivery" | "messages" | "otp"
 >;
 
-export const ForgotPassword = ({
-  cognito,
-  clock,
-  messageDelivery,
-  messages,
-  otp,
-}: ForgotPasswordServices): ForgotPasswordTarget => async (req) => {
-  const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-  const user = await userPool.getUserByUsername(req.Username);
-  if (!user) {
-    throw new UserNotFoundError();
-  }
+export const ForgotPassword =
+  ({
+    cognito,
+    clock,
+    messageDelivery,
+    messages,
+    otp,
+  }: ForgotPasswordServices): ForgotPasswordTarget =>
+  async (req) => {
+    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
+    const user = await userPool.getUserByUsername(req.Username);
+    if (!user) {
+      throw new UserNotFoundError();
+    }
 
-  const userEmail = attributeValue("email", user.Attributes);
-  if (!userEmail) {
-    throw new UnsupportedError("ForgotPassword without email on user");
-  }
+    const userEmail = attributeValue("email", user.Attributes);
+    if (!userEmail) {
+      throw new UnsupportedError("ForgotPassword without email on user");
+    }
 
-  // TODO: support UserMigration trigger
+    // TODO: support UserMigration trigger
 
-  const deliveryDetails: DeliveryDetails = {
-    AttributeName: "email",
-    DeliveryMedium: "EMAIL",
-    Destination: userEmail,
+    const deliveryDetails: DeliveryDetails = {
+      AttributeName: "email",
+      DeliveryMedium: "EMAIL",
+      Destination: userEmail,
+    };
+
+    const code = otp();
+    const message = await messages.forgotPassword(
+      req.ClientId,
+      userPool.config.Id,
+      user,
+      code,
+      req.ClientMetadata
+    );
+    await messageDelivery.deliver(user, deliveryDetails, message);
+
+    await userPool.saveUser({
+      ...user,
+      UserLastModifiedDate: clock.get(),
+      ConfirmationCode: code,
+    });
+
+    return {
+      CodeDeliveryDetails: deliveryDetails,
+    };
   };
-
-  const code = otp();
-  const message = await messages.forgotPassword(
-    req.ClientId,
-    userPool.config.Id,
-    user,
-    code,
-    req.ClientMetadata
-  );
-  await messageDelivery.deliver(user, deliveryDetails, message);
-
-  await userPool.saveUser({
-    ...user,
-    UserLastModifiedDate: clock.get(),
-    ConfirmationCode: code,
-  });
-
-  return {
-    CodeDeliveryDetails: deliveryDetails,
-  };
-};

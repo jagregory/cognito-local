@@ -11,24 +11,24 @@ export type AdminGetUserTarget = (
 
 type AdminGetUserServices = Pick<Services, "cognito">;
 
-export const AdminGetUser = ({
-  cognito,
-}: AdminGetUserServices): AdminGetUserTarget => async (req) => {
-  const userPool = await cognito.getUserPool(req.UserPoolId);
-  const user = await userPool.getUserByUsername(req.Username);
-  if (!user) {
-    throw new UserNotFoundError("User does not exist");
-  }
+export const AdminGetUser =
+  ({ cognito }: AdminGetUserServices): AdminGetUserTarget =>
+  async (req) => {
+    const userPool = await cognito.getUserPool(req.UserPoolId);
+    const user = await userPool.getUserByUsername(req.Username);
+    if (!user) {
+      throw new UserNotFoundError("User does not exist");
+    }
 
-  return {
-    Enabled: user.Enabled,
-    MFAOptions: user.MFAOptions,
-    PreferredMfaSetting: undefined,
-    UserAttributes: user.Attributes,
-    UserCreateDate: user.UserCreateDate,
-    UserLastModifiedDate: user.UserLastModifiedDate,
-    UserMFASettingList: undefined,
-    Username: user.Username,
-    UserStatus: user.UserStatus,
+    return {
+      Enabled: user.Enabled,
+      MFAOptions: user.MFAOptions,
+      PreferredMfaSetting: undefined,
+      UserAttributes: user.Attributes,
+      UserCreateDate: user.UserCreateDate,
+      UserLastModifiedDate: user.UserLastModifiedDate,
+      UserMFASettingList: undefined,
+      Username: user.Username,
+      UserStatus: user.UserStatus,
+    };
   };
-};
