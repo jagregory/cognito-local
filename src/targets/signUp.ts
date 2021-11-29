@@ -166,7 +166,19 @@ export const SignUp =
       ConfirmationCode: code,
     });
 
-    // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
+    if (
+      user.UserStatus === "CONFIRMED" &&
+      triggers.enabled("PostConfirmation")
+    ) {
+      await triggers.postConfirmation({
+        clientId: req.ClientId,
+        clientMetadata: req.ClientMetadata,
+        source: "PostConfirmation_ConfirmSignUp",
+        userAttributes: user.Attributes,
+        username: user.Username,
+        userPoolId: userPool.config.Id,
+      });
+    }
 
     return {
       CodeDeliveryDetails: deliveryDetails ?? undefined,

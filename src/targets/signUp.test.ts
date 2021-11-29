@@ -147,28 +147,130 @@ describe("SignUp target", () => {
       ).rejects.toBeInstanceOf(UserLambdaValidationError);
     });
 
-    it("confirms the user if the lambda returns autoConfirmUser=true", async () => {
-      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-      mockTriggers.preSignUp.mockResolvedValue({
-        autoConfirmUser: true,
+    describe("autoConfirmUser=true", () => {
+      beforeEach(() => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.preSignUp.mockResolvedValue({
+          autoConfirmUser: true,
+        });
       });
 
-      await signUp({
-        ClientId: "clientId",
-        ClientMetadata: {
-          client: "metadata",
-        },
-        Password: "pwd",
-        Username: "user-supplied",
-        UserAttributes: [{ Name: "email", Value: "example@example.com" }],
-        ValidationData: [{ Name: "another", Value: "attribute" }],
+      it("confirms the user", async () => {
+        await signUp({
+          ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
+          Password: "pwd",
+          Username: "user-supplied",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          ValidationData: [{ Name: "another", Value: "attribute" }],
+        });
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            UserStatus: "CONFIRMED",
+          })
+        );
       });
 
-      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
-        expect.objectContaining({
-          UserStatus: "CONFIRMED",
-        })
-      );
+      describe("when PostConfirmation trigger is enabled", () => {
+        beforeEach(() => {
+          mockTriggers.enabled.mockImplementation(
+            (trigger) =>
+              trigger === "PreSignUp" || trigger === "PostConfirmation"
+          );
+        });
+
+        it("calls the PostConfirmation trigger lambda", async () => {
+          await signUp({
+            ClientId: "clientId",
+            ClientMetadata: {
+              client: "metadata",
+            },
+            Password: "pwd",
+            Username: "user-supplied",
+            UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+            ValidationData: [{ Name: "another", Value: "attribute" }],
+          });
+
+          expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
+            clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
+            source: "PostConfirmation_ConfirmSignUp",
+            userAttributes: [
+              { Name: "sub", Value: expect.stringMatching(UUID) },
+              { Name: "email", Value: "example@example.com" },
+            ],
+            userPoolId: "test",
+            username: "user-supplied",
+            validationData: undefined,
+          });
+        });
+
+        it("throws if the PostConfirmation lambda fails", async () => {
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+          mockTriggers.postConfirmation.mockRejectedValue(
+            new UserLambdaValidationError()
+          );
+
+          await expect(
+            signUp({
+              ClientId: "clientId",
+              ClientMetadata: {
+                client: "metadata",
+              },
+              Password: "pwd",
+              Username: "user-supplied",
+              UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+              ValidationData: [{ Name: "another", Value: "attribute" }],
+            })
+          ).rejects.toBeInstanceOf(UserLambdaValidationError);
+        });
+      });
+    });
+
+    describe("autoConfirmUser=false", () => {
+      beforeEach(() => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.preSignUp.mockResolvedValue({
+          autoConfirmUser: false,
+        });
+      });
+
+      it("does not confirm the user", async () => {
+        await signUp({
+          ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
+          Password: "pwd",
+          Username: "user-supplied",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          ValidationData: [{ Name: "another", Value: "attribute" }],
+        });
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            UserStatus: "UNCONFIRMED",
+          })
+        );
+      });
+
+      it("does not call the PostConfirmation trigger lambda", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+
+        await signUp({
+          ClientId: "clientId",
+          Password: "pwd",
+          Username: "user-supplied",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+        });
+
+        expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();
+      });
     });
 
     it("verifies the user's email if the lambda returns autoVerifyEmail=true and the user has an email attribute", async () => {
