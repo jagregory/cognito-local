@@ -14,25 +14,29 @@ export interface Messages {
   adminCreateUser(
     userPoolId: string,
     user: User,
-    temporaryPassword: string
+    temporaryPassword: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message>;
   authentication(
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message>;
   forgotPassword(
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message>;
   signUp(
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message>;
 }
 
@@ -46,11 +50,13 @@ export class MessagesService implements Messages {
   public async adminCreateUser(
     userPoolId: string,
     user: User,
-    temporaryPassword: string
+    temporaryPassword: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage({
         clientId: AWS_ADMIN_CLIENT_ID,
+        clientMetadata,
         code: temporaryPassword,
         source: "CustomMessage_AdminCreateUser",
         userAttributes: user.Attributes,
@@ -74,11 +80,13 @@ export class MessagesService implements Messages {
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage({
         clientId,
+        clientMetadata,
         code,
         source: "CustomMessage_Authentication",
         userAttributes: user.Attributes,
@@ -102,11 +110,13 @@ export class MessagesService implements Messages {
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage({
         clientId,
+        clientMetadata,
         code,
         source: "CustomMessage_ForgotPassword",
         userAttributes: user.Attributes,
@@ -130,11 +140,13 @@ export class MessagesService implements Messages {
     clientId: string,
     userPoolId: string,
     user: User,
-    code: string
+    code: string,
+    clientMetadata: Record<string, string> | undefined
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage({
         clientId,
+        clientMetadata,
         code,
         source: "CustomMessage_SignUp",
         userAttributes: user.Attributes,

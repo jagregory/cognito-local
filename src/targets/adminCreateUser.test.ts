@@ -95,6 +95,9 @@ describe("AdminCreateUser target", () => {
         });
 
         const response = await adminCreateUser({
+          ClientMetadata: {
+            client: "metadata",
+          },
           DesiredDeliveryMediums: ["EMAIL"],
           TemporaryPassword: "pwd",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -105,7 +108,10 @@ describe("AdminCreateUser target", () => {
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
           { ...response.User, Password: "pwd" },
-          "pwd"
+          "pwd",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           {
@@ -148,6 +154,9 @@ describe("AdminCreateUser target", () => {
         });
 
         const response = await adminCreateUser({
+          ClientMetadata: {
+            client: "metadata",
+          },
           DesiredDeliveryMediums: ["SMS"],
           TemporaryPassword: "pwd",
           UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
@@ -158,7 +167,10 @@ describe("AdminCreateUser target", () => {
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
           { ...response.User, Password: "pwd" },
-          "pwd"
+          "pwd",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           {
@@ -201,6 +213,9 @@ describe("AdminCreateUser target", () => {
         });
 
         const response = await adminCreateUser({
+          ClientMetadata: {
+            client: "metadata",
+          },
           TemporaryPassword: "pwd",
           UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
           Username: "user-supplied",
@@ -210,7 +225,10 @@ describe("AdminCreateUser target", () => {
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
           { ...response.User, Password: "pwd" },
-          "pwd"
+          "pwd",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           {
@@ -229,6 +247,9 @@ describe("AdminCreateUser target", () => {
       it("fails for user without phone_number attribute", async () => {
         await expect(
           adminCreateUser({
+            ClientMetadata: {
+              client: "metadata",
+            },
             TemporaryPassword: "pwd",
             UserAttributes: [],
             Username: "user-supplied",
@@ -252,6 +273,9 @@ describe("AdminCreateUser target", () => {
         });
 
         const response = await adminCreateUser({
+          ClientMetadata: {
+            client: "metadata",
+          },
           DesiredDeliveryMediums: ["EMAIL", "SMS"],
           TemporaryPassword: "pwd",
           UserAttributes: [
@@ -265,7 +289,10 @@ describe("AdminCreateUser target", () => {
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
           { ...response.User, Password: "pwd" },
-          "pwd"
+          "pwd",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           {
@@ -288,6 +315,9 @@ describe("AdminCreateUser target", () => {
         });
 
         const response = await adminCreateUser({
+          ClientMetadata: {
+            client: "metadata",
+          },
           DesiredDeliveryMediums: ["EMAIL", "SMS"],
           TemporaryPassword: "pwd",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -298,7 +328,10 @@ describe("AdminCreateUser target", () => {
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
           { ...response.User, Password: "pwd" },
-          "pwd"
+          "pwd",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           {
@@ -353,5 +386,5 @@ describe("AdminCreateUser target", () => {
     ).rejects.toEqual(new UsernameExistsError());
   });
 
-  it.todo("invokes the PreSignIn lambda");
+  it.todo("invokes the PreSignUp lambda");
 });

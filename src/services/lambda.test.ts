@@ -39,11 +39,13 @@ describe("Lambda function invoker", () => {
       await expect(
         lambda.invoke("UserMigration", {
           clientId: "clientId",
+          clientMetadata: undefined,
           password: "password",
           triggerSource: "UserMigration_Authentication",
+          userAttributes: {},
           username: "username",
           userPoolId: "userPoolId",
-          userAttributes: {},
+          validationData: undefined,
         })
       ).rejects.toEqual(new Error("UserMigration trigger not configured"));
     });
@@ -67,11 +69,13 @@ describe("Lambda function invoker", () => {
 
         const result = await lambda.invoke("UserMigration", {
           clientId: "clientId",
+          clientMetadata: undefined,
           password: "password",
           triggerSource: "UserMigration_Authentication",
+          userAttributes: {},
           username: "username",
           userPoolId: "userPoolId",
-          userAttributes: {},
+          validationData: undefined,
         });
 
         expect(result).toEqual("value");
@@ -95,11 +99,13 @@ describe("Lambda function invoker", () => {
 
         const result = await lambda.invoke("UserMigration", {
           clientId: "clientId",
+          clientMetadata: undefined,
           password: "password",
           triggerSource: "UserMigration_Authentication",
+          userAttributes: {},
           username: "username",
           userPoolId: "userPoolId",
-          userAttributes: {},
+          validationData: undefined,
         });
 
         expect(result).toEqual("value");
@@ -125,26 +131,37 @@ describe("Lambda function invoker", () => {
 
         await lambda.invoke("UserMigration", {
           clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
           password: "password",
           triggerSource: "UserMigration_Authentication",
           username: "username",
           userPoolId: "userPoolId",
           userAttributes: {},
+          validationData: {
+            validation: "data",
+          },
         });
 
         expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
-          Payload: JSON.stringify({
+          Payload: expect.jsonMatching({
             version: 0,
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: "UserMigration_Authentication",
             request: {
+              clientMetadata: {
+                client: "metadata",
+              },
               userAttributes: {},
               password: "password",
-              validationData: {},
+              validationData: {
+                validation: "data",
+              },
             },
             response: {},
             userName: "username",
@@ -180,20 +197,30 @@ describe("Lambda function invoker", () => {
           triggerSource: source,
           username: "username",
           userPoolId: "userPoolId",
-          userAttributes: {},
+          userAttributes: {
+            user: "attributes",
+          },
+          clientMetadata: {
+            client: "metadata",
+          },
         });
 
         expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
-          Payload: JSON.stringify({
+          Payload: expect.jsonMatching({
             version: 0,
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: source,
             request: {
-              userAttributes: {},
+              userAttributes: {
+                user: "attributes",
+              },
+              clientMetadata: {
+                client: "metadata",
+              },
             },
             response: {},
             userName: "username",
@@ -229,9 +256,13 @@ describe("Lambda function invoker", () => {
 
         await lambda.invoke("CustomMessage", {
           clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
           codeParameter: "{####}",
           triggerSource: source,
           userAttributes: {},
+          username: "username",
           usernameParameter: "{username}",
           userPoolId: "userPoolId",
         });
@@ -239,16 +270,20 @@ describe("Lambda function invoker", () => {
         expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
-          Payload: JSON.stringify({
+          Payload: expect.jsonMatching({
             version: 0,
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
             triggerSource: source,
+            userName: "username",
             request: {
               userAttributes: {},
               usernameParameter: "{username}",
               codeParameter: "{####}",
+              clientMetadata: {
+                client: "metadata",
+              },
             },
             response: {},
           }),

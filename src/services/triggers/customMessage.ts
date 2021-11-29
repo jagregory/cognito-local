@@ -28,19 +28,36 @@ export type CustomMessageTrigger = (params: {
   username: string;
   code: string;
   userAttributes: AttributeListType;
+
+  /**
+   * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
+   * custom message trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter in the
+   * following API actions:
+   *
+   * - AdminResetUserPassword
+   * - AdminRespondToAuthChallenge
+   * - AdminUpdateUserAttributes
+   * - ForgotPassword
+   * - GetUserAttributeVerificationCode
+   * - ResendConfirmationCode
+   * - SignUp
+   * - UpdateUserAttributes
+   *
+   * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-message.html#cognito-user-pools-lambda-trigger-syntax-custom-message
+   */
+  clientMetadata: Record<string, string> | undefined;
 }) => Promise<CustomMessageResponse | null>;
 
+type CustomMessageServices = {
+  lambda: Lambda;
+  cognitoClient: CognitoService;
+};
 export const CustomMessage = (
-  {
-    lambda,
-    cognitoClient,
-  }: {
-    lambda: Lambda;
-    cognitoClient: CognitoService;
-  },
+  { lambda, cognitoClient }: CustomMessageServices,
   logger: Logger
 ): CustomMessageTrigger => async ({
   clientId,
+  clientMetadata,
   code,
   source,
   userAttributes,
@@ -55,9 +72,11 @@ export const CustomMessage = (
   try {
     const response = await lambda.invoke("CustomMessage", {
       clientId,
+      clientMetadata,
       codeParameter: AWS_CODE_PARAMETER,
       triggerSource: source,
       userAttributes: attributesToRecord(userAttributes),
+      username,
       usernameParameter: AWS_USERNAME_PARAMETER,
       userPoolId,
     });

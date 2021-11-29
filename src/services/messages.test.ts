@@ -30,7 +30,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -42,6 +45,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_Authentication",
             userAttributes: user.Attributes,
@@ -63,7 +69,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -72,6 +81,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_Authentication",
             userAttributes: user.Attributes,
@@ -91,7 +103,10 @@ describe("messages service", () => {
           "clientId",
           "userPoolId",
           user,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
 
         expect(message).toMatchObject({
@@ -121,7 +136,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -133,6 +151,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_ForgotPassword",
             userAttributes: user.Attributes,
@@ -154,7 +175,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -163,6 +187,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_ForgotPassword",
             userAttributes: user.Attributes,
@@ -182,7 +209,10 @@ describe("messages service", () => {
           "clientId",
           "userPoolId",
           user,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
 
         expect(message).toMatchObject({
@@ -212,7 +242,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -224,6 +257,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_SignUp",
             userAttributes: user.Attributes,
@@ -245,7 +281,10 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234"
+            "1234",
+            {
+              client: "metadata",
+            }
           );
 
           expect(message).toMatchObject({
@@ -254,6 +293,9 @@ describe("messages service", () => {
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             code: "1234",
             source: "CustomMessage_SignUp",
             userAttributes: user.Attributes,
@@ -273,7 +315,10 @@ describe("messages service", () => {
           "clientId",
           "userPoolId",
           user,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
 
         expect(message).toMatchObject({

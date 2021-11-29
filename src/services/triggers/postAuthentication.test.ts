@@ -36,6 +36,7 @@ describe("PostAuthentication trigger", () => {
       await expect(
         postAuthentication({
           clientId: "clientId",
+          clientMetadata: undefined,
           source: "PostAuthentication_Authentication",
           userAttributes: user.Attributes,
           username: user.Username,
@@ -49,6 +50,9 @@ describe("PostAuthentication trigger", () => {
 
       await postAuthentication({
         clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
         source: "PostAuthentication_Authentication",
         userAttributes: user.Attributes,
         username: user.Username,
@@ -57,6 +61,9 @@ describe("PostAuthentication trigger", () => {
 
       expect(mockLambda.invoke).toHaveBeenCalledWith("PostAuthentication", {
         clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
         triggerSource: "PostAuthentication_Authentication",
         userAttributes: attributesToRecord(user.Attributes),
         userPoolId: "userPoolId",

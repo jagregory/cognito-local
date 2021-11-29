@@ -5,47 +5,44 @@ import { UnexpectedLambdaExceptionError } from "../errors";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
 import { Logger } from "../log";
 
-interface CustomMessageEvent {
-  userPoolId: string;
+interface EventCommonParameters {
   clientId: string;
+  userAttributes: Record<string, string>;
+  username: string;
+  userPoolId: string;
+}
+
+interface CustomMessageEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
   codeParameter: string;
-  usernameParameter: string;
-  userAttributes: Record<string, string>;
   triggerSource:
-    | "CustomMessage_SignUp"
     | "CustomMessage_AdminCreateUser"
-    | "CustomMessage_ResendCode"
+    | "CustomMessage_Authentication"
     | "CustomMessage_ForgotPassword"
+    | "CustomMessage_ResendCode"
+    | "CustomMessage_SignUp"
     | "CustomMessage_UpdateUserAttribute"
-    | "CustomMessage_VerifyUserAttribute"
-    | "CustomMessage_Authentication";
+    | "CustomMessage_VerifyUserAttribute";
+  usernameParameter: string;
 }
 
-interface UserMigrationEvent {
-  userPoolId: string;
-  clientId: string;
-  username: string;
+interface UserMigrationEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
   password: string;
-  userAttributes: Record<string, string>;
   triggerSource: "UserMigration_Authentication";
+  validationData: Record<string, string> | undefined;
 }
 
-interface PostAuthenticationEvent {
-  userPoolId: string;
-  clientId: string;
-  username: string;
-  userAttributes: Record<string, string>;
+interface PostAuthenticationEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
   triggerSource: "PostAuthentication_Authentication";
 }
 
-interface PostConfirmationEvent {
-  userPoolId: string;
-  clientId: string;
-  username: string;
-  userAttributes: Record<string, string>;
+interface PostConfirmationEvent extends EventCommonParameters {
   triggerSource:
     | "PostConfirmation_ConfirmSignUp"
     | "PostConfirmation_ConfirmForgotPassword";
+  clientMetadata: Record<string, string> | undefined;
 }
 
 export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
@@ -118,30 +115,39 @@ export class LambdaService implements Lambda {
       region: "local", // TODO: pull from above,
       userPoolId: event.userPoolId,
       triggerSource: event.triggerSource,
+      userName: event.username,
       request: {
         userAttributes: event.userAttributes,
       },
       response: {},
     };
 
-    if (event.triggerSource === "UserMigration_Authentication") {
-      lambdaEvent.request.password = event.password;
-      lambdaEvent.request.validationData = {};
-    } else if (
-      event.triggerSource === "CustomMessage_SignUp" ||
-      event.triggerSource === "CustomMessage_AdminCreateUser" ||
-      event.triggerSource === "CustomMessage_ResendCode" ||
-      event.triggerSource === "CustomMessage_ForgotPassword" ||
-      event.triggerSource === "CustomMessage_UpdateUserAttribute" ||
-      event.triggerSource === "CustomMessage_VerifyUserAttribute" ||
-      event.triggerSource === "CustomMessage_Authentication"
-    ) {
-      lambdaEvent.request.usernameParameter = event.usernameParameter;
-      lambdaEvent.request.codeParameter = event.codeParameter;
-    }
+    switch (event.triggerSource) {
+      case "PostAuthentication_Authentication":
+      case "PostConfirmation_ConfirmForgotPassword":
+      case "PostConfirmation_ConfirmSignUp": {
+        lambdaEvent.request.clientMetadata = event.clientMetadata;
+        break;
+      }
+      case "UserMigration_Authentication": {
+        lambdaEvent.request.clientMetadata = event.clientMetadata;
+        lambdaEvent.request.password = event.password;
+        lambdaEvent.request.validationData = event.validationData;
 
-    if ("username" in event) {
-      lambdaEvent.userName = event.username;
+        break;
+      }
+      case "CustomMessage_SignUp":
+      case "CustomMessage_AdminCreateUser":
+      case "CustomMessage_ResendCode":
+      case "CustomMessage_ForgotPassword":
+      case "CustomMessage_UpdateUserAttribute":
+      case "CustomMessage_VerifyUserAttribute":
+      case "CustomMessage_Authentication": {
+        lambdaEvent.request.clientMetadata = event.clientMetadata;
+        lambdaEvent.request.codeParameter = event.codeParameter;
+        lambdaEvent.request.usernameParameter = event.usernameParameter;
+        break;
+      }
     }
 
     this.logger.debug(

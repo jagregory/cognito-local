@@ -16,22 +16,43 @@ export type UserMigrationTrigger = (params: {
   username: string;
   password: string;
   userAttributes: AttributeListType;
+
+  /**
+   * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
+   * migrate user trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter in the
+   * AdminRespondToAuthChallenge and ForgotPassword API actions.
+   *
+   * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+   */
+  clientMetadata: Record<string, string> | undefined;
+
+  /**
+   * One or more key-value pairs containing the validation data in the user's sign-in request. You can pass this data to
+   * your Lambda function by using the ClientMetadata parameter in the InitiateAuth and AdminInitiateAuth API actions.
+   *
+   * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+   */
+  validationData: Record<string, string> | undefined;
 }) => Promise<User>;
+
+interface UserMigrationServices {
+  clock: Clock;
+  cognitoClient: CognitoService;
+  lambda: Lambda;
+}
 
 export const UserMigration = ({
   lambda,
   cognitoClient,
   clock,
-}: {
-  lambda: Lambda;
-  cognitoClient: CognitoService;
-  clock: Clock;
-}): UserMigrationTrigger => async ({
-  userPoolId,
+}: UserMigrationServices): UserMigrationTrigger => async ({
   clientId,
-  username,
+  clientMetadata,
   password,
   userAttributes,
+  username,
+  userPoolId,
+  validationData,
 }): Promise<User> => {
   const userPool = await cognitoClient.getUserPoolForClientId(clientId);
   if (!userPool) {
@@ -42,12 +63,14 @@ export const UserMigration = ({
 
   try {
     result = await lambda.invoke("UserMigration", {
-      userPoolId,
       clientId,
-      username,
+      clientMetadata,
       password,
       triggerSource: "UserMigration_Authentication",
       userAttributes: attributesToRecord(userAttributes),
+      username,
+      userPoolId,
+      validationData,
     });
   } catch (ex) {
     throw new NotAuthorizedError();

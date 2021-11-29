@@ -206,6 +206,9 @@ describe("RespondToAuthChallenge target", () => {
           await respondToAuthChallenge({
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
+            ClientMetadata: {
+              client: "metadata",
+            },
             ChallengeResponses: {
               USERNAME: user.Username,
               SMS_MFA_CODE: "1234",
@@ -215,6 +218,9 @@ describe("RespondToAuthChallenge target", () => {
 
           expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
             clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
             source: "PostAuthentication_Authentication",
             userAttributes: user.Attributes,
             username: user.Username,

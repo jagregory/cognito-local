@@ -36,11 +36,12 @@ export const ConfirmSignUp = ({
 
   if (triggers.enabled("PostConfirmation")) {
     await triggers.postConfirmation({
-      source: "PostConfirmation_ConfirmSignUp",
-      username: user.Username,
       clientId: req.ClientId,
-      userPoolId: userPool.config.Id,
+      clientMetadata: req.ClientMetadata,
+      source: "PostConfirmation_ConfirmSignUp",
       userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId: userPool.config.Id,
     });
   }
 

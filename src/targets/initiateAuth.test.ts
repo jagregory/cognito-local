@@ -122,12 +122,25 @@ describe("InitiateAuth target", () => {
           mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
           const output = await initiateAuth({
-            ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: user.Username,
               PASSWORD: user.Password,
             },
+            ClientId: "clientId",
+            ClientMetadata: {
+              client: "metadata",
+            },
+          });
+
+          expect(mockTriggers.userMigration).toHaveBeenCalledWith({
+            clientId: "clientId",
+            clientMetadata: undefined,
+            password: user.Password,
+            userAttributes: [],
+            userPoolId: "test",
+            username: user.Username,
+            validationData: { client: "metadata" },
           });
 
           expect(output).toBeDefined();
@@ -281,6 +294,9 @@ describe("InitiateAuth target", () => {
           it("sends MFA code to user", async () => {
             const output = await initiateAuth({
               ClientId: "clientId",
+              ClientMetadata: {
+                client: "metadata",
+              },
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: user.Username,
@@ -294,7 +310,10 @@ describe("InitiateAuth target", () => {
               "clientId",
               "test",
               user,
-              "1234"
+              "1234",
+              {
+                client: "metadata",
+              }
             );
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
               user,

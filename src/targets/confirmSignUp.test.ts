@@ -96,6 +96,9 @@ describe("ConfirmSignUp target", () => {
 
         await confirmSignUp({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Username: "janice",
           ConfirmationCode: "4567",
           ForceAliasCreation: false,
@@ -103,6 +106,9 @@ describe("ConfirmSignUp target", () => {
 
         expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
           clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
           source: "PostConfirmation_ConfirmSignUp",
           userAttributes: user.Attributes,
           userPoolId: "test",

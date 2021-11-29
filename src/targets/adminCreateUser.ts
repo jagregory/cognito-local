@@ -87,7 +87,8 @@ const deliverWelcomeMessage = async (
   const message = await messages.adminCreateUser(
     userPool.config.Id,
     user,
-    temporaryPassword
+    temporaryPassword,
+    req.ClientMetadata
   );
   await messageDelivery.deliver(user, deliveryDetails, message);
 };

@@ -17,6 +17,9 @@ export const AdminConfirmSignUp = ({
   if (!user) {
     throw new NotAuthorizedError();
   }
+
+  // TODO: call PostConfirmation lambda
+
   await userPool.saveUser({
     ...user,
     UserStatus: "CONFIRMED",

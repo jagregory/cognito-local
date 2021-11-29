@@ -29,6 +29,7 @@ describe("CustomMessage trigger", () => {
 
       const message = await customMessage({
         clientId: "clientId",
+        clientMetadata: undefined,
         code: "1234",
         source: "CustomMessage_ForgotPassword",
         userAttributes: [],
@@ -50,18 +51,27 @@ describe("CustomMessage trigger", () => {
 
       const message = await customMessage({
         clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
         code: "1234",
         source: "CustomMessage_ForgotPassword",
-        userAttributes: [],
+        userAttributes: [{ Name: "user", Value: "attribute" }],
         username: "example@example.com",
         userPoolId: "userPoolId",
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith("CustomMessage", {
         clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
         codeParameter: "{####}",
         triggerSource: "CustomMessage_ForgotPassword",
-        userAttributes: {},
+        userAttributes: {
+          user: "attribute",
+        },
+        username: "example@example.com",
         usernameParameter: "{username}",
         userPoolId: "userPoolId",
       });

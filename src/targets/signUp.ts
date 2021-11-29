@@ -60,7 +60,8 @@ const deliverWelcomeMessage = async (
   user: User,
   userPool: UserPoolService,
   messages: Messages,
-  messageDelivery: MessageDelivery
+  messageDelivery: MessageDelivery,
+  clientMetadata: Record<string, string> | undefined
 ): Promise<DeliveryDetails | null> => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
     userPool.config.AutoVerifiedAttributes ?? [],
@@ -81,7 +82,8 @@ const deliverWelcomeMessage = async (
     clientId,
     userPool.config.Id,
     user,
-    code
+    code,
+    clientMetadata
   );
   await messageDelivery.deliver(user, deliveryDetails, message);
 
@@ -119,6 +121,10 @@ export const SignUp = ({
     Username: req.Username,
   };
 
+  // TODO: call PreSignUp trigger
+  // TODO: do we also need a UserMigration call in here?
+  // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
+
   const code = otp();
 
   const deliveryDetails = await deliverWelcomeMessage(
@@ -127,7 +133,8 @@ export const SignUp = ({
     user,
     userPool,
     messages,
-    messageDelivery
+    messageDelivery,
+    req.ClientMetadata
   );
 
   await userPool.saveUser({

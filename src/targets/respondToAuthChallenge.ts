@@ -81,6 +81,7 @@ export const RespondToAuthChallenge = ({
   if (triggers.enabled("PostAuthentication")) {
     await triggers.postAuthentication({
       clientId: req.ClientId,
+      clientMetadata: req.ClientMetadata,
       source: "PostAuthentication_Authentication",
       userAttributes: user.Attributes,
       username: user.Username,

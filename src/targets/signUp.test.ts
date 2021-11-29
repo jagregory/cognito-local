@@ -84,7 +84,22 @@ describe("SignUp target", () => {
         mockUserPoolService.config.AutoVerifiedAttributes = undefined;
       });
 
-      it.todo("does not send a confirmation code");
+      it("does not send a confirmation code", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockOtp.mockReturnValue("1234");
+
+        await signUp({
+          ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
+          Password: "pwd",
+          Username: "user-supplied",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+        });
+
+        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+      });
     });
 
     describe("UserPool.AutoVerifiedAttributes=email", () => {
@@ -98,6 +113,9 @@ describe("SignUp target", () => {
 
         await signUp({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Password: "pwd",
           Username: "user-supplied",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -120,7 +138,10 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           createdUser,
@@ -163,6 +184,9 @@ describe("SignUp target", () => {
 
         await signUp({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Password: "pwd",
           Username: "user-supplied",
           UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
@@ -185,7 +209,10 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           createdUser,
@@ -231,6 +258,9 @@ describe("SignUp target", () => {
 
         await signUp({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Password: "pwd",
           Username: "user-supplied",
           UserAttributes: [
@@ -257,7 +287,10 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           createdUser,
@@ -276,6 +309,9 @@ describe("SignUp target", () => {
 
         await signUp({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Password: "pwd",
           Username: "user-supplied",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
@@ -298,7 +334,10 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234"
+          "1234",
+          {
+            client: "metadata",
+          }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           createdUser,

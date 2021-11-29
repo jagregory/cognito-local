@@ -29,11 +29,13 @@ describe("UserMigration trigger", () => {
 
       await expect(
         userMigration({
-          userPoolId: "userPoolId",
           clientId: "clientId",
-          username: "username",
+          clientMetadata: undefined,
           password: "password",
           userAttributes: [],
+          username: "username",
+          userPoolId: "userPoolId",
+          validationData: undefined,
         })
       ).rejects.toBeInstanceOf(NotAuthorizedError);
     });
@@ -48,20 +50,32 @@ describe("UserMigration trigger", () => {
       });
 
       const user = await userMigration({
+        clientMetadata: {
+          client: "metadata",
+        },
         userPoolId: "userPoolId",
         clientId: "clientId",
         username: "example@example.com", // username may be an email when migration is from a login attempt
         password: "password",
         userAttributes: [], // there won't be any attributes yet because we don't know who the user is
+        validationData: {
+          validation: "data",
+        },
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith("UserMigration", {
         clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
         password: "password",
         triggerSource: "UserMigration_Authentication",
         userAttributes: {},
         userPoolId: "userPoolId",
         username: "example@example.com",
+        validationData: {
+          validation: "data",
+        },
       });
 
       expect(user).not.toBeNull();
@@ -80,11 +94,13 @@ describe("UserMigration trigger", () => {
       });
 
       const user = await userMigration({
-        userPoolId: "userPoolId",
         clientId: "clientId",
-        username: "example@example.com",
+        clientMetadata: undefined,
         password: "password",
         userAttributes: [],
+        username: "example@example.com",
+        userPoolId: "userPoolId",
+        validationData: undefined,
       });
 
       expect(user).not.toBeNull();

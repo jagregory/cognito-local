@@ -62,7 +62,8 @@ const verifyMfaChallenge = async (
     req.ClientId,
     userPool.config.Id,
     user,
-    code
+    code,
+    req.ClientMetadata
   );
   await messageDelivery.deliver(
     user,
@@ -145,11 +146,18 @@ export const InitiateAuth = ({
     // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
     // Cognito creates the user in the user pool.
     user = await triggers.userMigration({
-      userPoolId: userPool.config.Id,
       clientId: req.ClientId,
-      username: req.AuthParameters.USERNAME,
       password: req.AuthParameters.PASSWORD,
       userAttributes: [],
+      username: req.AuthParameters.USERNAME,
+      userPoolId: userPool.config.Id,
+
+      // UserMigration triggered by InitiateAuth does not passes the request ClientMetadata as ValidationData and
+      // nothing as the ClientMetadata.
+      //
+      // Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+      clientMetadata: undefined,
+      validationData: req.ClientMetadata,
     });
   }
 
@@ -192,6 +200,9 @@ export const InitiateAuth = ({
   if (triggers.enabled("PostAuthentication")) {
     await triggers.postAuthentication({
       clientId: req.ClientId,
+      // As per the InitiateAuth docs, ClientMetadata is not passed to PostAuthentication when called from InitiateAuth
+      // Source: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_RequestSyntax
+      clientMetadata: undefined,
       source: "PostAuthentication_Authentication",
       userAttributes: user.Attributes,
       username: user.Username,

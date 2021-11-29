@@ -34,6 +34,8 @@ export const ForgotPassword = ({
     throw new UnsupportedError("ForgotPassword without email on user");
   }
 
+  // TODO: support UserMigration trigger
+
   const deliveryDetails: DeliveryDetails = {
     AttributeName: "email",
     DeliveryMedium: "EMAIL",
@@ -45,7 +47,8 @@ export const ForgotPassword = ({
     req.ClientId,
     userPool.config.Id,
     user,
-    code
+    code,
+    req.ClientMetadata
   );
   await messageDelivery.deliver(user, deliveryDetails, message);
 

@@ -37,11 +37,12 @@ export const ConfirmForgotPassword = ({
 
   if (triggers.enabled("PostConfirmation")) {
     await triggers.postConfirmation({
-      source: "PostConfirmation_ConfirmForgotPassword",
-      username: user.Username,
       clientId: req.ClientId,
-      userPoolId: userPool.config.Id,
+      clientMetadata: req.ClientMetadata,
+      source: "PostConfirmation_ConfirmForgotPassword",
       userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId: userPool.config.Id,
     });
   }
 

@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts') --outdir=lib --platform=node --target=node14 --format=cjs && cp -r src/keys lib/keys",
+    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts' ! -name '*.test.ts' ! -path '*/__tests__/*') --outdir=lib --platform=node --target=node14 --format=cjs && cp -r src/keys lib/keys",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
@@ -44,7 +44,7 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "husky": "^4.2.5",
-    "jest": "^27.0.6",
+    "jest": "^27.3.1",
     "jest-date-mock": "^1.0.8",
     "lint-staged": "^10.1.3",
     "markdown-toc": "^1.2.0",
@@ -83,7 +83,7 @@
   "lint-staged": {
     "*.ts": [
       "eslint --fix",
-      "tsc --esModuleInterop --resolveJsonModule --noEmit",
+      "tsc --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
       "prettier --write"
     ],
     "README.md": "markdown-toc -i --bullets=-"

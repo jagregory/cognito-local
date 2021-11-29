@@ -103,6 +103,9 @@ describe("ConfirmForgotPassword target", () => {
 
         await confirmForgotPassword({
           ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
           Username: user.Username,
           ConfirmationCode: "4567",
           Password: "newPassword",
@@ -110,6 +113,9 @@ describe("ConfirmForgotPassword target", () => {
 
         expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
           clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
           source: "PostConfirmation_ConfirmForgotPassword",
           userAttributes: user.Attributes,
           userPoolId: "test",
