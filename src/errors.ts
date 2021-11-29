@@ -63,6 +63,21 @@ export class UnexpectedLambdaExceptionError extends CognitoError {
   }
 }
 
+export class UserLambdaValidationError extends CognitoError {
+  public constructor(message?: string) {
+    super(
+      "UserLambdaValidationException",
+      message ?? "Lambda threw an exception"
+    );
+  }
+}
+
+export class InvalidLambdaResponseError extends CognitoError {
+  public constructor() {
+    super("InvalidLambdaResponseException", "Invalid Lambda response");
+  }
+}
+
 export class InvalidParameterError extends CognitoError {
   public constructor(message = "Invalid parameter") {
     super("InvalidParameterException", message);

@@ -1,6 +1,7 @@
 import {
   SignUpRequest,
   SignUpResponse,
+  UserStatusType,
   VerifiedAttributesListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import uuid from "uuid";
@@ -22,7 +23,7 @@ export type SignUpTarget = (req: SignUpRequest) => Promise<SignUpResponse>;
 
 type SignUpServices = Pick<
   Services,
-  "clock" | "cognito" | "messages" | "messageDelivery" | "otp"
+  "clock" | "cognito" | "messages" | "messageDelivery" | "otp" | "triggers"
 >;
 
 const selectAppropriateDeliveryMethod = (
@@ -97,6 +98,7 @@ export const SignUp =
     messageDelivery,
     messages,
     otp,
+    triggers,
   }: SignUpServices): SignUpTarget =>
   async (req) => {
     // TODO: This should behave differently depending on if PreventUserExistenceErrors
@@ -111,6 +113,30 @@ export const SignUp =
     const attributes = attributesInclude("sub", req.UserAttributes)
       ? req.UserAttributes ?? []
       : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
+    let userStatus: UserStatusType = "UNCONFIRMED";
+
+    if (triggers.enabled("PreSignUp")) {
+      const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
+        await triggers.preSignUp({
+          clientId: req.ClientId,
+          clientMetadata: req.ClientMetadata,
+          source: "PreSignUp_SignUp",
+          userAttributes: attributes,
+          username: req.Username,
+          userPoolId: userPool.config.Id,
+          validationData: undefined,
+        });
+
+      if (autoConfirmUser) {
+        userStatus = "CONFIRMED";
+      }
+      if (attributesInclude("email", attributes) && autoVerifyEmail) {
+        attributes.push({ Name: "email_verified", Value: "true" });
+      }
+      if (attributesInclude("phone_number", attributes) && autoVerifyPhone) {
+        attributes.push({ Name: "phone_number_verified", Value: "true" });
+      }
+    }
 
     const now = clock.get();
     const user: User = {
@@ -119,13 +145,9 @@ export const SignUp =
       Password: req.Password,
       UserCreateDate: now,
       UserLastModifiedDate: now,
-      UserStatus: "UNCONFIRMED",
       Username: req.Username,
+      UserStatus: userStatus,
     };
-
-    // TODO: call PreSignUp trigger
-    // TODO: do we also need a UserMigration call in here?
-    // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
 
     const code = otp();
 
@@ -143,6 +165,8 @@ export const SignUp =
       ...user,
       ConfirmationCode: code,
     });
+
+    // TODO: call PostConfirmation if PreSignUp confirms auto confirms the user
 
     return {
       CodeDeliveryDetails: deliveryDetails ?? undefined,

@@ -5,5 +5,6 @@ export const newMockTriggers = (): jest.Mocked<Triggers> => ({
   enabled: jest.fn(),
   postAuthentication: jest.fn(),
   postConfirmation: jest.fn(),
+  preSignUp: jest.fn(),
   userMigration: jest.fn(),
 });

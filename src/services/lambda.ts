@@ -1,7 +1,11 @@
 import { CognitoUserPoolEvent } from "aws-lambda";
 import type { Lambda as LambdaClient } from "aws-sdk";
 import { InvocationResponse } from "aws-sdk/clients/lambda";
-import { UnexpectedLambdaExceptionError } from "../errors";
+import {
+  InvalidLambdaResponseError,
+  UnexpectedLambdaExceptionError,
+  UserLambdaValidationError,
+} from "../errors";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
 import { Logger } from "../log";
 
@@ -33,6 +37,15 @@ interface UserMigrationEvent extends EventCommonParameters {
   validationData: Record<string, string> | undefined;
 }
 
+interface PreSignUpEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
+  triggerSource:
+    | "PreSignUp_AdminCreateUser"
+    | "PreSignUp_ExternalProvider"
+    | "PreSignUp_SignUp";
+  validationData: Record<string, string> | undefined;
+}
+
 interface PostAuthenticationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
   triggerSource: "PostAuthentication_Authentication";
@@ -49,9 +62,10 @@ export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
 
 export interface FunctionConfig {
   CustomMessage?: string;
-  UserMigration?: string;
   PostAuthentication?: string;
   PostConfirmation?: string;
+  PreSignUp?: string;
+  UserMigration?: string;
 }
 
 export interface Lambda {
@@ -63,6 +77,10 @@ export interface Lambda {
   invoke(
     lambda: "UserMigration",
     event: UserMigrationEvent
+  ): Promise<CognitoUserPoolResponse>;
+  invoke(
+    lambda: "PreSignUp",
+    event: PreSignUpEvent
   ): Promise<CognitoUserPoolResponse>;
   invoke(
     lambda: "PostAuthentication",
@@ -97,9 +115,10 @@ export class LambdaService implements Lambda {
     trigger: keyof FunctionConfig,
     event:
       | CustomMessageEvent
-      | UserMigrationEvent
       | PostAuthenticationEvent
       | PostConfirmationEvent
+      | PreSignUpEvent
+      | UserMigrationEvent
   ) {
     const functionName = this.config[trigger];
     if (!functionName) {
@@ -127,6 +146,13 @@ export class LambdaService implements Lambda {
       case "PostConfirmation_ConfirmForgotPassword":
       case "PostConfirmation_ConfirmSignUp": {
         lambdaEvent.request.clientMetadata = event.clientMetadata;
+        break;
+      }
+      case "PreSignUp_AdminCreateUser":
+      case "PreSignUp_ExternalProvider":
+      case "PreSignUp_SignUp": {
+        lambdaEvent.request.clientMetadata = event.clientMetadata;
+        lambdaEvent.request.validationData = event.validationData;
         break;
       }
       case "UserMigration_Authentication": {
@@ -172,12 +198,17 @@ export class LambdaService implements Lambda {
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
     );
     if (result.StatusCode === 200) {
-      const parsedPayload = JSON.parse(result.Payload as string);
+      try {
+        const parsedPayload = JSON.parse(result.Payload as string);
 
-      return parsedPayload.response as CognitoUserPoolResponse;
+        return parsedPayload.response as CognitoUserPoolResponse;
+      } catch (err) {
+        this.logger.error(err);
+        throw new InvalidLambdaResponseError();
+      }
     } else {
       this.logger.error(result.FunctionError);
-      throw new UnexpectedLambdaExceptionError();
+      throw new UserLambdaValidationError(result.FunctionError);
     }
   }
 }

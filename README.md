@@ -189,7 +189,9 @@ cognito-local how to connect to your local Lambda server:
 | PostConfirmation            | ConfirmForgotPassword             | ✅      |
 | PostConfirmation            | ConfirmSignUp                     | ✅      |
 | PreAuthentication           | \*                                | ❌      |
-| PreSignUp                   | \*                                | ❌      |
+| PreSignUp                   | PreSignUp_AdminCreateUser         | ❌      |
+| PreSignUp                   | PreSignUp_ExternalProvider        | ❌      |
+| PreSignUp                   | PreSignUp_SignUp                  | ✅      |
 | PreTokenGeneration          | \*                                | ❌      |
 | UserMigration               | Authentication                    | ✅      |
 | UserMigration               | ForgotPassword                    | ❌      |
@@ -280,9 +282,11 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
 | `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
 | `TriggerFunctions`                         | `object`   | `{}`                    | Trigger name to Function name mapping                       |
-| `TriggerFunctions.CustomMessage`           | `string`   |                         | CustomMessage lambda name                                   |
-| `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation lambda name                                |
-| `TriggerFunctions.UserMigration`           | `string`   |                         | UserMigration lambda name                                   |
+| `TriggerFunctions.CustomMessage`           | `string`   |                         | CustomMessage local lambda function name                    |
+| `TriggerFunctions.PostAuthentication`      | `string`   |                         | PostAuthentication local lambda function name               |
+| `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation local lambda function name                 |
+| `TriggerFunctions.PreSignUp`               | `string`   |                         | PostConfirmation local lambda function name                 |
+| `TriggerFunctions.UserMigration`           | `string`   |                         | PreSignUp local lambda function name                        |
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.Id`                      | `string`   | `local`                 | Default User Pool Id                                        |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |

@@ -48,50 +48,53 @@ export type CustomMessageTrigger = (params: {
   clientMetadata: Record<string, string> | undefined;
 }) => Promise<CustomMessageResponse | null>;
 
-type CustomMessageServices = {
+interface CustomMessageServices {
   lambda: Lambda;
   cognitoClient: CognitoService;
-};
-export const CustomMessage = (
-  { lambda, cognitoClient }: CustomMessageServices,
-  logger: Logger
-): CustomMessageTrigger => async ({
-  clientId,
-  clientMetadata,
-  code,
-  source,
-  userAttributes,
-  username,
-  userPoolId,
-}): Promise<CustomMessageResponse | null> => {
-  const userPool = await cognitoClient.getUserPoolForClientId(clientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
+}
 
-  try {
-    const response = await lambda.invoke("CustomMessage", {
-      clientId,
-      clientMetadata,
-      codeParameter: AWS_CODE_PARAMETER,
-      triggerSource: source,
-      userAttributes: attributesToRecord(userAttributes),
-      username,
-      usernameParameter: AWS_USERNAME_PARAMETER,
-      userPoolId,
-    });
+export const CustomMessage =
+  (
+    { lambda, cognitoClient }: CustomMessageServices,
+    logger: Logger
+  ): CustomMessageTrigger =>
+  async ({
+    clientId,
+    clientMetadata,
+    code,
+    source,
+    userAttributes,
+    username,
+    userPoolId,
+  }): Promise<CustomMessageResponse | null> => {
+    const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+    if (!userPool) {
+      throw new ResourceNotFoundError();
+    }
 
-    return {
-      emailMessage: response.emailMessage
-        ?.replace(AWS_CODE_PARAMETER, code)
-        .replace(AWS_USERNAME_PARAMETER, username),
-      emailSubject: response.emailSubject,
-      smsMessage: response.smsMessage
-        ?.replace(AWS_CODE_PARAMETER, code)
-        .replace(AWS_USERNAME_PARAMETER, username),
-    };
-  } catch (ex) {
-    logger.error(ex);
-    return null;
-  }
-};
+    try {
+      const response = await lambda.invoke("CustomMessage", {
+        clientId,
+        clientMetadata,
+        codeParameter: AWS_CODE_PARAMETER,
+        triggerSource: source,
+        userAttributes: attributesToRecord(userAttributes),
+        username,
+        usernameParameter: AWS_USERNAME_PARAMETER,
+        userPoolId,
+      });
+
+      return {
+        emailMessage: response.emailMessage
+          ?.replace(AWS_CODE_PARAMETER, code)
+          .replace(AWS_USERNAME_PARAMETER, username),
+        emailSubject: response.emailSubject,
+        smsMessage: response.smsMessage
+          ?.replace(AWS_CODE_PARAMETER, code)
+          .replace(AWS_USERNAME_PARAMETER, username),
+      };
+    } catch (ex) {
+      logger.error(ex);
+      return null;
+    }
+  };

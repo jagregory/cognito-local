@@ -8,28 +8,32 @@ import {
   PostAuthenticationTrigger,
 } from "./postAuthentication";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
+import { PreSignUp, PreSignUpTrigger } from "./preSignUp";
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
 
 type SupportedTriggers =
   | "CustomMessage"
   | "UserMigration"
   | "PostAuthentication"
-  | "PostConfirmation";
+  | "PostConfirmation"
+  | "PreSignUp";
 
 export interface Triggers {
   enabled(trigger: SupportedTriggers): boolean;
   customMessage: CustomMessageTrigger;
-  userMigration: UserMigrationTrigger;
   postAuthentication: PostAuthenticationTrigger;
   postConfirmation: PostConfirmationTrigger;
+  preSignUp: PreSignUpTrigger;
+  userMigration: UserMigrationTrigger;
 }
 
-export class TriggersService {
+export class TriggersService implements Triggers {
   private readonly lambda: Lambda;
 
   public readonly customMessage: CustomMessageTrigger;
   public readonly postAuthentication: PostAuthenticationTrigger;
   public readonly postConfirmation: PostConfirmationTrigger;
+  public readonly preSignUp: PreSignUpTrigger;
   public readonly userMigration: UserMigrationTrigger;
 
   public constructor(
@@ -38,11 +42,13 @@ export class TriggersService {
     lambda: Lambda,
     logger: Logger
   ) {
+    this.lambda = lambda;
+
     this.customMessage = CustomMessage({ lambda, cognitoClient }, logger);
     this.postAuthentication = PostAuthentication({ lambda }, logger);
     this.postConfirmation = PostConfirmation({ lambda, cognitoClient }, logger);
+    this.preSignUp = PreSignUp({ lambda });
     this.userMigration = UserMigration({ clock, lambda, cognitoClient });
-    this.lambda = lambda;
   }
 
   public enabled(trigger: SupportedTriggers): boolean {

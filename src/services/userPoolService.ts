@@ -2,6 +2,7 @@ import {
   AttributeListType,
   MFAOptionListType,
   UserPoolType,
+  UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
@@ -46,11 +47,7 @@ export interface User {
   UserCreateDate: Date;
   UserLastModifiedDate: Date;
   Enabled: boolean;
-  UserStatus:
-    | "CONFIRMED"
-    | "FORCE_CHANGE_PASSWORD"
-    | "RESET_REQUIRED"
-    | "UNCONFIRMED";
+  UserStatus: UserStatusType;
   Attributes: AttributeListType;
   MFAOptions?: MFAOptionListType;
 

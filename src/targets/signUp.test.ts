@@ -2,11 +2,21 @@ import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
+import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import * as TDB from "../__tests__/testDataBuilder";
-import { InvalidParameterError, UsernameExistsError } from "../errors";
-import { MessageDelivery, Messages, UserPoolService } from "../services";
+import {
+  InvalidParameterError,
+  UserLambdaValidationError,
+  UsernameExistsError,
+} from "../errors";
+import {
+  MessageDelivery,
+  Messages,
+  Triggers,
+  UserPoolService,
+} from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
 
 describe("SignUp target", () => {
@@ -15,6 +25,7 @@ describe("SignUp target", () => {
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
+  let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
 
   beforeEach(() => {
@@ -27,12 +38,14 @@ describe("SignUp target", () => {
       emailSubject: "Mock message",
     });
     mockOtp = jest.fn();
+    mockTriggers = newMockTriggers();
     signUp = SignUp({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
+      triggers: mockTriggers,
     });
   });
 
@@ -75,6 +88,206 @@ describe("SignUp target", () => {
       UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
+    });
+  });
+
+  describe("when PreSignUp trigger is enabled", () => {
+    beforeEach(() => {
+      mockTriggers.enabled.mockImplementation(
+        (trigger) => trigger === "PreSignUp"
+      );
+    });
+
+    it("calls the trigger lambda", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({});
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockTriggers.preSignUp).toHaveBeenCalledWith({
+        clientId: "clientId",
+        clientMetadata: {
+          client: "metadata",
+        },
+        source: "PreSignUp_SignUp",
+        userAttributes: [
+          { Name: "sub", Value: expect.stringMatching(UUID) },
+          { Name: "email", Value: "example@example.com" },
+        ],
+        userPoolId: "test",
+        username: "user-supplied",
+        validationData: undefined,
+      });
+    });
+
+    it("throws if the trigger lambda fails", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockRejectedValue(new UserLambdaValidationError());
+
+      await expect(
+        signUp({
+          ClientId: "clientId",
+          ClientMetadata: {
+            client: "metadata",
+          },
+          Password: "pwd",
+          Username: "user-supplied",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          ValidationData: [{ Name: "another", Value: "attribute" }],
+        })
+      ).rejects.toBeInstanceOf(UserLambdaValidationError);
+    });
+
+    it("confirms the user if the lambda returns autoConfirmUser=true", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: true,
+      });
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          UserStatus: "CONFIRMED",
+        })
+      );
+    });
+
+    it("verifies the user's email if the lambda returns autoVerifyEmail=true and the user has an email attribute", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoVerifyEmail: true,
+      });
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Attributes: [
+            { Name: "sub", Value: expect.stringMatching(UUID) },
+            { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "true" },
+          ],
+        })
+      );
+    });
+
+    it("does not verify the user's email if the lambda returns autoVerifyEmail=true but the user does not have an email attribute", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoVerifyEmail: true,
+      });
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Attributes: [{ Name: "sub", Value: expect.stringMatching(UUID) }],
+        })
+      );
+    });
+
+    it("verifies the user's phone_number if the lambda returns autoVerifyPhone=true and the user has an phone_number attribute", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoVerifyPhone: true,
+      });
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Attributes: [
+            { Name: "sub", Value: expect.stringMatching(UUID) },
+            { Name: "phone_number", Value: "0400000000" },
+            { Name: "phone_number_verified", Value: "true" },
+          ],
+        })
+      );
+    });
+
+    it("does not verify the user's phone_number if the lambda returns autoVerifyPhone=true but the user does not have a phone_number attribute", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoVerifyPhone: true,
+      });
+
+      await signUp({
+        ClientId: "clientId",
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [],
+        ValidationData: [{ Name: "another", Value: "attribute" }],
+      });
+
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Attributes: [{ Name: "sub", Value: expect.stringMatching(UUID) }],
+        })
+      );
+    });
+  });
+
+  describe("when PreSignUp trigger is disabled", () => {
+    it("does not call the trigger lambda", async () => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+
+      await signUp({
+        ClientId: "clientId",
+        Password: "pwd",
+        Username: "user-supplied",
+        UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+      });
+
+      expect(mockTriggers.preSignUp).not.toHaveBeenCalled();
     });
   });
 
