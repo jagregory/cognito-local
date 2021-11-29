@@ -1,3 +1,16 @@
+# [3.7.0](https://github.com/jagregory/cognito-local/compare/v3.6.0...v3.7.0) (2021-11-29)
+
+
+### Bug Fixes
+
+* **lambda:** lambda triggers called with clientMetadata/validationData ([2399c3e](https://github.com/jagregory/cognito-local/commit/2399c3eb7cbe92a772cdd0ec4082fb56b57fe3c6))
+
+
+### Features
+
+* **lambda:** postConfirmation called in signUp ([ddb2b77](https://github.com/jagregory/cognito-local/commit/ddb2b77bcf857b3e54213b2468c095671af60381))
+* **lambda:** preSignUp trigger support in signUp ([af955a1](https://github.com/jagregory/cognito-local/commit/af955a1a5c093c8c9b3b9dd7821bfbb2a51243d9))
+
 # [3.6.0](https://github.com/jagregory/cognito-local/compare/v3.5.0...v3.6.0) (2021-11-27)
 
 
