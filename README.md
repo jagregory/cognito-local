@@ -15,6 +15,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
   - [via Node](#via-node)
   - [Using a different port](#using-a-different-port)
   - [Updating your application](#updating-your-application)
+- [Creating your first User Pool](#creating-your-first-user-pool)
 - [Configuration](#configuration)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
   - [User Pools and Clients](#user-pools-and-clients)
@@ -262,12 +263,28 @@ new CognitoUserPool({
 
 You only want to do this when you're running locally on your development machine.
 
+## Creating your first User Pool
+
+Once you've started Cognito Local the easiest way to create a new User Pool is with the aws-cli:
+
+```shell
+aws --endpoint http://localhost:9229 cognito-idp create-user-pool --pool-name MyUserPool
+```
+
+> Replace the `--endpoint` with whatever host and port you're running Cognito Local on.
+
+If you run `ls .cognito/db` you will now see a new file called `local_???.json` where `???` is the `Id` from the output
+of the command you just ran.
+
+You may commit this file to version control if you would like all your team to use a common User Pool when developing,
+or you can have each team member run the above command when they first start using Cognito Local.
+
 ## Configuration
 
 You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda
 triggers with local Lambdas, you will definitely need to override `LambdaClient.endpoint` at a minimum.
 
-Before starting Cognito Local, create a config file:
+Before starting Cognito Local, create a config file if one doesn't already exist:
 
     mkdir .cognito && echo '{}' > .cognito/config.json
 
@@ -288,7 +305,6 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `TriggerFunctions.PreSignUp`               | `string`   |                         | PostConfirmation local lambda function name                 |
 | `TriggerFunctions.UserMigration`           | `string`   |                         | PreSignUp local lambda function name                        |
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
-| `UserPoolDefaults.Id`                      | `string`   | `local`                 | Default User Pool Id                                        |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |
 | `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]`             | Username alias attributes                                   |
 
@@ -308,7 +324,6 @@ The default config is:
   },
   "TriggerFunctions": {},
   "UserPoolDefaults": {
-    "Id": "local",
     "UsernameAttributes": ["email"]
   }
 }
