@@ -31,6 +31,16 @@ export function generateTokens(
   const authTime = Math.floor(clock.get().getTime() / 1000);
   const sub = attributeValue("sub", user.Attributes);
 
+  const customAttributes = user.Attributes.reduce<{
+    [key: string]: string | undefined;
+  }>((acc, attr) => {
+    if (attr.Name.startsWith("custom:")) {
+      acc[attr.Name] = attr.Value;
+    }
+
+    return acc;
+  }, {});
+
   const issuer = `${tokenConfig.IssuerDomain}/${userPoolId}`;
   return {
     AccessToken: jwt.sign(
@@ -61,6 +71,7 @@ export function generateTokens(
         auth_time: authTime,
         "cognito:username": user.Username,
         email: attributeValue("email", user.Attributes),
+        ...customAttributes,
       },
       PrivateKey.pem,
       {
@@ -71,6 +82,21 @@ export function generateTokens(
         keyid: "CognitoLocal",
       }
     ),
-    RefreshToken: "<< TODO >>",
+    // this content is for debugging purposes only
+    // in reality token payload is encrypted and uses different algorithm
+    RefreshToken: jwt.sign(
+      {
+        "cognito:username": user.Username,
+        email: attributeValue("email", user.Attributes),
+        // something unique for each token
+        unique: uuid.v4(),
+      },
+      PrivateKey.pem,
+      {
+        algorithm: "RS256",
+        issuer,
+        expiresIn: "7d",
+      }
+    ),
   };
 }

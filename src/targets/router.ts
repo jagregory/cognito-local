@@ -23,11 +23,14 @@ import { AdminGetUser } from "./adminGetUser";
 import { AdminDeleteUser } from "./adminDeleteUser";
 import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
+import { AdminInitiateAuth } from "./adminInitiateAuth";
+import { RevokeToken } from "./revokeToken";
 
 export const Targets = {
   AdminConfirmSignUp,
   AdminCreateUser,
   AdminDeleteUser,
+  AdminInitiateAuth,
   AdminGetUser,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
@@ -46,6 +49,7 @@ export const Targets = {
   ListUsers,
   ListUserPools,
   RespondToAuthChallenge,
+  RevokeToken,
   SignUp,
 };
 

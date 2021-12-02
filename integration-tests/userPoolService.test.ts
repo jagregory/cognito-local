@@ -61,6 +61,7 @@ describe("User Pool Service", () => {
           UserLastModifiedDate: now,
           UserCreateDate: now,
           Enabled: true,
+          RefreshTokens: [],
         });
 
         const file = JSON.parse(
@@ -99,6 +100,7 @@ describe("User Pool Service", () => {
           UserLastModifiedDate: now,
           UserCreateDate: now,
           Enabled: true,
+          RefreshTokens: [],
         });
 
         let file = JSON.parse(
@@ -132,6 +134,7 @@ describe("User Pool Service", () => {
           UserLastModifiedDate: now,
           UserCreateDate: now,
           Enabled: true,
+          RefreshTokens: [],
         });
 
         file = JSON.parse(
@@ -174,6 +177,7 @@ describe("User Pool Service", () => {
           UserCreateDate: new Date(),
           UserLastModifiedDate: new Date(),
           Enabled: true,
+          RefreshTokens: [],
         });
       });
 
@@ -212,6 +216,7 @@ describe("User Pool Service", () => {
         UserCreateDate: now,
         UserLastModifiedDate: now,
         Enabled: true,
+        RefreshTokens: [],
       });
 
       await userPool.saveUser({
@@ -222,6 +227,7 @@ describe("User Pool Service", () => {
         UserCreateDate: now,
         UserLastModifiedDate: now,
         Enabled: true,
+        RefreshTokens: [],
       });
     });
 

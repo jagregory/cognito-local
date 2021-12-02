@@ -88,6 +88,7 @@ describe("SignUp target", () => {
       UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
+      RefreshTokens: [],
     });
   });
 
@@ -447,6 +448,7 @@ describe("SignUp target", () => {
           UserLastModifiedDate: now,
           UserStatus: "UNCONFIRMED",
           Username: "user-supplied",
+          RefreshTokens: [],
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
@@ -518,6 +520,7 @@ describe("SignUp target", () => {
           UserLastModifiedDate: now,
           UserStatus: "UNCONFIRMED",
           Username: "user-supplied",
+          RefreshTokens: [],
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
@@ -596,6 +599,7 @@ describe("SignUp target", () => {
           UserLastModifiedDate: now,
           UserStatus: "UNCONFIRMED",
           Username: "user-supplied",
+          RefreshTokens: [],
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
@@ -643,6 +647,7 @@ describe("SignUp target", () => {
           UserLastModifiedDate: now,
           UserStatus: "UNCONFIRMED",
           Username: "user-supplied",
+          RefreshTokens: [],
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
@@ -708,6 +713,7 @@ describe("SignUp target", () => {
       UserLastModifiedDate: now,
       UserStatus: "UNCONFIRMED",
       Username: "user-supplied",
+      RefreshTokens: [],
     });
   });
 });

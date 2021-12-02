@@ -55,6 +55,7 @@ describe("AdminCreateUser target", () => {
       UserLastModifiedDate: originalDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
+      RefreshTokens: [],
     });
   });
 
@@ -83,6 +84,7 @@ describe("AdminCreateUser target", () => {
       UserLastModifiedDate: originalDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
+      RefreshTokens: [],
     });
   });
 
@@ -107,7 +109,7 @@ describe("AdminCreateUser target", () => {
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
-          { ...response.User, Password: "pwd" },
+          { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
           {
             client: "metadata",
@@ -117,6 +119,7 @@ describe("AdminCreateUser target", () => {
           {
             ...response.User,
             Password: "pwd",
+            RefreshTokens: [],
           },
           {
             AttributeName: "email",
@@ -166,7 +169,7 @@ describe("AdminCreateUser target", () => {
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
-          { ...response.User, Password: "pwd" },
+          { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
           {
             client: "metadata",
@@ -176,6 +179,7 @@ describe("AdminCreateUser target", () => {
           {
             ...response.User,
             Password: "pwd",
+            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
@@ -224,7 +228,7 @@ describe("AdminCreateUser target", () => {
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
-          { ...response.User, Password: "pwd" },
+          { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
           {
             client: "metadata",
@@ -234,6 +238,7 @@ describe("AdminCreateUser target", () => {
           {
             ...response.User,
             Password: "pwd",
+            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
@@ -288,7 +293,7 @@ describe("AdminCreateUser target", () => {
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
-          { ...response.User, Password: "pwd" },
+          { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
           {
             client: "metadata",
@@ -298,6 +303,7 @@ describe("AdminCreateUser target", () => {
           {
             ...response.User,
             Password: "pwd",
+            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
@@ -327,7 +333,7 @@ describe("AdminCreateUser target", () => {
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
           "test",
-          { ...response.User, Password: "pwd" },
+          { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
           {
             client: "metadata",
@@ -337,6 +343,7 @@ describe("AdminCreateUser target", () => {
           {
             ...response.User,
             Password: "pwd",
+            RefreshTokens: [],
           },
           {
             AttributeName: "email",

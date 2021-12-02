@@ -4,7 +4,7 @@ import {
   UserStatusType,
   VerifiedAttributesListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import uuid from "uuid";
+import * as uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import {
   MessageDelivery,
@@ -147,6 +147,7 @@ export const SignUp =
       UserLastModifiedDate: now,
       Username: req.Username,
       UserStatus: userStatus,
+      RefreshTokens: [],
     };
 
     const code = otp();

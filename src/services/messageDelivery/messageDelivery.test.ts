@@ -11,6 +11,7 @@ describe("Message Delivery", () => {
     Enabled: true,
     UserCreateDate: new Date(),
     UserLastModifiedDate: new Date(),
+    RefreshTokens: [],
   };
 
   describe("when delivery method is EMAIL", () => {

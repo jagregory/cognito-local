@@ -55,6 +55,7 @@ export interface User {
   Password: string;
   ConfirmationCode?: string;
   MFACode?: string;
+  RefreshTokens: string[];
 }
 
 export interface Group {
