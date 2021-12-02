@@ -60,7 +60,7 @@ export const createDataStore: CreateDataStore = async (
       `Deserialize: Expected ${key} to contain a String or Number, received a ${typeof value}`
     );
   };
-  console.log(directory, id);
+
   const engine = new StormDB.localFileEngine(`${directory}/${id}.json`, {
     async: true,
     serialize: (obj: unknown) =>
