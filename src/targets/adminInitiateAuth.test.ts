@@ -64,6 +64,11 @@ describe("AdminInitiateAuth target", () => {
       },
     });
 
+    expect(mockUserPoolService.storeRefreshToken).toHaveBeenCalledWith(
+      response.AuthenticationResult?.RefreshToken,
+      existingUser
+    );
+
     expect(response.AuthenticationResult?.AccessToken).toBeTruthy();
     expect(response.AuthenticationResult?.IdToken).toBeTruthy();
     expect(response.AuthenticationResult?.RefreshToken).toBeTruthy();
@@ -84,6 +89,11 @@ describe("AdminInitiateAuth target", () => {
         REFRESH_TOKEN: "refresh token",
       },
     });
+
+    expect(mockUserPoolService.getUserByRefreshToken).toHaveBeenCalledWith(
+      "refresh token"
+    );
+    expect(mockUserPoolService.storeRefreshToken).not.toHaveBeenCalled();
 
     expect(response.AuthenticationResult?.AccessToken).toBeTruthy();
     expect(response.AuthenticationResult?.IdToken).toBeTruthy();
