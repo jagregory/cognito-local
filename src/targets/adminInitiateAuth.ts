@@ -2,22 +2,22 @@ import {
   AdminInitiateAuthRequest,
   AdminInitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
 import {
   InvalidParameterError,
   InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
+import { Services } from "../services";
 import { generateTokens } from "../services/tokens";
 
 export type AdminInitiateAuthTarget = (
   req: AdminInitiateAuthRequest
 ) => Promise<AdminInitiateAuthResponse>;
 
-type AuthServices = Pick<Services, "cognito" | "clock" | "triggers">;
+type AuthServices = Pick<Services, "cognito" | "clock" | "triggers" | "config">;
 
-const handleAdminUserPasswordAuth = async (
+const adminUserPasswordAuthFlow = async (
   services: AuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
@@ -65,7 +65,7 @@ const handleAdminUserPasswordAuth = async (
     user,
     req.ClientId,
     userPool.config.Id,
-    {},
+    services.config.TokenConfig,
     services.clock
   );
 
@@ -86,7 +86,7 @@ const handleAdminUserPasswordAuth = async (
   };
 };
 
-const handleRefreshTokenAuth = async (
+const refreshTokenAuthFlow = async (
   services: AuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
@@ -112,7 +112,7 @@ const handleRefreshTokenAuth = async (
     user,
     req.ClientId,
     userPool.config.Id,
-    {},
+    services.config.TokenConfig,
     services.clock
   );
 
@@ -135,10 +135,13 @@ export const AdminInitiateAuth =
   (services: AuthServices): AdminInitiateAuthTarget =>
   async (req) => {
     if (req.AuthFlow === "ADMIN_USER_PASSWORD_AUTH") {
-      return handleAdminUserPasswordAuth(services, req);
-    } else if (req.AuthFlow === "REFRESH_TOKEN_AUTH") {
-      return handleRefreshTokenAuth(services, req);
+      return adminUserPasswordAuthFlow(services, req);
+    } else if (
+      req.AuthFlow === "REFRESH_TOKEN_AUTH" ||
+      req.AuthFlow === "REFRESH_TOKEN"
+    ) {
+      return refreshTokenAuthFlow(services, req);
     } else {
-      throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
+      throw new UnsupportedError(`AdminInitAuth with AuthFlow=${req.AuthFlow}`);
     }
   };
