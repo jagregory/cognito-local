@@ -45,13 +45,13 @@ export function generateTokens(
   return {
     AccessToken: jwt.sign(
       {
-        sub,
-        event_id: eventId,
-        token_use: "access",
-        scope: "aws.cognito.signin.user.admin", // TODO: scopes
         auth_time: authTime,
-        jti: uuid.v4(),
         client_id: clientId,
+        event_id: eventId,
+        jti: uuid.v4(),
+        scope: "aws.cognito.signin.user.admin", // TODO: scopes
+        sub,
+        token_use: "access",
         username: user.Username,
       },
       PrivateKey.pem,
@@ -64,13 +64,14 @@ export function generateTokens(
     ),
     IdToken: jwt.sign(
       {
-        sub,
+        "cognito:username": user.Username,
+        auth_time: authTime,
+        email: attributeValue("email", user.Attributes),
         email_verified: true,
         event_id: eventId,
+        jti: uuid.v4(),
+        sub,
         token_use: "id",
-        auth_time: authTime,
-        "cognito:username": user.Username,
-        email: attributeValue("email", user.Attributes),
         ...customAttributes,
       },
       PrivateKey.pem,
@@ -88,8 +89,7 @@ export function generateTokens(
       {
         "cognito:username": user.Username,
         email: attributeValue("email", user.Attributes),
-        // something unique for each token
-        unique: uuid.v4(),
+        jti: uuid.v4(),
       },
       PrivateKey.pem,
       {
