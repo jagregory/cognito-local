@@ -127,6 +127,7 @@ export const AdminCreateUser =
       ConfirmationCode: undefined,
       UserCreateDate: now,
       UserLastModifiedDate: now,
+      RefreshTokens: [],
     };
     await userPool.saveUser(user);
 

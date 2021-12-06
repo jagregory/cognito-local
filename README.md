@@ -41,7 +41,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminForgetDevice                | ❌                   |
 | AdminGetDevice                   | ❌                   |
 | AdminGetUser                     | ✅                   |
-| AdminInitiateAuth                | ❌                   |
+| AdminInitiateAuth                | 🕒 (partial support) |
 | AdminLinkProviderForUser         | ❌                   |
 | AdminListDevices                 | ❌                   |
 | AdminListGroupsForUser           | ❌                   |
@@ -108,7 +108,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | ListUsersInGroup                 | ❌                   |
 | ResendConfirmationCode           | ❌                   |
 | RespondToAuthChallenge           | 🕒 (partial support) |
-| RevokeToken                      | ❌                   |
+| RevokeToken                      | 🕒 (partial support) |
 | SetRiskConfiguration             | ❌                   |
 | SetUICustomization               | ❌                   |
 | SetUserMFAPreference             | ❌                   |

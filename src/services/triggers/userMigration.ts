@@ -41,61 +41,64 @@ interface UserMigrationServices {
   lambda: Lambda;
 }
 
-export const UserMigration = ({
-  lambda,
-  cognitoClient,
-  clock,
-}: UserMigrationServices): UserMigrationTrigger => async ({
-  clientId,
-  clientMetadata,
-  password,
-  userAttributes,
-  username,
-  userPoolId,
-  validationData,
-}): Promise<User> => {
-  const userPool = await cognitoClient.getUserPoolForClientId(clientId);
-  if (!userPool) {
-    throw new ResourceNotFoundError();
-  }
+export const UserMigration =
+  ({
+    lambda,
+    cognitoClient,
+    clock,
+  }: UserMigrationServices): UserMigrationTrigger =>
+  async ({
+    clientId,
+    clientMetadata,
+    password,
+    userAttributes,
+    username,
+    userPoolId,
+    validationData,
+  }): Promise<User> => {
+    const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+    if (!userPool) {
+      throw new ResourceNotFoundError();
+    }
 
-  let result: CognitoUserPoolResponse;
+    let result: CognitoUserPoolResponse;
 
-  try {
-    result = await lambda.invoke("UserMigration", {
-      clientId,
-      clientMetadata,
-      password,
-      triggerSource: "UserMigration_Authentication",
-      userAttributes: attributesToRecord(userAttributes),
-      username,
-      userPoolId,
-      validationData,
-    });
-  } catch (ex) {
-    throw new NotAuthorizedError();
-  }
+    try {
+      result = await lambda.invoke("UserMigration", {
+        clientId,
+        clientMetadata,
+        password,
+        triggerSource: "UserMigration_Authentication",
+        userAttributes: attributesToRecord(userAttributes),
+        username,
+        userPoolId,
+        validationData,
+      });
+    } catch (ex) {
+      throw new NotAuthorizedError();
+    }
 
-  const now = clock.get();
-  const user: User = {
-    Attributes: attributesFromRecord(result.userAttributes ?? {}),
-    Enabled: true,
-    Password: password,
-    UserCreateDate: now,
-    UserLastModifiedDate: now,
-    Username: uuid.v4(),
-    UserStatus: result.finalUserStatus ?? "CONFIRMED",
+    const now = clock.get();
+    const user: User = {
+      Attributes: attributesFromRecord(result.userAttributes ?? {}),
+      Enabled: true,
+      Password: password,
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
+      Username: uuid.v4(),
+      UserStatus: result.finalUserStatus ?? "CONFIRMED",
+      RefreshTokens: [],
+    };
+
+    if (result.forceAliasCreation) {
+      // TODO: do something with aliases?
+    }
+
+    await userPool.saveUser(user);
+
+    if (result.messageAction !== "SUPPRESS") {
+      // TODO: send notification when not suppressed?
+    }
+
+    return user;
   };
-
-  if (result.forceAliasCreation) {
-    // TODO: do something with aliases?
-  }
-
-  await userPool.saveUser(user);
-
-  if (result.messageAction !== "SUPPRESS") {
-    // TODO: send notification when not suppressed?
-  }
-
-  return user;
-};

@@ -147,6 +147,7 @@ export const SignUp =
       UserLastModifiedDate: now,
       Username: req.Username,
       UserStatus: userStatus,
+      RefreshTokens: [],
     };
 
     const code = otp();

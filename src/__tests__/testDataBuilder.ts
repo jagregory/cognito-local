@@ -27,6 +27,7 @@ export const user = (partial?: Partial<User>): User => ({
   UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date(),
   Username: partial?.Username ?? id("User"),
   UserStatus: partial?.UserStatus ?? "CONFIRMED",
+  RefreshTokens: [],
 });
 
 export const userPool = (partial?: Partial<UserPool>): UserPool => {
