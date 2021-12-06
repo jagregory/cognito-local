@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { MockLogger } from "../__tests__/mockLogger";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
@@ -16,12 +16,9 @@ describe("GetUser target", () => {
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
-    getUser = GetUser(
-      {
-        cognito: newMockCognitoService(mockUserPoolService),
-      },
-      MockLogger
-    );
+    getUser = GetUser({
+      cognito: newMockCognitoService(mockUserPoolService),
+    });
   });
 
   it("parses token get user by sub", async () => {
@@ -29,7 +26,7 @@ describe("GetUser target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    const output = await getUser({
+    const output = await getUser(TestContext, {
       AccessToken: jwt.sign(
         {
           sub: attributeValue("sub", user.Attributes),
@@ -60,7 +57,7 @@ describe("GetUser target", () => {
 
   it("throws if token isn't valid", async () => {
     await expect(
-      getUser({
+      getUser(TestContext, {
         AccessToken: "blah",
       })
     ).rejects.toBeInstanceOf(InvalidParameterError);
@@ -70,7 +67,7 @@ describe("GetUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      getUser({
+      getUser(TestContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",

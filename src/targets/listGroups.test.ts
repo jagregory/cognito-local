@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { UserPoolService } from "../services";
 import { ListGroups, ListGroupsTarget } from "./listGroups";
 import * as TDB from "../__tests__/testDataBuilder";
@@ -21,7 +22,7 @@ describe("ListGroups target", () => {
 
     mockUserPoolService.listGroups.mockResolvedValue([group1, group2]);
 
-    const output = await listGroups({
+    const output = await listGroups(TestContext, {
       UserPoolId: "userPoolId",
     });
 

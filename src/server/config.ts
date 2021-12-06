@@ -1,3 +1,4 @@
+import { Context } from "../services/context";
 import { CreateDataStore } from "../services/dataStore";
 import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
@@ -35,12 +36,14 @@ export const DefaultConfig: Config = {
 };
 
 export const loadConfig = async (
+  ctx: Context,
   configDirectory: string,
   createDataStore: CreateDataStore
 ): Promise<Config> => {
-  const dataStore = await createDataStore("config", {}, configDirectory);
+  ctx.logger.debug("loadConfig");
+  const dataStore = await createDataStore(ctx, "config", {}, configDirectory);
 
-  const config = await dataStore.getRoot<Config>();
+  const config = await dataStore.getRoot<Config>(ctx);
 
   return mergeWith(
     {},

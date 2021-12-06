@@ -4,9 +4,9 @@ import {
   UserPoolType,
   UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Logger } from "../log";
 import { AppClient, newId } from "./appClient";
 import { Clock } from "./clock";
+import { Context } from "./context";
 import { CreateDataStore, DataStore } from "./dataStore";
 
 export interface MFAOption {
@@ -93,76 +93,84 @@ export type UserPool = UserPoolType & {
 export interface UserPoolService {
   readonly config: UserPool;
 
-  createAppClient(name: string): Promise<AppClient>;
-  deleteUser(user: User): Promise<void>;
-  getUserByUsername(username: string): Promise<User | null>;
-  getUserByRefreshToken(refreshToken: string): Promise<User | null>;
-  listGroups(): Promise<readonly Group[]>;
-  listUsers(): Promise<readonly User[]>;
-  saveGroup(group: Group): Promise<void>;
-  saveUser(user: User): Promise<void>;
-  storeRefreshToken(refreshToken: string, user: User): Promise<void>;
+  createAppClient(ctx: Context, name: string): Promise<AppClient>;
+  deleteUser(ctx: Context, user: User): Promise<void>;
+  getUserByUsername(ctx: Context, username: string): Promise<User | null>;
+  getUserByRefreshToken(
+    ctx: Context,
+    refreshToken: string
+  ): Promise<User | null>;
+  listGroups(ctx: Context): Promise<readonly Group[]>;
+  listUsers(ctx: Context): Promise<readonly User[]>;
+  saveGroup(ctx: Context, group: Group): Promise<void>;
+  saveUser(ctx: Context, user: User): Promise<void>;
+  storeRefreshToken(
+    ctx: Context,
+    refreshToken: string,
+    user: User
+  ): Promise<void>;
 }
 
 export type CreateUserPoolService = (
+  ctx: Context,
   dataDirectory: string,
   clientsDataStore: DataStore,
   clock: Clock,
   createDataStore: CreateDataStore,
-  defaultOptions: UserPool,
-  logger: Logger
+  defaultOptions: UserPool
 ) => Promise<UserPoolService>;
 
 export class UserPoolServiceImpl implements UserPoolService {
   private readonly clientsDataStore: DataStore;
   private readonly clock: Clock;
   private readonly dataStore: DataStore;
-  private readonly logger: Logger;
 
   public readonly config: UserPool;
 
   public static async create(
+    ctx: Context,
     dataDirectory: string,
     clientsDataStore: DataStore,
     clock: Clock,
     createDataStore: CreateDataStore,
-    defaultOptions: UserPool,
-    logger: Logger
+    defaultOptions: UserPool
   ): Promise<UserPoolService> {
+    const id = defaultOptions.Id;
+
+    ctx.logger.debug({ id }, "UserPoolServiceImpl.create");
+
     const dataStore = await createDataStore(
-      defaultOptions.Id,
+      ctx,
+      id,
       {
         Users: {},
         Options: defaultOptions,
       },
       dataDirectory
     );
-    const config = await dataStore.get<UserPool>("Options", defaultOptions);
-
-    return new UserPoolServiceImpl(
-      clientsDataStore,
-      clock,
-      dataStore,
-      config,
-      logger
+    const config = await dataStore.get<UserPool>(
+      ctx,
+      "Options",
+      defaultOptions
     );
+
+    return new UserPoolServiceImpl(clientsDataStore, clock, dataStore, config);
   }
 
   public constructor(
     clientsDataStore: DataStore,
     clock: Clock,
     dataStore: DataStore,
-    config: UserPool,
-    logger: Logger
+    config: UserPool
   ) {
     this.clientsDataStore = clientsDataStore;
     this.config = config;
     this.clock = clock;
     this.dataStore = dataStore;
-    this.logger = logger;
   }
 
-  public async createAppClient(name: string): Promise<AppClient> {
+  public async createAppClient(ctx: Context, name: string): Promise<AppClient> {
+    ctx.logger.debug({ name }, "UserPoolServiceImpl.createAppClient");
     const id = newId();
     const now = this.clock.get();
 
@@ -176,28 +184,42 @@ export class UserPoolServiceImpl implements UserPoolService {
       RefreshTokenValidity: 30,
     };
 
-    await this.clientsDataStore.set(["Clients", id], appClient);
+    await this.clientsDataStore.set(ctx, ["Clients", id], appClient);
 
     return appClient;
   }
 
-  public async deleteUser(user: User): Promise<void> {
-    await this.dataStore.delete(["Users", user.Username]);
+  public async deleteUser(ctx: Context, user: User): Promise<void> {
+    ctx.logger.debug(
+      { username: user.Username },
+      "UserPoolServiceImpl.deleteUser"
+    );
+    await this.dataStore.delete(ctx, ["Users", user.Username]);
   }
 
-  public async getUserByUsername(username: string): Promise<User | null> {
-    this.logger.debug("getUserByUsername", username);
+  public async getUserByUsername(
+    ctx: Context,
+    username: string
+  ): Promise<User | null> {
+    ctx.logger.debug({ username }, "UserPoolServiceImpl.getUserByUsername");
 
     const aliasEmailEnabled = this.config.UsernameAttributes?.includes("email");
     const aliasPhoneNumberEnabled =
       this.config.UsernameAttributes?.includes("phone_number");
 
-    const userByUsername = await this.dataStore.get<User>(["Users", username]);
+    const userByUsername = await this.dataStore.get<User>(ctx, [
+      "Users",
+      username,
+    ]);
     if (userByUsername) {
       return userByUsername;
     }
 
-    const users = await this.dataStore.get<Record<string, User>>("Users", {});
+    const users = await this.dataStore.get<Record<string, User>>(
+      ctx,
+      "Users",
+      {}
+    );
 
     for (const user of Object.values(users)) {
       if (attributesIncludeMatch("sub", username, user.Attributes)) {
@@ -223,10 +245,14 @@ export class UserPoolServiceImpl implements UserPoolService {
   }
 
   public async getUserByRefreshToken(
+    ctx: Context,
     refreshToken: string
   ): Promise<User | null> {
-    this.logger.debug("getUserByRefreshToken", refreshToken);
-    const users = await this.listUsers();
+    ctx.logger.debug(
+      { refreshToken },
+      "UserPoolServiceImpl.getUserByRefreshToken"
+    );
+    const users = await this.listUsers(ctx);
     const user = users.find(
       (user) =>
         Array.isArray(user.RefreshTokens) &&
@@ -236,22 +262,27 @@ export class UserPoolServiceImpl implements UserPoolService {
     return user ?? null;
   }
 
-  public async listUsers(): Promise<readonly User[]> {
-    this.logger.debug("listUsers");
-    const users = await this.dataStore.get<Record<string, User>>("Users", {});
+  public async listUsers(ctx: Context): Promise<readonly User[]> {
+    ctx.logger.debug("UserPoolServiceImpl.listUsers");
+    const users = await this.dataStore.get<Record<string, User>>(
+      ctx,
+      "Users",
+      {}
+    );
 
     return Object.values(users);
   }
 
-  public async saveUser(user: User): Promise<void> {
-    this.logger.debug("saveUser", user);
+  public async saveUser(ctx: Context, user: User): Promise<void> {
+    ctx.logger.debug({ user }, "UserPoolServiceImpl.saveUser");
 
-    await this.dataStore.set<User>(["Users", user.Username], user);
+    await this.dataStore.set<User>(ctx, ["Users", user.Username], user);
   }
 
-  async listGroups(): Promise<readonly Group[]> {
-    this.logger.debug("listGroups");
+  async listGroups(ctx: Context): Promise<readonly Group[]> {
+    ctx.logger.debug("UserPoolServiceImpl.listGroups");
     const groups = await this.dataStore.get<Record<string, Group>>(
+      ctx,
       "Groups",
       {}
     );
@@ -259,20 +290,28 @@ export class UserPoolServiceImpl implements UserPoolService {
     return Object.values(groups);
   }
 
-  async saveGroup(group: Group) {
-    this.logger.debug("saveGroup", group);
+  async saveGroup(ctx: Context, group: Group): Promise<void> {
+    ctx.logger.debug({ group }, "UserPoolServiceImpl.saveGroup");
 
-    await this.dataStore.set<Group>(["Groups", group.GroupName], group);
+    await this.dataStore.set<Group>(ctx, ["Groups", group.GroupName], group);
   }
 
-  async storeRefreshToken(refreshToken: string, user: User): Promise<void> {
-    this.logger.debug("storeRefreshToken", refreshToken, user);
+  async storeRefreshToken(
+    ctx: Context,
+    refreshToken: string,
+    user: User
+  ): Promise<void> {
+    ctx.logger.debug(
+      { refreshToken, username: user.Username },
+      "UserPoolServiceImpl.storeRefreshToken",
+      refreshToken
+    );
     const refreshTokens = Array.isArray(user.RefreshTokens)
       ? user.RefreshTokens
       : [];
     refreshTokens.push(refreshToken);
 
-    await this.saveUser({
+    await this.saveUser(ctx, {
       ...user,
       RefreshTokens: refreshTokens,
     });

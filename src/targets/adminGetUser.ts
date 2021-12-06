@@ -4,18 +4,20 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { UserNotFoundError } from "../errors";
+import { Target } from "./router";
 
-export type AdminGetUserTarget = (
-  req: AdminGetUserRequest
-) => Promise<AdminGetUserResponse>;
+export type AdminGetUserTarget = Target<
+  AdminGetUserRequest,
+  AdminGetUserResponse
+>;
 
 type AdminGetUserServices = Pick<Services, "cognito">;
 
 export const AdminGetUser =
   ({ cognito }: AdminGetUserServices): AdminGetUserTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPool(req.UserPoolId);
-    const user = await userPool.getUserByUsername(req.Username);
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
+    const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
       throw new UserNotFoundError("User does not exist");
     }

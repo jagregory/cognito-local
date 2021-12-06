@@ -4,23 +4,27 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type ConfirmForgotPasswordTarget = (
-  req: ConfirmForgotPasswordRequest
-) => Promise<ConfirmForgotPasswordResponse>;
+export type ConfirmForgotPasswordTarget = Target<
+  ConfirmForgotPasswordRequest,
+  ConfirmForgotPasswordResponse
+>;
+
+type ConfirmForgotPasswordServices = Pick<
+  Services,
+  "cognito" | "clock" | "triggers"
+>;
 
 export const ConfirmForgotPassword =
   ({
     cognito,
     clock,
     triggers,
-  }: Pick<
-    Services,
-    "cognito" | "clock" | "triggers"
-  >): ConfirmForgotPasswordTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-    const user = await userPool.getUserByUsername(req.Username);
+  }: ConfirmForgotPasswordServices): ConfirmForgotPasswordTarget =>
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
       throw new UserNotFoundError();
     }
@@ -29,7 +33,7 @@ export const ConfirmForgotPassword =
       throw new CodeMismatchError();
     }
 
-    await userPool.saveUser({
+    await userPool.saveUser(ctx, {
       ...user,
       UserLastModifiedDate: clock.get(),
       UserStatus: "CONFIRMED",
@@ -38,7 +42,7 @@ export const ConfirmForgotPassword =
     });
 
     if (triggers.enabled("PostConfirmation")) {
-      await triggers.postConfirmation({
+      await triggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmForgotPassword",

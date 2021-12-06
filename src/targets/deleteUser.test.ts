@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { MockLogger } from "../__tests__/mockLogger";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
@@ -15,12 +15,9 @@ describe("DeleteUser target", () => {
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
-    deleteUser = DeleteUser(
-      {
-        cognito: newMockCognitoService(mockUserPoolService),
-      },
-      MockLogger
-    );
+    deleteUser = DeleteUser({
+      cognito: newMockCognitoService(mockUserPoolService),
+    });
   });
 
   it("parses token get user by sub", async () => {
@@ -28,7 +25,7 @@ describe("DeleteUser target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await deleteUser({
+    await deleteUser(TestContext, {
       AccessToken: jwt.sign(
         {
           sub: "0000-0000",
@@ -50,12 +47,15 @@ describe("DeleteUser target", () => {
       ),
     });
 
-    expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(user);
+    expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(
+      TestContext,
+      user
+    );
   });
 
   it("throws if token isn't valid", async () => {
     await expect(
-      deleteUser({
+      deleteUser(TestContext, {
         AccessToken: "blah",
       })
     ).rejects.toBeInstanceOf(InvalidParameterError);
@@ -65,7 +65,7 @@ describe("DeleteUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      deleteUser({
+      deleteUser(TestContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",

@@ -1,7 +1,7 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { newMockDataStore } from "../__tests__/mockDataStore";
-import { MockLogger } from "../__tests__/mockLogger";
+import { TestContext } from "../__tests__/testContext";
 import { DataStore } from "./dataStore";
 import {
   attributesFromRecord,
@@ -31,15 +31,19 @@ describe("User Pool Service", () => {
     const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
 
     await UserPoolServiceImpl.create(
+      TestContext,
       "data-directory",
       mockClientsDataStore,
       clock,
       createDataStore,
-      { Id: "local", UsernameAttributes: [] },
-      MockLogger
+      {
+        Id: "local",
+        UsernameAttributes: [],
+      }
     );
 
     expect(createDataStore).toHaveBeenCalledWith(
+      TestContext,
       "local",
       {
         Options: { Id: "local", UsernameAttributes: [] },
@@ -52,18 +56,23 @@ describe("User Pool Service", () => {
   describe("createAppClient", () => {
     it("saves an app client", async () => {
       const ds = newMockDataStore();
-      ds.get.mockImplementation((key, defaults) => Promise.resolve(defaults));
+      ds.get.mockImplementation((ctx, key, defaults) =>
+        Promise.resolve(defaults)
+      );
 
       const userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        { Id: "local", UsernameAttributes: [] },
-        MockLogger
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
       );
 
-      const result = await userPool.createAppClient("clientName");
+      const result = await userPool.createAppClient(TestContext, "clientName");
 
       expect(result).toEqual({
         AllowedOAuthFlowsUserPoolClient: false,
@@ -76,6 +85,7 @@ describe("User Pool Service", () => {
       });
 
       expect(mockClientsDataStore.set).toHaveBeenCalledWith(
+        TestContext,
         ["Clients", result.ClientId],
         result
       );
@@ -89,17 +99,24 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        { Id: "local", UsernameAttributes: [] },
-        MockLogger
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
       );
 
-      await userPool.saveUser(user);
+      await userPool.saveUser(TestContext, user);
 
-      expect(ds.set).toHaveBeenCalledWith(["Users", user.Username], user);
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Users", user.Username],
+        user
+      );
     });
   });
 
@@ -110,17 +127,23 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        { Id: "local", UsernameAttributes: [] },
-        MockLogger
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
       );
 
-      await userPool.deleteUser(user);
+      await userPool.deleteUser(TestContext, user);
 
-      expect(ds.delete).toHaveBeenCalledWith(["Users", user.Username]);
+      expect(ds.delete).toHaveBeenCalledWith(TestContext, [
+        "Users",
+        user.Username,
+      ]);
     });
   });
 
@@ -155,7 +178,7 @@ describe("User Pool Service", () => {
           };
 
           const ds = newMockDataStore();
-          ds.get.mockImplementation((key) => {
+          ds.get.mockImplementation((ctx, key) => {
             if (key === "Users") {
               return Promise.resolve(users);
             } else if (key === "Options") {
@@ -168,29 +191,35 @@ describe("User Pool Service", () => {
           });
 
           userPool = await UserPoolServiceImpl.create(
+            TestContext,
             "data-directory",
             mockClientsDataStore,
             clock,
             () => Promise.resolve(ds),
-            options,
-            MockLogger
+            options
           );
         });
 
         it("returns null if user doesn't exist", async () => {
-          const user = await userPool.getUserByUsername("invalid");
+          const user = await userPool.getUserByUsername(TestContext, "invalid");
 
           expect(user).toBeNull();
         });
 
         it("returns existing user by their username", async () => {
-          const foundUser = await userPool.getUserByUsername(user.Username);
+          const foundUser = await userPool.getUserByUsername(
+            TestContext,
+            user.Username
+          );
 
           expect(foundUser).toEqual(user);
         });
 
         it("returns existing user by their sub", async () => {
-          const foundUser = await userPool.getUserByUsername("uuid-1234");
+          const foundUser = await userPool.getUserByUsername(
+            TestContext,
+            "uuid-1234"
+          );
 
           expect(foundUser).toEqual(user);
         });
@@ -198,6 +227,7 @@ describe("User Pool Service", () => {
         if (find_by_email) {
           it("returns existing user by their email", async () => {
             const foundUser = await userPool.getUserByUsername(
+              TestContext,
               "example@example.com"
             );
 
@@ -206,6 +236,7 @@ describe("User Pool Service", () => {
         } else {
           it("does not return the user by their email", async () => {
             const foundUser = await userPool.getUserByUsername(
+              TestContext,
               "example@example.com"
             );
 
@@ -215,13 +246,19 @@ describe("User Pool Service", () => {
 
         if (find_by_phone_number) {
           it("returns existing user by their phone number", async () => {
-            const foundUser = await userPool.getUserByUsername("0411000111");
+            const foundUser = await userPool.getUserByUsername(
+              TestContext,
+              "0411000111"
+            );
 
             expect(foundUser).toEqual(user);
           });
         } else {
           it("does not return the user by their phone number", async () => {
-            const foundUser = await userPool.getUserByUsername("0411000111");
+            const foundUser = await userPool.getUserByUsername(
+              TestContext,
+              "0411000111"
+            );
 
             expect(foundUser).toBeNull();
           });
@@ -251,7 +288,7 @@ describe("User Pool Service", () => {
       };
 
       const ds = newMockDataStore();
-      ds.get.mockImplementation((key) => {
+      ds.get.mockImplementation((ctx, key) => {
         if (key === "Users") {
           return Promise.resolve(users);
         } else if (key === "Options") {
@@ -261,17 +298,17 @@ describe("User Pool Service", () => {
         return Promise.resolve(null);
       });
       userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        options,
-        MockLogger
+        options
       );
     });
 
     it("returns existing users", async () => {
-      const users = await userPool.listUsers();
+      const users = await userPool.listUsers(TestContext);
 
       expect(users).not.toBeNull();
       expect(users).toEqual([user1, user2]);
@@ -341,15 +378,18 @@ describe("User Pool Service", () => {
       const ds = newMockDataStore();
 
       const userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        { Id: "local", UsernameAttributes: [] },
-        MockLogger
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
       );
 
-      await userPool.saveGroup({
+      await userPool.saveGroup(TestContext, {
         CreationDate: now,
         Description: "Description",
         GroupName: "theGroupName",
@@ -358,14 +398,18 @@ describe("User Pool Service", () => {
         RoleArn: "ARN",
       });
 
-      expect(ds.set).toHaveBeenCalledWith(["Groups", "theGroupName"], {
-        CreationDate: now,
-        Description: "Description",
-        GroupName: "theGroupName",
-        LastModifiedDate: now,
-        Precedence: 1,
-        RoleArn: "ARN",
-      });
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", "theGroupName"],
+        {
+          CreationDate: now,
+          Description: "Description",
+          GroupName: "theGroupName",
+          LastModifiedDate: now,
+          Precedence: 1,
+          RoleArn: "ARN",
+        }
+      );
     });
   });
 
@@ -388,7 +432,7 @@ describe("User Pool Service", () => {
       };
 
       const ds = newMockDataStore();
-      ds.get.mockImplementation((key) => {
+      ds.get.mockImplementation((ctx, key) => {
         if (key === "Groups") {
           return Promise.resolve(groups);
         } else if (key === "Options") {
@@ -398,17 +442,17 @@ describe("User Pool Service", () => {
         return Promise.resolve(null);
       });
       userPool = await UserPoolServiceImpl.create(
+        TestContext,
         "data-directory",
         mockClientsDataStore,
         clock,
         () => Promise.resolve(ds),
-        options,
-        MockLogger
+        options
       );
     });
 
     it("returns existing groups", async () => {
-      const groups = await userPool.listGroups();
+      const groups = await userPool.listGroups(TestContext);
 
       expect(groups).not.toBeNull();
       expect(groups).toHaveLength(1);

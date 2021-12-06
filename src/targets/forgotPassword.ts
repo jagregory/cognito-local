@@ -6,10 +6,12 @@ import { UnsupportedError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import { attributeValue } from "../services/userPoolService";
+import { Target } from "./router";
 
-export type ForgotPasswordTarget = (
-  req: ForgotPasswordRequest
-) => Promise<ForgotPasswordResponse>;
+export type ForgotPasswordTarget = Target<
+  ForgotPasswordRequest,
+  ForgotPasswordResponse
+>;
 
 type ForgotPasswordServices = Pick<
   Services,
@@ -24,9 +26,9 @@ export const ForgotPassword =
     messages,
     otp,
   }: ForgotPasswordServices): ForgotPasswordTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-    const user = await userPool.getUserByUsername(req.Username);
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
       throw new UserNotFoundError();
     }
@@ -46,15 +48,16 @@ export const ForgotPassword =
 
     const code = otp();
     const message = await messages.forgotPassword(
+      ctx,
       req.ClientId,
       userPool.config.Id,
       user,
       code,
       req.ClientMetadata
     );
-    await messageDelivery.deliver(user, deliveryDetails, message);
+    await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 
-    await userPool.saveUser({
+    await userPool.saveUser(ctx, {
       ...user,
       UserLastModifiedDate: clock.get(),
       ConfirmationCode: code,

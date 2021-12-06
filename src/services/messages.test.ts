@@ -1,4 +1,5 @@
 import { newMockTriggers } from "../__tests__/mockTriggers";
+import { TestContext } from "../__tests__/testContext";
 import { MessagesService } from "./messages";
 import * as TDB from "../__tests__/testDataBuilder";
 import { Triggers } from "./triggers";
@@ -27,6 +28,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.authentication(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -43,7 +45,7 @@ describe("messages service", () => {
             emailMessage: "email",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -66,6 +68,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.authentication(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -79,7 +82,7 @@ describe("messages service", () => {
             __code: "1234",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -100,6 +103,7 @@ describe("messages service", () => {
 
         const messages = new MessagesService(mockTriggers);
         const message = await messages.authentication(
+          TestContext,
           "clientId",
           "userPoolId",
           user,
@@ -133,6 +137,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.forgotPassword(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -149,7 +154,7 @@ describe("messages service", () => {
             emailMessage: "email",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -172,6 +177,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.forgotPassword(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -185,7 +191,7 @@ describe("messages service", () => {
             __code: "1234",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -206,6 +212,7 @@ describe("messages service", () => {
 
         const messages = new MessagesService(mockTriggers);
         const message = await messages.forgotPassword(
+          TestContext,
           "clientId",
           "userPoolId",
           user,
@@ -239,6 +246,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.signUp(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -255,7 +263,7 @@ describe("messages service", () => {
             emailMessage: "email",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -278,6 +286,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(mockTriggers);
           const message = await messages.signUp(
+            TestContext,
             "clientId",
             "userPoolId",
             user,
@@ -291,7 +300,7 @@ describe("messages service", () => {
             __code: "1234",
           });
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith({
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -312,6 +321,7 @@ describe("messages service", () => {
 
         const messages = new MessagesService(mockTriggers);
         const message = await messages.signUp(
+          TestContext,
           "clientId",
           "userPoolId",
           user,

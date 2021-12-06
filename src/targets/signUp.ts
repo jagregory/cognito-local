@@ -18,8 +18,9 @@ import {
   attributeValue,
   User,
 } from "../services/userPoolService";
+import { Context, Target } from "./router";
 
-export type SignUpTarget = (req: SignUpRequest) => Promise<SignUpResponse>;
+export type SignUpTarget = Target<SignUpRequest, SignUpResponse>;
 
 type SignUpServices = Pick<
   Services,
@@ -56,6 +57,7 @@ const selectAppropriateDeliveryMethod = (
 };
 
 const deliverWelcomeMessage = async (
+  ctx: Context,
   code: string,
   clientId: string,
   user: User,
@@ -80,13 +82,14 @@ const deliverWelcomeMessage = async (
   }
 
   const message = await messages.signUp(
+    ctx,
     clientId,
     userPool.config.Id,
     user,
     code,
     clientMetadata
   );
-  await messageDelivery.deliver(user, deliveryDetails, message);
+  await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 
   return deliveryDetails;
 };
@@ -100,12 +103,12 @@ export const SignUp =
     otp,
     triggers,
   }: SignUpServices): SignUpTarget =>
-  async (req) => {
+  async (ctx, req) => {
     // TODO: This should behave differently depending on if PreventUserExistenceErrors
     // is enabled on the user pool. This will be the default after Feb 2020.
     // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-    const existingUser = await userPool.getUserByUsername(req.Username);
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const existingUser = await userPool.getUserByUsername(ctx, req.Username);
     if (existingUser) {
       throw new UsernameExistsError();
     }
@@ -117,7 +120,7 @@ export const SignUp =
 
     if (triggers.enabled("PreSignUp")) {
       const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
-        await triggers.preSignUp({
+        await triggers.preSignUp(ctx, {
           clientId: req.ClientId,
           clientMetadata: req.ClientMetadata,
           source: "PreSignUp_SignUp",
@@ -153,6 +156,7 @@ export const SignUp =
     const code = otp();
 
     const deliveryDetails = await deliverWelcomeMessage(
+      ctx,
       code,
       req.ClientId,
       user,
@@ -162,7 +166,7 @@ export const SignUp =
       req.ClientMetadata
     );
 
-    await userPool.saveUser({
+    await userPool.saveUser(ctx, {
       ...user,
       ConfirmationCode: code,
     });
@@ -171,7 +175,7 @@ export const SignUp =
       user.UserStatus === "CONFIRMED" &&
       triggers.enabled("PostConfirmation")
     ) {
-      await triggers.postConfirmation({
+      await triggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",

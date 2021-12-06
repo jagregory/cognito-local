@@ -1,3 +1,4 @@
+import { TestContext } from "../../__tests__/testContext";
 import { User } from "../userPoolService";
 import { MessageDeliveryService } from "./messageDelivery";
 import { MessageSender } from "./messageSender";
@@ -27,6 +28,7 @@ describe("Message Delivery", () => {
       const messageDelivery = new MessageDeliveryService(sender);
 
       await messageDelivery.deliver(
+        TestContext,
         user,
         {
           Destination: "example@example.com",
@@ -37,6 +39,7 @@ describe("Message Delivery", () => {
       );
 
       expect(sender.sendEmail).toHaveBeenCalledWith(
+        TestContext,
         user,
         "example@example.com",
         message
@@ -58,6 +61,7 @@ describe("Message Delivery", () => {
       const messageDelivery = new MessageDeliveryService(sender);
 
       await messageDelivery.deliver(
+        TestContext,
         user,
         {
           Destination: "0123445670",
@@ -67,7 +71,12 @@ describe("Message Delivery", () => {
         message
       );
 
-      expect(sender.sendSms).toHaveBeenCalledWith(user, "0123445670", message);
+      expect(sender.sendSms).toHaveBeenCalledWith(
+        TestContext,
+        user,
+        "0123445670",
+        message
+      );
       expect(sender.sendEmail).not.toHaveBeenCalled();
     });
   });

@@ -19,12 +19,15 @@ import {
   MFAOption,
   User,
 } from "../services/userPoolService";
+import { Context, Target } from "./router";
 
-export type InitiateAuthTarget = (
-  req: InitiateAuthRequest
-) => Promise<InitiateAuthResponse>;
+export type InitiateAuthTarget = Target<
+  InitiateAuthRequest,
+  InitiateAuthResponse
+>;
 
 const verifyMfaChallenge = async (
+  ctx: Context,
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
@@ -51,6 +54,7 @@ const verifyMfaChallenge = async (
 
   const code = services.otp();
   const message = await services.messages.authentication(
+    ctx,
     req.ClientId,
     userPool.config.Id,
     user,
@@ -58,6 +62,7 @@ const verifyMfaChallenge = async (
     req.ClientMetadata
   );
   await services.messageDelivery.deliver(
+    ctx,
     user,
     {
       DeliveryMedium: smsMfaOption.DeliveryMedium,
@@ -67,7 +72,7 @@ const verifyMfaChallenge = async (
     message
   );
 
-  await userPool.saveUser({
+  await userPool.saveUser(ctx, {
     ...user,
     MFACode: code,
   });
@@ -83,6 +88,7 @@ const verifyMfaChallenge = async (
 };
 
 const verifyPasswordChallenge = async (
+  ctx: Context,
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
@@ -96,7 +102,7 @@ const verifyPasswordChallenge = async (
     services.clock
   );
 
-  await userPool.storeRefreshToken(tokens.RefreshToken, user);
+  await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
   return {
     ChallengeName: "PASSWORD_VERIFIER",
@@ -116,6 +122,7 @@ const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
 });
 
 const userPasswordAuthFlow = async (
+  ctx: Context,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
   services: Services
@@ -126,7 +133,7 @@ const userPasswordAuthFlow = async (
     );
   }
 
-  let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
+  let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
 
   if (!user && services.triggers.enabled("UserMigration")) {
     // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
@@ -134,7 +141,7 @@ const userPasswordAuthFlow = async (
     // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time
     // of sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully,
     // Amazon Cognito creates the user in the user pool.
-    user = await services.triggers.userMigration({
+    user = await services.triggers.userMigration(ctx, {
       clientId: req.ClientId,
       password: req.AuthParameters.PASSWORD,
       userAttributes: [],
@@ -168,13 +175,13 @@ const userPasswordAuthFlow = async (
       (user.MFAOptions ?? []).length > 0) ||
     userPool.config.MfaConfiguration === "ON"
   ) {
-    return verifyMfaChallenge(user, req, userPool, services);
+    return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
 
-  const result = verifyPasswordChallenge(user, req, userPool, services);
+  const result = verifyPasswordChallenge(ctx, user, req, userPool, services);
 
   if (services.triggers.enabled("PostAuthentication")) {
-    await services.triggers.postAuthentication({
+    await services.triggers.postAuthentication(ctx, {
       clientId: req.ClientId,
       // As per the InitiateAuth docs, ClientMetadata is not passed to PostAuthentication when called from InitiateAuth
       // Source: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_RequestSyntax
@@ -190,6 +197,7 @@ const userPasswordAuthFlow = async (
 };
 
 const refreshTokenAuthFlow = async (
+  ctx: Context,
   req: InitiateAuthRequest,
   services: Services
 ): Promise<InitiateAuthResponse> => {
@@ -203,8 +211,12 @@ const refreshTokenAuthFlow = async (
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
   }
 
-  const userPool = await services.cognito.getUserPoolForClientId(req.ClientId);
+  const userPool = await services.cognito.getUserPoolForClientId(
+    ctx,
+    req.ClientId
+  );
   const user = await userPool.getUserByRefreshToken(
+    ctx,
     req.AuthParameters.REFRESH_TOKEN
   );
   if (!user) {
@@ -236,18 +248,19 @@ const refreshTokenAuthFlow = async (
 
 export const InitiateAuth =
   (services: Services): InitiateAuthTarget =>
-  async (req) => {
+  async (ctx, req) => {
     const userPool = await services.cognito.getUserPoolForClientId(
+      ctx,
       req.ClientId
     );
 
     if (req.AuthFlow === "USER_PASSWORD_AUTH") {
-      return userPasswordAuthFlow(req, userPool, services);
+      return userPasswordAuthFlow(ctx, req, userPool, services);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN" ||
       req.AuthFlow === "REFRESH_TOKEN_AUTH"
     ) {
-      return refreshTokenAuthFlow(req, services);
+      return refreshTokenAuthFlow(ctx, req, services);
     } else {
       throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
     }

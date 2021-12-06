@@ -2,6 +2,7 @@ import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
 import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
 import { UUID } from "../../__tests__/patterns";
+import { TestContext } from "../../__tests__/testContext";
 import { NotAuthorizedError } from "../../errors";
 import { DateClock } from "../clock";
 import { Lambda } from "../lambda";
@@ -28,7 +29,7 @@ describe("UserMigration trigger", () => {
       mockLambda.invoke.mockRejectedValue(new Error("Something bad happened"));
 
       await expect(
-        userMigration({
+        userMigration(TestContext, {
           clientId: "clientId",
           clientMetadata: undefined,
           password: "password",
@@ -49,7 +50,7 @@ describe("UserMigration trigger", () => {
         },
       });
 
-      const user = await userMigration({
+      const user = await userMigration(TestContext, {
         clientMetadata: {
           client: "metadata",
         },
@@ -63,20 +64,24 @@ describe("UserMigration trigger", () => {
         },
       });
 
-      expect(mockLambda.invoke).toHaveBeenCalledWith("UserMigration", {
-        clientId: "clientId",
-        clientMetadata: {
-          client: "metadata",
-        },
-        password: "password",
-        triggerSource: "UserMigration_Authentication",
-        userAttributes: {},
-        userPoolId: "userPoolId",
-        username: "example@example.com",
-        validationData: {
-          validation: "data",
-        },
-      });
+      expect(mockLambda.invoke).toHaveBeenCalledWith(
+        TestContext,
+        "UserMigration",
+        {
+          clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
+          password: "password",
+          triggerSource: "UserMigration_Authentication",
+          userAttributes: {},
+          userPoolId: "userPoolId",
+          username: "example@example.com",
+          validationData: {
+            validation: "data",
+          },
+        }
+      );
 
       expect(user).not.toBeNull();
       expect(user.Username).toEqual(expect.stringMatching(UUID));
@@ -93,7 +98,7 @@ describe("UserMigration trigger", () => {
         finalUserStatus: "RESET_REQUIRED",
       });
 
-      const user = await userMigration({
+      const user = await userMigration(TestContext, {
         clientId: "clientId",
         clientMetadata: undefined,
         password: "password",

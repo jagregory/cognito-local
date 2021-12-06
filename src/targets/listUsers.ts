@@ -3,16 +3,15 @@ import {
   ListUsersResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type ListUsersTarget = (
-  req: ListUsersRequest
-) => Promise<ListUsersResponse>;
+export type ListUsersTarget = Target<ListUsersRequest, ListUsersResponse>;
 
 export const ListUsers =
   ({ cognito }: Pick<Services, "cognito">): ListUsersTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPool(req.UserPoolId);
-    const users = await userPool.listUsers();
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
+    const users = await userPool.listUsers(ctx);
 
     // TODO: support AttributesToGet
     // TODO: support Filter

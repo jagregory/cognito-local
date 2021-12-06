@@ -5,6 +5,7 @@ import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import {
   InvalidParameterError,
@@ -55,7 +56,7 @@ describe("SignUp target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      signUp({
+      signUp(TestContext, {
         ClientId: "clientId",
         Password: "pwd",
         Username: user.Username,
@@ -67,14 +68,14 @@ describe("SignUp target", () => {
   it("saves a new user", async () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
-    await signUp({
+    await signUp(TestContext, {
       ClientId: "clientId",
       Password: "pwd",
       Username: "user-supplied",
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
         {
           Name: "sub",
@@ -103,7 +104,7 @@ describe("SignUp target", () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({});
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         ClientMetadata: {
           client: "metadata",
@@ -114,7 +115,7 @@ describe("SignUp target", () => {
         ValidationData: [{ Name: "another", Value: "attribute" }],
       });
 
-      expect(mockTriggers.preSignUp).toHaveBeenCalledWith({
+      expect(mockTriggers.preSignUp).toHaveBeenCalledWith(TestContext, {
         clientId: "clientId",
         clientMetadata: {
           client: "metadata",
@@ -135,7 +136,7 @@ describe("SignUp target", () => {
       mockTriggers.preSignUp.mockRejectedValue(new UserLambdaValidationError());
 
       await expect(
-        signUp({
+        signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -157,7 +158,7 @@ describe("SignUp target", () => {
       });
 
       it("confirms the user", async () => {
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -169,6 +170,7 @@ describe("SignUp target", () => {
         });
 
         expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          TestContext,
           expect.objectContaining({
             UserStatus: "CONFIRMED",
           })
@@ -184,7 +186,7 @@ describe("SignUp target", () => {
         });
 
         it("calls the PostConfirmation trigger lambda", async () => {
-          await signUp({
+          await signUp(TestContext, {
             ClientId: "clientId",
             ClientMetadata: {
               client: "metadata",
@@ -195,20 +197,23 @@ describe("SignUp target", () => {
             ValidationData: [{ Name: "another", Value: "attribute" }],
           });
 
-          expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            source: "PostConfirmation_ConfirmSignUp",
-            userAttributes: [
-              { Name: "sub", Value: expect.stringMatching(UUID) },
-              { Name: "email", Value: "example@example.com" },
-            ],
-            userPoolId: "test",
-            username: "user-supplied",
-            validationData: undefined,
-          });
+          expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(
+            TestContext,
+            {
+              clientId: "clientId",
+              clientMetadata: {
+                client: "metadata",
+              },
+              source: "PostConfirmation_ConfirmSignUp",
+              userAttributes: [
+                { Name: "sub", Value: expect.stringMatching(UUID) },
+                { Name: "email", Value: "example@example.com" },
+              ],
+              userPoolId: "test",
+              username: "user-supplied",
+              validationData: undefined,
+            }
+          );
         });
 
         it("throws if the PostConfirmation lambda fails", async () => {
@@ -218,7 +223,7 @@ describe("SignUp target", () => {
           );
 
           await expect(
-            signUp({
+            signUp(TestContext, {
               ClientId: "clientId",
               ClientMetadata: {
                 client: "metadata",
@@ -242,7 +247,7 @@ describe("SignUp target", () => {
       });
 
       it("does not confirm the user", async () => {
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -254,6 +259,7 @@ describe("SignUp target", () => {
         });
 
         expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          TestContext,
           expect.objectContaining({
             UserStatus: "UNCONFIRMED",
           })
@@ -263,7 +269,7 @@ describe("SignUp target", () => {
       it("does not call the PostConfirmation trigger lambda", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           Password: "pwd",
           Username: "user-supplied",
@@ -280,7 +286,7 @@ describe("SignUp target", () => {
         autoVerifyEmail: true,
       });
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         ClientMetadata: {
           client: "metadata",
@@ -292,6 +298,7 @@ describe("SignUp target", () => {
       });
 
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        TestContext,
         expect.objectContaining({
           Attributes: [
             { Name: "sub", Value: expect.stringMatching(UUID) },
@@ -308,7 +315,7 @@ describe("SignUp target", () => {
         autoVerifyEmail: true,
       });
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         ClientMetadata: {
           client: "metadata",
@@ -320,6 +327,7 @@ describe("SignUp target", () => {
       });
 
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        TestContext,
         expect.objectContaining({
           Attributes: [{ Name: "sub", Value: expect.stringMatching(UUID) }],
         })
@@ -332,7 +340,7 @@ describe("SignUp target", () => {
         autoVerifyPhone: true,
       });
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         ClientMetadata: {
           client: "metadata",
@@ -344,6 +352,7 @@ describe("SignUp target", () => {
       });
 
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        TestContext,
         expect.objectContaining({
           Attributes: [
             { Name: "sub", Value: expect.stringMatching(UUID) },
@@ -360,7 +369,7 @@ describe("SignUp target", () => {
         autoVerifyPhone: true,
       });
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         ClientMetadata: {
           client: "metadata",
@@ -372,6 +381,7 @@ describe("SignUp target", () => {
       });
 
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        TestContext,
         expect.objectContaining({
           Attributes: [{ Name: "sub", Value: expect.stringMatching(UUID) }],
         })
@@ -383,7 +393,7 @@ describe("SignUp target", () => {
     it("does not call the trigger lambda", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
-      await signUp({
+      await signUp(TestContext, {
         ClientId: "clientId",
         Password: "pwd",
         Username: "user-supplied",
@@ -404,7 +414,7 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockOtp.mockReturnValue("1234");
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -427,7 +437,7 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockOtp.mockReturnValue("1234");
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -452,6 +462,7 @@ describe("SignUp target", () => {
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
+          TestContext,
           "clientId",
           "test",
           createdUser,
@@ -461,6 +472,7 @@ describe("SignUp target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           createdUser,
           {
             AttributeName: "email",
@@ -473,7 +485,7 @@ describe("SignUp target", () => {
 
       it("fails if user doesn't have an email", async () => {
         await expect(
-          signUp({
+          signUp(TestContext, {
             ClientId: "clientId",
             Password: "pwd",
             Username: "user-supplied",
@@ -499,7 +511,7 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockOtp.mockReturnValue("1234");
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -524,6 +536,7 @@ describe("SignUp target", () => {
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
+          TestContext,
           "clientId",
           "test",
           createdUser,
@@ -533,6 +546,7 @@ describe("SignUp target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           createdUser,
           {
             AttributeName: "phone_number",
@@ -545,7 +559,7 @@ describe("SignUp target", () => {
 
       it("fails if user doesn't have a phone_number", async () => {
         await expect(
-          signUp({
+          signUp(TestContext, {
             ClientId: "clientId",
             Password: "pwd",
             Username: "user-supplied",
@@ -574,7 +588,7 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockOtp.mockReturnValue("1234");
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -603,6 +617,7 @@ describe("SignUp target", () => {
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
+          TestContext,
           "clientId",
           "test",
           createdUser,
@@ -612,6 +627,7 @@ describe("SignUp target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           createdUser,
           {
             AttributeName: "phone_number",
@@ -626,7 +642,7 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockOtp.mockReturnValue("1234");
 
-        await signUp({
+        await signUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -651,6 +667,7 @@ describe("SignUp target", () => {
         };
 
         expect(mockMessages.signUp).toHaveBeenCalledWith(
+          TestContext,
           "clientId",
           "test",
           createdUser,
@@ -660,6 +677,7 @@ describe("SignUp target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           createdUser,
           {
             AttributeName: "email",
@@ -672,7 +690,7 @@ describe("SignUp target", () => {
 
       it("fails if user doesn't have a phone_number or an email", async () => {
         await expect(
-          signUp({
+          signUp(TestContext, {
             ClientId: "clientId",
             Password: "pwd",
             Username: "user-supplied",
@@ -694,14 +712,14 @@ describe("SignUp target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
     mockOtp.mockReturnValue("1234");
 
-    await signUp({
+    await signUp(TestContext, {
       ClientId: "clientId",
       Password: "pwd",
       Username: "user-supplied",
       UserAttributes: [{ Name: "email", Value: "example@example.com" }],
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
         { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },

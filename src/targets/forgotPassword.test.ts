@@ -3,6 +3,7 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { UserNotFoundError } from "../errors";
 import { MessageDelivery, Messages, UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
@@ -39,7 +40,7 @@ describe("ForgotPassword target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      forgotPassword({
+      forgotPassword(TestContext, {
         ClientId: "clientId",
         Username: "0000-0000",
       })
@@ -51,12 +52,13 @@ describe("ForgotPassword target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    const result = await forgotPassword({
+    const result = await forgotPassword(TestContext, {
       ClientId: "clientId",
       Username: user.Username,
     });
 
     expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+      TestContext,
       user,
       {
         AttributeName: "email",
@@ -80,12 +82,12 @@ describe("ForgotPassword target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await forgotPassword({
+    await forgotPassword(TestContext, {
       ClientId: "clientId",
       Username: user.Username,
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       ...user,
       UserLastModifiedDate: currentDate,
       ConfirmationCode: "1234",

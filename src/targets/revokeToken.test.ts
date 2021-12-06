@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { CognitoService, UserPoolService } from "../services";
 import { RevokeToken, RevokeTokenTarget } from "./revokeToken";
@@ -25,12 +26,13 @@ describe("AdminInitiateAuth target", () => {
 
     mockUserPoolService.listUsers.mockResolvedValue([existingUser]);
 
-    await revokeToken({
+    await revokeToken(TestContext, {
       ClientId: "clientId",
       Token: "token",
     });
 
     expect(mockUserPoolService.saveUser).toBeCalledWith(
+      TestContext,
       expect.objectContaining({
         RefreshTokens: [],
       })

@@ -4,10 +4,12 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type ConfirmSignUpTarget = (
-  req: ConfirmSignUpRequest
-) => Promise<ConfirmSignUpResponse>;
+export type ConfirmSignUpTarget = Target<
+  ConfirmSignUpRequest,
+  ConfirmSignUpResponse
+>;
 
 export const ConfirmSignUp =
   ({
@@ -15,9 +17,9 @@ export const ConfirmSignUp =
     clock,
     triggers,
   }: Pick<Services, "cognito" | "clock" | "triggers">): ConfirmSignUpTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-    const user = await userPool.getUserByUsername(req.Username);
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
       throw new NotAuthorizedError();
     }
@@ -26,7 +28,7 @@ export const ConfirmSignUp =
       throw new CodeMismatchError();
     }
 
-    await userPool.saveUser({
+    await userPool.saveUser(ctx, {
       ...user,
       UserStatus: "CONFIRMED",
       ConfirmationCode: undefined,
@@ -34,7 +36,7 @@ export const ConfirmSignUp =
     });
 
     if (triggers.enabled("PostConfirmation")) {
-      await triggers.postConfirmation({
+      await triggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",

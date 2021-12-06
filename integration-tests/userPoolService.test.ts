@@ -1,6 +1,6 @@
 import fs from "fs";
 import { promisify } from "util";
-import { MockLogger } from "../src/__tests__/mockLogger";
+import { TestContext } from "../src/__tests__/testContext";
 import {
   CognitoService,
   CognitoServiceImpl,
@@ -23,12 +23,12 @@ describe("User Pool Service", () => {
   beforeEach(async () => {
     dataDirectory = await mkdtemp("/tmp/cognito-local:");
     cognitoClient = await CognitoServiceImpl.create(
+      TestContext,
       dataDirectory,
       {},
       new DateClock(),
       createDataStore,
-      UserPoolServiceImpl.create,
-      MockLogger
+      UserPoolServiceImpl.create
     );
   });
 
@@ -39,7 +39,7 @@ describe("User Pool Service", () => {
   );
 
   it("creates a database", async () => {
-    await cognitoClient.getUserPool("local");
+    await cognitoClient.getUserPool(TestContext, "local");
 
     expect(fs.existsSync(dataDirectory + "/local.json")).toBe(true);
   });
@@ -48,9 +48,9 @@ describe("User Pool Service", () => {
     describe.each(validUsernameExamples)("with username %s", (username) => {
       it("saves the user", async () => {
         const now = new Date();
-        const userPool = await cognitoClient.getUserPool("local");
+        const userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-        await userPool.saveUser({
+        await userPool.saveUser(TestContext, {
           Username: username,
           Password: "hunter3",
           UserStatus: "UNCONFIRMED",
@@ -87,9 +87,9 @@ describe("User Pool Service", () => {
 
       it("updates a user", async () => {
         const now = new Date();
-        const userPool = await cognitoClient.getUserPool("local");
+        const userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-        await userPool.saveUser({
+        await userPool.saveUser(TestContext, {
           Username: username,
           Password: "hunter3",
           UserStatus: "UNCONFIRMED",
@@ -125,7 +125,7 @@ describe("User Pool Service", () => {
           },
         });
 
-        await userPool.saveUser({
+        await userPool.saveUser(TestContext, {
           Username: username,
           Password: "hunter3",
           UserStatus: "CONFIRMED",
@@ -166,9 +166,9 @@ describe("User Pool Service", () => {
     describe.each(validUsernameExamples)("with username %s", (username) => {
       let userPool: UserPoolService;
       beforeAll(async () => {
-        userPool = await cognitoClient.getUserPool("local");
+        userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-        await userPool.saveUser({
+        await userPool.saveUser(TestContext, {
           Username: username,
           Password: "hunter2",
           UserStatus: "UNCONFIRMED",
@@ -185,13 +185,13 @@ describe("User Pool Service", () => {
       });
 
       it("returns null if user doesn't exist", async () => {
-        const user = await userPool.getUserByUsername("invalid");
+        const user = await userPool.getUserByUsername(TestContext, "invalid");
 
         expect(user).toBeNull();
       });
 
       it("returns existing user by their username", async () => {
-        const user = await userPool.getUserByUsername(username);
+        const user = await userPool.getUserByUsername(TestContext, username);
 
         expect(user).not.toBeNull();
         expect(user?.Username).toEqual(username);
@@ -204,9 +204,9 @@ describe("User Pool Service", () => {
     let userPool: UserPoolService;
 
     beforeAll(async () => {
-      userPool = await cognitoClient.getUserPool("local");
+      userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-      await userPool.saveUser({
+      await userPool.saveUser(TestContext, {
         Username: username,
         Password: "hunter2",
         UserStatus: "UNCONFIRMED",
@@ -223,13 +223,16 @@ describe("User Pool Service", () => {
     });
 
     it("returns null if the refresh token doesn't match a user", async () => {
-      const user = await userPool.getUserByRefreshToken("invalid");
+      const user = await userPool.getUserByRefreshToken(TestContext, "invalid");
 
       expect(user).toBeNull();
     });
 
     it("returns user by their refresh token", async () => {
-      const user = await userPool.getUserByRefreshToken("refresh token");
+      const user = await userPool.getUserByRefreshToken(
+        TestContext,
+        "refresh token"
+      );
 
       expect(user).not.toBeNull();
       expect(user?.Username).toEqual(username);
@@ -255,15 +258,18 @@ describe("User Pool Service", () => {
     let userPool: UserPoolService;
 
     beforeAll(async () => {
-      userPool = await cognitoClient.getUserPool("local");
+      userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-      await userPool.saveUser(user);
+      await userPool.saveUser(TestContext, user);
     });
 
     it("saves a refresh token on the user", async () => {
-      await userPool.storeRefreshToken("refresh token", user);
+      await userPool.storeRefreshToken(TestContext, "refresh token", user);
 
-      const foundUser = await userPool.getUserByRefreshToken("refresh token");
+      const foundUser = await userPool.getUserByRefreshToken(
+        TestContext,
+        "refresh token"
+      );
 
       expect(foundUser).toMatchObject({
         Username: "User",
@@ -278,9 +284,9 @@ describe("User Pool Service", () => {
 
     beforeAll(async () => {
       now = new Date();
-      userPool = await cognitoClient.getUserPool("local");
+      userPool = await cognitoClient.getUserPool(TestContext, "local");
 
-      await userPool.saveUser({
+      await userPool.saveUser(TestContext, {
         Username: "1",
         Password: "hunter2",
         UserStatus: "UNCONFIRMED",
@@ -295,7 +301,7 @@ describe("User Pool Service", () => {
         RefreshTokens: [],
       });
 
-      await userPool.saveUser({
+      await userPool.saveUser(TestContext, {
         Username: "2",
         Password: "password1",
         UserStatus: "UNCONFIRMED",
@@ -308,7 +314,7 @@ describe("User Pool Service", () => {
     });
 
     it("returns all users", async () => {
-      const users = await userPool.listUsers();
+      const users = await userPool.listUsers(TestContext);
 
       expect(users).toEqual([
         {

@@ -3,16 +3,18 @@ import {
   CreateUserPoolClientResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type CreateUserPoolClientTarget = (
-  req: CreateUserPoolClientRequest
-) => Promise<CreateUserPoolClientResponse>;
+export type CreateUserPoolClientTarget = Target<
+  CreateUserPoolClientRequest,
+  CreateUserPoolClientResponse
+>;
 
 export const CreateUserPoolClient =
   ({ cognito }: Pick<Services, "cognito">): CreateUserPoolClientTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPool(req.UserPoolId);
-    const appClient = await userPool.createAppClient(req.ClientName);
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
+    const appClient = await userPool.createAppClient(ctx, req.ClientName);
 
     return {
       UserPoolClient: {

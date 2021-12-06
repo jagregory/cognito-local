@@ -1,7 +1,7 @@
 import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
-import { MockLogger } from "../../__tests__/mockLogger";
 import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
+import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
 import { UserPoolService } from "../userPoolService";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
@@ -14,13 +14,10 @@ describe("PostConfirmation trigger", () => {
   beforeEach(() => {
     mockLambda = newMockLambda();
     mockUserPoolService = newMockUserPoolService();
-    postConfirmation = PostConfirmation(
-      {
-        lambda: mockLambda,
-        cognitoClient: newMockCognitoService(mockUserPoolService),
-      },
-      MockLogger
-    );
+    postConfirmation = PostConfirmation({
+      lambda: mockLambda,
+      cognitoClient: newMockCognitoService(mockUserPoolService),
+    });
   });
 
   describe.each([
@@ -33,7 +30,7 @@ describe("PostConfirmation trigger", () => {
           new Error("Something bad happened")
         );
 
-        await postConfirmation({
+        await postConfirmation(TestContext, {
           userPoolId: "userPoolId",
           clientId: "clientId",
           username: "username",
@@ -47,7 +44,7 @@ describe("PostConfirmation trigger", () => {
       it("quietly completes", async () => {
         mockLambda.invoke.mockResolvedValue({});
 
-        await postConfirmation({
+        await postConfirmation(TestContext, {
           userPoolId: "userPoolId",
           clientId: "clientId",
           username: "example@example.com",
@@ -55,13 +52,17 @@ describe("PostConfirmation trigger", () => {
           source: source as any,
         });
 
-        expect(mockLambda.invoke).toHaveBeenCalledWith("PostConfirmation", {
-          clientId: "clientId",
-          triggerSource: source,
-          userAttributes: { email: "example@example.com" },
-          userPoolId: "userPoolId",
-          username: "example@example.com",
-        });
+        expect(mockLambda.invoke).toHaveBeenCalledWith(
+          TestContext,
+          "PostConfirmation",
+          {
+            clientId: "clientId",
+            triggerSource: source,
+            userAttributes: { email: "example@example.com" },
+            userPoolId: "userPoolId",
+            username: "example@example.com",
+          }
+        );
       });
     });
   });

@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { ResourceNotFoundError } from "../errors";
 import { CognitoService } from "../services";
 import { AppClient } from "../services/appClient";
@@ -31,7 +32,7 @@ describe("DescribeUserPoolClient target", () => {
     };
     mockCognitoService.getAppClient.mockResolvedValue(existingAppClient);
 
-    const result = await describeUserPoolClient({
+    const result = await describeUserPoolClient(TestContext, {
       ClientId: "abc",
       UserPoolId: "userPoolId",
     });
@@ -49,7 +50,7 @@ describe("DescribeUserPoolClient target", () => {
     mockCognitoService.getAppClient.mockResolvedValue(null);
 
     await expect(
-      describeUserPoolClient({
+      describeUserPoolClient(TestContext, {
         ClientId: "abc",
         UserPoolId: "userPoolId",
       })

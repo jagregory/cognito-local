@@ -1,4 +1,5 @@
 import StormDB from "stormdb";
+import { TestContext } from "../src/__tests__/testContext";
 import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
@@ -21,13 +22,13 @@ describe("Data Store", () => {
   );
 
   it("creates a named database", async () => {
-    await createDataStore("example", {}, path);
+    await createDataStore(TestContext, "example", {}, path);
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
   });
 
   it("creates a named database with the defaults persisted", async () => {
-    await createDataStore("example", { DefaultValue: true }, path);
+    await createDataStore(TestContext, "example", { DefaultValue: true }, path);
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
@@ -37,14 +38,32 @@ describe("Data Store", () => {
     });
   });
 
+  it("does not overwrite defaults if the file already exists", async () => {
+    fs.writeFileSync(path + "/example.json", '{"Users":{"a":{"key":"value"}}}');
+
+    await createDataStore(TestContext, "example", { Users: {} }, path);
+
+    expect(fs.existsSync(path + "/example.json")).toBe(true);
+
+    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    expect(file).toEqual({
+      Users: {
+        a: {
+          key: "value",
+        },
+      },
+    });
+  });
+
   it("saves the default objects when a save occurs", async () => {
     const dataStore = await createDataStore(
+      TestContext,
       "example",
       { DefaultValue: true },
       path
     );
 
-    await dataStore.set("key", 1);
+    await dataStore.set(TestContext, "key", 1);
 
     const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
     expect(file).toEqual({
@@ -55,10 +74,10 @@ describe("Data Store", () => {
 
   describe("delete", () => {
     it("deletes a value", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set("key1", 1);
-      await dataStore.set("key2", 2);
+      await dataStore.set(TestContext, "key1", 1);
+      await dataStore.set(TestContext, "key2", 2);
 
       const fileBefore = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -69,7 +88,7 @@ describe("Data Store", () => {
         key2: 2,
       });
 
-      await dataStore.delete("key1");
+      await dataStore.delete(TestContext, "key1");
 
       const fileAfter = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -81,11 +100,11 @@ describe("Data Store", () => {
     });
 
     it("deletes a nested value using array syntax", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set(["key", "a", "b"], 1);
-      await dataStore.set(["key", "a", "c"], 2);
-      await dataStore.set("key2", 3);
+      await dataStore.set(TestContext, ["key", "a", "b"], 1);
+      await dataStore.set(TestContext, ["key", "a", "c"], 2);
+      await dataStore.set(TestContext, "key2", 3);
 
       const fileBefore = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -101,7 +120,7 @@ describe("Data Store", () => {
         key2: 3,
       });
 
-      await dataStore.delete(["key", "a", "b"]);
+      await dataStore.delete(TestContext, ["key", "a", "b"]);
 
       const fileAfter = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -120,10 +139,10 @@ describe("Data Store", () => {
 
   describe("set", () => {
     it("saves a value", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set("key1", 1);
-      await dataStore.set("key2", 2);
+      await dataStore.set(TestContext, "key1", 1);
+      await dataStore.set(TestContext, "key2", 2);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -134,11 +153,11 @@ describe("Data Store", () => {
     });
 
     it("saves a date value", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
       const date = new Date();
 
-      await dataStore.set("SomethingDate", date);
+      await dataStore.set(TestContext, "SomethingDate", date);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -148,12 +167,12 @@ describe("Data Store", () => {
     });
 
     it("fails to save a date value with the wrong type", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
       const date = new Date();
 
       await expect(
-        dataStore.set("SomethingDate", date.getTime())
+        dataStore.set(TestContext, "SomethingDate", date.getTime())
       ).rejects.toEqual(
         new Error(
           "Serialize: Expected SomethingDate field to contain a Date, received a number"
@@ -162,9 +181,9 @@ describe("Data Store", () => {
     });
 
     it("saves a nested value using array syntax", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set(["key", "a", "b"], 1);
+      await dataStore.set(TestContext, ["key", "a", "b"], 1);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -178,9 +197,9 @@ describe("Data Store", () => {
     });
 
     it("saves a key with dots in as a single key-value pair", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set("key.a.b", 1);
+      await dataStore.set(TestContext, "key.a.b", 1);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -190,9 +209,9 @@ describe("Data Store", () => {
     });
 
     it("replaces a value", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set("key", 1);
+      await dataStore.set(TestContext, "key", 1);
 
       let file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -200,7 +219,7 @@ describe("Data Store", () => {
         key: 1,
       });
 
-      await dataStore.set("key", 2);
+      await dataStore.set(TestContext, "key", 2);
 
       file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -213,14 +232,15 @@ describe("Data Store", () => {
   describe("getRoot", () => {
     it("returns entire db", async () => {
       const dataStore = await createDataStore(
+        TestContext,
         "example",
         { DefaultValue: true },
         path
       );
 
-      await dataStore.set("key", "value");
+      await dataStore.set(TestContext, "key", "value");
 
-      const result = await dataStore.getRoot();
+      const result = await dataStore.getRoot(TestContext);
 
       expect(result).toEqual({ DefaultValue: true, key: "value" });
     });
@@ -229,44 +249,55 @@ describe("Data Store", () => {
   describe("get", () => {
     it("returns a default", async () => {
       const dataStore = await createDataStore(
+        TestContext,
         "example",
         { DefaultValue: true },
         path
       );
 
-      const result = await dataStore.get("DefaultValue");
+      const result = await dataStore.get(TestContext, "DefaultValue");
 
       expect(result).toEqual(true);
     });
 
     it("returns null if key doesn't exist", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      const result = await dataStore.get("invalid");
+      const result = await dataStore.get(TestContext, "invalid");
 
       expect(result).toBeNull();
     });
 
     it("returns existing value", async () => {
-      const dataStore = await createDataStore("example", {}, path);
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
 
-      await dataStore.set("key", 1);
+      await dataStore.set(TestContext, "key", 1);
 
-      const result = await dataStore.get("key");
+      const result = await dataStore.get(TestContext, "key");
 
       expect(result).toEqual(1);
     });
 
     it("returns a date value", async () => {
-      const dataStore1 = await createDataStore("example", {}, path);
+      const dataStore1 = await createDataStore(
+        TestContext,
+        "example",
+        {},
+        path
+      );
 
       const date = new Date();
 
-      await dataStore1.set("SomethingDate", date);
+      await dataStore1.set(TestContext, "SomethingDate", date);
 
       // use a separate datastore to avoid caching
-      const dataStore2 = await createDataStore("example", {}, path);
-      const result = await dataStore2.get("SomethingDate");
+      const dataStore2 = await createDataStore(
+        TestContext,
+        "example",
+        {},
+        path
+      );
+      const result = await dataStore2.get(TestContext, "SomethingDate");
 
       expect(result).toEqual(date);
     });
@@ -283,8 +314,8 @@ describe("Data Store", () => {
       db.set("SomethingDate", date.getTime());
       await db.save();
 
-      const dataStore = await createDataStore("example", {}, path);
-      const result = await dataStore.get("SomethingDate");
+      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const result = await dataStore.get(TestContext, "SomethingDate");
 
       expect(result).toEqual(date);
     });

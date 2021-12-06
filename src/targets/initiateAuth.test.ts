@@ -6,6 +6,7 @@ import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import {
   InvalidParameterError,
@@ -67,7 +68,7 @@ describe("InitiateAuth target", () => {
   describe("USER_PASSWORD_AUTH auth flow", () => {
     it("throws if AuthParameters not provided", async () => {
       await expect(
-        initiateAuth({
+        initiateAuth(TestContext, {
           ClientId: "clientId",
           AuthFlow: "USER_PASSWORD_AUTH",
         })
@@ -82,7 +83,7 @@ describe("InitiateAuth target", () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       await expect(
-        initiateAuth({
+        initiateAuth(TestContext, {
           ClientId: "clientId",
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
@@ -101,7 +102,7 @@ describe("InitiateAuth target", () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
       await expect(
-        initiateAuth({
+        initiateAuth(TestContext, {
           ClientId: "clientId",
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
@@ -121,7 +122,7 @@ describe("InitiateAuth target", () => {
           mockTriggers.userMigration.mockResolvedValue(user);
           mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
-          const output = await initiateAuth({
+          const output = await initiateAuth(TestContext, {
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: user.Username,
@@ -133,7 +134,7 @@ describe("InitiateAuth target", () => {
             },
           });
 
-          expect(mockTriggers.userMigration).toHaveBeenCalledWith({
+          expect(mockTriggers.userMigration).toHaveBeenCalledWith(TestContext, {
             clientId: "clientId",
             clientMetadata: undefined,
             password: user.Password,
@@ -154,7 +155,7 @@ describe("InitiateAuth target", () => {
           mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
           await expect(
-            initiateAuth({
+            initiateAuth(TestContext, {
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
@@ -195,7 +196,7 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            const output = await initiateAuth({
+            const output = await initiateAuth(TestContext, {
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
@@ -207,6 +208,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
 
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+              TestContext,
               user,
               {
                 AttributeName: "phone_number",
@@ -217,10 +219,13 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
-              ...user,
-              MFACode: "1234",
-            });
+            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+              TestContext,
+              {
+                ...user,
+                MFACode: "1234",
+              }
+            );
           });
 
           describe("when Post Authentication trigger is enabled", () => {
@@ -229,7 +234,7 @@ describe("InitiateAuth target", () => {
                 (trigger) => trigger === "PostAuthentication"
               );
 
-              await initiateAuth({
+              await initiateAuth(TestContext, {
                 ClientId: "clientId",
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
@@ -252,7 +257,7 @@ describe("InitiateAuth target", () => {
 
           it("throws an exception", async () => {
             await expect(
-              initiateAuth({
+              initiateAuth(TestContext, {
                 ClientId: "clientId",
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
@@ -292,7 +297,7 @@ describe("InitiateAuth target", () => {
           });
 
           it("sends MFA code to user", async () => {
-            const output = await initiateAuth({
+            const output = await initiateAuth(TestContext, {
               ClientId: "clientId",
               ClientMetadata: {
                 client: "metadata",
@@ -307,6 +312,7 @@ describe("InitiateAuth target", () => {
             expect(output).toBeDefined();
 
             expect(mockMessages.authentication).toHaveBeenCalledWith(
+              TestContext,
               "clientId",
               "test",
               user,
@@ -316,6 +322,7 @@ describe("InitiateAuth target", () => {
               }
             );
             expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+              TestContext,
               user,
               {
                 AttributeName: "phone_number",
@@ -326,10 +333,13 @@ describe("InitiateAuth target", () => {
             );
 
             // also saves the code on the user for comparison later
-            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
-              ...user,
-              MFACode: "1234",
-            });
+            expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+              TestContext,
+              {
+                ...user,
+                MFACode: "1234",
+              }
+            );
           });
 
           describe("when Post Authentication trigger is enabled", () => {
@@ -338,7 +348,7 @@ describe("InitiateAuth target", () => {
                 (trigger) => trigger === "PostAuthentication"
               );
 
-              await initiateAuth({
+              await initiateAuth(TestContext, {
                 ClientId: "clientId",
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
@@ -362,7 +372,7 @@ describe("InitiateAuth target", () => {
           });
 
           it("generates tokens", async () => {
-            const output = await initiateAuth({
+            const output = await initiateAuth(TestContext, {
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
@@ -437,7 +447,7 @@ describe("InitiateAuth target", () => {
         });
 
         it("generates tokens", async () => {
-          const output = await initiateAuth({
+          const output = await initiateAuth(TestContext, {
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
@@ -507,7 +517,7 @@ describe("InitiateAuth target", () => {
               (trigger) => trigger === "PostAuthentication"
             );
 
-            await initiateAuth({
+            await initiateAuth(TestContext, {
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
@@ -516,13 +526,16 @@ describe("InitiateAuth target", () => {
               },
             });
 
-            expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
-              clientId: "clientId",
-              source: "PostAuthentication_Authentication",
-              userAttributes: user.Attributes,
-              username: user.Username,
-              userPoolId: "test",
-            });
+            expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
+              TestContext,
+              {
+                clientId: "clientId",
+                source: "PostAuthentication_Authentication",
+                userAttributes: user.Attributes,
+                username: user.Username,
+                userPoolId: "test",
+              }
+            );
           });
         });
       });
@@ -538,7 +551,7 @@ describe("InitiateAuth target", () => {
       });
 
       it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {
-        const response = await initiateAuth({
+        const response = await initiateAuth(TestContext, {
           ClientId: "clientId",
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
@@ -564,7 +577,7 @@ describe("InitiateAuth target", () => {
             (trigger) => trigger === "PostAuthentication"
           );
 
-          await initiateAuth({
+          await initiateAuth(TestContext, {
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
@@ -587,7 +600,7 @@ describe("InitiateAuth target", () => {
 
       mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
 
-      const response = await initiateAuth({
+      const response = await initiateAuth(TestContext, {
         AuthFlow: "REFRESH_TOKEN_AUTH",
         ClientId: "clientId",
         AuthParameters: {

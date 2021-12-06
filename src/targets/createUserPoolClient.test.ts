@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { UserPoolService } from "../services";
 import { AppClient } from "../services/appClient";
 import {
@@ -30,12 +31,13 @@ describe("CreateUserPoolClient target", () => {
     };
     mockUserPoolService.createAppClient.mockResolvedValue(createdAppClient);
 
-    const result = await createUserPoolClient({
+    const result = await createUserPoolClient(TestContext, {
       ClientName: "clientName",
       UserPoolId: "userPoolId",
     });
 
     expect(mockUserPoolService.createAppClient).toHaveBeenCalledWith(
+      TestContext,
       "clientName"
     );
 

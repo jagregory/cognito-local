@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { CognitoService } from "../services";
 import { ListUserPools, ListUserPoolsTarget } from "./listUserPools";
@@ -21,7 +22,7 @@ describe("ListUserPools target", () => {
 
     mockCognitoService.listUserPools.mockResolvedValue([userPool1, userPool2]);
 
-    const output = await listUserPools({
+    const output = await listUserPools(TestContext, {
       MaxResults: 10,
     });
 

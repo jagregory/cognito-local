@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
@@ -21,12 +22,15 @@ describe("AdminDeleteUser target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
-    await adminDeleteUser({
+    await adminDeleteUser(TestContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(existingUser);
+    expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(
+      TestContext,
+      existingUser
+    );
   });
 
   it("handles trying to delete an invalid user", async () => {
@@ -35,7 +39,7 @@ describe("AdminDeleteUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminDeleteUser({
+      adminDeleteUser(TestContext, {
         Username: existingUser.Username,
         UserPoolId: "test",
       })

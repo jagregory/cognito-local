@@ -1,7 +1,7 @@
 import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
-import { MockLogger } from "../../__tests__/mockLogger";
 import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
+import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
 import { UserPoolService } from "../userPoolService";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
@@ -14,20 +14,17 @@ describe("CustomMessage trigger", () => {
   beforeEach(() => {
     mockLambda = newMockLambda();
     mockUserPoolService = newMockUserPoolService();
-    customMessage = CustomMessage(
-      {
-        lambda: mockLambda,
-        cognitoClient: newMockCognitoService(mockUserPoolService),
-      },
-      MockLogger
-    );
+    customMessage = CustomMessage({
+      lambda: mockLambda,
+      cognitoClient: newMockCognitoService(mockUserPoolService),
+    });
   });
 
   describe("when lambda invoke fails", () => {
     it("returns null", async () => {
       mockLambda.invoke.mockRejectedValue(new Error("Something bad happened"));
 
-      const message = await customMessage({
+      const message = await customMessage(TestContext, {
         clientId: "clientId",
         clientMetadata: undefined,
         code: "1234",
@@ -49,7 +46,7 @@ describe("CustomMessage trigger", () => {
         smsMessage: "hi {username} your code is {####}. via sms",
       });
 
-      const message = await customMessage({
+      const message = await customMessage(TestContext, {
         clientId: "clientId",
         clientMetadata: {
           client: "metadata",
@@ -61,20 +58,24 @@ describe("CustomMessage trigger", () => {
         userPoolId: "userPoolId",
       });
 
-      expect(mockLambda.invoke).toHaveBeenCalledWith("CustomMessage", {
-        clientId: "clientId",
-        clientMetadata: {
-          client: "metadata",
-        },
-        codeParameter: "{####}",
-        triggerSource: "CustomMessage_ForgotPassword",
-        userAttributes: {
-          user: "attribute",
-        },
-        username: "example@example.com",
-        usernameParameter: "{username}",
-        userPoolId: "userPoolId",
-      });
+      expect(mockLambda.invoke).toHaveBeenCalledWith(
+        TestContext,
+        "CustomMessage",
+        {
+          clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
+          codeParameter: "{####}",
+          triggerSource: "CustomMessage_ForgotPassword",
+          userAttributes: {
+            user: "attribute",
+          },
+          username: "example@example.com",
+          usernameParameter: "{username}",
+          userPoolId: "userPoolId",
+        }
+      );
 
       expect(message).not.toBeNull();
       expect(message?.emailMessage).toEqual(

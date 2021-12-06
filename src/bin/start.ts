@@ -1,9 +1,21 @@
 #!/usr/bin/env node
 
-import { ConsoleLogger } from "../log";
 import { createDefaultServer } from "../server";
+import Pino from "pino";
+import PinoPretty from "pino-pretty";
 
-const logger = new ConsoleLogger();
+const logger = Pino(
+  {
+    level: process.env.DEBUG ? "debug" : "info",
+  },
+  PinoPretty({
+    colorize: true,
+    ignore: "pid,name,hostname",
+    singleLine: true,
+    messageFormat: (log, messageKey) =>
+      `${log["reqId"] ?? "NONE"} ${log["target"] ?? "NONE"} ${log[messageKey]}`,
+  }) as any
+);
 
 createDefaultServer(logger)
   .then((server) => {
@@ -24,6 +36,6 @@ createDefaultServer(logger)
     logger.info(`Cognito Local running on http://${url}`);
   })
   .catch((err) => {
-    logger.error(err);
+    logger.error({ error: err });
     process.exit(1);
   });

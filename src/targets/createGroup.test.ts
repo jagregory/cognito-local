@@ -1,6 +1,7 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { UserPoolService } from "../services";
 import { CreateGroup, CreateGroupTarget } from "./createGroup";
 
@@ -19,7 +20,7 @@ describe("CreateGroup target", () => {
   });
 
   it("creates a group", async () => {
-    await createGroup({
+    await createGroup(TestContext, {
       Description: "Description",
       GroupName: "theGroupName",
       Precedence: 1,
@@ -27,7 +28,7 @@ describe("CreateGroup target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
       CreationDate: originalDate,
       Description: "Description",
       GroupName: "theGroupName",

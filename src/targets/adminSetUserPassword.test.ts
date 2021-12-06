@@ -1,6 +1,7 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
@@ -30,13 +31,13 @@ describe("AdminSetUser target", () => {
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword({
+    await adminSetUserPassword(TestContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -51,14 +52,14 @@ describe("AdminSetUser target", () => {
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword({
+    await adminSetUserPassword(TestContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
       Permanent: false,
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -73,14 +74,14 @@ describe("AdminSetUser target", () => {
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword({
+    await adminSetUserPassword(TestContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
       Permanent: true,
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -92,7 +93,7 @@ describe("AdminSetUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminSetUserPassword({
+      adminSetUserPassword(TestContext, {
         Password: "Password",
         Username: "Username",
         UserPoolId: "test",

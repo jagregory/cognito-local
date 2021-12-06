@@ -1,4 +1,3 @@
-import { Logger } from "../../log";
 import { Clock } from "../clock";
 import { CognitoService } from "../cognitoService";
 import { Lambda } from "../lambda";
@@ -39,14 +38,13 @@ export class TriggersService implements Triggers {
   public constructor(
     clock: Clock,
     cognitoClient: CognitoService,
-    lambda: Lambda,
-    logger: Logger
+    lambda: Lambda
   ) {
     this.lambda = lambda;
 
-    this.customMessage = CustomMessage({ lambda, cognitoClient }, logger);
-    this.postAuthentication = PostAuthentication({ lambda }, logger);
-    this.postConfirmation = PostConfirmation({ lambda, cognitoClient }, logger);
+    this.customMessage = CustomMessage({ lambda, cognitoClient });
+    this.postAuthentication = PostAuthentication({ lambda });
+    this.postConfirmation = PostConfirmation({ lambda, cognitoClient });
     this.preSignUp = PreSignUp({ lambda });
     this.userMigration = UserMigration({ clock, lambda, cognitoClient });
   }

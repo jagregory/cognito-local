@@ -1,5 +1,6 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
@@ -21,7 +22,7 @@ describe("AdminGetUser target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
-    const result = await adminGetUser({
+    const result = await adminGetUser(TestContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
     });
@@ -42,7 +43,7 @@ describe("AdminGetUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminGetUser({
+      adminGetUser(TestContext, {
         Username: existingUser.Username,
         UserPoolId: "test",
       })

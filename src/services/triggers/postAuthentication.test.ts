@@ -1,6 +1,6 @@
 import { newMockLambda } from "../../__tests__/mockLambda";
-import { MockLogger } from "../../__tests__/mockLogger";
 import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
+import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
 import { attributesToRecord, UserPoolService } from "../userPoolService";
 import {
@@ -17,12 +17,9 @@ describe("PostAuthentication trigger", () => {
   beforeEach(() => {
     mockLambda = newMockLambda();
     mockUserPoolService = newMockUserPoolService();
-    postAuthentication = PostAuthentication(
-      {
-        lambda: mockLambda,
-      },
-      MockLogger
-    );
+    postAuthentication = PostAuthentication({
+      lambda: mockLambda,
+    });
   });
 
   describe("PostAuthentication_Authentication", () => {
@@ -34,7 +31,7 @@ describe("PostAuthentication trigger", () => {
       // bit of an odd assertion, we're asserting that the promise was successfully resolved with undefined
       // if the promise rejects, this test would fail
       await expect(
-        postAuthentication({
+        postAuthentication(TestContext, {
           clientId: "clientId",
           clientMetadata: undefined,
           source: "PostAuthentication_Authentication",
@@ -48,7 +45,7 @@ describe("PostAuthentication trigger", () => {
     it("invokes the lambda", async () => {
       mockLambda.invoke.mockResolvedValue({});
 
-      await postAuthentication({
+      await postAuthentication(TestContext, {
         clientId: "clientId",
         clientMetadata: {
           client: "metadata",
@@ -59,16 +56,20 @@ describe("PostAuthentication trigger", () => {
         userPoolId: "userPoolId",
       });
 
-      expect(mockLambda.invoke).toHaveBeenCalledWith("PostAuthentication", {
-        clientId: "clientId",
-        clientMetadata: {
-          client: "metadata",
-        },
-        triggerSource: "PostAuthentication_Authentication",
-        userAttributes: attributesToRecord(user.Attributes),
-        userPoolId: "userPoolId",
-        username: user.Username,
-      });
+      expect(mockLambda.invoke).toHaveBeenCalledWith(
+        TestContext,
+        "PostAuthentication",
+        {
+          clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
+          triggerSource: "PostAuthentication_Authentication",
+          userAttributes: attributesToRecord(user.Attributes),
+          userPoolId: "userPoolId",
+          username: user.Username,
+        }
+      );
     });
   });
 });

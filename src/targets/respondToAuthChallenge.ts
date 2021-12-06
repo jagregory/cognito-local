@@ -10,10 +10,12 @@ import {
 } from "../errors";
 import { Services } from "../services";
 import { generateTokens } from "../services/tokens";
+import { Target } from "./router";
 
-export type RespondToAuthChallengeTarget = (
-  req: RespondToAuthChallengeRequest
-) => Promise<RespondToAuthChallengeResponse>;
+export type RespondToAuthChallengeTarget = Target<
+  RespondToAuthChallengeRequest,
+  RespondToAuthChallengeResponse
+>;
 
 type RespondToAuthChallengeService = Pick<
   Services,
@@ -27,7 +29,7 @@ export const RespondToAuthChallenge =
     config,
     triggers,
   }: RespondToAuthChallengeService): RespondToAuthChallengeTarget =>
-  async (req) => {
+  async (ctx, req) => {
     if (!req.ChallengeResponses) {
       throw new InvalidParameterError(
         "Missing required parameter challenge responses"
@@ -40,8 +42,9 @@ export const RespondToAuthChallenge =
       throw new InvalidParameterError("Missing required parameter Session");
     }
 
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
     const user = await userPool.getUserByUsername(
+      ctx,
       req.ChallengeResponses.USERNAME
     );
     if (!user) {
@@ -53,7 +56,7 @@ export const RespondToAuthChallenge =
         throw new CodeMismatchError();
       }
 
-      await userPool.saveUser({
+      await userPool.saveUser(ctx, {
         ...user,
         MFACode: undefined,
         UserLastModifiedDate: clock.get(),
@@ -66,7 +69,7 @@ export const RespondToAuthChallenge =
       }
 
       // TODO: validate the password?
-      await userPool.saveUser({
+      await userPool.saveUser(ctx, {
         ...user,
         Password: req.ChallengeResponses.NEW_PASSWORD,
         UserLastModifiedDate: clock.get(),
@@ -79,7 +82,7 @@ export const RespondToAuthChallenge =
     }
 
     if (triggers.enabled("PostAuthentication")) {
-      await triggers.postAuthentication({
+      await triggers.postAuthentication(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostAuthentication_Authentication",

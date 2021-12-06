@@ -2,6 +2,7 @@ import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
@@ -31,7 +32,7 @@ describe("ConfirmSignUp target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      confirmSignUp({
+      confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: "janice",
         ConfirmationCode: "1234",
@@ -49,7 +50,7 @@ describe("ConfirmSignUp target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      confirmSignUp({
+      confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
         ConfirmationCode: "1234",
@@ -69,13 +70,13 @@ describe("ConfirmSignUp target", () => {
       // advance the time so we can see the last modified timestamp change
       const newNow = clock.advanceBy(5000);
 
-      await confirmSignUp({
+      await confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
         ConfirmationCode: "4567",
       });
 
-      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
         ...user,
         ConfirmationCode: undefined,
         UserLastModifiedDate: newNow,
@@ -94,7 +95,7 @@ describe("ConfirmSignUp target", () => {
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await confirmSignUp({
+        await confirmSignUp(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -104,16 +105,19 @@ describe("ConfirmSignUp target", () => {
           ForceAliasCreation: false,
         });
 
-        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
-          clientId: "clientId",
-          clientMetadata: {
-            client: "metadata",
-          },
-          source: "PostConfirmation_ConfirmSignUp",
-          userAttributes: user.Attributes,
-          userPoolId: "test",
-          username: user.Username,
-        });
+        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(
+          TestContext,
+          {
+            clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
+            source: "PostConfirmation_ConfirmSignUp",
+            userAttributes: user.Attributes,
+            userPoolId: "test",
+            username: user.Username,
+          }
+        );
       });
     });
 
@@ -128,7 +132,7 @@ describe("ConfirmSignUp target", () => {
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await confirmSignUp({
+        await confirmSignUp(TestContext, {
           ClientId: "clientId",
           Username: user.Username,
           ConfirmationCode: "4567",

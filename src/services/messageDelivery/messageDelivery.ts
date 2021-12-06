@@ -1,3 +1,4 @@
+import { Context } from "../context";
 import { Message } from "../messages";
 import { User } from "../userPoolService";
 import { MessageSender } from "./messageSender";
@@ -16,6 +17,7 @@ export type DeliveryDetails =
 
 export interface MessageDelivery {
   deliver(
+    ctx: Context,
     user: User,
     deliveryDetails: DeliveryDetails,
     message: Message
@@ -30,14 +32,25 @@ export class MessageDeliveryService implements MessageDelivery {
   }
 
   public async deliver(
+    ctx: Context,
     user: User,
     deliveryDetails: DeliveryDetails,
     message: Message
   ): Promise<void> {
     if (deliveryDetails.DeliveryMedium === "SMS") {
-      await this.sender.sendSms(user, deliveryDetails.Destination, message);
+      await this.sender.sendSms(
+        ctx,
+        user,
+        deliveryDetails.Destination,
+        message
+      );
     } else if (deliveryDetails.DeliveryMedium === "EMAIL") {
-      await this.sender.sendEmail(user, deliveryDetails.Destination, message);
+      await this.sender.sendEmail(
+        ctx,
+        user,
+        deliveryDetails.Destination,
+        message
+      );
     }
   }
 }

@@ -2,10 +2,12 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import * as http from "http";
+import type { Logger } from "pino";
+import uuid from "uuid";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
-import { Logger } from "../log";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import Pino from "pino-http";
 
 export interface ServerOptions {
   port: number;
@@ -23,7 +25,18 @@ export const createServer = (
   logger: Logger,
   options: Partial<ServerOptions> = {}
 ): Server => {
+  const pino = Pino({
+    logger,
+    useLevel: "debug",
+    genReqId: () => uuid.v4().split("-")[0],
+    quietReqLogger: true,
+    autoLogging: {
+      ignore: (req) => req.method === "OPTIONS",
+    },
+  });
   const app = express();
+
+  app.use(pino);
 
   app.use(
     cors({
@@ -71,33 +84,34 @@ export const createServer = (
       return value;
     };
 
-    route(req.body).then(
+    route({ logger: req.log }, req.body).then(
       (output) =>
         res.status(200).type("json").send(JSON.stringify(output, replacer)),
       (ex) => {
-        logger.error(`Error handling target: ${target}`, ex);
         if (ex instanceof UnsupportedError) {
           if (options.development) {
-            logger.info("======");
-            logger.info();
-            logger.info("Unsupported target");
-            logger.info("");
-            logger.info(`x-amz-target: ${xAmzTarget}`);
-            logger.info("Body:");
-            logger.info(JSON.stringify(req.body, undefined, 2));
-            logger.info();
-            logger.info("======");
+            req.log.info("======");
+            req.log.info("");
+            req.log.info("Unsupported target");
+            req.log.info("");
+            req.log.info(`x-amz-target: ${xAmzTarget}`);
+            req.log.info("Body:");
+            req.log.info(JSON.stringify(req.body, undefined, 2));
+            req.log.info("");
+            req.log.info("======");
           }
 
-          unsupported(ex.message, res, logger);
+          unsupported(ex.message, res, req.log);
           return;
         } else if (ex instanceof CognitoError) {
+          req.log.warn({ error: ex }, `Error handling target: ${target}`);
           res.status(400).json({
             code: ex.code,
             message: ex.message,
           });
           return;
         } else {
+          req.log.error({ error: ex }, `Error handling target: ${target}`);
           res.status(500).json(ex);
           return;
         }

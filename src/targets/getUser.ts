@@ -4,25 +4,26 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
-import { Logger } from "../log";
 import { Services } from "../services";
 import { Token } from "../services/tokens";
+import { Target } from "./router";
 
-export type GetUserTarget = (req: GetUserRequest) => Promise<GetUserResponse>;
+export type GetUserTarget = Target<GetUserRequest, GetUserResponse>;
 
 export const GetUser =
-  ({ cognito }: Pick<Services, "cognito">, logger: Logger): GetUserTarget =>
-  async (req) => {
+  ({ cognito }: Pick<Services, "cognito">): GetUserTarget =>
+  async (ctx, req) => {
     const decodedToken = jwt.decode(req.AccessToken) as Token | null;
     if (!decodedToken) {
-      logger.info("Unable to decode token");
+      ctx.logger.info("Unable to decode token");
       throw new InvalidParameterError();
     }
 
     const userPool = await cognito.getUserPoolForClientId(
+      ctx,
       decodedToken.client_id
     );
-    const user = await userPool.getUserByUsername(decodedToken.sub);
+    const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
       throw new UserNotFoundError();
     }

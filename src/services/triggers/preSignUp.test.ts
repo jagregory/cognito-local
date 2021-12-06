@@ -1,4 +1,5 @@
 import { newMockLambda } from "../../__tests__/mockLambda";
+import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
 import { PreSignUp, PreSignUpTrigger } from "./preSignUp";
 
@@ -25,7 +26,7 @@ describe("PreSignUp trigger", () => {
         );
 
         await expect(
-          preSignUp({
+          preSignUp(TestContext, {
             clientId: "clientId",
             clientMetadata: undefined,
             source,
@@ -42,7 +43,7 @@ describe("PreSignUp trigger", () => {
       it("quietly completes", async () => {
         mockLambda.invoke.mockResolvedValue({});
 
-        await preSignUp({
+        await preSignUp(TestContext, {
           clientMetadata: {
             client: "metadata",
           },
@@ -56,19 +57,23 @@ describe("PreSignUp trigger", () => {
           },
         });
 
-        expect(mockLambda.invoke).toHaveBeenCalledWith("PreSignUp", {
-          clientId: "clientId",
-          clientMetadata: {
-            client: "metadata",
-          },
-          triggerSource: source,
-          userAttributes: { email: "example@example.com" },
-          userPoolId: "userPoolId",
-          username: "example@example.com",
-          validationData: {
-            validation: "data",
-          },
-        });
+        expect(mockLambda.invoke).toHaveBeenCalledWith(
+          TestContext,
+          "PreSignUp",
+          {
+            clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
+            triggerSource: source,
+            userAttributes: { email: "example@example.com" },
+            userPoolId: "userPoolId",
+            username: "example@example.com",
+            validationData: {
+              validation: "data",
+            },
+          }
+        );
       });
     });
   });

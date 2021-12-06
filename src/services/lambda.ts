@@ -7,7 +7,7 @@ import {
   UserLambdaValidationError,
 } from "../errors";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
-import { Logger } from "../log";
+import { Context } from "./context";
 
 interface EventCommonParameters {
   clientId: string;
@@ -71,22 +71,27 @@ export interface FunctionConfig {
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
   invoke(
+    ctx: Context,
     lambda: "CustomMessage",
     event: CustomMessageEvent
   ): Promise<CognitoUserPoolResponse>;
   invoke(
+    ctx: Context,
     lambda: "UserMigration",
     event: UserMigrationEvent
   ): Promise<CognitoUserPoolResponse>;
   invoke(
+    ctx: Context,
     lambda: "PreSignUp",
     event: PreSignUpEvent
   ): Promise<CognitoUserPoolResponse>;
   invoke(
+    ctx: Context,
     lambda: "PostAuthentication",
     event: PostAuthenticationEvent
   ): Promise<CognitoUserPoolResponse>;
   invoke(
+    ctx: Context,
     lambda: "PostConfirmation",
     event: PostConfirmationEvent
   ): Promise<CognitoUserPoolResponse>;
@@ -95,16 +100,10 @@ export interface Lambda {
 export class LambdaService implements Lambda {
   private readonly config: FunctionConfig;
   private readonly lambdaClient: LambdaClient;
-  private readonly logger: Logger;
 
-  public constructor(
-    config: FunctionConfig,
-    lambdaClient: LambdaClient,
-    logger: Logger
-  ) {
+  public constructor(config: FunctionConfig, lambdaClient: LambdaClient) {
     this.config = config;
     this.lambdaClient = lambdaClient;
-    this.logger = logger;
   }
 
   public enabled(lambda: keyof FunctionConfig): boolean {
@@ -112,6 +111,7 @@ export class LambdaService implements Lambda {
   }
 
   public async invoke(
+    ctx: Context,
     trigger: keyof FunctionConfig,
     event:
       | CustomMessageEvent
@@ -176,9 +176,12 @@ export class LambdaService implements Lambda {
       }
     }
 
-    this.logger.debug(
-      `Invoking "${functionName}" with event`,
-      JSON.stringify(lambdaEvent, undefined, 2)
+    ctx.logger.debug(
+      {
+        functionName,
+        event: JSON.stringify(lambdaEvent, undefined, 2),
+      },
+      `Invoking "${functionName}" with event`
     );
     let result: InvocationResponse;
     try {
@@ -190,11 +193,11 @@ export class LambdaService implements Lambda {
         })
         .promise();
     } catch (ex) {
-      this.logger.error(ex);
+      ctx.logger.error({ error: ex });
       throw new UnexpectedLambdaExceptionError();
     }
 
-    this.logger.debug(
+    ctx.logger.debug(
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
     );
     if (result.StatusCode === 200) {
@@ -203,11 +206,11 @@ export class LambdaService implements Lambda {
 
         return parsedPayload.response as CognitoUserPoolResponse;
       } catch (err) {
-        this.logger.error(err);
+        ctx.logger.error({ error: err });
         throw new InvalidLambdaResponseError();
       }
     } else {
-      this.logger.error(result.FunctionError);
+      ctx.logger.error({ error: result.FunctionError });
       throw new UserLambdaValidationError(result.FunctionError);
     }
   }

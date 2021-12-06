@@ -51,22 +51,26 @@ export const Targets = {
   RespondToAuthChallenge,
   RevokeToken,
   SignUp,
-};
+} as const;
 
 type TargetName = keyof typeof Targets;
+
+export type Context = { readonly logger: Logger };
+export type Target<Req extends {}, Res extends {}> = (
+  ctx: Context,
+  req: Req
+) => Promise<Res>;
 
 export const isSupportedTarget = (name: string): name is TargetName =>
   Object.keys(Targets).includes(name);
 
 // eslint-disable-next-line
-export type Route = (req: any) => Promise<any>;
+export type Route = (ctx: Context, req: any) => Promise<any>;
 export type Router = (target: string) => Route;
 
 export const Router =
-  (services: Services, logger: Logger): Router =>
+  (services: Services): Router =>
   (target: string) => {
-    logger.debug(target);
-
     if (!isSupportedTarget(target)) {
       return () =>
         Promise.reject(
@@ -74,5 +78,22 @@ export const Router =
         );
     }
 
-    return Targets[target](services, logger);
+    const t = Targets[target](services);
+
+    return async (ctx, req) => {
+      const targetLogger = ctx.logger.child({
+        target,
+      });
+
+      targetLogger.debug("start");
+      const res = await t(
+        {
+          ...ctx,
+          logger: targetLogger,
+        },
+        req
+      );
+      targetLogger.debug("end");
+      return res;
+    };
   };

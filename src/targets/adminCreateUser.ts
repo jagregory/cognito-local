@@ -22,14 +22,16 @@ import {
   attributeValue,
   User,
 } from "../services/userPoolService";
+import { Context, Target } from "./router";
 
 const generator = shortUUID(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!"
 );
 
-export type AdminCreateUserTarget = (
-  req: AdminCreateUserRequest
-) => Promise<AdminCreateUserResponse>;
+export type AdminCreateUserTarget = Target<
+  AdminCreateUserRequest,
+  AdminCreateUserResponse
+>;
 
 type AdminCreateUserServices = Pick<
   Services,
@@ -66,6 +68,7 @@ const selectAppropriateDeliveryMethod = (
 };
 
 const deliverWelcomeMessage = async (
+  ctx: Context,
   req: AdminCreateUserRequest,
   temporaryPassword: string,
   user: User,
@@ -85,12 +88,13 @@ const deliverWelcomeMessage = async (
   }
 
   const message = await messages.adminCreateUser(
+    ctx,
     userPool.config.Id,
     user,
     temporaryPassword,
     req.ClientMetadata
   );
-  await messageDelivery.deliver(user, deliveryDetails, message);
+  await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 };
 
 export const AdminCreateUser =
@@ -100,9 +104,9 @@ export const AdminCreateUser =
     messageDelivery,
     messages,
   }: AdminCreateUserServices): AdminCreateUserTarget =>
-  async (req) => {
-    const userPool = await cognito.getUserPool(req.UserPoolId);
-    const existingUser = await userPool.getUserByUsername(req.Username);
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
+    const existingUser = await userPool.getUserByUsername(ctx, req.Username);
     if (existingUser && req.MessageAction === "RESEND") {
       throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
     } else if (existingUser) {
@@ -129,7 +133,7 @@ export const AdminCreateUser =
       UserLastModifiedDate: now,
       RefreshTokens: [],
     };
-    await userPool.saveUser(user);
+    await userPool.saveUser(ctx, user);
 
     // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
     // TODO: should send a message unless MessageAction=="SUPPRESS"
@@ -139,6 +143,7 @@ export const AdminCreateUser =
     // TODO: support PreSignIn lambda and ValidationData
 
     await deliverWelcomeMessage(
+      ctx,
       req,
       temporaryPassword,
       user,

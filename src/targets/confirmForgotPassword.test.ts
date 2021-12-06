@@ -2,6 +2,7 @@ import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
+import { TestContext } from "../__tests__/testContext";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
 import {
@@ -35,7 +36,7 @@ describe("ConfirmForgotPassword target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      confirmForgotPassword({
+      confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: "janice",
         ConfirmationCode: "1234",
@@ -53,7 +54,7 @@ describe("ConfirmForgotPassword target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      confirmForgotPassword({
+      confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: "janice",
         ConfirmationCode: "1234",
@@ -74,14 +75,14 @@ describe("ConfirmForgotPassword target", () => {
       // advance the time so we can see the last modified timestamp change
       const newNow = clock.advanceBy(5000);
 
-      await confirmForgotPassword({
+      await confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
         ConfirmationCode: "4567",
         Password: "newPassword",
       });
 
-      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
         ...user,
         ConfirmationCode: undefined,
         Password: "newPassword",
@@ -101,7 +102,7 @@ describe("ConfirmForgotPassword target", () => {
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await confirmForgotPassword({
+        await confirmForgotPassword(TestContext, {
           ClientId: "clientId",
           ClientMetadata: {
             client: "metadata",
@@ -111,16 +112,19 @@ describe("ConfirmForgotPassword target", () => {
           Password: "newPassword",
         });
 
-        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith({
-          clientId: "clientId",
-          clientMetadata: {
-            client: "metadata",
-          },
-          source: "PostConfirmation_ConfirmForgotPassword",
-          userAttributes: user.Attributes,
-          userPoolId: "test",
-          username: user.Username,
-        });
+        expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(
+          TestContext,
+          {
+            clientId: "clientId",
+            clientMetadata: {
+              client: "metadata",
+            },
+            source: "PostConfirmation_ConfirmForgotPassword",
+            userAttributes: user.Attributes,
+            userPoolId: "test",
+            username: user.Username,
+          }
+        );
       });
     });
 
@@ -135,7 +139,7 @@ describe("ConfirmForgotPassword target", () => {
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await confirmForgotPassword({
+        await confirmForgotPassword(TestContext, {
           ClientId: "clientId",
           Username: user.Username,
           ConfirmationCode: "4567",

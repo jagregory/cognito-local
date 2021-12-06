@@ -4,6 +4,7 @@ import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { MessageDelivery, Messages, UserPoolService } from "../services";
@@ -30,7 +31,7 @@ describe("AdminCreateUser target", () => {
   });
 
   it("saves a new user with a provided temporary password", async () => {
-    await adminCreateUser({
+    await adminCreateUser(TestContext, {
       TemporaryPassword: "pwd",
       UserAttributes: [
         { Name: "email", Value: "example@example.com" },
@@ -40,7 +41,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
         {
           Name: "sub",
@@ -60,7 +61,7 @@ describe("AdminCreateUser target", () => {
   });
 
   it("saves a new user with a generated temporary password", async () => {
-    await adminCreateUser({
+    await adminCreateUser(TestContext, {
       UserAttributes: [
         { Name: "email", Value: "example@example.com" },
         { Name: "phone_number", Value: "0400000000" },
@@ -69,7 +70,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
         {
           Name: "sub",
@@ -96,7 +97,7 @@ describe("AdminCreateUser target", () => {
           emailSubject: "email subject",
         });
 
-        const response = await adminCreateUser({
+        const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -108,6 +109,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+          TestContext,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -116,6 +118,7 @@ describe("AdminCreateUser target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           {
             ...response.User,
             Password: "pwd",
@@ -132,7 +135,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without email attribute", async () => {
         await expect(
-          adminCreateUser({
+          adminCreateUser(TestContext, {
             DesiredDeliveryMediums: ["EMAIL"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -156,7 +159,7 @@ describe("AdminCreateUser target", () => {
           smsMessage: "sms message",
         });
 
-        const response = await adminCreateUser({
+        const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -168,6 +171,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+          TestContext,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -176,6 +180,7 @@ describe("AdminCreateUser target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           {
             ...response.User,
             Password: "pwd",
@@ -192,7 +197,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without phone_number attribute", async () => {
         await expect(
-          adminCreateUser({
+          adminCreateUser(TestContext, {
             DesiredDeliveryMediums: ["SMS"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -216,7 +221,7 @@ describe("AdminCreateUser target", () => {
           smsMessage: "sms message",
         });
 
-        const response = await adminCreateUser({
+        const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -227,6 +232,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+          TestContext,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -235,6 +241,7 @@ describe("AdminCreateUser target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           {
             ...response.User,
             Password: "pwd",
@@ -251,7 +258,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without phone_number attribute", async () => {
         await expect(
-          adminCreateUser({
+          adminCreateUser(TestContext, {
             ClientMetadata: {
               client: "metadata",
             },
@@ -277,7 +284,7 @@ describe("AdminCreateUser target", () => {
           smsMessage: "sms message",
         });
 
-        const response = await adminCreateUser({
+        const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -292,6 +299,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+          TestContext,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -300,6 +308,7 @@ describe("AdminCreateUser target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           {
             ...response.User,
             Password: "pwd",
@@ -320,7 +329,7 @@ describe("AdminCreateUser target", () => {
           emailSubject: "email subject",
         });
 
-        const response = await adminCreateUser({
+        const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -332,6 +341,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+          TestContext,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -340,6 +350,7 @@ describe("AdminCreateUser target", () => {
           }
         );
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
+          TestContext,
           {
             ...response.User,
             Password: "pwd",
@@ -356,7 +367,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for users without phone_number or email", async () => {
         await expect(
-          adminCreateUser({
+          adminCreateUser(TestContext, {
             DesiredDeliveryMediums: ["EMAIL", "SMS"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -384,7 +395,7 @@ describe("AdminCreateUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     await expect(
-      adminCreateUser({
+      adminCreateUser(TestContext, {
         TemporaryPassword: "pwd",
         UserAttributes: existingUser.Attributes,
         Username: existingUser.Username,

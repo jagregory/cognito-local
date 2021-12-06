@@ -1,22 +1,9 @@
-import debug from "debug";
+import pino from "pino";
 
-export interface Logger {
-  debug(message?: any, ...optionalParams: any[]): void;
-  error(message?: any, ...optionalParams: any[]): void;
-  info(message?: any, ...optionalParams: any[]): void;
-  warn(message?: any, ...optionalParams: any[]): void;
-}
-
-const logger = debug("CognitoLocal");
-
-export class ConsoleLogger implements Logger {
-  info = console.info;
-  error = console.error;
-  warn = console.warn;
-
-  debug(...args: any[]) {
-    if (logger.enabled) {
-      logger.log(...args);
-    }
-  }
-}
+export type Logger = {
+  child(bindings: pino.Bindings, options?: pino.ChildLoggerOptions): Logger;
+  debug: pino.LogFn;
+  error: pino.LogFn;
+  info: pino.LogFn;
+  warn: pino.LogFn;
+};

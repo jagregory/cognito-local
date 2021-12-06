@@ -1,33 +1,30 @@
 import boxen from "boxen";
-import { Logger } from "../../log";
+import { Context } from "../context";
 import { Message } from "../messages";
 import { User } from "../userPoolService";
 import { MessageSender } from "./messageSender";
 
 export class ConsoleMessageSender implements MessageSender {
-  private readonly logger: Logger;
-
-  constructor(logger: Logger) {
-    this.logger = logger;
-  }
-
   public sendEmail(
+    ctx: Context,
     user: User,
     destination: string,
     message: Message
   ): Promise<void> {
-    return this.sendToConsole(user, destination, message);
+    return this.sendToConsole(ctx, user, destination, message);
   }
 
   public sendSms(
+    ctx: Context,
     user: User,
     destination: string,
     message: Message
   ): Promise<void> {
-    return this.sendToConsole(user, destination, message);
+    return this.sendToConsole(ctx, user, destination, message);
   }
 
   private sendToConsole(
+    ctx: Context,
     user: User,
     destination: string,
     { __code, ...message }: Message
@@ -51,7 +48,7 @@ export class ConsoleMessageSender implements MessageSender {
       ([k, v]) => `${(k + ":").padEnd(longestDefinedFieldName + 1)} ${v}`
     );
 
-    this.logger.info(
+    ctx.logger.info(
       boxen(`Confirmation Code Delivery\n\n${formattedFields.join("\n")}`, {
         borderStyle: "round" as any,
         borderColor: "yellow",

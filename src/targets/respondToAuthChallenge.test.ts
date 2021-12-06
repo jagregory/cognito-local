@@ -4,6 +4,7 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
+import { TestContext } from "../__tests__/testContext";
 import {
   CodeMismatchError,
   InvalidParameterError,
@@ -48,7 +49,7 @@ describe("RespondToAuthChallenge target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      respondToAuthChallenge({
+      respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -62,7 +63,7 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses missing", async () => {
     await expect(
-      respondToAuthChallenge({
+      respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
       })
@@ -75,7 +76,7 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses.USERNAME is missing", async () => {
     await expect(
-      respondToAuthChallenge({
+      respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {},
@@ -89,7 +90,7 @@ describe("RespondToAuthChallenge target", () => {
     // we don't actually do anything with the session right now, but we still want to
     // replicate Cognito's behaviour if you don't provide it
     await expect(
-      respondToAuthChallenge({
+      respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -114,7 +115,7 @@ describe("RespondToAuthChallenge target", () => {
       it("updates the user and removes the MFACode", async () => {
         const newDate = clock.advanceBy(1200);
 
-        await respondToAuthChallenge({
+        await respondToAuthChallenge(TestContext, {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -124,7 +125,7 @@ describe("RespondToAuthChallenge target", () => {
           Session: "Session",
         });
 
-        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
           ...user,
           MFACode: undefined,
           UserLastModifiedDate: newDate,
@@ -132,7 +133,7 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       it("generates tokens", async () => {
-        const output = await respondToAuthChallenge({
+        const output = await respondToAuthChallenge(TestContext, {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -203,7 +204,7 @@ describe("RespondToAuthChallenge target", () => {
             (trigger) => trigger === "PostAuthentication"
           );
 
-          await respondToAuthChallenge({
+          await respondToAuthChallenge(TestContext, {
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
             ClientMetadata: {
@@ -216,16 +217,19 @@ describe("RespondToAuthChallenge target", () => {
             Session: "Session",
           });
 
-          expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            source: "PostAuthentication_Authentication",
-            userAttributes: user.Attributes,
-            username: user.Username,
-            userPoolId: "test",
-          });
+          expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
+            TestContext,
+            {
+              clientId: "clientId",
+              clientMetadata: {
+                client: "metadata",
+              },
+              source: "PostAuthentication_Authentication",
+              userAttributes: user.Attributes,
+              username: user.Username,
+              userPoolId: "test",
+            }
+          );
         });
       });
     });
@@ -235,7 +239,7 @@ describe("RespondToAuthChallenge target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await expect(
-          respondToAuthChallenge({
+          respondToAuthChallenge(TestContext, {
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
             ChallengeResponses: {
@@ -258,7 +262,7 @@ describe("RespondToAuthChallenge target", () => {
 
     it("throws if NEW_PASSWORD missing", async () => {
       await expect(
-        respondToAuthChallenge({
+        respondToAuthChallenge(TestContext, {
           ClientId: "clientId",
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
@@ -274,7 +278,7 @@ describe("RespondToAuthChallenge target", () => {
     it("updates the user's password and status", async () => {
       const newDate = clock.advanceBy(1200);
 
-      await respondToAuthChallenge({
+      await respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -284,7 +288,7 @@ describe("RespondToAuthChallenge target", () => {
         Session: "Session",
       });
 
-      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith({
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
         ...user,
         Password: "foo",
         UserLastModifiedDate: newDate,
@@ -293,7 +297,7 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("generates tokens", async () => {
-      const output = await respondToAuthChallenge({
+      const output = await respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -360,7 +364,7 @@ describe("RespondToAuthChallenge target", () => {
           (trigger) => trigger === "PostAuthentication"
         );
 
-        await respondToAuthChallenge({
+        await respondToAuthChallenge(TestContext, {
           ClientId: "clientId",
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
@@ -370,13 +374,16 @@ describe("RespondToAuthChallenge target", () => {
           Session: "Session",
         });
 
-        expect(mockTriggers.postAuthentication).toHaveBeenCalledWith({
-          clientId: "clientId",
-          source: "PostAuthentication_Authentication",
-          userAttributes: user.Attributes,
-          username: user.Username,
-          userPoolId: "test",
-        });
+        expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
+          TestContext,
+          {
+            clientId: "clientId",
+            source: "PostAuthentication_Authentication",
+            userAttributes: user.Attributes,
+            username: user.Username,
+            userPoolId: "test",
+          }
+        );
       });
     });
   });

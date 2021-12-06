@@ -4,15 +4,17 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type DescribeUserPoolClientTarget = (
-  req: DescribeUserPoolClientRequest
-) => Promise<DescribeUserPoolClientResponse>;
+export type DescribeUserPoolClientTarget = Target<
+  DescribeUserPoolClientRequest,
+  DescribeUserPoolClientResponse
+>;
 
 export const DescribeUserPoolClient =
   ({ cognito }: Pick<Services, "cognito">): DescribeUserPoolClientTarget =>
-  async (req) => {
-    const client = await cognito.getAppClient(req.ClientId);
+  async (ctx, req) => {
+    const client = await cognito.getAppClient(ctx, req.ClientId);
     if (client?.UserPoolId !== req.UserPoolId) {
       throw new ResourceNotFoundError();
     }

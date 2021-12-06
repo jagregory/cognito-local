@@ -1,11 +1,12 @@
 import { newMockDataStore } from "../__tests__/mockDataStore";
+import { TestContext } from "../__tests__/testContext";
 import { DefaultConfig, loadConfig } from "./config";
 
 describe("loadConfig", () => {
   it("returns the default config if no config exists", async () => {
     const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
 
-    const config = await loadConfig("dir", createDataStore);
+    const config = await loadConfig(TestContext, "dir", createDataStore);
 
     expect(config).toEqual(DefaultConfig);
   });
@@ -23,7 +24,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig("dir", createDataStore);
+    const config = await loadConfig(TestContext, "dir", createDataStore);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -49,7 +50,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig("dir", createDataStore);
+    const config = await loadConfig(TestContext, "dir", createDataStore);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -69,7 +70,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig("dir", createDataStore);
+    const config = await loadConfig(TestContext, "dir", createDataStore);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -89,7 +90,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig("dir", createDataStore);
+    const config = await loadConfig(TestContext, "dir", createDataStore);
 
     expect(config).toEqual({
       ...DefaultConfig,

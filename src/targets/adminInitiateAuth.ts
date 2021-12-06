@@ -10,14 +10,17 @@ import {
 } from "../errors";
 import { Services } from "../services";
 import { generateTokens } from "../services/tokens";
+import { Context, Target } from "./router";
 
-export type AdminInitiateAuthTarget = (
-  req: AdminInitiateAuthRequest
-) => Promise<AdminInitiateAuthResponse>;
+export type AdminInitiateAuthTarget = Target<
+  AdminInitiateAuthRequest,
+  AdminInitiateAuthResponse
+>;
 
 type AuthServices = Pick<Services, "cognito" | "clock" | "triggers" | "config">;
 
 const adminUserPasswordAuthFlow = async (
+  ctx: Context,
   services: AuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
@@ -33,8 +36,11 @@ const adminUserPasswordAuthFlow = async (
     );
   }
 
-  const userPool = await services.cognito.getUserPoolForClientId(req.ClientId);
-  let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
+  const userPool = await services.cognito.getUserPoolForClientId(
+    ctx,
+    req.ClientId
+  );
+  let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
 
   if (!user && services.triggers.enabled("UserMigration")) {
     // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
@@ -42,7 +48,7 @@ const adminUserPasswordAuthFlow = async (
     // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time of
     // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
     // Cognito creates the user in the user pool.
-    user = await services.triggers.userMigration({
+    user = await services.triggers.userMigration(ctx, {
       clientMetadata: {},
       validationData: {},
       userPoolId: userPool.config.Id,
@@ -69,7 +75,7 @@ const adminUserPasswordAuthFlow = async (
     services.clock
   );
 
-  await userPool.storeRefreshToken(tokens.RefreshToken, user);
+  await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
   return {
     ChallengeName: undefined,
@@ -87,6 +93,7 @@ const adminUserPasswordAuthFlow = async (
 };
 
 const refreshTokenAuthFlow = async (
+  ctx: Context,
   services: AuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
@@ -100,8 +107,12 @@ const refreshTokenAuthFlow = async (
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
   }
 
-  const userPool = await services.cognito.getUserPoolForClientId(req.ClientId);
+  const userPool = await services.cognito.getUserPoolForClientId(
+    ctx,
+    req.ClientId
+  );
   const user = await userPool.getUserByRefreshToken(
+    ctx,
     req.AuthParameters.REFRESH_TOKEN
   );
   if (!user) {
@@ -133,14 +144,14 @@ const refreshTokenAuthFlow = async (
 
 export const AdminInitiateAuth =
   (services: AuthServices): AdminInitiateAuthTarget =>
-  async (req) => {
+  async (ctx, req) => {
     if (req.AuthFlow === "ADMIN_USER_PASSWORD_AUTH") {
-      return adminUserPasswordAuthFlow(services, req);
+      return adminUserPasswordAuthFlow(ctx, services, req);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN_AUTH" ||
       req.AuthFlow === "REFRESH_TOKEN"
     ) {
-      return refreshTokenAuthFlow(services, req);
+      return refreshTokenAuthFlow(ctx, services, req);
     } else {
       throw new UnsupportedError(`AdminInitAuth with AuthFlow=${req.AuthFlow}`);
     }

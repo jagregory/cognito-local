@@ -4,7 +4,7 @@ import http from "http";
 import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
-import { Logger } from "../../src/log";
+import type { Logger } from "pino";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
@@ -27,7 +27,7 @@ export const withCognitoSdk =
   (
     fn: (cognito: () => AWS.CognitoIdentityServiceProvider) => void,
     {
-      logger = MockLogger,
+      logger = MockLogger as any,
       clock = new DateClock(),
     }: { logger?: Logger; clock?: Clock } = {}
   ) =>
@@ -38,42 +38,35 @@ export const withCognitoSdk =
 
     beforeEach(async () => {
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
+      const ctx = { logger };
 
       const cognitoClient = await CognitoServiceImpl.create(
+        ctx,
         dataDirectory,
         {},
         clock,
         createDataStore,
-        UserPoolServiceImpl.create.bind(UserPoolServiceImpl),
-        logger
+        UserPoolServiceImpl.create.bind(UserPoolServiceImpl)
       );
       const mockLambda: jest.Mocked<Lambda> = {
         enabled: jest.fn().mockReturnValue(false),
         invoke: jest.fn(),
       };
-      const triggers = new TriggersService(
-        clock,
-        cognitoClient,
-        mockLambda,
-        logger
-      );
+      const triggers = new TriggersService(clock, cognitoClient, mockLambda);
       const mockCodeDelivery: jest.Mocked<MessageDelivery> = {
         deliver: jest.fn(),
       };
 
-      const router = Router(
-        {
-          clock,
-          cognito: cognitoClient,
-          config: DefaultConfig,
-          messageDelivery: mockCodeDelivery,
-          messages: new MessagesService(triggers),
-          otp,
-          triggers,
-        },
-        logger
-      );
-      const server = createServer(router, logger);
+      const router = Router({
+        clock,
+        cognito: cognitoClient,
+        config: DefaultConfig,
+        messageDelivery: mockCodeDelivery,
+        messages: new MessagesService(triggers),
+        otp,
+        triggers,
+      });
+      const server = createServer(router, ctx.logger);
       httpServer = await server.start({
         port: 0,
       });

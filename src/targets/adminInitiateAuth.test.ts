@@ -2,6 +2,7 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { ClockFake } from "../__tests__/clockFake";
+import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { DefaultConfig } from "../server/config";
 import {
@@ -54,7 +55,7 @@ describe("AdminInitiateAuth target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
-    const response = await adminInitiateAuth({
+    const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
       ClientId: "clientId",
       UserPoolId: "test",
@@ -65,6 +66,7 @@ describe("AdminInitiateAuth target", () => {
     });
 
     expect(mockUserPoolService.storeRefreshToken).toHaveBeenCalledWith(
+      TestContext,
       response.AuthenticationResult?.RefreshToken,
       existingUser
     );
@@ -81,7 +83,7 @@ describe("AdminInitiateAuth target", () => {
 
     mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
 
-    const response = await adminInitiateAuth({
+    const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "REFRESH_TOKEN_AUTH",
       ClientId: "clientId",
       UserPoolId: "test",
@@ -91,6 +93,7 @@ describe("AdminInitiateAuth target", () => {
     });
 
     expect(mockUserPoolService.getUserByRefreshToken).toHaveBeenCalledWith(
+      TestContext,
       "refresh token"
     );
     expect(mockUserPoolService.storeRefreshToken).not.toHaveBeenCalled();

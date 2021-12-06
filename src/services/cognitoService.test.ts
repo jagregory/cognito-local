@@ -1,5 +1,5 @@
 import { newMockDataStore } from "../__tests__/mockDataStore";
-import { MockLogger } from "../__tests__/mockLogger";
+import { TestContext } from "../__tests__/testContext";
 import { ResourceNotFoundError } from "../errors";
 import { DateClock } from "./clock";
 import { CognitoServiceImpl, USER_POOL_AWS_DEFAULTS } from "./cognitoService";
@@ -24,15 +24,16 @@ describe("Cognito Service", () => {
       () => mockDataStore
     ) as unknown as CreateDataStore;
     await CognitoServiceImpl.create(
+      TestContext,
       "data-directory",
       {},
       clock,
       createDataStore,
-      createUserPoolClient,
-      MockLogger
+      createUserPoolClient
     );
 
     expect(createDataStore).toHaveBeenCalledWith(
+      TestContext,
       "clients",
       {
         Clients: {},
@@ -47,23 +48,23 @@ describe("Cognito Service", () => {
     // continue. This may change in a later release.
     it("creates a user pool by the id specified", async () => {
       const cognitoClient = await CognitoServiceImpl.create(
+        TestContext,
         "data-directory",
         { UsernameAttributes: [] },
         clock,
         createDataStore,
-        createUserPoolClient,
-        MockLogger
+        createUserPoolClient
       );
 
-      const userPool = await cognitoClient.getUserPool("testing");
+      const userPool = await cognitoClient.getUserPool(TestContext, "testing");
 
       expect(createUserPoolClient).toHaveBeenCalledWith(
+        TestContext,
         "data-directory",
         mockDataStore,
         clock,
         createDataStore,
-        { ...USER_POOL_AWS_DEFAULTS, Id: "testing", UsernameAttributes: [] },
-        MockLogger
+        { ...USER_POOL_AWS_DEFAULTS, Id: "testing", UsernameAttributes: [] }
       );
       expect(userPool).toEqual(mockUserPool);
     });
@@ -73,16 +74,16 @@ describe("Cognito Service", () => {
     it("throws if client isn't registered", async () => {
       mockDataStore.get.mockResolvedValue(null);
       const cognitoClient = await CognitoServiceImpl.create(
+        TestContext,
         "data-directory",
         {},
         clock,
         createDataStore,
-        createUserPoolClient,
-        MockLogger
+        createUserPoolClient
       );
 
       await expect(
-        cognitoClient.getUserPoolForClientId("testing")
+        cognitoClient.getUserPoolForClientId(TestContext, "testing")
       ).rejects.toBeInstanceOf(ResourceNotFoundError);
 
       expect(createUserPoolClient).not.toHaveBeenCalled();
@@ -93,24 +94,30 @@ describe("Cognito Service", () => {
         UserPoolId: "userPoolId",
       });
       const cognitoClient = await CognitoServiceImpl.create(
+        TestContext,
         "data-directory",
         { UsernameAttributes: [] },
         clock,
         createDataStore,
-        createUserPoolClient,
-        MockLogger
+        createUserPoolClient
       );
 
-      const userPool = await cognitoClient.getUserPoolForClientId("testing");
+      const userPool = await cognitoClient.getUserPoolForClientId(
+        TestContext,
+        "testing"
+      );
 
-      expect(mockDataStore.get).toHaveBeenCalledWith(["Clients", "testing"]);
+      expect(mockDataStore.get).toHaveBeenCalledWith(TestContext, [
+        "Clients",
+        "testing",
+      ]);
       expect(createUserPoolClient).toHaveBeenCalledWith(
+        TestContext,
         "data-directory",
         mockDataStore,
         clock,
         createDataStore,
-        { ...USER_POOL_AWS_DEFAULTS, Id: "userPoolId", UsernameAttributes: [] },
-        MockLogger
+        { ...USER_POOL_AWS_DEFAULTS, Id: "userPoolId", UsernameAttributes: [] }
       );
       expect(userPool).toEqual(mockUserPool);
     });

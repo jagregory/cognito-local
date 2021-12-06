@@ -9,31 +9,35 @@ import {
   attributesToRecord,
   User,
 } from "../userPoolService";
+import { Trigger } from "./trigger";
 
-export type UserMigrationTrigger = (params: {
-  userPoolId: string;
-  clientId: string;
-  username: string;
-  password: string;
-  userAttributes: AttributeListType;
+export type UserMigrationTrigger = Trigger<
+  {
+    userPoolId: string;
+    clientId: string;
+    username: string;
+    password: string;
+    userAttributes: AttributeListType;
 
-  /**
-   * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
-   * migrate user trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter in the
-   * AdminRespondToAuthChallenge and ForgotPassword API actions.
-   *
-   * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
-   */
-  clientMetadata: Record<string, string> | undefined;
+    /**
+     * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
+     * migrate user trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter in the
+     * AdminRespondToAuthChallenge and ForgotPassword API actions.
+     *
+     * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+     */
+    clientMetadata: Record<string, string> | undefined;
 
-  /**
-   * One or more key-value pairs containing the validation data in the user's sign-in request. You can pass this data to
-   * your Lambda function by using the ClientMetadata parameter in the InitiateAuth and AdminInitiateAuth API actions.
-   *
-   * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
-   */
-  validationData: Record<string, string> | undefined;
-}) => Promise<User>;
+    /**
+     * One or more key-value pairs containing the validation data in the user's sign-in request. You can pass this data to
+     * your Lambda function by using the ClientMetadata parameter in the InitiateAuth and AdminInitiateAuth API actions.
+     *
+     * Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+     */
+    validationData: Record<string, string> | undefined;
+  },
+  User
+>;
 
 interface UserMigrationServices {
   clock: Clock;
@@ -47,16 +51,19 @@ export const UserMigration =
     cognitoClient,
     clock,
   }: UserMigrationServices): UserMigrationTrigger =>
-  async ({
-    clientId,
-    clientMetadata,
-    password,
-    userAttributes,
-    username,
-    userPoolId,
-    validationData,
-  }): Promise<User> => {
-    const userPool = await cognitoClient.getUserPoolForClientId(clientId);
+  async (
+    ctx,
+    {
+      clientId,
+      clientMetadata,
+      password,
+      userAttributes,
+      username,
+      userPoolId,
+      validationData,
+    }
+  ) => {
+    const userPool = await cognitoClient.getUserPoolForClientId(ctx, clientId);
     if (!userPool) {
       throw new ResourceNotFoundError();
     }
@@ -64,7 +71,7 @@ export const UserMigration =
     let result: CognitoUserPoolResponse;
 
     try {
-      result = await lambda.invoke("UserMigration", {
+      result = await lambda.invoke(ctx, "UserMigration", {
         clientId,
         clientMetadata,
         password,
@@ -94,7 +101,7 @@ export const UserMigration =
       // TODO: do something with aliases?
     }
 
-    await userPool.saveUser(user);
+    await userPool.saveUser(ctx, user);
 
     if (result.messageAction !== "SUPPRESS") {
       // TODO: send notification when not suppressed?

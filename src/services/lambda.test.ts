@@ -1,4 +1,4 @@
-import { MockLogger } from "../__tests__/mockLogger";
+import { TestContext } from "../__tests__/testContext";
 import {
   InvalidLambdaResponseError,
   UserLambdaValidationError,
@@ -22,15 +22,14 @@ describe("Lambda function invoker", () => {
         {
           UserMigration: "MyLambdaName",
         },
-        mockLambdaClient,
-        MockLogger
+        mockLambdaClient
       );
 
       expect(lambda.enabled("UserMigration")).toBe(true);
     });
 
     it("returns false if lambda is not configured", () => {
-      const lambda = new LambdaService({}, mockLambdaClient, MockLogger);
+      const lambda = new LambdaService({}, mockLambdaClient);
 
       expect(lambda.enabled("UserMigration")).toBe(false);
     });
@@ -38,10 +37,10 @@ describe("Lambda function invoker", () => {
 
   describe("invoke", () => {
     it("throws if lambda is not configured", async () => {
-      const lambda = new LambdaService({}, mockLambdaClient, MockLogger);
+      const lambda = new LambdaService({}, mockLambdaClient);
 
       await expect(
-        lambda.invoke("UserMigration", {
+        lambda.invoke(TestContext, "UserMigration", {
           clientId: "clientId",
           clientMetadata: undefined,
           password: "password",
@@ -67,11 +66,10 @@ describe("Lambda function invoker", () => {
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        const result = await lambda.invoke("UserMigration", {
+        const result = await lambda.invoke(TestContext, "UserMigration", {
           clientId: "clientId",
           clientMetadata: undefined,
           password: "password",
@@ -97,12 +95,11 @@ describe("Lambda function invoker", () => {
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
         await expect(
-          lambda.invoke("UserMigration", {
+          lambda.invoke(TestContext, "UserMigration", {
             clientId: "clientId",
             clientMetadata: undefined,
             password: "password",
@@ -127,12 +124,11 @@ describe("Lambda function invoker", () => {
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
         await expect(
-          lambda.invoke("UserMigration", {
+          lambda.invoke(TestContext, "UserMigration", {
             clientId: "clientId",
             clientMetadata: undefined,
             password: "password",
@@ -159,11 +155,10 @@ describe("Lambda function invoker", () => {
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        const result = await lambda.invoke("UserMigration", {
+        const result = await lambda.invoke(TestContext, "UserMigration", {
           clientId: "clientId",
           clientMetadata: undefined,
           password: "password",
@@ -195,11 +190,10 @@ describe("Lambda function invoker", () => {
           {
             PreSignUp: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        await lambda.invoke("PreSignUp", {
+        await lambda.invoke(TestContext, "PreSignUp", {
           clientId: "clientId",
           clientMetadata: {
             client: "metadata",
@@ -251,11 +245,10 @@ describe("Lambda function invoker", () => {
           {
             UserMigration: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        await lambda.invoke("UserMigration", {
+        await lambda.invoke(TestContext, "UserMigration", {
           clientId: "clientId",
           clientMetadata: {
             client: "metadata",
@@ -314,11 +307,10 @@ describe("Lambda function invoker", () => {
           {
             [trigger]: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        await lambda.invoke(trigger, {
+        await lambda.invoke(TestContext, trigger, {
           clientId: "clientId",
           triggerSource: source,
           username: "username",
@@ -376,11 +368,10 @@ describe("Lambda function invoker", () => {
           {
             CustomMessage: "MyLambdaName",
           },
-          mockLambdaClient,
-          MockLogger
+          mockLambdaClient
         );
 
-        await lambda.invoke("CustomMessage", {
+        await lambda.invoke(TestContext, "CustomMessage", {
           clientId: "clientId",
           clientMetadata: {
             client: "metadata",

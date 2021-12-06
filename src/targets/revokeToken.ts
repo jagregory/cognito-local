@@ -4,19 +4,18 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { NotAuthorizedError } from "../errors";
 import { Services } from "../services";
+import { Target } from "./router";
 
-export type RevokeTokenTarget = (
-  req: RevokeTokenRequest
-) => Promise<RevokeTokenResponse>;
+export type RevokeTokenTarget = Target<RevokeTokenRequest, RevokeTokenResponse>;
+
+type RevokeTokenServices = Pick<Services, "cognito">;
 
 export const RevokeToken =
-  (services: Pick<Services, "cognito">): RevokeTokenTarget =>
-  async (req) => {
-    const userPool = await services.cognito.getUserPoolForClientId(
-      req.ClientId
-    );
+  ({ cognito }: RevokeTokenServices): RevokeTokenTarget =>
+  async (ctx, req) => {
+    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
 
-    const users = await userPool.listUsers();
+    const users = await userPool.listUsers(ctx);
     const user = users.find(
       (user) =>
         Array.isArray(user.RefreshTokens) &&
@@ -34,7 +33,7 @@ export const RevokeToken =
       tokens.splice(tokenIndex, 1);
     }
 
-    userPool.saveUser({
+    await userPool.saveUser(ctx, {
       ...user,
       RefreshTokens: [...tokens],
     });
