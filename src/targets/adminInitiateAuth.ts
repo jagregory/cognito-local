@@ -69,17 +69,9 @@ const handleAdminUserPasswordAuth = async (
     services.clock
   );
 
-  const refreshTokens = Array.isArray(user.RefreshTokens)
-    ? user.RefreshTokens
-    : [];
-  refreshTokens.push(tokens.RefreshToken);
+  await userPool.storeRefreshToken(tokens.RefreshToken, user);
 
-  await userPool.saveUser({
-    ...user,
-    RefreshTokens: refreshTokens,
-  });
-
-  const response: AdminInitiateAuthResponse = {
+  return {
     ChallengeName: undefined,
     Session: undefined,
     ChallengeParameters: undefined,
@@ -92,8 +84,6 @@ const handleAdminUserPasswordAuth = async (
       ExpiresIn: undefined,
     },
   };
-
-  return response;
 };
 
 const handleRefreshTokenAuth = async (
@@ -111,15 +101,9 @@ const handleRefreshTokenAuth = async (
   }
 
   const userPool = await services.cognito.getUserPoolForClientId(req.ClientId);
-
-  const users = await userPool.listUsers();
-  const user = users.find(
-    (user) =>
-      req.AuthParameters &&
-      Array.isArray(user.RefreshTokens) &&
-      user.RefreshTokens.includes(req.AuthParameters.REFRESH_TOKEN)
+  const user = await userPool.getUserByRefreshToken(
+    req.AuthParameters.REFRESH_TOKEN
   );
-
   if (!user) {
     throw new NotAuthorizedError();
   }
@@ -132,7 +116,7 @@ const handleRefreshTokenAuth = async (
     services.clock
   );
 
-  const response: AdminInitiateAuthResponse = {
+  return {
     ChallengeName: undefined,
     Session: undefined,
     ChallengeParameters: undefined,
@@ -145,8 +129,6 @@ const handleRefreshTokenAuth = async (
       ExpiresIn: undefined,
     },
   };
-
-  return response;
 };
 
 export const AdminInitiateAuth =

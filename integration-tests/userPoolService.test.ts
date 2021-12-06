@@ -1,3 +1,5 @@
+import fs from "fs";
+import { promisify } from "util";
 import { MockLogger } from "../src/__tests__/mockLogger";
 import {
   CognitoService,
@@ -7,8 +9,6 @@ import {
   UserPoolServiceImpl,
 } from "../src/services";
 import { createDataStore } from "../src/services/dataStore";
-import fs from "fs";
-import { promisify } from "util";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const readFile = promisify(fs.readFile);
@@ -195,6 +195,79 @@ describe("User Pool Service", () => {
 
         expect(user).not.toBeNull();
         expect(user?.Username).toEqual(username);
+      });
+    });
+  });
+
+  describe("getUserByRefreshToken", () => {
+    const username = "User";
+    let userPool: UserPoolService;
+
+    beforeAll(async () => {
+      userPool = await cognitoClient.getUserPool("local");
+
+      await userPool.saveUser({
+        Username: username,
+        Password: "hunter2",
+        UserStatus: "UNCONFIRMED",
+        Attributes: [
+          { Name: "sub", Value: "uuid-1234" },
+          { Name: "email", Value: "example@example.com" },
+          { Name: "phone_number", Value: "0411000111" },
+        ],
+        UserCreateDate: new Date(),
+        UserLastModifiedDate: new Date(),
+        Enabled: true,
+        RefreshTokens: ["refresh token"],
+      });
+    });
+
+    it("returns null if the refresh token doesn't match a user", async () => {
+      const user = await userPool.getUserByRefreshToken("invalid");
+
+      expect(user).toBeNull();
+    });
+
+    it("returns user by their refresh token", async () => {
+      const user = await userPool.getUserByRefreshToken("refresh token");
+
+      expect(user).not.toBeNull();
+      expect(user?.Username).toEqual(username);
+    });
+  });
+
+  describe("storeRefreshToken", () => {
+    const user = {
+      Username: "User",
+      Password: "hunter2",
+      UserStatus: "UNCONFIRMED",
+      Attributes: [
+        { Name: "sub", Value: "uuid-1234" },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0411000111" },
+      ],
+      UserCreateDate: new Date(),
+      UserLastModifiedDate: new Date(),
+      Enabled: true,
+      RefreshTokens: [],
+    };
+
+    let userPool: UserPoolService;
+
+    beforeAll(async () => {
+      userPool = await cognitoClient.getUserPool("local");
+
+      await userPool.saveUser(user);
+    });
+
+    it("saves a refresh token on the user", async () => {
+      await userPool.storeRefreshToken("refresh token", user);
+
+      const foundUser = await userPool.getUserByRefreshToken("refresh token");
+
+      expect(foundUser).toMatchObject({
+        Username: "User",
+        RefreshTokens: ["refresh token"],
       });
     });
   });

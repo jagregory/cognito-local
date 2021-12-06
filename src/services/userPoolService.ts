@@ -96,10 +96,12 @@ export interface UserPoolService {
   createAppClient(name: string): Promise<AppClient>;
   deleteUser(user: User): Promise<void>;
   getUserByUsername(username: string): Promise<User | null>;
+  getUserByRefreshToken(refreshToken: string): Promise<User | null>;
   listGroups(): Promise<readonly Group[]>;
   listUsers(): Promise<readonly User[]>;
   saveGroup(group: Group): Promise<void>;
   saveUser(user: User): Promise<void>;
+  storeRefreshToken(refreshToken: string, user: User): Promise<void>;
 }
 
 export type CreateUserPoolService = (
@@ -220,6 +222,20 @@ export class UserPoolServiceImpl implements UserPoolService {
     return null;
   }
 
+  public async getUserByRefreshToken(
+    refreshToken: string
+  ): Promise<User | null> {
+    this.logger.debug("getUserByRefreshToken", refreshToken);
+    const users = await this.listUsers();
+    const user = users.find(
+      (user) =>
+        Array.isArray(user.RefreshTokens) &&
+        user.RefreshTokens.includes(refreshToken)
+    );
+
+    return user ?? null;
+  }
+
   public async listUsers(): Promise<readonly User[]> {
     this.logger.debug("listUsers");
     const users = await this.dataStore.get<Record<string, User>>("Users", {});
@@ -247,5 +263,18 @@ export class UserPoolServiceImpl implements UserPoolService {
     this.logger.debug("saveGroup", group);
 
     await this.dataStore.set<Group>(["Groups", group.GroupName], group);
+  }
+
+  async storeRefreshToken(refreshToken: string, user: User): Promise<void> {
+    this.logger.debug("storeRefreshToken", refreshToken, user);
+    const refreshTokens = Array.isArray(user.RefreshTokens)
+      ? user.RefreshTokens
+      : [];
+    refreshTokens.push(refreshToken);
+
+    await this.saveUser({
+      ...user,
+      RefreshTokens: refreshTokens,
+    });
   }
 }
