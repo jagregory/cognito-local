@@ -578,4 +578,28 @@ describe("InitiateAuth target", () => {
       });
     });
   });
+
+  describe("REFRESH_TOKEN_AUTH auth flow", () => {
+    it("returns new tokens", async () => {
+      const existingUser = TDB.user({
+        RefreshTokens: ["refresh token"],
+      });
+
+      mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
+
+      const response = await initiateAuth({
+        AuthFlow: "REFRESH_TOKEN_AUTH",
+        ClientId: "clientId",
+        AuthParameters: {
+          REFRESH_TOKEN: "refresh token",
+        },
+      });
+
+      expect(response.AuthenticationResult?.AccessToken).toBeTruthy();
+      expect(response.AuthenticationResult?.IdToken).toBeTruthy();
+
+      // does not return a refresh token as part of a refresh token flow
+      expect(response.AuthenticationResult?.RefreshToken).not.toBeDefined();
+    });
+  });
 });

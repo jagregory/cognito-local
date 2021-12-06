@@ -65,6 +65,8 @@ export type Router = (target: string) => Route;
 export const Router =
   (services: Services, logger: Logger): Router =>
   (target: string) => {
+    logger.debug(target);
+
     if (!isSupportedTarget(target)) {
       return () =>
         Promise.reject(

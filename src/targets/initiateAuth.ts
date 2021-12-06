@@ -11,14 +11,8 @@ import {
   PasswordResetRequiredError,
   UnsupportedError,
 } from "../errors";
-import {
-  Clock,
-  MessageDelivery,
-  Messages,
-  Services,
-  UserPoolService,
-} from "../services";
-import { generateTokens, TokenConfig } from "../services/tokens";
+import { Services, UserPoolService } from "../services";
+import { generateTokens } from "../services/tokens";
 import {
   attributesToRecord,
   attributeValue,
@@ -31,12 +25,10 @@ export type InitiateAuthTarget = (
 ) => Promise<InitiateAuthResponse>;
 
 const verifyMfaChallenge = async (
-  otp: () => string,
-  messages: Messages,
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
-  messageDelivery: MessageDelivery
+  services: Services
 ): Promise<InitiateAuthResponse> => {
   if (!user.MFAOptions?.length) {
     throw new NotAuthorizedError();
@@ -57,15 +49,15 @@ const verifyMfaChallenge = async (
     throw new UnsupportedError(`SMS_MFA without ${smsMfaOption.AttributeName}`);
   }
 
-  const code = otp();
-  const message = await messages.authentication(
+  const code = services.otp();
+  const message = await services.messages.authentication(
     req.ClientId,
     userPool.config.Id,
     user,
     code,
     req.ClientMetadata
   );
-  await messageDelivery.deliver(
+  await services.messageDelivery.deliver(
     user,
     {
       DeliveryMedium: smsMfaOption.DeliveryMedium,
@@ -90,23 +82,28 @@ const verifyMfaChallenge = async (
   };
 };
 
-const verifyPasswordChallenge = (
+const verifyPasswordChallenge = async (
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
-  tokenConfig: TokenConfig,
-  clock: Clock
-): InitiateAuthResponse => ({
-  ChallengeName: "PASSWORD_VERIFIER",
-  ChallengeParameters: {},
-  AuthenticationResult: generateTokens(
+  services: Services
+): Promise<InitiateAuthResponse> => {
+  const tokens = generateTokens(
     user,
     req.ClientId,
     userPool.config.Id,
-    tokenConfig,
-    clock
-  ),
-});
+    services.config.TokenConfig,
+    services.clock
+  );
+
+  await userPool.storeRefreshToken(tokens.RefreshToken, user);
+
+  return {
+    ChallengeName: "PASSWORD_VERIFIER",
+    ChallengeParameters: {},
+    AuthenticationResult: tokens,
+  };
+};
 
 const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
   ChallengeName: "NEW_PASSWORD_REQUIRED",
@@ -118,99 +115,140 @@ const newPasswordChallenge = (user: User): InitiateAuthResponse => ({
   Session: v4(),
 });
 
-export const InitiateAuth =
-  ({
-    cognito,
-    config,
-    clock,
-    messageDelivery,
-    messages,
-    otp,
-    triggers,
-  }: Services): InitiateAuthTarget =>
-  async (req) => {
-    if (req.AuthFlow !== "USER_PASSWORD_AUTH") {
-      throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
-    }
-    if (!req.AuthParameters) {
-      throw new InvalidParameterError(
-        "Missing required parameter authParameters"
-      );
-    }
+const userPasswordAuthFlow = async (
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  services: Services
+): Promise<InitiateAuthResponse> => {
+  if (!req.AuthParameters) {
+    throw new InvalidParameterError(
+      "Missing required parameter authParameters"
+    );
+  }
 
-    const userPool = await cognito.getUserPoolForClientId(req.ClientId);
-    let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
+  let user = await userPool.getUserByUsername(req.AuthParameters.USERNAME);
 
-    if (!user && triggers.enabled("UserMigration")) {
-      // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
+  if (!user && services.triggers.enabled("UserMigration")) {
+    // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
+    //
+    // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time
+    // of sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully,
+    // Amazon Cognito creates the user in the user pool.
+    user = await services.triggers.userMigration({
+      clientId: req.ClientId,
+      password: req.AuthParameters.PASSWORD,
+      userAttributes: [],
+      username: req.AuthParameters.USERNAME,
+      userPoolId: userPool.config.Id,
+
+      // UserMigration triggered by InitiateAuth passes the request ClientMetadata as ValidationData and nothing as
+      // the ClientMetadata.
       //
-      // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time of
-      // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
-      // Cognito creates the user in the user pool.
-      user = await triggers.userMigration({
-        clientId: req.ClientId,
-        password: req.AuthParameters.PASSWORD,
-        userAttributes: [],
-        username: req.AuthParameters.USERNAME,
-        userPoolId: userPool.config.Id,
+      // Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
+      clientMetadata: undefined,
+      validationData: req.ClientMetadata,
+    });
+  }
 
-        // UserMigration triggered by InitiateAuth does not passes the request ClientMetadata as ValidationData and
-        // nothing as the ClientMetadata.
-        //
-        // Source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html#cognito-user-pools-lambda-trigger-syntax-user-migration
-        clientMetadata: undefined,
-        validationData: req.ClientMetadata,
-      });
-    }
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+  if (user.UserStatus === "RESET_REQUIRED") {
+    throw new PasswordResetRequiredError();
+  }
+  if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+    return newPasswordChallenge(user);
+  }
+  if (user.Password !== req.AuthParameters.PASSWORD) {
+    throw new InvalidPasswordError();
+  }
 
-    if (!user) {
-      throw new NotAuthorizedError();
-    }
-    if (user.UserStatus === "RESET_REQUIRED") {
-      throw new PasswordResetRequiredError();
-    }
-    if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
-      return newPasswordChallenge(user);
-    }
-    if (user.Password !== req.AuthParameters.PASSWORD) {
-      throw new InvalidPasswordError();
-    }
+  if (
+    (userPool.config.MfaConfiguration === "OPTIONAL" &&
+      (user.MFAOptions ?? []).length > 0) ||
+    userPool.config.MfaConfiguration === "ON"
+  ) {
+    return verifyMfaChallenge(user, req, userPool, services);
+  }
 
-    if (
-      (userPool.config.MfaConfiguration === "OPTIONAL" &&
-        (user.MFAOptions ?? []).length > 0) ||
-      userPool.config.MfaConfiguration === "ON"
-    ) {
-      return verifyMfaChallenge(
-        otp,
-        messages,
-        user,
-        req,
-        userPool,
-        messageDelivery
-      );
-    }
+  const result = verifyPasswordChallenge(user, req, userPool, services);
 
-    const result = verifyPasswordChallenge(
-      user,
-      req,
-      userPool,
-      config.TokenConfig,
-      clock
+  if (services.triggers.enabled("PostAuthentication")) {
+    await services.triggers.postAuthentication({
+      clientId: req.ClientId,
+      // As per the InitiateAuth docs, ClientMetadata is not passed to PostAuthentication when called from InitiateAuth
+      // Source: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_RequestSyntax
+      clientMetadata: undefined,
+      source: "PostAuthentication_Authentication",
+      userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId: userPool.config.Id,
+    });
+  }
+
+  return result;
+};
+
+const refreshTokenAuthFlow = async (
+  req: InitiateAuthRequest,
+  services: Services
+): Promise<InitiateAuthResponse> => {
+  if (!req.AuthParameters) {
+    throw new InvalidParameterError(
+      "Missing required parameter authParameters"
+    );
+  }
+
+  if (!req.AuthParameters.REFRESH_TOKEN) {
+    throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
+  }
+
+  const userPool = await services.cognito.getUserPoolForClientId(req.ClientId);
+  const user = await userPool.getUserByRefreshToken(
+    req.AuthParameters.REFRESH_TOKEN
+  );
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  const tokens = generateTokens(
+    user,
+    req.ClientId,
+    userPool.config.Id,
+    services.config.TokenConfig,
+    services.clock
+  );
+
+  return {
+    ChallengeName: undefined,
+    Session: undefined,
+    ChallengeParameters: undefined,
+    AuthenticationResult: {
+      AccessToken: tokens.AccessToken,
+      RefreshToken: undefined,
+      IdToken: tokens.IdToken,
+      NewDeviceMetadata: undefined,
+      TokenType: undefined,
+      ExpiresIn: undefined,
+    },
+  };
+};
+
+export const InitiateAuth =
+  (services: Services): InitiateAuthTarget =>
+  async (req) => {
+    const userPool = await services.cognito.getUserPoolForClientId(
+      req.ClientId
     );
 
-    if (triggers.enabled("PostAuthentication")) {
-      await triggers.postAuthentication({
-        clientId: req.ClientId,
-        // As per the InitiateAuth docs, ClientMetadata is not passed to PostAuthentication when called from InitiateAuth
-        // Source: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_RequestSyntax
-        clientMetadata: undefined,
-        source: "PostAuthentication_Authentication",
-        userAttributes: user.Attributes,
-        username: user.Username,
-        userPoolId: userPool.config.Id,
-      });
+    if (req.AuthFlow === "USER_PASSWORD_AUTH") {
+      return userPasswordAuthFlow(req, userPool, services);
+    } else if (
+      req.AuthFlow === "REFRESH_TOKEN" ||
+      req.AuthFlow === "REFRESH_TOKEN_AUTH"
+    ) {
+      return refreshTokenAuthFlow(req, services);
+    } else {
+      throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
     }
-
-    return result;
   };
