@@ -1,3 +1,18 @@
+# [3.8.0](https://github.com/jagregory/cognito-local/compare/v3.7.1...v3.8.0) (2021-12-07)
+
+
+### Bug Fixes
+
+* cache data stores to fix potential race condition ([406599a](https://github.com/jagregory/cognito-local/commit/406599acd787d8973ab5500a2e568b45d754dda1))
+* **tokens:** add jti to id and refresh tokens ([4f475ad](https://github.com/jagregory/cognito-local/commit/4f475ad5d2b5b92d30e7953809f80301ffe41944))
+* **tokens:** adminInitateAuth uses token IssuerDomain ([37ba1c5](https://github.com/jagregory/cognito-local/commit/37ba1c557420340bf4a8cbcdb301b82b25f5cc2d))
+
+
+### Features
+
+* **token:** add refresh token, revoke token and initiate auth ([0d46ed7](https://github.com/jagregory/cognito-local/commit/0d46ed768fa6eb22c1ce1f404b7a366f1c341d0f))
+* **token:** initiateAuth basic refresh token support ([2d6b0e3](https://github.com/jagregory/cognito-local/commit/2d6b0e362401e3414d3d49e2a60963dc492ce669))
+
 ## [3.7.1](https://github.com/jagregory/cognito-local/compare/v3.7.0...v3.7.1) (2021-11-29)
 
 
