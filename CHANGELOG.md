@@ -1,3 +1,10 @@
+# [3.9.0](https://github.com/jagregory/cognito-local/compare/v3.8.0...v3.9.0) (2021-12-07)
+
+
+### Features
+
+* **lambda:** preTokenGeneration trigger called when tokens generated ([d04506e](https://github.com/jagregory/cognito-local/commit/d04506e3623889fb96ffbb413cd97be627570aee))
+
 # [3.8.0](https://github.com/jagregory/cognito-local/compare/v3.7.1...v3.8.0) (2021-12-07)
 
 
