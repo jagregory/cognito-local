@@ -7,6 +7,7 @@ import {
 } from "../src/services/cognitoService";
 import fs from "fs";
 import { promisify } from "util";
+import { NoOpCache } from "../src/services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
 
@@ -21,7 +22,10 @@ describe("Cognito Service", () => {
     dataDirectory = await mkdtemp("/tmp/cognito-local:");
 
     const clock = new DateClock();
-    const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
+    const dataStoreFactory = new StormDBDataStoreFactory(
+      dataDirectory,
+      new NoOpCache()
+    );
 
     factory = new CognitoServiceFactoryImpl(
       dataDirectory,

@@ -13,6 +13,7 @@ import {
   TriggersService,
 } from "../../src/services";
 import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
+import { NoOpCache } from "../../src/services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
@@ -38,7 +39,10 @@ export const withCognitoSdk =
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
       const ctx = { logger };
 
-      const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
+      const dataStoreFactory = new StormDBDataStoreFactory(
+        dataDirectory,
+        new NoOpCache()
+      );
       const cognitoServiceFactory = new CognitoServiceFactoryImpl(
         dataDirectory,
         clock,
@@ -66,7 +70,10 @@ export const withCognitoSdk =
         port: 0,
       });
 
-      const address = httpServer.address()!;
+      const address = httpServer.address();
+      if (!address) {
+        throw new Error("HttpServer has no address");
+      }
       const url =
         typeof address === "string"
           ? address
