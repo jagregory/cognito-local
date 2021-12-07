@@ -9,7 +9,6 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
-import { generateTokens } from "../services/tokens";
 import { Target } from "./router";
 
 export type RespondToAuthChallengeTarget = Target<
@@ -19,15 +18,15 @@ export type RespondToAuthChallengeTarget = Target<
 
 type RespondToAuthChallengeService = Pick<
   Services,
-  "clock" | "cognito" | "config" | "triggers"
+  "clock" | "cognito" | "triggers" | "tokenGenerator"
 >;
 
 export const RespondToAuthChallenge =
   ({
     clock,
     cognito,
-    config,
     triggers,
+    tokenGenerator,
   }: RespondToAuthChallengeService): RespondToAuthChallengeTarget =>
   async (ctx, req) => {
     if (!req.ChallengeResponses) {
@@ -94,12 +93,13 @@ export const RespondToAuthChallenge =
 
     return {
       ChallengeParameters: {},
-      AuthenticationResult: generateTokens(
+      AuthenticationResult: await tokenGenerator.generate(
+        ctx,
         user,
         req.ClientId,
         userPool.config.Id,
-        config.TokenConfig,
-        clock
+        req.ClientMetadata,
+        "Authentication"
       ),
     };
   };

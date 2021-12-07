@@ -1,6 +1,7 @@
 import { Config } from "../server/config";
 import { Clock } from "./clock";
 import { Messages } from "./messages";
+import { TokenGenerator } from "./tokenGenerator";
 import { Triggers } from "./triggers";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
 import { CognitoService } from "./cognitoService";
@@ -20,5 +21,6 @@ export interface Services {
   messageDelivery: MessageDelivery;
   messages: Messages;
   otp: () => string;
+  tokenGenerator: TokenGenerator;
   triggers: Triggers;
 }

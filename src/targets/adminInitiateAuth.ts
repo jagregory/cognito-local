@@ -9,7 +9,6 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
-import { generateTokens } from "../services/tokens";
 import { Context, Target } from "./router";
 
 export type AdminInitiateAuthTarget = Target<
@@ -17,11 +16,14 @@ export type AdminInitiateAuthTarget = Target<
   AdminInitiateAuthResponse
 >;
 
-type AuthServices = Pick<Services, "cognito" | "clock" | "triggers" | "config">;
+type AdminInitiateAuthServices = Pick<
+  Services,
+  "cognito" | "triggers" | "tokenGenerator"
+>;
 
 const adminUserPasswordAuthFlow = async (
   ctx: Context,
-  services: AuthServices,
+  services: AdminInitiateAuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
   if (!req.AuthParameters) {
@@ -67,12 +69,13 @@ const adminUserPasswordAuthFlow = async (
     throw new InvalidPasswordError();
   }
 
-  const tokens = generateTokens(
+  const tokens = await services.tokenGenerator.generate(
+    ctx,
     user,
     req.ClientId,
     userPool.config.Id,
-    services.config.TokenConfig,
-    services.clock
+    req.ClientMetadata,
+    "Authentication"
   );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
@@ -94,7 +97,7 @@ const adminUserPasswordAuthFlow = async (
 
 const refreshTokenAuthFlow = async (
   ctx: Context,
-  services: AuthServices,
+  services: AdminInitiateAuthServices,
   req: AdminInitiateAuthRequest
 ): Promise<AdminInitiateAuthResponse> => {
   if (!req.AuthParameters) {
@@ -119,12 +122,13 @@ const refreshTokenAuthFlow = async (
     throw new NotAuthorizedError();
   }
 
-  const tokens = generateTokens(
+  const tokens = await services.tokenGenerator.generate(
+    ctx,
     user,
     req.ClientId,
     userPool.config.Id,
-    services.config.TokenConfig,
-    services.clock
+    req.ClientMetadata,
+    "RefreshTokens"
   );
 
   return {
@@ -143,7 +147,7 @@ const refreshTokenAuthFlow = async (
 };
 
 export const AdminInitiateAuth =
-  (services: AuthServices): AdminInitiateAuthTarget =>
+  (services: AdminInitiateAuthServices): AdminInitiateAuthTarget =>
   async (ctx, req) => {
     if (req.AuthFlow === "ADMIN_USER_PASSWORD_AUTH") {
       return adminUserPasswordAuthFlow(ctx, services, req);

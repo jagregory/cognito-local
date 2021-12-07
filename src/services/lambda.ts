@@ -7,6 +7,7 @@ import {
   PostConfirmationTriggerEvent,
   PreAuthenticationTriggerEvent,
   PreSignUpTriggerEvent,
+  PreTokenGenerationTriggerEvent,
   UserMigrationTriggerEvent,
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
@@ -29,6 +30,7 @@ type CognitoUserPoolEvent =
   | PostConfirmationTriggerEvent
   | PreAuthenticationTriggerEvent
   | PreSignUpTriggerEvent
+  | PreTokenGenerationTriggerEvent
   | UserMigrationTriggerEvent
   | VerifyAuthChallengeResponseTriggerEvent;
 
@@ -69,6 +71,43 @@ interface PreSignUpEvent extends EventCommonParameters {
   validationData: Record<string, string> | undefined;
 }
 
+interface PreTokenGenerationEvent extends EventCommonParameters {
+  /**
+   * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
+   * pre token generation trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter
+   * in the AdminRespondToAuthChallenge and RespondToAuthChallenge API actions.
+   */
+  clientMetadata: Record<string, string> | undefined;
+
+  triggerSource:
+    | "TokenGeneration_AuthenticateDevice"
+    | "TokenGeneration_Authentication"
+    | "TokenGeneration_HostedAuth"
+    | "TokenGeneration_NewPasswordChallenge"
+    | "TokenGeneration_RefreshTokens";
+
+  /**
+   * The input object containing the current group configuration. It includes groupsToOverride, iamRolesToOverride, and
+   * preferredRole.
+   */
+  groupConfiguration: {
+    /**
+     * A list of the group names that are associated with the user that the identity token is issued for.
+     */
+    groupsToOverride: readonly string[] | undefined;
+
+    /**
+     * A list of the current IAM roles associated with these groups.
+     */
+    iamRolesToOverride: readonly string[] | undefined;
+
+    /**
+     * A string indicating the preferred IAM role.
+     */
+    preferredRole: string | undefined;
+  };
+}
+
 interface PostAuthenticationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
   triggerSource: "PostAuthentication_Authentication";
@@ -81,15 +120,26 @@ interface PostConfirmationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
 }
 
-export type CognitoUserPoolResponse = CognitoUserPoolEvent["response"];
-
 export interface FunctionConfig {
   CustomMessage?: string;
   PostAuthentication?: string;
   PostConfirmation?: string;
   PreSignUp?: string;
+  PreTokenGeneration?: string;
   UserMigration?: string;
 }
+
+export type CustomMessageTriggerResponse =
+  CustomMessageTriggerEvent["response"];
+export type UserMigrationTriggerResponse =
+  UserMigrationTriggerEvent["response"];
+export type PreSignUpTriggerResponse = PreSignUpTriggerEvent["response"];
+export type PreTokenGenerationTriggerResponse =
+  PreTokenGenerationTriggerEvent["response"];
+export type PostAuthenticationTriggerResponse =
+  PostAuthenticationTriggerEvent["response"];
+export type PostConfirmationTriggerResponse =
+  PostConfirmationTriggerEvent["response"];
 
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
@@ -97,27 +147,32 @@ export interface Lambda {
     ctx: Context,
     lambda: "CustomMessage",
     event: CustomMessageEvent
-  ): Promise<CognitoUserPoolResponse>;
+  ): Promise<CustomMessageTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "UserMigration",
     event: UserMigrationEvent
-  ): Promise<CognitoUserPoolResponse>;
+  ): Promise<UserMigrationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PreSignUp",
     event: PreSignUpEvent
-  ): Promise<CognitoUserPoolResponse>;
+  ): Promise<PreSignUpTriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "PreTokenGeneration",
+    event: PreTokenGenerationEvent
+  ): Promise<PreTokenGenerationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostAuthentication",
     event: PostAuthenticationEvent
-  ): Promise<CognitoUserPoolResponse>;
+  ): Promise<PostAuthenticationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostConfirmation",
     event: PostConfirmationEvent
-  ): Promise<CognitoUserPoolResponse>;
+  ): Promise<PostConfirmationTriggerResponse>;
 }
 
 export class LambdaService implements Lambda {
@@ -141,6 +196,7 @@ export class LambdaService implements Lambda {
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
+      | PreTokenGenerationEvent
       | UserMigrationEvent
   ) {
     const functionName = this.config[trigger];
@@ -178,7 +234,7 @@ export class LambdaService implements Lambda {
       try {
         const parsedPayload = JSON.parse(result.Payload as string);
 
-        return parsedPayload.response as CognitoUserPoolResponse;
+        return parsedPayload.response;
       } catch (err) {
         ctx.logger.error({ error: err });
         throw new InvalidLambdaResponseError();
@@ -195,6 +251,7 @@ export class LambdaService implements Lambda {
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
+      | PreTokenGenerationEvent
       | UserMigrationEvent
   ): CognitoUserPoolEvent {
     const version = "0"; // TODO: how do we know what this is?
@@ -262,6 +319,29 @@ export class LambdaService implements Lambda {
         };
       }
 
+      case "TokenGeneration_AuthenticateDevice":
+      case "TokenGeneration_Authentication":
+      case "TokenGeneration_HostedAuth":
+      case "TokenGeneration_NewPasswordChallenge":
+      case "TokenGeneration_RefreshTokens": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            groupConfiguration: {},
+            clientMetadata: event.clientMetadata,
+          },
+          response: {
+            claimsOverrideDetails: {},
+          },
+        };
+      }
+
       case "UserMigration_Authentication": {
         return {
           version,
@@ -303,7 +383,7 @@ export class LambdaService implements Lambda {
             clientMetadata: event.clientMetadata,
             codeParameter: event.codeParameter,
             usernameParameter: event.usernameParameter,
-            userAttributes: {},
+            userAttributes: event.userAttributes,
           },
           response: {
             smsMessage: "",

@@ -174,29 +174,33 @@ cognito-local how to connect to your local Lambda server:
 
 #### Supported Lambda Triggers
 
-| Trigger                     | Operation                         | Support |
-| --------------------------- | --------------------------------- | ------- |
-| CreateAuthChallenge         | \*                                | ❌      |
-| CustomEmailSender           | \*                                | ❌      |
-| CustomMessage               | AdminCreateUser                   | ✅      |
-| CustomMessage               | Authentication                    | ✅      |
-| CustomMessage               | ForgotPassword                    | ✅      |
-| CustomMessage               | ResendCode                        | ❌      |
-| CustomMessage               | SignUp                            | ✅      |
-| CustomMessage               | UpdateUserAttribute               | ❌      |
-| CustomMessage               | VerifyUserAttribute               | ❌      |
-| DefineAuthChallenge         | \*                                | ❌      |
-| PostAuthentication          | PostAuthentication_Authentication | ✅      |
-| PostConfirmation            | ConfirmForgotPassword             | ✅      |
-| PostConfirmation            | ConfirmSignUp                     | ✅      |
-| PreAuthentication           | \*                                | ❌      |
-| PreSignUp                   | PreSignUp_AdminCreateUser         | ❌      |
-| PreSignUp                   | PreSignUp_ExternalProvider        | ❌      |
-| PreSignUp                   | PreSignUp_SignUp                  | ✅      |
-| PreTokenGeneration          | \*                                | ❌      |
-| UserMigration               | Authentication                    | ✅      |
-| UserMigration               | ForgotPassword                    | ❌      |
-| VerifyAuthChallengeResponse | \*                                | ❌      |
+| Trigger                     | Operation                            | Support |
+| --------------------------- | ------------------------------------ | ------- |
+| CreateAuthChallenge         | \*                                   | ❌      |
+| CustomEmailSender           | \*                                   | ❌      |
+| CustomMessage               | AdminCreateUser                      | ✅      |
+| CustomMessage               | Authentication                       | ✅      |
+| CustomMessage               | ForgotPassword                       | ✅      |
+| CustomMessage               | ResendCode                           | ❌      |
+| CustomMessage               | SignUp                               | ✅      |
+| CustomMessage               | UpdateUserAttribute                  | ❌      |
+| CustomMessage               | VerifyUserAttribute                  | ❌      |
+| DefineAuthChallenge         | \*                                   | ❌      |
+| PostAuthentication          | PostAuthentication_Authentication    | ✅      |
+| PostConfirmation            | ConfirmForgotPassword                | ✅      |
+| PostConfirmation            | ConfirmSignUp                        | ✅      |
+| PreAuthentication           | \*                                   | ❌      |
+| PreSignUp                   | PreSignUp_AdminCreateUser            | ❌      |
+| PreSignUp                   | PreSignUp_ExternalProvider           | ❌      |
+| PreSignUp                   | PreSignUp_SignUp                     | ✅      |
+| PreTokenGeneration          | TokenGeneration_AuthenticateDevice   | ❌      |
+| PreTokenGeneration          | TokenGeneration_Authentication       | ✅      |
+| PreTokenGeneration          | TokenGeneration_HostedAuth           | ❌      |
+| PreTokenGeneration          | TokenGeneration_NewPasswordChallenge | ❌      |
+| PreTokenGeneration          | TokenGeneration_RefreshTokens        | ✅      |
+| UserMigration               | Authentication                       | ✅      |
+| UserMigration               | ForgotPassword                       | ❌      |
+| VerifyAuthChallengeResponse | \*                                   | ❌      |
 
 #### Known limitations
 
@@ -291,7 +295,7 @@ Before starting Cognito Local, create a config file if one doesn't already exist
 You can edit that `.cognito/config.json` and add any of the following settings:
 
 | Setting                                    | Type       | Default                 | Description                                                 |
-| ------------------------------------------ | ---------- | ----------------------- | ----------------------------------------------------------- |
+|--------------------------------------------| ---------- | ----------------------- |-------------------------------------------------------------|
 | `LambdaClient`                             | `object`   |                         | Any setting you would pass to the AWS.Lambda Node.js client |
 | `LambdaClient.credentials.accessKeyId`     | `string`   | `local`                 |                                                             |
 | `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |
@@ -303,6 +307,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `TriggerFunctions.PostAuthentication`      | `string`   |                         | PostAuthentication local lambda function name               |
 | `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation local lambda function name                 |
 | `TriggerFunctions.PreSignUp`               | `string`   |                         | PostConfirmation local lambda function name                 |
+| `TriggerFunctions.PreTokenGeneration`      | `string`   |                         | PreTokenGeneration local lambda function name               |
 | `TriggerFunctions.UserMigration`           | `string`   |                         | PreSignUp local lambda function name                        |
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |

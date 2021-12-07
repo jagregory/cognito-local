@@ -1,19 +1,16 @@
-import jwt from "jsonwebtoken";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { UUID } from "../__tests__/patterns";
 import { TestContext } from "../__tests__/testContext";
 import {
   CodeMismatchError,
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import PublicKey from "../keys/cognitoLocal.public.json";
-import { DefaultConfig } from "../server/config";
 import { Triggers, UserPoolService } from "../services";
-import { attributeValue } from "../services/userPoolService";
+import { TokenGenerator } from "../services/tokenGenerator";
 import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
@@ -24,23 +21,20 @@ const currentDate = new Date();
 
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
+  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
     clock = new ClockFake(currentDate);
-    mockUserPoolService = newMockUserPoolService();
+    mockTokenGenerator = newMockTokenGenerator();
     mockTriggers = newMockTriggers();
+    mockUserPoolService = newMockUserPoolService();
     respondToAuthChallenge = RespondToAuthChallenge({
       clock,
       cognito: newMockCognitoService(mockUserPoolService),
-      config: {
-        ...DefaultConfig,
-        TokenConfig: {
-          IssuerDomain: "http://issuer-domain",
-        },
-      },
+      tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
     });
   });
@@ -133,6 +127,12 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       it("generates tokens", async () => {
+        mockTokenGenerator.generate.mockResolvedValue({
+          AccessToken: "access",
+          IdToken: "id",
+          RefreshToken: "refresh",
+        });
+
         const output = await respondToAuthChallenge(TestContext, {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
@@ -141,61 +141,27 @@ describe("RespondToAuthChallenge target", () => {
             SMS_MFA_CODE: "1234",
           },
           Session: "Session",
+          ClientMetadata: {
+            client: "metadata",
+          },
         });
 
         expect(output).toBeDefined();
 
-        // access token
-        expect(output.AuthenticationResult?.AccessToken).toBeDefined();
-        const decodedAccessToken = jwt.decode(
-          output.AuthenticationResult?.AccessToken ?? ""
-        );
-        expect(decodedAccessToken).toMatchObject({
-          client_id: "clientId",
-          iss: "http://issuer-domain/test",
-          sub: attributeValue("sub", user.Attributes),
-          token_use: "access",
-          username: user.Username,
-          event_id: expect.stringMatching(UUID),
-          scope: "aws.cognito.signin.user.admin", // TODO: scopes
-          auth_time: Math.floor(clock.get().getTime() / 1000),
-          jti: expect.stringMatching(UUID),
-        });
-        expect(
-          jwt.verify(
-            output.AuthenticationResult?.AccessToken ?? "",
-            PublicKey.pem,
-            {
-              algorithms: ["RS256"],
-            }
-          )
-        ).toBeTruthy();
+        expect(output.AuthenticationResult?.AccessToken).toEqual("access");
+        expect(output.AuthenticationResult?.IdToken).toEqual("id");
+        expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
-        // id token
-        expect(output.AuthenticationResult?.IdToken).toBeDefined();
-        const decodedIdToken = jwt.decode(
-          output.AuthenticationResult?.IdToken ?? ""
+        expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
+          TestContext,
+          user,
+          "clientId",
+          "test",
+          {
+            client: "metadata",
+          },
+          "Authentication"
         );
-        expect(decodedIdToken).toMatchObject({
-          aud: "clientId",
-          iss: "http://issuer-domain/test",
-          sub: attributeValue("sub", user.Attributes),
-          token_use: "id",
-          "cognito:username": user.Username,
-          email_verified: true,
-          event_id: expect.stringMatching(UUID),
-          auth_time: Math.floor(clock.get().getTime() / 1000),
-          email: attributeValue("email", user.Attributes),
-        });
-        expect(
-          jwt.verify(
-            output.AuthenticationResult?.IdToken ?? "",
-            PublicKey.pem,
-            {
-              algorithms: ["RS256"],
-            }
-          )
-        ).toBeTruthy();
       });
 
       describe("when Post Authentication trigger is enabled", () => {
@@ -297,6 +263,12 @@ describe("RespondToAuthChallenge target", () => {
     });
 
     it("generates tokens", async () => {
+      mockTokenGenerator.generate.mockResolvedValue({
+        AccessToken: "access",
+        IdToken: "id",
+        RefreshToken: "refresh",
+      });
+
       const output = await respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
@@ -305,57 +277,25 @@ describe("RespondToAuthChallenge target", () => {
           NEW_PASSWORD: "foo",
         },
         Session: "Session",
+        ClientMetadata: {
+          client: "metadata",
+        },
       });
 
       expect(output).toBeDefined();
 
-      // access token
-      expect(output.AuthenticationResult?.AccessToken).toBeDefined();
-      const decodedAccessToken = jwt.decode(
-        output.AuthenticationResult?.AccessToken ?? ""
-      );
-      expect(decodedAccessToken).toMatchObject({
-        client_id: "clientId",
-        iss: "http://issuer-domain/test",
-        sub: attributeValue("sub", user.Attributes),
-        token_use: "access",
-        username: user.Username,
-        event_id: expect.stringMatching(UUID),
-        scope: "aws.cognito.signin.user.admin", // TODO: scopes
-        auth_time: Math.floor(clock.get().getTime() / 1000),
-        jti: expect.stringMatching(UUID),
-      });
-      expect(
-        jwt.verify(
-          output.AuthenticationResult?.AccessToken ?? "",
-          PublicKey.pem,
-          {
-            algorithms: ["RS256"],
-          }
-        )
-      ).toBeTruthy();
+      expect(output.AuthenticationResult?.AccessToken).toEqual("access");
+      expect(output.AuthenticationResult?.IdToken).toEqual("id");
+      expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
-      // id token
-      expect(output.AuthenticationResult?.IdToken).toBeDefined();
-      const decodedIdToken = jwt.decode(
-        output.AuthenticationResult?.IdToken ?? ""
+      expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
+        TestContext,
+        user,
+        "clientId",
+        "test",
+        { client: "metadata" },
+        "Authentication"
       );
-      expect(decodedIdToken).toMatchObject({
-        aud: "clientId",
-        iss: "http://issuer-domain/test",
-        sub: attributeValue("sub", user.Attributes),
-        token_use: "id",
-        "cognito:username": user.Username,
-        email_verified: true,
-        event_id: expect.stringMatching(UUID),
-        auth_time: Math.floor(clock.get().getTime() / 1000),
-        email: attributeValue("email", user.Attributes),
-      });
-      expect(
-        jwt.verify(output.AuthenticationResult?.IdToken ?? "", PublicKey.pem, {
-          algorithms: ["RS256"],
-        })
-      ).toBeTruthy();
     });
 
     describe("when Post Authentication trigger is enabled", () => {

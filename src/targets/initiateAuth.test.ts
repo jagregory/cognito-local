@@ -1,8 +1,7 @@
-import jwt from "jsonwebtoken";
-import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
+import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
@@ -14,19 +13,14 @@ import {
   NotAuthorizedError,
   PasswordResetRequiredError,
 } from "../errors";
-import PublicKey from "../keys/cognitoLocal.public.json";
-import { DefaultConfig } from "../server/config";
 import {
   MessageDelivery,
   Messages,
   Triggers,
   UserPoolService,
 } from "../services";
-import {
-  attributesToRecord,
-  attributeValue,
-  User,
-} from "../services/userPoolService";
+import { TokenGenerator } from "../services/tokenGenerator";
+import { attributesToRecord, User } from "../services/userPoolService";
 import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
 
 describe("InitiateAuth target", () => {
@@ -36,11 +30,9 @@ describe("InitiateAuth target", () => {
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
-  let now: Date;
+  let mockTokenGenerator: jest.Mocked<TokenGenerator>;
 
   beforeEach(() => {
-    now = new Date(2020, 1, 2, 3, 4, 5);
-
     mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
@@ -49,19 +41,14 @@ describe("InitiateAuth target", () => {
     });
     mockOtp = jest.fn().mockReturnValue("1234");
     mockTriggers = newMockTriggers();
+    mockTokenGenerator = newMockTokenGenerator();
     initiateAuth = InitiateAuth({
-      clock: new ClockFake(now),
       cognito: newMockCognitoService(mockUserPoolService),
-      config: {
-        ...DefaultConfig,
-        TokenConfig: {
-          IssuerDomain: "http://issuer-domain",
-        },
-      },
       messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
+      tokenGenerator: mockTokenGenerator,
     });
   });
 
@@ -116,6 +103,12 @@ describe("InitiateAuth target", () => {
     describe("when user doesn't exist", () => {
       describe("when User Migration trigger is enabled", () => {
         it("invokes the User Migration trigger and continues", async () => {
+          mockTokenGenerator.generate.mockResolvedValue({
+            AccessToken: "access",
+            IdToken: "id",
+            RefreshToken: "refresh",
+          });
+
           const user = TDB.user();
 
           mockTriggers.enabled.mockReturnValue(true);
@@ -372,6 +365,12 @@ describe("InitiateAuth target", () => {
           });
 
           it("generates tokens", async () => {
+            mockTokenGenerator.generate.mockResolvedValue({
+              AccessToken: "access",
+              IdToken: "id",
+              RefreshToken: "refresh",
+            });
+
             const output = await initiateAuth(TestContext, {
               ClientId: "clientId",
               AuthFlow: "USER_PASSWORD_AUTH",
@@ -379,61 +378,27 @@ describe("InitiateAuth target", () => {
                 USERNAME: user.Username,
                 PASSWORD: user.Password,
               },
+              ClientMetadata: {
+                client: "metadata",
+              },
             });
 
             expect(output).toBeDefined();
 
-            // access token
-            expect(output.AuthenticationResult?.AccessToken).toBeDefined();
-            const decodedAccessToken = jwt.decode(
-              output.AuthenticationResult?.AccessToken ?? ""
+            expect(output.AuthenticationResult?.AccessToken).toEqual("access");
+            expect(output.AuthenticationResult?.IdToken).toEqual("id");
+            expect(output.AuthenticationResult?.RefreshToken).toEqual(
+              "refresh"
             );
-            expect(decodedAccessToken).toMatchObject({
-              client_id: "clientId",
-              iss: "http://issuer-domain/test",
-              sub: attributeValue("sub", user.Attributes),
-              token_use: "access",
-              username: user.Username,
-              event_id: expect.stringMatching(UUID),
-              scope: "aws.cognito.signin.user.admin", // TODO: scopes
-              auth_time: Math.floor(now.getTime() / 1000),
-              jti: expect.stringMatching(UUID),
-            });
-            expect(
-              jwt.verify(
-                output.AuthenticationResult?.AccessToken ?? "",
-                PublicKey.pem,
-                {
-                  algorithms: ["RS256"],
-                }
-              )
-            ).toBeTruthy();
 
-            // id token
-            expect(output.AuthenticationResult?.IdToken).toBeDefined();
-            const decodedIdToken = jwt.decode(
-              output.AuthenticationResult?.IdToken ?? ""
+            expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
+              TestContext,
+              user,
+              "clientId",
+              "test",
+              undefined,
+              "Authentication"
             );
-            expect(decodedIdToken).toMatchObject({
-              aud: "clientId",
-              iss: "http://issuer-domain/test",
-              sub: attributeValue("sub", user.Attributes),
-              token_use: "id",
-              "cognito:username": user.Username,
-              email_verified: true,
-              event_id: expect.stringMatching(UUID),
-              auth_time: Math.floor(now.getTime() / 1000),
-              email: attributeValue("email", user.Attributes),
-            });
-            expect(
-              jwt.verify(
-                output.AuthenticationResult?.IdToken ?? "",
-                PublicKey.pem,
-                {
-                  algorithms: ["RS256"],
-                }
-              )
-            ).toBeTruthy();
           });
         });
       });
@@ -447,6 +412,12 @@ describe("InitiateAuth target", () => {
         });
 
         it("generates tokens", async () => {
+          mockTokenGenerator.generate.mockResolvedValue({
+            AccessToken: "access",
+            IdToken: "id",
+            RefreshToken: "refresh",
+          });
+
           const output = await initiateAuth(TestContext, {
             ClientId: "clientId",
             AuthFlow: "USER_PASSWORD_AUTH",
@@ -454,65 +425,35 @@ describe("InitiateAuth target", () => {
               USERNAME: user.Username,
               PASSWORD: user.Password,
             },
+            ClientMetadata: {
+              client: "metadata",
+            },
           });
 
           expect(output).toBeDefined();
 
-          // access token
-          expect(output.AuthenticationResult?.AccessToken).toBeDefined();
-          const decodedAccessToken = jwt.decode(
-            output.AuthenticationResult?.AccessToken ?? ""
-          );
-          expect(decodedAccessToken).toMatchObject({
-            client_id: "clientId",
-            iss: "http://issuer-domain/test",
-            sub: attributeValue("sub", user.Attributes),
-            token_use: "access",
-            username: user.Username,
-            event_id: expect.stringMatching(UUID),
-            scope: "aws.cognito.signin.user.admin", // TODO: scopes
-            auth_time: Math.floor(now.getTime() / 1000),
-            jti: expect.stringMatching(UUID),
-          });
-          expect(
-            jwt.verify(
-              output.AuthenticationResult?.AccessToken ?? "",
-              PublicKey.pem,
-              {
-                algorithms: ["RS256"],
-              }
-            )
-          ).toBeTruthy();
+          expect(output.AuthenticationResult?.AccessToken).toEqual("access");
+          expect(output.AuthenticationResult?.IdToken).toEqual("id");
+          expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
-          // id token
-          expect(output.AuthenticationResult?.IdToken).toBeDefined();
-          const decodedIdToken = jwt.decode(
-            output.AuthenticationResult?.IdToken ?? ""
+          expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
+            TestContext,
+            user,
+            "clientId",
+            "test",
+            undefined,
+            "Authentication"
           );
-          expect(decodedIdToken).toMatchObject({
-            aud: "clientId",
-            iss: "http://issuer-domain/test",
-            sub: attributeValue("sub", user.Attributes),
-            token_use: "id",
-            "cognito:username": user.Username,
-            email_verified: true,
-            event_id: expect.stringMatching(UUID),
-            auth_time: Math.floor(now.getTime() / 1000),
-            email: attributeValue("email", user.Attributes),
-          });
-          expect(
-            jwt.verify(
-              output.AuthenticationResult?.IdToken ?? "",
-              PublicKey.pem,
-              {
-                algorithms: ["RS256"],
-              }
-            )
-          ).toBeTruthy();
         });
 
         describe("when Post Authentication trigger is enabled", () => {
           it("invokes the trigger", async () => {
+            mockTokenGenerator.generate.mockResolvedValue({
+              AccessToken: "access",
+              IdToken: "id",
+              RefreshToken: "refresh",
+            });
+
             mockTriggers.enabled.mockImplementation(
               (trigger) => trigger === "PostAuthentication"
             );
@@ -594,6 +535,12 @@ describe("InitiateAuth target", () => {
 
   describe("REFRESH_TOKEN_AUTH auth flow", () => {
     it("returns new tokens", async () => {
+      mockTokenGenerator.generate.mockResolvedValue({
+        AccessToken: "access",
+        IdToken: "id",
+        RefreshToken: "refresh",
+      });
+
       const existingUser = TDB.user({
         RefreshTokens: ["refresh token"],
       });
@@ -606,13 +553,25 @@ describe("InitiateAuth target", () => {
         AuthParameters: {
           REFRESH_TOKEN: "refresh token",
         },
+        ClientMetadata: {
+          client: "metadata",
+        },
       });
 
-      expect(response.AuthenticationResult?.AccessToken).toBeTruthy();
-      expect(response.AuthenticationResult?.IdToken).toBeTruthy();
+      expect(response.AuthenticationResult?.AccessToken).toEqual("access");
+      expect(response.AuthenticationResult?.IdToken).toEqual("id");
 
       // does not return a refresh token as part of a refresh token flow
       expect(response.AuthenticationResult?.RefreshToken).not.toBeDefined();
+
+      expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
+        TestContext,
+        existingUser,
+        "clientId",
+        "test",
+        undefined,
+        "RefreshTokens"
+      );
     });
   });
 });

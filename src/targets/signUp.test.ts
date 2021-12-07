@@ -102,7 +102,11 @@ describe("SignUp target", () => {
 
     it("calls the trigger lambda", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-      mockTriggers.preSignUp.mockResolvedValue({});
+      mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: false,
+        autoVerifyPhone: false,
+        autoVerifyEmail: false,
+      });
 
       await signUp(TestContext, {
         ClientId: "clientId",
@@ -154,6 +158,8 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockTriggers.preSignUp.mockResolvedValue({
           autoConfirmUser: true,
+          autoVerifyPhone: false,
+          autoVerifyEmail: false,
         });
       });
 
@@ -243,6 +249,8 @@ describe("SignUp target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
         mockTriggers.preSignUp.mockResolvedValue({
           autoConfirmUser: false,
+          autoVerifyPhone: false,
+          autoVerifyEmail: false,
         });
       });
 
@@ -283,7 +291,9 @@ describe("SignUp target", () => {
     it("verifies the user's email if the lambda returns autoVerifyEmail=true and the user has an email attribute", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: false,
         autoVerifyEmail: true,
+        autoVerifyPhone: false,
       });
 
       await signUp(TestContext, {
@@ -312,6 +322,8 @@ describe("SignUp target", () => {
     it("does not verify the user's email if the lambda returns autoVerifyEmail=true but the user does not have an email attribute", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: false,
+        autoVerifyPhone: false,
         autoVerifyEmail: true,
       });
 
@@ -337,7 +349,9 @@ describe("SignUp target", () => {
     it("verifies the user's phone_number if the lambda returns autoVerifyPhone=true and the user has an phone_number attribute", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: false,
         autoVerifyPhone: true,
+        autoVerifyEmail: false,
       });
 
       await signUp(TestContext, {
@@ -366,7 +380,9 @@ describe("SignUp target", () => {
     it("does not verify the user's phone_number if the lambda returns autoVerifyPhone=true but the user does not have a phone_number attribute", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
+        autoConfirmUser: false,
         autoVerifyPhone: true,
+        autoVerifyEmail: false,
       });
 
       await signUp(TestContext, {

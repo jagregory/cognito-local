@@ -3,7 +3,7 @@ import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
 import { Clock } from "../clock";
 import { CognitoService } from "../cognitoService";
-import { CognitoUserPoolResponse, Lambda } from "../lambda";
+import { UserMigrationTriggerResponse, Lambda } from "../lambda";
 import {
   attributesFromRecord,
   attributesToRecord,
@@ -68,7 +68,7 @@ export const UserMigration =
       throw new ResourceNotFoundError();
     }
 
-    let result: CognitoUserPoolResponse;
+    let result: UserMigrationTriggerResponse;
 
     try {
       result = await lambda.invoke(ctx, "UserMigration", {

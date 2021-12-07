@@ -12,7 +12,6 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services, UserPoolService } from "../services";
-import { generateTokens } from "../services/tokens";
 import {
   attributesToRecord,
   attributeValue,
@@ -26,12 +25,22 @@ export type InitiateAuthTarget = Target<
   InitiateAuthResponse
 >;
 
+type InitiateAuthServices = Pick<
+  Services,
+  | "cognito"
+  | "messageDelivery"
+  | "messages"
+  | "otp"
+  | "tokenGenerator"
+  | "triggers"
+>;
+
 const verifyMfaChallenge = async (
   ctx: Context,
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
-  services: Services
+  services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   if (!user.MFAOptions?.length) {
     throw new NotAuthorizedError();
@@ -92,14 +101,19 @@ const verifyPasswordChallenge = async (
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
-  services: Services
+  services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
-  const tokens = generateTokens(
+  const tokens = await services.tokenGenerator.generate(
+    ctx,
     user,
     req.ClientId,
     userPool.config.Id,
-    services.config.TokenConfig,
-    services.clock
+    // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
+    // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
+    //
+    // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+    undefined,
+    "Authentication"
   );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
@@ -125,7 +139,7 @@ const userPasswordAuthFlow = async (
   ctx: Context,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
-  services: Services
+  services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   if (!req.AuthParameters) {
     throw new InvalidParameterError(
@@ -199,7 +213,7 @@ const userPasswordAuthFlow = async (
 const refreshTokenAuthFlow = async (
   ctx: Context,
   req: InitiateAuthRequest,
-  services: Services
+  services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   if (!req.AuthParameters) {
     throw new InvalidParameterError(
@@ -223,12 +237,17 @@ const refreshTokenAuthFlow = async (
     throw new NotAuthorizedError();
   }
 
-  const tokens = generateTokens(
+  const tokens = await services.tokenGenerator.generate(
+    ctx,
     user,
     req.ClientId,
     userPool.config.Id,
-    services.config.TokenConfig,
-    services.clock
+    // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
+    // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
+    //
+    // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+    undefined,
+    "RefreshTokens"
   );
 
   return {
@@ -247,7 +266,7 @@ const refreshTokenAuthFlow = async (
 };
 
 export const InitiateAuth =
-  (services: Services): InitiateAuthTarget =>
+  (services: InitiateAuthServices): InitiateAuthTarget =>
   async (ctx, req) => {
     const userPool = await services.cognito.getUserPoolForClientId(
       ctx,

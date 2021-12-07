@@ -409,6 +409,67 @@ describe("Lambda function invoker", () => {
       });
     });
 
+    describe.each`
+      trigger              | source
+      ${"TokenGeneration"} | ${"TokenGeneration_AuthenticateDevice"}
+      ${"TokenGeneration"} | ${"TokenGeneration_Authentication"}
+      ${"TokenGeneration"} | ${"TokenGeneration_HostedAuth"}
+      ${"TokenGeneration"} | ${"TokenGeneration_NewPasswordChallenge"}
+      ${"TokenGeneration"} | ${"TokenGeneration_RefreshTokens"}
+    `("$source", ({ trigger, source }) => {
+      it("invokes the lambda", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "some": "json" }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            [trigger]: "MyLambdaName",
+          },
+          mockLambdaClient
+        );
+
+        await lambda.invoke(TestContext, trigger, {
+          clientId: "clientId",
+          triggerSource: source,
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {
+            user: "attributes",
+          },
+          clientMetadata: {
+            client: "metadata",
+          },
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyLambdaName",
+          InvocationType: "RequestResponse",
+          Payload: expect.jsonMatching({
+            version: "0",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: source,
+            request: {
+              userAttributes: {
+                user: "attributes",
+              },
+              clientMetadata: {
+                client: "metadata",
+              },
+              groupConfiguration: {},
+            },
+            response: { claimsOverrideDetails: {} },
+            userName: "username",
+          }),
+        });
+      });
+    });
+
     describe.each([
       "CustomMessage_SignUp",
       "CustomMessage_AdminCreateUser",

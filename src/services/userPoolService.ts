@@ -43,6 +43,11 @@ export const attributesFromRecord = (
 ): AttributeListType =>
   Object.entries(attributes).map(([Name, Value]) => ({ Name, Value }));
 
+export const customAttributes = (
+  attributes: AttributeListType | undefined
+): AttributeListType =>
+  (attributes ?? []).filter((attr) => attr.Name.startsWith("custom:"));
+
 export interface User {
   Username: string;
   UserCreateDate: Date;

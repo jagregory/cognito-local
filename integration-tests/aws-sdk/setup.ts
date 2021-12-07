@@ -16,6 +16,7 @@ import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
 import { NoOpCache } from "../../src/services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
+import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
 import { Router } from "../../src/targets/router";
 
@@ -64,6 +65,11 @@ export const withCognitoSdk =
         messages: new MessagesService(triggers),
         otp,
         triggers,
+        tokenGenerator: new JwtTokenGenerator(
+          clock,
+          triggers,
+          DefaultConfig.TokenConfig
+        ),
       });
       const server = createServer(router, ctx.logger);
       httpServer = await server.start({

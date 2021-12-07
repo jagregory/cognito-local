@@ -1,13 +1,7 @@
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Lambda } from "../lambda";
+import { Lambda, PreSignUpTriggerResponse } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
 import { Trigger } from "./trigger";
-
-interface PreSignUpTriggerResponse {
-  autoConfirmUser?: boolean;
-  autoVerifyPhone?: boolean;
-  autoVerifyEmail?: boolean;
-}
 
 export type PreSignUpTrigger = Trigger<
   {

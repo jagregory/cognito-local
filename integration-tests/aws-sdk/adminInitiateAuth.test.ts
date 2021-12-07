@@ -47,7 +47,10 @@ describe(
         .adminCreateUser({
           DesiredDeliveryMediums: ["EMAIL"],
           TemporaryPassword: "def",
-          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          UserAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "true" },
+          ],
           Username: "abc",
           UserPoolId: "test",
         })
@@ -128,7 +131,10 @@ describe(
         .adminCreateUser({
           DesiredDeliveryMediums: ["EMAIL"],
           TemporaryPassword: "def",
-          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          UserAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "true" },
+          ],
           Username: "abc",
           UserPoolId: "test",
         })

@@ -2,7 +2,7 @@ import { Context } from "../services/context";
 import { DataStoreFactory } from "../services/dataStore/factory";
 import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
-import { TokenConfig } from "../services/tokens";
+import { TokenConfig } from "../services/tokenGenerator";
 import mergeWith from "lodash.mergewith";
 
 export type UserPoolDefaults = Omit<

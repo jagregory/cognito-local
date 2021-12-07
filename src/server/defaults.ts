@@ -12,6 +12,7 @@ import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
 import { otp } from "../services/otp";
+import { JwtTokenGenerator } from "../services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../services/userPoolService";
 import { Router } from "../targets/router";
 import { loadConfig } from "./config";
@@ -68,6 +69,11 @@ export const createDefaultServer = async (
       messageDelivery: new MessageDeliveryService(new ConsoleMessageSender()),
       messages: new MessagesService(triggers),
       otp,
+      tokenGenerator: new JwtTokenGenerator(
+        clock,
+        triggers,
+        config.TokenConfig
+      ),
       triggers,
     }),
     logger,

@@ -1,18 +1,12 @@
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CognitoService } from "../index";
-import { Lambda } from "../lambda";
+import { CustomMessageTriggerResponse, Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
 import { ResourceNotFoundError } from "../../errors";
 import { Trigger } from "./trigger";
 
 const AWS_USERNAME_PARAMETER = "{username}";
 const AWS_CODE_PARAMETER = "{####}";
-
-interface CustomMessageResponse {
-  emailMessage?: string;
-  emailSubject?: string;
-  smsMessage?: string;
-}
 
 export type CustomMessageTrigger = Trigger<
   {
@@ -48,7 +42,7 @@ export type CustomMessageTrigger = Trigger<
      */
     clientMetadata: Record<string, string> | undefined;
   },
-  CustomMessageResponse | null
+  CustomMessageTriggerResponse | null
 >;
 
 interface CustomMessageServices {
