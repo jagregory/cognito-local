@@ -8,7 +8,9 @@ import {
   UserPoolService,
   UserPoolServiceImpl,
 } from "../src/services";
-import { createDataStore } from "../src/services/dataStore";
+import { CognitoServiceFactoryImpl } from "../src/services/cognitoService";
+import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
+import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const readFile = promisify(fs.readFile);
@@ -22,14 +24,15 @@ describe("User Pool Service", () => {
 
   beforeEach(async () => {
     dataDirectory = await mkdtemp("/tmp/cognito-local:");
-    cognitoClient = await CognitoServiceImpl.create(
-      TestContext,
+    const clock = new DateClock();
+    const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
+
+    cognitoClient = await new CognitoServiceFactoryImpl(
       dataDirectory,
-      {},
-      new DateClock(),
-      createDataStore,
-      UserPoolServiceImpl.create
-    );
+      clock,
+      dataStoreFactory,
+      new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
+    ).create(TestContext, {});
   });
 
   afterEach(() =>

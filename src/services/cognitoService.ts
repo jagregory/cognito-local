@@ -4,11 +4,12 @@ import { UserPoolDefaults } from "../server/config";
 import { AppClient } from "./appClient";
 import { Clock } from "./clock";
 import { Context } from "./context";
-import { CreateDataStore, DataStore } from "./dataStore";
+import { DataStore } from "./dataStore/dataStore";
+import { DataStoreFactory } from "./dataStore/factory";
 import {
-  CreateUserPoolService,
   UserPool,
   UserPoolService,
+  UserPoolServiceFactory,
 } from "./userPoolService";
 import fs from "fs";
 import { promisify } from "util";
@@ -272,53 +273,32 @@ export interface CognitoService {
   listUserPools(ctx: Context): Promise<readonly UserPool[]>;
 }
 
+export interface CognitoServiceFactory {
+  create(
+    ctx: Context,
+    userPoolDefaultConfig: UserPoolDefaults
+  ): Promise<CognitoService>;
+}
+
 export class CognitoServiceImpl implements CognitoService {
   private readonly clients: DataStore;
   private readonly clock: Clock;
-  private readonly createDataStore: CreateDataStore;
-  private readonly createUserPoolClient: CreateUserPoolService;
+  private readonly userPoolServiceFactory: UserPoolServiceFactory;
   private readonly dataDirectory: string;
   private readonly userPoolDefaultConfig: UserPoolDefaults;
-
-  public static async create(
-    ctx: Context,
-    dataDirectory: string,
-    userPoolDefaultConfig: UserPoolDefaults,
-    clock: Clock,
-    createDataStore: CreateDataStore,
-    createUserPoolClient: CreateUserPoolService
-  ): Promise<CognitoService> {
-    const clients = await createDataStore(
-      ctx,
-      CLIENTS_DATABASE_NAME,
-      { Clients: {} },
-      dataDirectory
-    );
-
-    return new CognitoServiceImpl(
-      dataDirectory,
-      clients,
-      clock,
-      userPoolDefaultConfig,
-      createDataStore,
-      createUserPoolClient
-    );
-  }
 
   public constructor(
     dataDirectory: string,
     clients: DataStore,
     clock: Clock,
     userPoolDefaultConfig: UserPoolDefaults,
-    createDataStore: CreateDataStore,
-    createUserPoolClient: CreateUserPoolService
+    userPoolServiceFactory: UserPoolServiceFactory
   ) {
     this.clients = clients;
     this.clock = clock;
-    this.createDataStore = createDataStore;
-    this.createUserPoolClient = createUserPoolClient;
     this.dataDirectory = dataDirectory;
     this.userPoolDefaultConfig = userPoolDefaultConfig;
+    this.userPoolServiceFactory = userPoolServiceFactory;
   }
 
   public async createUserPool(
@@ -326,12 +306,9 @@ export class CognitoServiceImpl implements CognitoService {
     userPool: UserPool
   ): Promise<UserPool> {
     ctx.logger.debug("CognitoServiceImpl.createUserPool");
-    const service = await this.createUserPoolClient(
+    const service = await this.userPoolServiceFactory.create(
       ctx,
-      this.dataDirectory,
       this.clients,
-      this.clock,
-      this.createDataStore,
       {
         ...USER_POOL_AWS_DEFAULTS,
         ...this.userPoolDefaultConfig,
@@ -347,18 +324,11 @@ export class CognitoServiceImpl implements CognitoService {
     userPoolId: string
   ): Promise<UserPoolService> {
     ctx.logger.debug({ userPoolId }, "CognitoServiceImpl.getUserPool");
-    return this.createUserPoolClient(
-      ctx,
-      this.dataDirectory,
-      this.clients,
-      this.clock,
-      this.createDataStore,
-      {
-        ...USER_POOL_AWS_DEFAULTS,
-        ...this.userPoolDefaultConfig,
-        Id: userPoolId,
-      }
-    );
+    return this.userPoolServiceFactory.create(ctx, this.clients, {
+      ...USER_POOL_AWS_DEFAULTS,
+      ...this.userPoolDefaultConfig,
+      Id: userPoolId,
+    });
   }
 
   public async getUserPoolForClientId(
@@ -371,18 +341,11 @@ export class CognitoServiceImpl implements CognitoService {
       throw new ResourceNotFoundError();
     }
 
-    return this.createUserPoolClient(
-      ctx,
-      this.dataDirectory,
-      this.clients,
-      this.clock,
-      this.createDataStore,
-      {
-        ...USER_POOL_AWS_DEFAULTS,
-        ...this.userPoolDefaultConfig,
-        Id: appClient.UserPoolId,
-      }
-    );
+    return this.userPoolServiceFactory.create(ctx, this.clients, {
+      ...USER_POOL_AWS_DEFAULTS,
+      ...this.userPoolDefaultConfig,
+      Id: appClient.UserPoolId,
+    });
   }
 
   public async getAppClient(
@@ -414,6 +377,44 @@ export class CognitoServiceImpl implements CognitoService {
 
           return userPool.config;
         })
+    );
+  }
+}
+
+export class CognitoServiceFactoryImpl implements CognitoServiceFactory {
+  private readonly dataDirectory: string;
+  private readonly clock: Clock;
+  private readonly dataStoreFactory: DataStoreFactory;
+  private readonly userPoolServiceFactory: UserPoolServiceFactory;
+
+  public constructor(
+    dataDirectory: string,
+    clock: Clock,
+    dataStoreFactory: DataStoreFactory,
+    userPoolServiceFactory: UserPoolServiceFactory
+  ) {
+    this.dataDirectory = dataDirectory;
+    this.clock = clock;
+    this.dataStoreFactory = dataStoreFactory;
+    this.userPoolServiceFactory = userPoolServiceFactory;
+  }
+
+  public async create(
+    ctx: Context,
+    userPoolDefaultConfig: UserPoolDefaults
+  ): Promise<CognitoService> {
+    const clients = await this.dataStoreFactory.create(
+      ctx,
+      CLIENTS_DATABASE_NAME,
+      { Clients: {} }
+    );
+
+    return new CognitoServiceImpl(
+      this.dataDirectory,
+      clients,
+      this.clock,
+      userPoolDefaultConfig,
+      this.userPoolServiceFactory
     );
   }
 }

@@ -7,7 +7,8 @@ import {
 import { AppClient, newId } from "./appClient";
 import { Clock } from "./clock";
 import { Context } from "./context";
-import { CreateDataStore, DataStore } from "./dataStore";
+import { DataStore } from "./dataStore/dataStore";
+import { DataStoreFactory } from "./dataStore/factory";
 
 export interface MFAOption {
   DeliveryMedium: "SMS";
@@ -111,14 +112,13 @@ export interface UserPoolService {
   ): Promise<void>;
 }
 
-export type CreateUserPoolService = (
-  ctx: Context,
-  dataDirectory: string,
-  clientsDataStore: DataStore,
-  clock: Clock,
-  createDataStore: CreateDataStore,
-  defaultOptions: UserPool
-) => Promise<UserPoolService>;
+export interface UserPoolServiceFactory {
+  create(
+    ctx: Context,
+    clientsDataStore: DataStore,
+    defaultOptions: UserPool
+  ): Promise<UserPoolService>;
+}
 
 export class UserPoolServiceImpl implements UserPoolService {
   private readonly clientsDataStore: DataStore;
@@ -126,36 +126,6 @@ export class UserPoolServiceImpl implements UserPoolService {
   private readonly dataStore: DataStore;
 
   public readonly config: UserPool;
-
-  public static async create(
-    ctx: Context,
-    dataDirectory: string,
-    clientsDataStore: DataStore,
-    clock: Clock,
-    createDataStore: CreateDataStore,
-    defaultOptions: UserPool
-  ): Promise<UserPoolService> {
-    const id = defaultOptions.Id;
-
-    ctx.logger.debug({ id }, "UserPoolServiceImpl.create");
-
-    const dataStore = await createDataStore(
-      ctx,
-      id,
-      {
-        Users: {},
-        Options: defaultOptions,
-      },
-      dataDirectory
-    );
-    const config = await dataStore.get<UserPool>(
-      ctx,
-      "Options",
-      defaultOptions
-    );
-
-    return new UserPoolServiceImpl(clientsDataStore, clock, dataStore, config);
-  }
 
   public constructor(
     clientsDataStore: DataStore,
@@ -315,5 +285,42 @@ export class UserPoolServiceImpl implements UserPoolService {
       ...user,
       RefreshTokens: refreshTokens,
     });
+  }
+}
+
+export class UserPoolServiceFactoryImpl implements UserPoolServiceFactory {
+  private readonly clock: Clock;
+  private readonly dataStoreFactory: DataStoreFactory;
+
+  public constructor(clock: Clock, dataStoreFactory: DataStoreFactory) {
+    this.clock = clock;
+    this.dataStoreFactory = dataStoreFactory;
+  }
+
+  public async create(
+    ctx: Context,
+    clientsDataStore: DataStore,
+    defaultOptions: UserPool
+  ): Promise<UserPoolService> {
+    const id = defaultOptions.Id;
+
+    ctx.logger.debug({ id }, "UserPoolServiceImpl.create");
+
+    const dataStore = await this.dataStoreFactory.create(ctx, id, {
+      Users: {},
+      Options: defaultOptions,
+    });
+    const config = await dataStore.get<UserPool>(
+      ctx,
+      "Options",
+      defaultOptions
+    );
+
+    return new UserPoolServiceImpl(
+      clientsDataStore,
+      this.clock,
+      dataStore,
+      config
+    );
   }
 }

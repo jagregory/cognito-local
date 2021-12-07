@@ -1,5 +1,5 @@
 import { Context } from "../services/context";
-import { CreateDataStore } from "../services/dataStore";
+import { DataStoreFactory } from "../services/dataStore/factory";
 import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokens";
@@ -37,11 +37,10 @@ export const DefaultConfig: Config = {
 
 export const loadConfig = async (
   ctx: Context,
-  configDirectory: string,
-  createDataStore: CreateDataStore
+  dataStoreFactory: DataStoreFactory
 ): Promise<Config> => {
   ctx.logger.debug("loadConfig");
-  const dataStore = await createDataStore(ctx, "config", {}, configDirectory);
+  const dataStore = await dataStoreFactory.create(ctx, "config", {});
 
   const config = await dataStore.getRoot<Config>(ctx);
 

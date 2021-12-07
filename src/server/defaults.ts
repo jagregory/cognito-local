@@ -1,20 +1,20 @@
+import * as AWS from "aws-sdk";
 import pino from "pino";
 import {
-  CognitoServiceImpl,
   DateClock,
   LambdaService,
   MessagesService,
   TriggersService,
-  UserPoolServiceImpl,
 } from "../services";
+import { CognitoServiceFactoryImpl } from "../services/cognitoService";
+import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
-import { createDataStore } from "../services/dataStore";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
 import { otp } from "../services/otp";
+import { UserPoolServiceFactoryImpl } from "../services/userPoolService";
 import { Router } from "../targets/router";
 import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
-import * as AWS from "aws-sdk";
 
 export const createDefaultServer = async (
   logger: pino.Logger
@@ -25,34 +25,50 @@ export const createDefaultServer = async (
     logger,
   };
 
-  const config = await loadConfig(ctx, configDirectory, createDataStore);
+  const config = await loadConfig(
+    ctx,
+    // the config gets a separate factory because it's stored in a different directory
+    new StormDBDataStoreFactory(configDirectory)
+  );
 
   logger.debug({ config }, "Loaded config");
 
   const clock = new DateClock();
 
-  const cognitoClient = await CognitoServiceImpl.create(
-    ctx,
-    dataDirectory,
-    config.UserPoolDefaults,
-    clock,
-    createDataStore,
-    UserPoolServiceImpl.create.bind(UserPoolServiceImpl)
-  );
-  const lambdaClient = new AWS.Lambda(config.LambdaClient);
-  const lambda = new LambdaService(config.TriggerFunctions, lambdaClient);
-  const triggers = new TriggersService(clock, cognitoClient, lambda);
-  const router = Router({
-    clock,
-    cognito: cognitoClient,
-    config,
-    messageDelivery: new MessageDeliveryService(new ConsoleMessageSender()),
-    messages: new MessagesService(triggers),
-    otp,
-    triggers,
-  });
+  const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
 
-  return createServer(router, logger, {
-    development: !!process.env.COGNITO_LOCAL_DEVMODE,
-  });
+  const cognitoServiceFactory = new CognitoServiceFactoryImpl(
+    dataDirectory,
+    clock,
+    dataStoreFactory,
+    new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
+  );
+  const cognitoClient = await cognitoServiceFactory.create(
+    ctx,
+    config.UserPoolDefaults
+  );
+  const triggers = new TriggersService(
+    clock,
+    cognitoClient,
+    new LambdaService(
+      config.TriggerFunctions,
+      new AWS.Lambda(config.LambdaClient)
+    )
+  );
+
+  return createServer(
+    Router({
+      clock,
+      cognito: cognitoClient,
+      config,
+      messageDelivery: new MessageDeliveryService(new ConsoleMessageSender()),
+      messages: new MessagesService(triggers),
+      otp,
+      triggers,
+    }),
+    logger,
+    {
+      development: !!process.env.COGNITO_LOCAL_DEVMODE,
+    }
+  );
 };

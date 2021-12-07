@@ -1,45 +1,46 @@
-import { newMockDataStore } from "../__tests__/mockDataStore";
+import { ClockFake } from "../__tests__/clockFake";
+import {
+  newMockDataStore,
+  newMockDataStoreFactory,
+} from "../__tests__/mockDataStore";
+import { newMockUserPoolServiceFactory } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import { ResourceNotFoundError } from "../errors";
-import { DateClock } from "./clock";
-import { CognitoServiceImpl, USER_POOL_AWS_DEFAULTS } from "./cognitoService";
-import { CreateDataStore, DataStore } from "./dataStore";
-import { CreateUserPoolService, UserPoolService } from "./userPoolService";
+import {
+  CognitoServiceFactoryImpl,
+  CognitoServiceImpl,
+  USER_POOL_AWS_DEFAULTS,
+} from "./cognitoService";
+import { UserPoolService, UserPoolServiceFactory } from "./userPoolService";
 
-describe("Cognito Service", () => {
-  let mockDataStore: jest.Mocked<DataStore>;
-  let mockUserPool: jest.Mocked<UserPoolService>;
-  let createUserPoolClient: jest.MockedFunction<CreateUserPoolService>;
-  let createDataStore: jest.MockedFunction<CreateDataStore>;
-  const clock = new DateClock();
-
-  beforeEach(() => {
-    mockDataStore = newMockDataStore();
-    createUserPoolClient = jest.fn().mockResolvedValue(mockUserPool);
-    createDataStore = jest.fn().mockResolvedValue(mockDataStore);
-  });
-
+describe("CognitoServiceFactory", () => {
   it("creates a database for clients", async () => {
-    const createDataStore = jest.fn(
-      () => mockDataStore
-    ) as unknown as CreateDataStore;
-    await CognitoServiceImpl.create(
-      TestContext,
+    const mockDataStoreFactory = newMockDataStoreFactory();
+    const factory = new CognitoServiceFactoryImpl(
       "data-directory",
-      {},
-      clock,
-      createDataStore,
-      createUserPoolClient
+      new ClockFake(new Date()),
+      mockDataStoreFactory,
+      newMockUserPoolServiceFactory()
     );
 
-    expect(createDataStore).toHaveBeenCalledWith(
+    await factory.create(TestContext, {});
+
+    expect(mockDataStoreFactory.create).toHaveBeenCalledWith(
       TestContext,
       "clients",
       {
         Clients: {},
-      },
-      "data-directory"
+      }
     );
+  });
+});
+
+describe("Cognito Service", () => {
+  let mockUserPool: jest.Mocked<UserPoolService>;
+  let mockUserPoolServiceFactory: jest.Mocked<UserPoolServiceFactory>;
+
+  beforeEach(() => {
+    mockUserPoolServiceFactory = newMockUserPoolServiceFactory(mockUserPool);
   });
 
   describe("getUserPool", () => {
@@ -47,23 +48,23 @@ describe("Cognito Service", () => {
     // used that doesn't exist we just create it and allow the operation to
     // continue. This may change in a later release.
     it("creates a user pool by the id specified", async () => {
-      const cognitoClient = await CognitoServiceImpl.create(
-        TestContext,
+      mockUserPoolServiceFactory.create.mockResolvedValue(mockUserPool);
+
+      const clientsDataStore = newMockDataStore();
+
+      const cognitoClient = new CognitoServiceImpl(
         "data-directory",
+        clientsDataStore,
+        new ClockFake(new Date()),
         { UsernameAttributes: [] },
-        clock,
-        createDataStore,
-        createUserPoolClient
+        mockUserPoolServiceFactory
       );
 
       const userPool = await cognitoClient.getUserPool(TestContext, "testing");
 
-      expect(createUserPoolClient).toHaveBeenCalledWith(
+      expect(mockUserPoolServiceFactory.create).toHaveBeenCalledWith(
         TestContext,
-        "data-directory",
-        mockDataStore,
-        clock,
-        createDataStore,
+        clientsDataStore,
         { ...USER_POOL_AWS_DEFAULTS, Id: "testing", UsernameAttributes: [] }
       );
       expect(userPool).toEqual(mockUserPool);
@@ -72,34 +73,40 @@ describe("Cognito Service", () => {
 
   describe("getUserPoolForClientId", () => {
     it("throws if client isn't registered", async () => {
-      mockDataStore.get.mockResolvedValue(null);
-      const cognitoClient = await CognitoServiceImpl.create(
-        TestContext,
+      mockUserPoolServiceFactory.create.mockResolvedValue(mockUserPool);
+
+      const clientsDataStore = newMockDataStore();
+      clientsDataStore.get.mockResolvedValue(null);
+
+      const cognitoClient = new CognitoServiceImpl(
         "data-directory",
-        {},
-        clock,
-        createDataStore,
-        createUserPoolClient
+        clientsDataStore,
+        new ClockFake(new Date()),
+        { UsernameAttributes: [] },
+        mockUserPoolServiceFactory
       );
 
       await expect(
         cognitoClient.getUserPoolForClientId(TestContext, "testing")
       ).rejects.toBeInstanceOf(ResourceNotFoundError);
 
-      expect(createUserPoolClient).not.toHaveBeenCalled();
+      expect(mockUserPoolServiceFactory.create).not.toHaveBeenCalled();
     });
 
     it("creates a user pool by the id in the client config", async () => {
-      mockDataStore.get.mockResolvedValue({
+      mockUserPoolServiceFactory.create.mockResolvedValue(mockUserPool);
+
+      const clientsDataStore = newMockDataStore();
+      clientsDataStore.get.mockResolvedValue({
         UserPoolId: "userPoolId",
       });
-      const cognitoClient = await CognitoServiceImpl.create(
-        TestContext,
+
+      const cognitoClient = new CognitoServiceImpl(
         "data-directory",
+        clientsDataStore,
+        new ClockFake(new Date()),
         { UsernameAttributes: [] },
-        clock,
-        createDataStore,
-        createUserPoolClient
+        mockUserPoolServiceFactory
       );
 
       const userPool = await cognitoClient.getUserPoolForClientId(
@@ -107,16 +114,13 @@ describe("Cognito Service", () => {
         "testing"
       );
 
-      expect(mockDataStore.get).toHaveBeenCalledWith(TestContext, [
+      expect(clientsDataStore.get).toHaveBeenCalledWith(TestContext, [
         "Clients",
         "testing",
       ]);
-      expect(createUserPoolClient).toHaveBeenCalledWith(
+      expect(mockUserPoolServiceFactory.create).toHaveBeenCalledWith(
         TestContext,
-        "data-directory",
-        mockDataStore,
-        clock,
-        createDataStore,
+        clientsDataStore,
         { ...USER_POOL_AWS_DEFAULTS, Id: "userPoolId", UsernameAttributes: [] }
       );
       expect(userPool).toEqual(mockUserPool);

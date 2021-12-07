@@ -1,8 +1,11 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { newMockDataStore } from "../__tests__/mockDataStore";
+import {
+  newMockDataStore,
+  newMockDataStoreFactory,
+} from "../__tests__/mockDataStore";
 import { TestContext } from "../__tests__/testContext";
-import { DataStore } from "./dataStore";
+import { DataStore } from "./dataStore/dataStore";
 import {
   attributesFromRecord,
   attributesInclude,
@@ -12,8 +15,35 @@ import {
   UserPoolService,
   UserPoolServiceImpl,
   Group,
+  UserPoolServiceFactoryImpl,
 } from "./userPoolService";
 import * as TDB from "../__tests__/testDataBuilder";
+
+describe("UserPoolServiceFactory", () => {
+  it("creates a database", async () => {
+    const mockDataStoreFactory = newMockDataStoreFactory(newMockDataStore());
+
+    const clientsDataStore = newMockDataStore();
+    const factory = new UserPoolServiceFactoryImpl(
+      new ClockFake(new Date()),
+      mockDataStoreFactory
+    );
+
+    await factory.create(TestContext, clientsDataStore, {
+      Id: "local",
+      UsernameAttributes: [],
+    });
+
+    expect(mockDataStoreFactory.create).toHaveBeenCalledWith(
+      TestContext,
+      "local",
+      {
+        Options: { Id: "local", UsernameAttributes: [] },
+        Users: {},
+      }
+    );
+  });
+});
 
 describe("User Pool Service", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
@@ -27,32 +57,6 @@ describe("User Pool Service", () => {
     mockClientsDataStore = newMockDataStore();
   });
 
-  it("creates a database", async () => {
-    const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
-
-    await UserPoolServiceImpl.create(
-      TestContext,
-      "data-directory",
-      mockClientsDataStore,
-      clock,
-      createDataStore,
-      {
-        Id: "local",
-        UsernameAttributes: [],
-      }
-    );
-
-    expect(createDataStore).toHaveBeenCalledWith(
-      TestContext,
-      "local",
-      {
-        Options: { Id: "local", UsernameAttributes: [] },
-        Users: {},
-      },
-      "data-directory"
-    );
-  });
-
   describe("createAppClient", () => {
     it("saves an app client", async () => {
       const ds = newMockDataStore();
@@ -60,12 +64,10 @@ describe("User Pool Service", () => {
         Promise.resolve(defaults)
       );
 
-      const userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
+      const userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
         clock,
-        () => Promise.resolve(ds),
+        ds,
         {
           Id: "local",
           UsernameAttributes: [],
@@ -98,12 +100,10 @@ describe("User Pool Service", () => {
     it("saves the user", async () => {
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
+      const userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
         clock,
-        () => Promise.resolve(ds),
+        ds,
         {
           Id: "local",
           UsernameAttributes: [],
@@ -126,12 +126,10 @@ describe("User Pool Service", () => {
     it("deletes the user", async () => {
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
+      const userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
         clock,
-        () => Promise.resolve(ds),
+        ds,
         {
           Id: "local",
           UsernameAttributes: [],
@@ -168,7 +166,7 @@ describe("User Pool Service", () => {
       ({ username_attributes, find_by_email, find_by_phone_number }) => {
         let userPool: UserPoolService;
 
-        beforeEach(async () => {
+        beforeEach(() => {
           const options = {
             Id: "local",
             UsernameAttributes: username_attributes,
@@ -190,12 +188,10 @@ describe("User Pool Service", () => {
             return Promise.resolve(null);
           });
 
-          userPool = await UserPoolServiceImpl.create(
-            TestContext,
-            "data-directory",
+          userPool = new UserPoolServiceImpl(
             mockClientsDataStore,
             clock,
-            () => Promise.resolve(ds),
+            ds,
             options
           );
         });
@@ -277,7 +273,7 @@ describe("User Pool Service", () => {
 
     let userPool: UserPoolService;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       const options = {
         Id: "local",
       };
@@ -297,14 +293,10 @@ describe("User Pool Service", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
-        mockClientsDataStore,
-        clock,
-        () => Promise.resolve(ds),
-        options
-      );
+      userPool = new UserPoolServiceImpl(mockClientsDataStore, clock, ds, {
+        Id: "local",
+        UsernameAttributes: [],
+      });
     });
 
     it("returns existing users", async () => {
@@ -377,12 +369,10 @@ describe("User Pool Service", () => {
       const now = new Date();
       const ds = newMockDataStore();
 
-      const userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
+      const userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
         clock,
-        () => Promise.resolve(ds),
+        ds,
         {
           Id: "local",
           UsernameAttributes: [],
@@ -416,7 +406,7 @@ describe("User Pool Service", () => {
   describe("listGroups", () => {
     let userPool: UserPoolService;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       const options = {
         Id: "local",
       };
@@ -441,12 +431,10 @@ describe("User Pool Service", () => {
 
         return Promise.resolve(null);
       });
-      userPool = await UserPoolServiceImpl.create(
-        TestContext,
-        "data-directory",
+      userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
         clock,
-        () => Promise.resolve(ds),
+        ds,
         options
       );
     });

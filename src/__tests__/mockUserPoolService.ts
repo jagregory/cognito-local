@@ -1,4 +1,5 @@
 import { UserPoolService } from "../services";
+import { UserPoolServiceFactory } from "../services/userPoolService";
 
 export const newMockUserPoolService = (): jest.Mocked<UserPoolService> => ({
   config: {
@@ -13,4 +14,10 @@ export const newMockUserPoolService = (): jest.Mocked<UserPoolService> => ({
   saveGroup: jest.fn(),
   saveUser: jest.fn(),
   storeRefreshToken: jest.fn(),
+});
+
+export const newMockUserPoolServiceFactory = (
+  cognitoService: jest.Mocked<UserPoolService> = newMockUserPoolService()
+): jest.Mocked<UserPoolServiceFactory> => ({
+  create: jest.fn().mockResolvedValue(cognitoService),
 });

@@ -1,8 +1,9 @@
 import StormDB from "stormdb";
 import { TestContext } from "../src/__tests__/testContext";
-import { createDataStore } from "../src/services/dataStore";
 import fs from "fs";
 import { promisify } from "util";
+import { DataStoreFactory } from "../src/services/dataStore/factory";
+import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const readFile = promisify(fs.readFile);
@@ -10,9 +11,11 @@ const rmdir = promisify(fs.rmdir);
 
 describe("Data Store", () => {
   let path: string;
+  let factory: DataStoreFactory;
 
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
+    factory = new StormDBDataStoreFactory(path);
   });
 
   afterEach(() =>
@@ -22,13 +25,13 @@ describe("Data Store", () => {
   );
 
   it("creates a named database", async () => {
-    await createDataStore(TestContext, "example", {}, path);
+    await factory.create(TestContext, "example", {});
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
   });
 
   it("creates a named database with the defaults persisted", async () => {
-    await createDataStore(TestContext, "example", { DefaultValue: true }, path);
+    await factory.create(TestContext, "example", { DefaultValue: true });
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
@@ -41,7 +44,7 @@ describe("Data Store", () => {
   it("does not overwrite defaults if the file already exists", async () => {
     fs.writeFileSync(path + "/example.json", '{"Users":{"a":{"key":"value"}}}');
 
-    await createDataStore(TestContext, "example", { Users: {} }, path);
+    await factory.create(TestContext, "example", { Users: {} });
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
@@ -56,12 +59,9 @@ describe("Data Store", () => {
   });
 
   it("saves the default objects when a save occurs", async () => {
-    const dataStore = await createDataStore(
-      TestContext,
-      "example",
-      { DefaultValue: true },
-      path
-    );
+    const dataStore = await factory.create(TestContext, "example", {
+      DefaultValue: true,
+    });
 
     await dataStore.set(TestContext, "key", 1);
 
@@ -74,7 +74,7 @@ describe("Data Store", () => {
 
   describe("delete", () => {
     it("deletes a value", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, "key1", 1);
       await dataStore.set(TestContext, "key2", 2);
@@ -100,7 +100,7 @@ describe("Data Store", () => {
     });
 
     it("deletes a nested value using array syntax", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, ["key", "a", "b"], 1);
       await dataStore.set(TestContext, ["key", "a", "c"], 2);
@@ -139,7 +139,7 @@ describe("Data Store", () => {
 
   describe("set", () => {
     it("saves a value", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, "key1", 1);
       await dataStore.set(TestContext, "key2", 2);
@@ -153,7 +153,7 @@ describe("Data Store", () => {
     });
 
     it("saves a date value", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       const date = new Date();
 
@@ -167,7 +167,7 @@ describe("Data Store", () => {
     });
 
     it("fails to save a date value with the wrong type", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       const date = new Date();
 
@@ -181,7 +181,7 @@ describe("Data Store", () => {
     });
 
     it("saves a nested value using array syntax", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, ["key", "a", "b"], 1);
 
@@ -197,7 +197,7 @@ describe("Data Store", () => {
     });
 
     it("saves a key with dots in as a single key-value pair", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, "key.a.b", 1);
 
@@ -209,7 +209,7 @@ describe("Data Store", () => {
     });
 
     it("replaces a value", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, "key", 1);
 
@@ -231,12 +231,9 @@ describe("Data Store", () => {
 
   describe("getRoot", () => {
     it("returns entire db", async () => {
-      const dataStore = await createDataStore(
-        TestContext,
-        "example",
-        { DefaultValue: true },
-        path
-      );
+      const dataStore = await factory.create(TestContext, "example", {
+        DefaultValue: true,
+      });
 
       await dataStore.set(TestContext, "key", "value");
 
@@ -248,12 +245,9 @@ describe("Data Store", () => {
 
   describe("get", () => {
     it("returns a default", async () => {
-      const dataStore = await createDataStore(
-        TestContext,
-        "example",
-        { DefaultValue: true },
-        path
-      );
+      const dataStore = await factory.create(TestContext, "example", {
+        DefaultValue: true,
+      });
 
       const result = await dataStore.get(TestContext, "DefaultValue");
 
@@ -261,7 +255,7 @@ describe("Data Store", () => {
     });
 
     it("returns null if key doesn't exist", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       const result = await dataStore.get(TestContext, "invalid");
 
@@ -269,7 +263,7 @@ describe("Data Store", () => {
     });
 
     it("returns existing value", async () => {
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
 
       await dataStore.set(TestContext, "key", 1);
 
@@ -279,24 +273,14 @@ describe("Data Store", () => {
     });
 
     it("returns a date value", async () => {
-      const dataStore1 = await createDataStore(
-        TestContext,
-        "example",
-        {},
-        path
-      );
+      const dataStore1 = await factory.create(TestContext, "example", {});
 
       const date = new Date();
 
       await dataStore1.set(TestContext, "SomethingDate", date);
 
       // use a separate datastore to avoid caching
-      const dataStore2 = await createDataStore(
-        TestContext,
-        "example",
-        {},
-        path
-      );
+      const dataStore2 = await factory.create(TestContext, "example", {});
       const result = await dataStore2.get(TestContext, "SomethingDate");
 
       expect(result).toEqual(date);
@@ -314,7 +298,7 @@ describe("Data Store", () => {
       db.set("SomethingDate", date.getTime());
       await db.save();
 
-      const dataStore = await createDataStore(TestContext, "example", {}, path);
+      const dataStore = await factory.create(TestContext, "example", {});
       const result = await dataStore.get(TestContext, "SomethingDate");
 
       expect(result).toEqual(date);

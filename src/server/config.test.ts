@@ -1,19 +1,20 @@
-import { newMockDataStore } from "../__tests__/mockDataStore";
+import {
+  newMockDataStore,
+  newMockDataStoreFactory,
+} from "../__tests__/mockDataStore";
 import { TestContext } from "../__tests__/testContext";
 import { DefaultConfig, loadConfig } from "./config";
 
 describe("loadConfig", () => {
   it("returns the default config if no config exists", async () => {
-    const createDataStore = jest.fn().mockResolvedValue(newMockDataStore());
-
-    const config = await loadConfig(TestContext, "dir", createDataStore);
+    const config = await loadConfig(TestContext, newMockDataStoreFactory());
 
     expect(config).toEqual(DefaultConfig);
   });
 
   it("merges the defaults with any existing config", async () => {
     const ds = newMockDataStore();
-    const createDataStore = jest.fn().mockResolvedValue(ds);
+    const mockDataStoreFactory = newMockDataStoreFactory(ds);
 
     ds.getRoot.mockResolvedValue({
       TriggerFunctions: {
@@ -24,7 +25,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig(TestContext, "dir", createDataStore);
+    const config = await loadConfig(TestContext, mockDataStoreFactory);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -42,7 +43,7 @@ describe("loadConfig", () => {
 
   it("can unset a property when merging", async () => {
     const ds = newMockDataStore();
-    const createDataStore = jest.fn().mockResolvedValue(ds);
+    const mockDataStoreFactory = newMockDataStoreFactory(ds);
 
     ds.getRoot.mockResolvedValue({
       UserPoolDefaults: {
@@ -50,7 +51,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig(TestContext, "dir", createDataStore);
+    const config = await loadConfig(TestContext, mockDataStoreFactory);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -62,7 +63,7 @@ describe("loadConfig", () => {
 
   it("overwrites arrays when merging", async () => {
     const ds = newMockDataStore();
-    const createDataStore = jest.fn().mockResolvedValue(ds);
+    const mockDataStoreFactory = newMockDataStoreFactory(ds);
 
     ds.getRoot.mockResolvedValue({
       UserPoolDefaults: {
@@ -70,7 +71,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig(TestContext, "dir", createDataStore);
+    const config = await loadConfig(TestContext, mockDataStoreFactory);
 
     expect(config).toEqual({
       ...DefaultConfig,
@@ -82,7 +83,7 @@ describe("loadConfig", () => {
 
   it("can set an arrays to empty when merging", async () => {
     const ds = newMockDataStore();
-    const createDataStore = jest.fn().mockResolvedValue(ds);
+    const mockDataStoreFactory = newMockDataStoreFactory(ds);
 
     ds.getRoot.mockResolvedValue({
       UserPoolDefaults: {
@@ -90,7 +91,7 @@ describe("loadConfig", () => {
       },
     });
 
-    const config = await loadConfig(TestContext, "dir", createDataStore);
+    const config = await loadConfig(TestContext, mockDataStoreFactory);
 
     expect(config).toEqual({
       ...DefaultConfig,

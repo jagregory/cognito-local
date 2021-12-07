@@ -1,23 +1,21 @@
 import * as AWS from "aws-sdk";
 import fs from "fs";
 import http from "http";
+import type { Logger } from "pino";
 import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
-import type { Logger } from "pino";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
-  CognitoServiceImpl,
   DateClock,
-  Lambda,
-  MessageDelivery,
   MessagesService,
   TriggersService,
-  UserPoolServiceImpl,
 } from "../../src/services";
-import { createDataStore } from "../../src/services/dataStore";
+import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
+import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
+import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
 import { Router } from "../../src/targets/router";
 
 const mkdtemp = promisify(fs.mkdtemp);
@@ -40,28 +38,25 @@ export const withCognitoSdk =
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
       const ctx = { logger };
 
-      const cognitoClient = await CognitoServiceImpl.create(
-        ctx,
+      const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
+      const cognitoServiceFactory = new CognitoServiceFactoryImpl(
         dataDirectory,
-        {},
         clock,
-        createDataStore,
-        UserPoolServiceImpl.create.bind(UserPoolServiceImpl)
+        dataStoreFactory,
+        new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
       );
-      const mockLambda: jest.Mocked<Lambda> = {
+      const cognitoClient = await cognitoServiceFactory.create(ctx, {});
+      const triggers = new TriggersService(clock, cognitoClient, {
         enabled: jest.fn().mockReturnValue(false),
         invoke: jest.fn(),
-      };
-      const triggers = new TriggersService(clock, cognitoClient, mockLambda);
-      const mockCodeDelivery: jest.Mocked<MessageDelivery> = {
-        deliver: jest.fn(),
-      };
-
+      });
       const router = Router({
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
-        messageDelivery: mockCodeDelivery,
+        messageDelivery: {
+          deliver: jest.fn(),
+        },
         messages: new MessagesService(triggers),
         otp,
         triggers,

@@ -1,22 +1,34 @@
 import { TestContext } from "../src/__tests__/testContext";
+import { DateClock } from "../src/services";
 import {
-  CognitoServiceImpl,
-  DateClock,
-  UserPoolServiceImpl,
-} from "../src/services";
-import { USER_POOL_AWS_DEFAULTS } from "../src/services/cognitoService";
-import { createDataStore } from "../src/services/dataStore";
+  CognitoServiceFactory,
+  CognitoServiceFactoryImpl,
+  USER_POOL_AWS_DEFAULTS,
+} from "../src/services/cognitoService";
 import fs from "fs";
 import { promisify } from "util";
+import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
+import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const rmdir = promisify(fs.rmdir);
 
 describe("Cognito Service", () => {
   let dataDirectory: string;
+  let factory: CognitoServiceFactory;
 
   beforeEach(async () => {
     dataDirectory = await mkdtemp("/tmp/cognito-local:");
+
+    const clock = new DateClock();
+    const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
+
+    factory = new CognitoServiceFactoryImpl(
+      dataDirectory,
+      clock,
+      dataStoreFactory,
+      new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
+    );
   });
 
   afterEach(() =>
@@ -25,28 +37,16 @@ describe("Cognito Service", () => {
     })
   );
 
-  it("creates a clients database", async () => {
-    await CognitoServiceImpl.create(
-      TestContext,
-      dataDirectory,
-      {},
-      new DateClock(),
-      createDataStore,
-      UserPoolServiceImpl.create
-    );
+  describe("CognitoServiceFactory", () => {
+    it("creates a clients database", async () => {
+      await factory.create(TestContext, {});
 
-    expect(fs.existsSync(`${dataDirectory}/clients.json`)).toBe(true);
+      expect(fs.existsSync(`${dataDirectory}/clients.json`)).toBe(true);
+    });
   });
 
   it("creates a user pool database", async () => {
-    const cognitoService = await CognitoServiceImpl.create(
-      TestContext,
-      dataDirectory,
-      {},
-      new DateClock(),
-      createDataStore,
-      UserPoolServiceImpl.create
-    );
+    const cognitoService = await factory.create(TestContext, {});
 
     await cognitoService.getUserPool(TestContext, "test-pool");
 
@@ -54,14 +54,7 @@ describe("Cognito Service", () => {
   });
 
   it("lists multiple user pools", async () => {
-    const cognitoService = await CognitoServiceImpl.create(
-      TestContext,
-      dataDirectory,
-      {},
-      new DateClock(),
-      createDataStore,
-      UserPoolServiceImpl.create
-    );
+    const cognitoService = await factory.create(TestContext, {});
 
     await cognitoService.getUserPool(TestContext, "test-pool-1");
     await cognitoService.getUserPool(TestContext, "test-pool-2");
