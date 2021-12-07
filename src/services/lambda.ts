@@ -1,13 +1,36 @@
-import { CognitoUserPoolEvent } from "aws-lambda";
+import {
+  CreateAuthChallengeTriggerEvent,
+  CustomEmailSenderTriggerEvent,
+  CustomMessageTriggerEvent,
+  DefineAuthChallengeTriggerEvent,
+  PostAuthenticationTriggerEvent,
+  PostConfirmationTriggerEvent,
+  PreAuthenticationTriggerEvent,
+  PreSignUpTriggerEvent,
+  UserMigrationTriggerEvent,
+  VerifyAuthChallengeResponseTriggerEvent,
+} from "aws-lambda";
 import type { Lambda as LambdaClient } from "aws-sdk";
 import { InvocationResponse } from "aws-sdk/clients/lambda";
+import { version as awsSdkVersion } from "aws-sdk/package.json";
 import {
   InvalidLambdaResponseError,
   UnexpectedLambdaExceptionError,
   UserLambdaValidationError,
 } from "../errors";
-import { version as awsSdkVersion } from "aws-sdk/package.json";
 import { Context } from "./context";
+
+type CognitoUserPoolEvent =
+  | CreateAuthChallengeTriggerEvent
+  | CustomEmailSenderTriggerEvent
+  | CustomMessageTriggerEvent
+  | DefineAuthChallengeTriggerEvent
+  | PostAuthenticationTriggerEvent
+  | PostConfirmationTriggerEvent
+  | PreAuthenticationTriggerEvent
+  | PreSignUpTriggerEvent
+  | UserMigrationTriggerEvent
+  | VerifyAuthChallengeResponseTriggerEvent;
 
 interface EventCommonParameters {
   clientId: string;
@@ -125,56 +148,7 @@ export class LambdaService implements Lambda {
       throw new Error(`${trigger} trigger not configured`);
     }
 
-    const lambdaEvent: CognitoUserPoolEvent = {
-      version: 0, // TODO: how do we know what this is?
-      callerContext: {
-        awsSdkVersion,
-        clientId: event.clientId,
-      },
-      region: "local", // TODO: pull from above,
-      userPoolId: event.userPoolId,
-      triggerSource: event.triggerSource,
-      userName: event.username,
-      request: {
-        userAttributes: event.userAttributes,
-      },
-      response: {},
-    };
-
-    switch (event.triggerSource) {
-      case "PostAuthentication_Authentication":
-      case "PostConfirmation_ConfirmForgotPassword":
-      case "PostConfirmation_ConfirmSignUp": {
-        lambdaEvent.request.clientMetadata = event.clientMetadata;
-        break;
-      }
-      case "PreSignUp_AdminCreateUser":
-      case "PreSignUp_ExternalProvider":
-      case "PreSignUp_SignUp": {
-        lambdaEvent.request.clientMetadata = event.clientMetadata;
-        lambdaEvent.request.validationData = event.validationData;
-        break;
-      }
-      case "UserMigration_Authentication": {
-        lambdaEvent.request.clientMetadata = event.clientMetadata;
-        lambdaEvent.request.password = event.password;
-        lambdaEvent.request.validationData = event.validationData;
-
-        break;
-      }
-      case "CustomMessage_SignUp":
-      case "CustomMessage_AdminCreateUser":
-      case "CustomMessage_ResendCode":
-      case "CustomMessage_ForgotPassword":
-      case "CustomMessage_UpdateUserAttribute":
-      case "CustomMessage_VerifyUserAttribute":
-      case "CustomMessage_Authentication": {
-        lambdaEvent.request.clientMetadata = event.clientMetadata;
-        lambdaEvent.request.codeParameter = event.codeParameter;
-        lambdaEvent.request.usernameParameter = event.usernameParameter;
-        break;
-      }
-    }
+    const lambdaEvent = this.createLambdaEvent(event);
 
     ctx.logger.debug(
       {
@@ -212,6 +186,136 @@ export class LambdaService implements Lambda {
     } else {
       ctx.logger.error({ error: result.FunctionError });
       throw new UserLambdaValidationError(result.FunctionError);
+    }
+  }
+
+  private createLambdaEvent(
+    event:
+      | CustomMessageEvent
+      | PostAuthenticationEvent
+      | PostConfirmationEvent
+      | PreSignUpEvent
+      | UserMigrationEvent
+  ): CognitoUserPoolEvent {
+    const version = "0"; // TODO: how do we know what this is?
+    const callerContext = {
+      awsSdkVersion,
+      clientId: event.clientId,
+    };
+    const region = "local"; // TODO: pull from above,
+
+    switch (event.triggerSource) {
+      case "PostAuthentication_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            clientMetadata: event.clientMetadata,
+            newDeviceUsed: false,
+          },
+          response: {},
+        };
+      }
+
+      case "PostConfirmation_ConfirmForgotPassword":
+      case "PostConfirmation_ConfirmSignUp": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            clientMetadata: event.clientMetadata,
+          },
+          response: {},
+        };
+      }
+
+      case "PreSignUp_AdminCreateUser":
+      case "PreSignUp_ExternalProvider":
+      case "PreSignUp_SignUp": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            clientMetadata: event.clientMetadata,
+            validationData: event.validationData,
+          },
+          response: {
+            autoConfirmUser: false,
+            autoVerifyEmail: false,
+            autoVerifyPhone: false,
+          },
+        };
+      }
+
+      case "UserMigration_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            clientMetadata: event.clientMetadata,
+            password: event.password,
+            validationData: event.validationData,
+          },
+          response: {
+            desiredDeliveryMediums: [],
+            finalUserStatus: undefined,
+            forceAliasCreation: undefined,
+            messageAction: undefined,
+            userAttributes: {},
+          },
+        };
+      }
+
+      case "CustomMessage_SignUp":
+      case "CustomMessage_AdminCreateUser":
+      case "CustomMessage_ResendCode":
+      case "CustomMessage_ForgotPassword":
+      case "CustomMessage_UpdateUserAttribute":
+      case "CustomMessage_VerifyUserAttribute":
+      case "CustomMessage_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            clientMetadata: event.clientMetadata,
+            codeParameter: event.codeParameter,
+            usernameParameter: event.usernameParameter,
+            userAttributes: {},
+          },
+          response: {
+            smsMessage: "",
+            emailMessage: "",
+            emailSubject: "",
+          },
+        };
+      }
+
+      default: {
+        throw new Error("Unsupported Trigger Source");
+      }
     }
   }
 }

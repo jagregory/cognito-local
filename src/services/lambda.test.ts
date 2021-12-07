@@ -211,7 +211,7 @@ describe("Lambda function invoker", () => {
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
           Payload: expect.jsonMatching({
-            version: 0,
+            version: "0",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -225,7 +225,11 @@ describe("Lambda function invoker", () => {
                 validation: "data",
               },
             },
-            response: {},
+            response: {
+              autoConfirmUser: false,
+              autoVerifyEmail: false,
+              autoVerifyPhone: false,
+            },
             userName: "username",
           }),
         });
@@ -267,7 +271,7 @@ describe("Lambda function invoker", () => {
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
           Payload: expect.jsonMatching({
-            version: 0,
+            version: "0",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -276,13 +280,15 @@ describe("Lambda function invoker", () => {
               clientMetadata: {
                 client: "metadata",
               },
-              userAttributes: {},
               password: "password",
               validationData: {
                 validation: "data",
               },
             },
-            response: {},
+            response: {
+              desiredDeliveryMediums: [],
+              userAttributes: {},
+            },
             userName: "username",
           }),
         });
@@ -292,8 +298,6 @@ describe("Lambda function invoker", () => {
     describe.each`
       trigger                 | source
       ${"PostAuthentication"} | ${"PostAuthentication_Authentication"}
-      ${"PostConfirmation"}   | ${"PostConfirmation_ConfirmSignUp"}
-      ${"PostConfirmation"}   | ${"PostConfirmation_ConfirmForgotPassword"}
     `("$source", ({ trigger, source }) => {
       it("invokes the lambda", async () => {
         const response = Promise.resolve({
@@ -327,7 +331,65 @@ describe("Lambda function invoker", () => {
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
           Payload: expect.jsonMatching({
-            version: 0,
+            version: "0",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: source,
+            request: {
+              userAttributes: {
+                user: "attributes",
+              },
+              clientMetadata: {
+                client: "metadata",
+              },
+              newDeviceUsed: false,
+            },
+            response: {},
+            userName: "username",
+          }),
+        });
+      });
+    });
+
+    describe.each`
+      trigger               | source
+      ${"PostConfirmation"} | ${"PostConfirmation_ConfirmSignUp"}
+      ${"PostConfirmation"} | ${"PostConfirmation_ConfirmForgotPassword"}
+    `("$source", ({ trigger, source }) => {
+      it("invokes the lambda", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "some": "json" }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            [trigger]: "MyLambdaName",
+          },
+          mockLambdaClient
+        );
+
+        await lambda.invoke(TestContext, trigger, {
+          clientId: "clientId",
+          triggerSource: source,
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {
+            user: "attributes",
+          },
+          clientMetadata: {
+            client: "metadata",
+          },
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyLambdaName",
+          InvocationType: "RequestResponse",
+          Payload: expect.jsonMatching({
+            version: "0",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -388,7 +450,7 @@ describe("Lambda function invoker", () => {
           FunctionName: "MyLambdaName",
           InvocationType: "RequestResponse",
           Payload: expect.jsonMatching({
-            version: 0,
+            version: "0",
             callerContext: { awsSdkVersion: version, clientId: "clientId" },
             region: "local",
             userPoolId: "userPoolId",
@@ -402,7 +464,11 @@ describe("Lambda function invoker", () => {
                 client: "metadata",
               },
             },
-            response: {},
+            response: {
+              smsMessage: "",
+              emailMessage: "",
+              emailSubject: "",
+            },
           }),
         });
       });
