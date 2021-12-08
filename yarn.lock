@@ -672,10 +672,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@codedependant/semantic-release-docker@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@codedependant/semantic-release-docker/-/semantic-release-docker-3.1.0.tgz#52673abbc3541b9cabebf3bd46fc982cf611e55c"
-  integrity sha512-8R4yGiF48qi58OXBOJLGdb0a0LvVLhYBH3KJhNkhDAK2bR2kgUMiPRafjECaXynDgvEx5KMR2/kdVBKCxAFOGw==
+"@codedependant/semantic-release-docker@^3.1.2":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@codedependant/semantic-release-docker/-/semantic-release-docker-3.1.2.tgz#34b578fb6a7f0cfc7f9d5e31a83664f4ff0953a9"
+  integrity sha512-ArGFvFLYM+yw/lL6jRF/oAAxP4gq/dBFeFio4hTw2RIAbFmZUdo6cAtp6+MHTaW1p96PKQ+0/BY/QDBm7QnKjw==
   dependencies:
     "@semantic-release/error" "^2.2.0"
     debug "^4.1.1"
