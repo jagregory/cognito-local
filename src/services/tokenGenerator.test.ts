@@ -126,6 +126,52 @@ describe("JwtTokenGenerator", () => {
         attributeValue("email", user.Attributes)
       );
     });
+
+    describe.each([
+      "acr",
+      "amr",
+      "aud",
+      "at_hash",
+      "auth_time",
+      "azp",
+      "cognito:username",
+      "exp",
+      "iat",
+      "identities",
+      "iss",
+      "jti",
+      "nbf",
+      "nonce",
+      "origin_jti",
+      "sub",
+      "token_use",
+    ])("reserved claim %s", (claim) => {
+      it("cannot override a reserved claim", async () => {
+        mockTriggers.enabled.mockImplementation((name) => {
+          return name === "PreTokenGeneration";
+        });
+        mockTriggers.preTokenGeneration.mockResolvedValue({
+          claimsOverrideDetails: {
+            claimsToAddOrOverride: {
+              [claim]: "value",
+            },
+          },
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          "clientId",
+          "userPoolId",
+          { client: "metadata" },
+          "RefreshTokens"
+        );
+
+        expect(jwt.decode(tokens.IdToken)).not.toMatchObject({
+          [claim]: "value",
+        });
+      });
+    });
   });
 
   describe("TokenGeneration lambda is not configured", () => {

@@ -35,17 +35,44 @@ interface TokenOverrides {
   groupOverrideDetails?: GroupOverrideDetails | undefined;
 }
 
+const RESERVED_CLAIMS = [
+  "acr",
+  "amr",
+  "aud",
+  "at_hash",
+  "auth_time",
+  "azp",
+  "cognito:username",
+  "exp",
+  "iat",
+  "identities",
+  "iss",
+  "jti",
+  "nbf",
+  "nonce",
+  "origin_jti",
+  "sub",
+  "token_use",
+];
+
 const applyTokenOverrides = (
   token: Record<string, string | number | boolean | undefined>,
   overrides: TokenOverrides
 ): Record<string, string | number | boolean | undefined> => {
   // TODO: support group overrides
 
+  const claimsToSuppress = (overrides?.claimsToSuppress ?? []).filter(
+    (claim) => !RESERVED_CLAIMS.includes(claim)
+  );
+
+  const claimsToOverride = Object.entries(
+    overrides?.claimsToAddOrOverride ?? []
+  ).filter(([claim]) => !RESERVED_CLAIMS.includes(claim));
+
   return Object.fromEntries(
-    [
-      ...Object.entries(token),
-      ...Object.entries(overrides?.claimsToAddOrOverride ?? []),
-    ].filter(([k]) => !overrides?.claimsToSuppress?.includes(k))
+    [...Object.entries(token), ...claimsToOverride].filter(
+      ([claim]) => !claimsToSuppress.includes(claim)
+    )
   );
 };
 
