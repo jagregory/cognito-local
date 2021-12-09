@@ -11,33 +11,20 @@ export interface Message {
   smsMessage?: string;
 }
 
+type MessageSource =
+  | "AdminCreateUser"
+  | "Authentication"
+  | "ForgotPassword"
+  | "ResendCode"
+  | "SignUp"
+  | "UpdateUserAttribute"
+  | "VerifyUserAttribute";
+
 export interface Messages {
-  adminCreateUser(
+  create(
     ctx: Context,
-    userPoolId: string,
-    user: User,
-    temporaryPassword: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message>;
-  authentication(
-    ctx: Context,
-    clientId: string,
-    userPoolId: string,
-    user: User,
-    code: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message>;
-  forgotPassword(
-    ctx: Context,
-    clientId: string,
-    userPoolId: string,
-    user: User,
-    code: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message>;
-  signUp(
-    ctx: Context,
-    clientId: string,
+    source: MessageSource,
+    clientId: string | null,
     userPoolId: string,
     user: User,
     code: string,
@@ -52,39 +39,10 @@ export class MessagesService implements Messages {
     this.triggers = triggers;
   }
 
-  public async adminCreateUser(
+  public async create(
     ctx: Context,
-    userPoolId: string,
-    user: User,
-    temporaryPassword: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message> {
-    if (this.triggers.enabled("CustomMessage")) {
-      const message = await this.triggers.customMessage(ctx, {
-        clientId: AWS_ADMIN_CLIENT_ID,
-        clientMetadata,
-        code: temporaryPassword,
-        source: "CustomMessage_AdminCreateUser",
-        userAttributes: user.Attributes,
-        username: user.Username,
-        userPoolId,
-      });
-
-      return {
-        __code: temporaryPassword,
-        ...message,
-      };
-    }
-
-    // TODO: What should the default message be?
-    return {
-      __code: temporaryPassword,
-    };
-  }
-
-  public async authentication(
-    ctx: Context,
-    clientId: string,
+    source: MessageSource,
+    clientId: string | null,
     userPoolId: string,
     user: User,
     code: string,
@@ -92,72 +50,10 @@ export class MessagesService implements Messages {
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
       const message = await this.triggers.customMessage(ctx, {
-        clientId,
+        clientId: clientId ?? AWS_ADMIN_CLIENT_ID,
         clientMetadata,
         code,
-        source: "CustomMessage_Authentication",
-        userAttributes: user.Attributes,
-        username: user.Username,
-        userPoolId,
-      });
-
-      return {
-        __code: code,
-        ...message,
-      };
-    }
-
-    // TODO: What should the default message be?
-    return {
-      __code: code,
-    };
-  }
-
-  public async forgotPassword(
-    ctx: Context,
-    clientId: string,
-    userPoolId: string,
-    user: User,
-    code: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message> {
-    if (this.triggers.enabled("CustomMessage")) {
-      const message = await this.triggers.customMessage(ctx, {
-        clientId,
-        clientMetadata,
-        code,
-        source: "CustomMessage_ForgotPassword",
-        userAttributes: user.Attributes,
-        username: user.Username,
-        userPoolId,
-      });
-
-      return {
-        __code: code,
-        ...message,
-      };
-    }
-
-    // TODO: What should the default message be?
-    return {
-      __code: code,
-    };
-  }
-
-  public async signUp(
-    ctx: Context,
-    clientId: string,
-    userPoolId: string,
-    user: User,
-    code: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message> {
-    if (this.triggers.enabled("CustomMessage")) {
-      const message = await this.triggers.customMessage(ctx, {
-        clientId,
-        clientMetadata,
-        code,
-        source: "CustomMessage_SignUp",
+        source: `CustomMessage_${source}`,
         userAttributes: user.Attributes,
         username: user.Username,
         userPoolId,

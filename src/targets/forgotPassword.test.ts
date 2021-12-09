@@ -23,7 +23,7 @@ describe("ForgotPassword target", () => {
     mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
-    mockMessages.forgotPassword.mockResolvedValue({
+    mockMessages.create.mockResolvedValue({
       emailSubject: "Mock message",
     });
     mockOtp = jest.fn().mockReturnValue("1234");

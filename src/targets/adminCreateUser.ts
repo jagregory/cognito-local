@@ -87,8 +87,10 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  const message = await messages.adminCreateUser(
+  const message = await messages.create(
     ctx,
+    "AdminCreateUser",
+    null,
     userPool.config.Id,
     user,
     temporaryPassword,

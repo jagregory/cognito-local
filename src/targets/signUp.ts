@@ -83,8 +83,9 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  const message = await messages.signUp(
+  const message = await messages.create(
     ctx,
+    "SignUp",
     clientId,
     userPool.config.Id,
     user,

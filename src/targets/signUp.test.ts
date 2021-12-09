@@ -35,7 +35,7 @@ describe("SignUp target", () => {
     mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
-    mockMessages.signUp.mockResolvedValue({
+    mockMessages.create.mockResolvedValue({
       emailSubject: "Mock message",
     });
     mockOtp = jest.fn();
@@ -478,8 +478,9 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.signUp).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "SignUp",
           "clientId",
           "test",
           createdUser,
@@ -514,7 +515,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.signUp).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });
@@ -552,8 +553,9 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.signUp).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "SignUp",
           "clientId",
           "test",
           createdUser,
@@ -588,7 +590,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.signUp).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });
@@ -633,8 +635,9 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.signUp).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "SignUp",
           "clientId",
           "test",
           createdUser,
@@ -683,8 +686,9 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.signUp).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "SignUp",
           "clientId",
           "test",
           createdUser,
@@ -719,7 +723,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.signUp).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });

@@ -47,8 +47,9 @@ export const ForgotPassword =
     };
 
     const code = otp();
-    const message = await messages.forgotPassword(
+    const message = await messages.create(
       ctx,
+      "ForgotPassword",
       req.ClientId,
       userPool.config.Id,
       user,

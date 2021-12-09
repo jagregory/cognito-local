@@ -27,8 +27,9 @@ describe("messages service", () => {
           });
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.authentication(
+          const message = await messages.create(
             TestContext,
+            "Authentication",
             "clientId",
             "userPoolId",
             user,
@@ -67,8 +68,9 @@ describe("messages service", () => {
           mockTriggers.customMessage.mockResolvedValue(null);
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.authentication(
+          const message = await messages.create(
             TestContext,
+            "Authentication",
             "clientId",
             "userPoolId",
             user,
@@ -102,8 +104,9 @@ describe("messages service", () => {
         mockTriggers.enabled.mockReturnValue(false);
 
         const messages = new MessagesService(mockTriggers);
-        const message = await messages.authentication(
+        const message = await messages.create(
           TestContext,
+          "Authentication",
           "clientId",
           "userPoolId",
           user,
@@ -136,8 +139,9 @@ describe("messages service", () => {
           });
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.forgotPassword(
+          const message = await messages.create(
             TestContext,
+            "ForgotPassword",
             "clientId",
             "userPoolId",
             user,
@@ -176,8 +180,9 @@ describe("messages service", () => {
           mockTriggers.customMessage.mockResolvedValue(null);
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.forgotPassword(
+          const message = await messages.create(
             TestContext,
+            "ForgotPassword",
             "clientId",
             "userPoolId",
             user,
@@ -211,8 +216,9 @@ describe("messages service", () => {
         mockTriggers.enabled.mockReturnValue(false);
 
         const messages = new MessagesService(mockTriggers);
-        const message = await messages.forgotPassword(
+        const message = await messages.create(
           TestContext,
+          "ForgotPassword",
           "clientId",
           "userPoolId",
           user,
@@ -245,8 +251,9 @@ describe("messages service", () => {
           });
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.signUp(
+          const message = await messages.create(
             TestContext,
+            "SignUp",
             "clientId",
             "userPoolId",
             user,
@@ -285,8 +292,9 @@ describe("messages service", () => {
           mockTriggers.customMessage.mockResolvedValue(null);
 
           const messages = new MessagesService(mockTriggers);
-          const message = await messages.signUp(
+          const message = await messages.create(
             TestContext,
+            "SignUp",
             "clientId",
             "userPoolId",
             user,
@@ -320,8 +328,9 @@ describe("messages service", () => {
         mockTriggers.enabled.mockReturnValue(false);
 
         const messages = new MessagesService(mockTriggers);
-        const message = await messages.signUp(
+        const message = await messages.create(
           TestContext,
+          "SignUp",
           "clientId",
           "userPoolId",
           user,

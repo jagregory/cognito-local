@@ -92,7 +92,7 @@ describe("AdminCreateUser target", () => {
   describe("messages", () => {
     describe("DesiredDeliveryMediums=EMAIL", () => {
       it("sends a welcome email to the user", async () => {
-        mockMessages.adminCreateUser.mockResolvedValue({
+        mockMessages.create.mockResolvedValue({
           emailMessage: "email message",
           emailSubject: "email subject",
         });
@@ -108,8 +108,10 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "AdminCreateUser",
+          null,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -148,14 +150,14 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.adminCreateUser).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=SMS", () => {
       it("sends a welcome sms to the user", async () => {
-        mockMessages.adminCreateUser.mockResolvedValue({
+        mockMessages.create.mockResolvedValue({
           smsMessage: "sms message",
         });
 
@@ -170,8 +172,10 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "AdminCreateUser",
+          null,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -210,14 +214,14 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.adminCreateUser).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=default", () => {
       it("sends a welcome sms to the user", async () => {
-        mockMessages.adminCreateUser.mockResolvedValue({
+        mockMessages.create.mockResolvedValue({
           smsMessage: "sms message",
         });
 
@@ -231,8 +235,10 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "AdminCreateUser",
+          null,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -273,14 +279,14 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.adminCreateUser).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=EMAIL and SMS", () => {
       it("sends a welcome sms to a user with a phone_number and an email", async () => {
-        mockMessages.adminCreateUser.mockResolvedValue({
+        mockMessages.create.mockResolvedValue({
           smsMessage: "sms message",
         });
 
@@ -298,8 +304,10 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "AdminCreateUser",
+          null,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -324,7 +332,7 @@ describe("AdminCreateUser target", () => {
       });
 
       it("sends a welcome email to a user without a phone_number but with an email", async () => {
-        mockMessages.adminCreateUser.mockResolvedValue({
+        mockMessages.create.mockResolvedValue({
           emailMessage: "email message",
           emailSubject: "email subject",
         });
@@ -340,8 +348,10 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.adminCreateUser).toHaveBeenCalledWith(
+        expect(mockMessages.create).toHaveBeenCalledWith(
           TestContext,
+          "AdminCreateUser",
+          null,
           "test",
           { ...response.User, Password: "pwd", RefreshTokens: [] },
           "pwd",
@@ -380,7 +390,7 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.adminCreateUser).not.toHaveBeenCalled();
+        expect(mockMessages.create).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
       });
     });

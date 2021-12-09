@@ -36,7 +36,7 @@ describe("InitiateAuth target", () => {
     mockUserPoolService = newMockUserPoolService();
     mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
-    mockMessages.authentication.mockResolvedValue({
+    mockMessages.create.mockResolvedValue({
       emailSubject: "Mock message",
     });
     mockOtp = jest.fn().mockReturnValue("1234");
@@ -304,8 +304,9 @@ describe("InitiateAuth target", () => {
 
             expect(output).toBeDefined();
 
-            expect(mockMessages.authentication).toHaveBeenCalledWith(
+            expect(mockMessages.create).toHaveBeenCalledWith(
               TestContext,
+              "Authentication",
               "clientId",
               "test",
               user,
