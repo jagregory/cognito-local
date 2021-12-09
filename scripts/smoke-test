@@ -7,8 +7,14 @@
 # We run this in CI to prove the actual server can start. This catches some edge-cases where
 # everything else passes, but something in the compile produced invalid JavaScript.
 
-export PORT=59232
-yarn start &
+while
+  PORT=$(shuf -n 1 -i 49152-65535)
+  netstat -atun | grep -q "$PORT"
+do
+  continue
+done
+
+PORT=$PORT yarn start &
 PID=$!
 
 trap "kill $PID" SIGINT
