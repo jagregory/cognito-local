@@ -1,3 +1,15 @@
+# [3.10.0](https://github.com/jagregory/cognito-local/compare/v3.9.0...v3.10.0) (2021-12-09)
+
+
+### Bug Fixes
+
+* **lambda:** preTokenGenerator can't change reserved claims ([407122f](https://github.com/jagregory/cognito-local/commit/407122fdfd5d973624c26aaba941fe8c6c783dce))
+
+
+### Features
+
+* **api:** adminConfirmSignUp full support ([e16a211](https://github.com/jagregory/cognito-local/commit/e16a2110eb1d707404eda6342d0178432e2f4875))
+
 # [3.9.0](https://github.com/jagregory/cognito-local/compare/v3.8.0...v3.9.0) (2021-12-07)
 
 
