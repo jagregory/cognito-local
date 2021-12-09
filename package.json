@@ -60,7 +60,7 @@
   "dependencies": {
     "aws-sdk": "^2.1045.0",
     "body-parser": "^1.19.0",
-    "boxen": "^4.2.0",
+    "boxen": "^5.1.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
