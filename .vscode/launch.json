@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CognitoLocal",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "args": ["src/bin/start.ts"],
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
+      "outputCapture": "std",
+      "env": {
+        "COGNITO_LOCAL_DEVMODE": "1",
+        "DEBUG": "1"
+      }
+    }
+  ]
+}

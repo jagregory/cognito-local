@@ -15,6 +15,7 @@
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
     "lint": "eslint src/**/*.ts && tsc --noEmit",
     "start": "COGNITO_LOCAL_DEVMODE=1 ts-node src/bin/start.ts",
+    "start:debug": "COGNITO_LOCAL_DEVMODE=1 DEBUG=1 node -r ts-node/register --inspect=9230 --enable-source-maps src/bin/start.ts",
     "start:watch": "nodemon",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -89,7 +90,7 @@
       "tsc --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
       "prettier --write"
     ],
-    "README.md": "markdown-toc -i --bullets=-"
+    "README.md": "markdown-toc -i --bullets=- --maxdepth=3"
   },
   "husky": {
     "hooks": {

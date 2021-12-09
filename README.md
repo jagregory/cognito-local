@@ -8,20 +8,20 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 - [Supported Features](#supported-features)
   - [Lambda triggers](#lambda-triggers)
-    - [Supported Lambda Triggers](#supported-lambda-triggers)
-    - [Known limitations](#known-limitations)
 - [Usage](#usage)
   - [via Docker](#via-docker)
   - [via Node](#via-node)
   - [Using a different port](#using-a-different-port)
   - [Updating your application](#updating-your-application)
-- [Creating your first User Pool](#creating-your-first-user-pool)
+  - [Creating your first User Pool](#creating-your-first-user-pool)
 - [Configuration](#configuration)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
   - [User Pools and Clients](#user-pools-and-clients)
 - [Known Limitations](#known-limitations)
 - [Multi-factor authentication](#multi-factor-authentication)
 - [Confirmation codes](#confirmation-codes)
+- [Advanced](#advanced)
+  - [Debugging Cognito Local](#debugging-cognito-local)
 
 <!-- tocstop -->
 
@@ -267,7 +267,7 @@ new CognitoUserPool({
 
 You only want to do this when you're running locally on your development machine.
 
-## Creating your first User Pool
+### Creating your first User Pool
 
 Once you've started Cognito Local the easiest way to create a new User Pool is with the aws-cli:
 
@@ -386,3 +386,74 @@ For example:
 ```
 
 If a Custom Message lambda is configured, the output of the function invocation will be printed in the console too (verbosely!).
+
+## Advanced
+
+### Debugging Cognito Local
+
+There's a few different ways you can debug Cognito Local. _Currently, it's best to debug Cognito Locally via Node, and
+not with Docker_.
+
+#### Verbose logging
+
+If you just need more logs to understand what Cognito Local is doing, you can use the `DEBUG` environment variable.
+
+```shell
+DEBUG=1 yarn start
+```
+
+Which will print extra debug logs to the terminal (with `{...}` replaced by detailed information):
+
+```
+[1639034724411] INFO: NONE NONE Cognito Local running on http://127.0.0.1:9229
+[1639034724872] DEBUG: 7f53abbd CreateUserPool start {...}
+[1639034724873] DEBUG: 7f53abbd CreateUserPool CognitoServiceImpl.createUserPool {...}
+[1639034724873] DEBUG: 7f53abbd CreateUserPool UserPoolServiceImpl.create {...}
+[1639034724873] DEBUG: 7f53abbd CreateUserPool createDataStore {...}
+[1639034724873] DEBUG: 7f53abbd CreateUserPool Creating new data store {...}
+[1639034724874] DEBUG: 7f53abbd CreateUserPool DataStore.save {...}
+[1639034724876] DEBUG: 7f53abbd CreateUserPool DataStore.get {...}
+[1639034724877] DEBUG: 7f53abbd CreateUserPool end {...}
+[1639034724882] DEBUG: 7f53abbd NONE request completed {...}
+```
+
+#### VSCode debugger
+
+There's a launch configuration included in the repo at [.vscode/launch.json](./.vscode/launch.json).
+
+If you open `Run and Debug` and start the `CognitoLocal` configuration it will start Cognito Local and attach the
+debugger.
+
+Put a breakpoint in [src/bin/start.ts](./src/bin/start.ts) or in the target for the API call you want to debug
+(e.g. [src/targets/createUserPool.ts](./src/targets/createUserPool.ts)) and run your code that uses Cognito Local or a
+CLI command.
+
+#### WebStorm debugger
+
+There's a WebStorm run configuration included in the repo at
+[.idea/runConfigurations/CognitoLocal.xml](./.idea/runConfigurations/CognitoLocal.xml).
+
+A `CognitoLocal` entry should appear in the Run Configurations drop-down in the toolbar, which you can Run or Debug.
+Alternatively, the `Run > Debug` menu will let you pick a Run Configuration to launch.
+
+Put a breakpoint in [src/bin/start.ts](./src/bin/start.ts) or in the target for the API call you want to debug
+(e.g. [src/targets/createUserPool.ts](./src/targets/createUserPool.ts)) and run your code that uses Cognito Local or a
+CLI command.
+
+#### Chrome DevTools
+
+> Note: due to a poor choice of ports on my part, Chrome will spam Cognito Local with HTTP requests if you have the
+> NodeJS DevTools open. I'll change the default port for Cognito Local at some point to fix this.
+
+Launch Cognito Local using the `start:debug` script:
+
+```shell
+yarn start:debug
+```
+
+This will configure NodeJS to start the inspector on port `9230`.
+
+Open Chrome and navigate to `chrome://inspect`. Click the `Open dedicated DevTools for Node` link which will open a new
+DevTools window. You can then open the Sources tab and browse to a Cognito Local file, or press `Cmd+P` or `Ctrl+P` to
+open the file navigator and open `src/bin/start.ts` or a target you want to debug then place a breakpoint and run your
+code that uses Cognito Local or a CLI command.
