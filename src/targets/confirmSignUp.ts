@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
+import { attribute, attributesAppend } from "../services/userPoolService";
 import { Target } from "./router";
 
 export type ConfirmSignUpTarget = Target<
@@ -28,21 +29,29 @@ export const ConfirmSignUp =
       throw new CodeMismatchError();
     }
 
-    await userPool.saveUser(ctx, {
+    const updatedUser = {
       ...user,
       UserStatus: "CONFIRMED",
       ConfirmationCode: undefined,
       UserLastModifiedDate: clock.get(),
-    });
+    };
+
+    await userPool.saveUser(ctx, updatedUser);
 
     if (triggers.enabled("PostConfirmation")) {
       await triggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",
-        userAttributes: user.Attributes,
-        username: user.Username,
+        username: updatedUser.Username,
         userPoolId: userPool.config.Id,
+
+        // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
+        // into every place we send attributes to lambdas
+        userAttributes: attributesAppend(
+          updatedUser.Attributes,
+          attribute("cognito:user_status", updatedUser.UserStatus)
+        ),
       });
     }
 

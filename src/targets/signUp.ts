@@ -14,6 +14,8 @@ import {
 } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
+  attribute,
+  attributesAppend,
   attributesInclude,
   attributeValue,
   User,
@@ -105,7 +107,7 @@ export const SignUp =
   }: SignUpServices): SignUpTarget =>
   async (ctx, req) => {
     // TODO: This should behave differently depending on if PreventUserExistenceErrors
-    // is enabled on the user pool. This will be the default after Feb 2020.
+    // is enabled on the updatedUser pool. This will be the default after Feb 2020.
     // See: https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html
     const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
     const existingUser = await userPool.getUserByUsername(ctx, req.Username);
@@ -142,15 +144,16 @@ export const SignUp =
     }
 
     const now = clock.get();
-    const user: User = {
+
+    const updatedUser: User = {
       Attributes: attributes,
       Enabled: true,
       Password: req.Password,
+      RefreshTokens: [],
       UserCreateDate: now,
       UserLastModifiedDate: now,
       Username: req.Username,
       UserStatus: userStatus,
-      RefreshTokens: [],
     };
 
     const code = otp();
@@ -159,7 +162,7 @@ export const SignUp =
       ctx,
       code,
       req.ClientId,
-      user,
+      updatedUser,
       userPool,
       messages,
       messageDelivery,
@@ -167,27 +170,33 @@ export const SignUp =
     );
 
     await userPool.saveUser(ctx, {
-      ...user,
+      ...updatedUser,
       ConfirmationCode: code,
     });
 
     if (
-      user.UserStatus === "CONFIRMED" &&
+      updatedUser.UserStatus === "CONFIRMED" &&
       triggers.enabled("PostConfirmation")
     ) {
       await triggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",
-        userAttributes: user.Attributes,
-        username: user.Username,
+        username: updatedUser.Username,
         userPoolId: userPool.config.Id,
+
+        // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
+        // into every place we send attributes to lambdas
+        userAttributes: attributesAppend(
+          updatedUser.Attributes,
+          attribute("cognito:user_status", updatedUser.UserStatus)
+        ),
       });
     }
 
     return {
       CodeDeliveryDetails: deliveryDetails ?? undefined,
-      UserConfirmed: user.UserStatus === "CONFIRMED",
-      UserSub: attributeValue("sub", attributes) as string,
+      UserConfirmed: updatedUser.UserStatus === "CONFIRMED",
+      UserSub: attributeValue("sub", updatedUser.Attributes) as string,
     };
   };

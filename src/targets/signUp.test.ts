@@ -214,6 +214,7 @@ describe("SignUp target", () => {
               userAttributes: [
                 { Name: "sub", Value: expect.stringMatching(UUID) },
                 { Name: "email", Value: "example@example.com" },
+                { Name: "cognito:user_status", Value: "CONFIRMED" },
               ],
               userPoolId: "test",
               username: "user-supplied",

@@ -31,7 +31,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | -------------------------------- | -------------------- |
 | AddCustomAttributes              | ❌                   |
 | AdminAddUserToGroup              | ❌                   |
-| AdminConfirmSignUp               | 🕒 (partial support) |
+| AdminConfirmSignUp               | ✅                   |
 | AdminCreateUser                  | 🕒 (partial support) |
 | AdminDeleteUser                  | ✅                   |
 | AdminDeleteUserAttributes        | ❌                   |
@@ -295,7 +295,7 @@ Before starting Cognito Local, create a config file if one doesn't already exist
 You can edit that `.cognito/config.json` and add any of the following settings:
 
 | Setting                                    | Type       | Default                 | Description                                                 |
-|--------------------------------------------| ---------- | ----------------------- |-------------------------------------------------------------|
+| ------------------------------------------ | ---------- | ----------------------- | ----------------------------------------------------------- |
 | `LambdaClient`                             | `object`   |                         | Any setting you would pass to the AWS.Lambda Node.js client |
 | `LambdaClient.credentials.accessKeyId`     | `string`   | `local`                 |                                                             |
 | `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |

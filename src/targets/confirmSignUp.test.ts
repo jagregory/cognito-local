@@ -6,6 +6,7 @@ import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
+import { attribute, attributesAppend } from "../services/userPoolService";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
 
 const originalDate = new Date();
@@ -113,7 +114,10 @@ describe("ConfirmSignUp target", () => {
               client: "metadata",
             },
             source: "PostConfirmation_ConfirmSignUp",
-            userAttributes: user.Attributes,
+            userAttributes: attributesAppend(
+              user.Attributes,
+              attribute("cognito:user_status", "CONFIRMED")
+            ),
             userPoolId: "test",
             username: user.Username,
           }

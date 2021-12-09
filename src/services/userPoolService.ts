@@ -1,5 +1,6 @@
 import {
   AttributeListType,
+  AttributeType,
   MFAOptionListType,
   UserPoolType,
   UserStatusType,
@@ -15,6 +16,10 @@ export interface MFAOption {
   AttributeName: "phone_number";
 }
 
+export const attribute = (
+  name: string,
+  value: string | undefined
+): AttributeType => ({ Name: name, Value: value });
 export const attributesIncludeMatch = (
   attributeName: string,
   attributeValue: string,
@@ -42,6 +47,22 @@ export const attributesFromRecord = (
   attributes: Record<string, string>
 ): AttributeListType =>
   Object.entries(attributes).map(([Name, Value]) => ({ Name, Value }));
+export const attributesAppend = (
+  attributes: AttributeListType | undefined,
+  ...toAppend: AttributeListType
+): AttributeListType => {
+  const attributeSet = attributesToRecord(attributes);
+
+  for (const attr of toAppend) {
+    if (attr.Value) {
+      attributeSet[attr.Name] = attr.Value;
+    } else {
+      delete attributeSet[attr.Name];
+    }
+  }
+
+  return attributesFromRecord(attributeSet);
+};
 
 export const customAttributes = (
   attributes: AttributeListType | undefined

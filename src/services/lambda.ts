@@ -113,11 +113,13 @@ interface PostAuthenticationEvent extends EventCommonParameters {
   triggerSource: "PostAuthentication_Authentication";
 }
 
-interface PostConfirmationEvent extends EventCommonParameters {
+interface PostConfirmationEvent
+  extends Omit<EventCommonParameters, "clientId"> {
   triggerSource:
     | "PostConfirmation_ConfirmSignUp"
     | "PostConfirmation_ConfirmForgotPassword";
   clientMetadata: Record<string, string> | undefined;
+  clientId: string | null;
 }
 
 export interface FunctionConfig {
@@ -257,7 +259,9 @@ export class LambdaService implements Lambda {
     const version = "0"; // TODO: how do we know what this is?
     const callerContext = {
       awsSdkVersion,
-      clientId: event.clientId,
+
+      // client id can be null, even though the types don't allow it
+      clientId: event.clientId as string,
     };
     const region = "local"; // TODO: pull from above,
 

@@ -5,6 +5,7 @@ import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
+import { attribute, attributesAppend } from "../services/userPoolService";
 import {
   ConfirmForgotPassword,
   ConfirmForgotPasswordTarget,
@@ -120,7 +121,10 @@ describe("ConfirmForgotPassword target", () => {
               client: "metadata",
             },
             source: "PostConfirmation_ConfirmForgotPassword",
-            userAttributes: user.Attributes,
+            userAttributes: attributesAppend(
+              user.Attributes,
+              attribute("cognito:user_status", "CONFIRMED")
+            ),
             userPoolId: "test",
             username: user.Username,
           }

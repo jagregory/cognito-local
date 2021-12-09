@@ -51,7 +51,7 @@ export class TriggersService implements Triggers {
 
     this.customMessage = CustomMessage({ lambda, cognitoClient });
     this.postAuthentication = PostAuthentication({ lambda });
-    this.postConfirmation = PostConfirmation({ lambda, cognitoClient });
+    this.postConfirmation = PostConfirmation({ lambda });
     this.preSignUp = PreSignUp({ lambda });
     this.preTokenGeneration = PreTokenGeneration({ lambda });
     this.userMigration = UserMigration({ clock, lambda, cognitoClient });

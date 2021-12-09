@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { NotAuthorizedError } from "../errors";
+import { attribute, attributesAppend } from "../services/userPoolService";
 import { Target } from "./router";
 
 export type AdminConfirmSignUpTarget = Target<
@@ -11,8 +12,17 @@ export type AdminConfirmSignUpTarget = Target<
   AdminConfirmSignUpResponse
 >;
 
+type AdminConfirmSignUpServices = Pick<
+  Services,
+  "clock" | "cognito" | "triggers"
+>;
+
 export const AdminConfirmSignUp =
-  ({ cognito }: Services): AdminConfirmSignUpTarget =>
+  ({
+    clock,
+    cognito,
+    triggers,
+  }: AdminConfirmSignUpServices): AdminConfirmSignUpTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const user = await userPool.getUserByUsername(ctx, req.Username);
@@ -20,20 +30,30 @@ export const AdminConfirmSignUp =
       throw new NotAuthorizedError();
     }
 
-    // TODO: call PostConfirmation lambda
-
-    await userPool.saveUser(ctx, {
+    const updatedUser = {
       ...user,
+      UserLastModifiedDate: clock.get(),
       UserStatus: "CONFIRMED",
-      // TODO: Remove existing email_verified attribute?
-      Attributes: [
-        ...(user.Attributes || []),
-        {
-          Name: "email_verified",
-          Value: "true",
-        },
-      ],
-    });
+    };
+
+    await userPool.saveUser(ctx, updatedUser);
+
+    if (triggers.enabled("PostConfirmation")) {
+      await triggers.postConfirmation(ctx, {
+        source: "PostConfirmation_ConfirmSignUp",
+        clientId: null,
+        clientMetadata: req.ClientMetadata,
+        username: updatedUser.Username,
+        userPoolId: req.UserPoolId,
+
+        // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
+        // into every place we send attributes to lambdas
+        userAttributes: attributesAppend(
+          updatedUser.Attributes,
+          attribute("cognito:user_status", updatedUser.UserStatus)
+        ),
+      });
+    }
 
     return {};
   };

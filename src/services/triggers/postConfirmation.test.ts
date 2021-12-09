@@ -1,22 +1,16 @@
-import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
-import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
 import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
-import { UserPoolService } from "../userPoolService";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
 
 describe("PostConfirmation trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
     mockLambda = newMockLambda();
-    mockUserPoolService = newMockUserPoolService();
     postConfirmation = PostConfirmation({
       lambda: mockLambda,
-      cognitoClient: newMockCognitoService(mockUserPoolService),
     });
   });
 
