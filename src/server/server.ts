@@ -55,6 +55,10 @@ export const createServer = (
     });
   });
 
+  app.get("/health", (req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   app.post("/", (req, res) => {
     const xAmzTarget = req.headers["x-amz-target"];
 

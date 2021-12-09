@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This script launches the Cognito Local server, then polls the server until the /health endpoint
+# responds with a 200. If the server doesn't respond in time, or exits with a non-zero code, the
+# script will fail.
+#
+# We run this in CI to prove the actual server can start. This catches some edge-cases where
+# everything else passes, but something in the compile produced invalid JavaScript.
+
+export PORT=59232
+yarn start &
+PID=$!
+
+trap "kill $PID" SIGINT
+
+PORT=$PORT timeout --foreground -s TERM 30 bash -c \
+'while [[ ${STATUS_RECEIVED} != 200 ]];\
+  do STATUS_RECEIVED=$(curl -s -o /dev/null -L -w ''%{http_code}'' http://localhost:$PORT/health) && \
+  echo "received status: $STATUS_RECEIVED" && \
+  sleep 1;\
+done;
+echo success with status: $STATUS_RECEIVED'
+CURL_EXIT_CODE=$?
+
+kill $PID
+
+if [[ $CURL_EXIT_CODE -ne 0 ]]; then
+  echo Failed to start in time >&2
+  exit 1
+fi
