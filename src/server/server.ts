@@ -3,7 +3,7 @@ import cors from "cors";
 import express from "express";
 import * as http from "http";
 import type { Logger } from "pino";
-import uuid from "uuid";
+import * as uuid from "uuid";
 import { CognitoError, unsupported, UnsupportedError } from "../errors";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";

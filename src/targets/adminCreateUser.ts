@@ -4,7 +4,7 @@ import {
   DeliveryMediumListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import shortUUID from "short-uuid";
-import uuid from "uuid";
+import * as uuid from "uuid";
 import {
   InvalidParameterError,
   UnsupportedError,
