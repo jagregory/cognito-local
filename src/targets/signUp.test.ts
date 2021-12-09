@@ -1,6 +1,5 @@
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -12,18 +11,12 @@ import {
   UserLambdaValidationError,
   UsernameExistsError,
 } from "../errors";
-import {
-  MessageDelivery,
-  Messages,
-  Triggers,
-  UserPoolService,
-} from "../services";
+import { Messages, Triggers, UserPoolService } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
@@ -33,17 +26,12 @@ describe("SignUp target", () => {
     now = new Date(2020, 1, 2, 3, 4, 5);
 
     mockUserPoolService = newMockUserPoolService();
-    mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
-    mockMessages.create.mockResolvedValue({
-      emailSubject: "Mock message",
-    });
     mockOtp = jest.fn();
     mockTriggers = newMockTriggers();
     signUp = SignUp({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),
-      messageDelivery: mockMessageDelivery,
       messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
@@ -441,7 +429,7 @@ describe("SignUp target", () => {
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
         });
 
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
@@ -478,7 +466,7 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "SignUp",
           "clientId",
@@ -487,17 +475,12 @@ describe("SignUp target", () => {
           "1234",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          createdUser,
+          },
           {
             AttributeName: "email",
             DeliveryMedium: "EMAIL",
             Destination: "example@example.com",
-          },
-          { emailSubject: "Mock message" }
+          }
         );
       });
 
@@ -515,8 +498,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
@@ -553,7 +535,7 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "SignUp",
           "clientId",
@@ -562,17 +544,12 @@ describe("SignUp target", () => {
           "1234",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          createdUser,
+          },
           {
             AttributeName: "phone_number",
             DeliveryMedium: "SMS",
             Destination: "0400000000",
-          },
-          { emailSubject: "Mock message" }
+          }
         );
       });
 
@@ -590,8 +567,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
@@ -635,7 +611,7 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "SignUp",
           "clientId",
@@ -644,17 +620,12 @@ describe("SignUp target", () => {
           "1234",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          createdUser,
+          },
           {
             AttributeName: "phone_number",
             DeliveryMedium: "SMS",
             Destination: "0400000000",
-          },
-          { emailSubject: "Mock message" }
+          }
         );
       });
 
@@ -686,7 +657,7 @@ describe("SignUp target", () => {
           RefreshTokens: [],
         };
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "SignUp",
           "clientId",
@@ -695,17 +666,12 @@ describe("SignUp target", () => {
           "1234",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          createdUser,
+          },
           {
             AttributeName: "email",
             DeliveryMedium: "EMAIL",
             Destination: "example@example.com",
-          },
-          { emailSubject: "Mock message" }
+          }
         );
       });
 
@@ -723,8 +689,7 @@ describe("SignUp target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
   });

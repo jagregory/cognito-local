@@ -5,6 +5,7 @@ import type { Logger } from "pino";
 import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/__tests__/mockLogger";
+import { newMockMessageDelivery } from "../../src/__tests__/mockMessageDelivery";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
@@ -59,10 +60,7 @@ export const withCognitoSdk =
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
-        messageDelivery: {
-          deliver: jest.fn(),
-        },
-        messages: new MessagesService(triggers),
+        messages: new MessagesService(triggers, newMockMessageDelivery()),
         otp,
         triggers,
         tokenGenerator: new JwtTokenGenerator(

@@ -6,12 +6,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import * as uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
-import {
-  MessageDelivery,
-  Messages,
-  Services,
-  UserPoolService,
-} from "../services";
+import { Messages, Services, UserPoolService } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attribute,
@@ -26,7 +21,7 @@ export type SignUpTarget = Target<SignUpRequest, SignUpResponse>;
 
 type SignUpServices = Pick<
   Services,
-  "clock" | "cognito" | "messages" | "messageDelivery" | "otp" | "triggers"
+  "clock" | "cognito" | "messages" | "otp" | "triggers"
 >;
 
 const selectAppropriateDeliveryMethod = (
@@ -65,7 +60,6 @@ const deliverWelcomeMessage = async (
   user: User,
   userPool: UserPoolService,
   messages: Messages,
-  messageDelivery: MessageDelivery,
   clientMetadata: Record<string, string> | undefined
 ): Promise<DeliveryDetails | null> => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
@@ -83,29 +77,22 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  const message = await messages.create(
+  await messages.deliver(
     ctx,
     "SignUp",
     clientId,
     userPool.config.Id,
     user,
     code,
-    clientMetadata
+    clientMetadata,
+    deliveryDetails
   );
-  await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 
   return deliveryDetails;
 };
 
 export const SignUp =
-  ({
-    clock,
-    cognito,
-    messageDelivery,
-    messages,
-    otp,
-    triggers,
-  }: SignUpServices): SignUpTarget =>
+  ({ clock, cognito, messages, otp, triggers }: SignUpServices): SignUpTarget =>
   async (ctx, req) => {
     // TODO: This should behave differently depending on if PreventUserExistenceErrors
     // is enabled on the updatedUser pool. This will be the default after Feb 2020.
@@ -166,7 +153,6 @@ export const SignUp =
       updatedUser,
       userPool,
       messages,
-      messageDelivery,
       req.ClientMetadata
     );
 

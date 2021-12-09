@@ -10,12 +10,7 @@ import {
   UnsupportedError,
   UsernameExistsError,
 } from "../errors";
-import {
-  MessageDelivery,
-  Messages,
-  Services,
-  UserPoolService,
-} from "../services";
+import { Messages, Services, UserPoolService } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attributesInclude,
@@ -33,10 +28,7 @@ export type AdminCreateUserTarget = Target<
   AdminCreateUserResponse
 >;
 
-type AdminCreateUserServices = Pick<
-  Services,
-  "clock" | "cognito" | "messageDelivery" | "messages"
->;
+type AdminCreateUserServices = Pick<Services, "clock" | "cognito" | "messages">;
 
 const selectAppropriateDeliveryMethod = (
   desiredDeliveryMediums: DeliveryMediumListType,
@@ -73,8 +65,7 @@ const deliverWelcomeMessage = async (
   temporaryPassword: string,
   user: User,
   messages: Messages,
-  userPool: UserPoolService,
-  messageDelivery: MessageDelivery
+  userPool: UserPoolService
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
     req.DesiredDeliveryMediums ?? ["SMS"],
@@ -87,23 +78,22 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  const message = await messages.create(
+  await messages.deliver(
     ctx,
     "AdminCreateUser",
     null,
     userPool.config.Id,
     user,
     temporaryPassword,
-    req.ClientMetadata
+    req.ClientMetadata,
+    deliveryDetails
   );
-  await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 };
 
 export const AdminCreateUser =
   ({
     clock,
     cognito,
-    messageDelivery,
     messages,
   }: AdminCreateUserServices): AdminCreateUserTarget =>
   async (ctx, req) => {
@@ -150,8 +140,7 @@ export const AdminCreateUser =
       temporaryPassword,
       user,
       messages,
-      userPool,
-      messageDelivery
+      userPool
     );
 
     return {

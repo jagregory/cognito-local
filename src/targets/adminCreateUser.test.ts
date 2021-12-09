@@ -7,7 +7,7 @@ import { UUID } from "../__tests__/patterns";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
-import { MessageDelivery, Messages, UserPoolService } from "../services";
+import { Messages, UserPoolService } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
 
 const originalDate = new Date();
@@ -15,17 +15,14 @@ const originalDate = new Date();
 describe("AdminCreateUser target", () => {
   let adminCreateUser: AdminCreateUserTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
   let mockMessages: jest.Mocked<Messages>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
-    mockMessageDelivery = newMockMessageDelivery();
     mockMessages = newMockMessages();
     adminCreateUser = AdminCreateUser({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(originalDate),
-      messageDelivery: mockMessageDelivery,
       messages: mockMessages,
     });
   });
@@ -92,11 +89,6 @@ describe("AdminCreateUser target", () => {
   describe("messages", () => {
     describe("DesiredDeliveryMediums=EMAIL", () => {
       it("sends a welcome email to the user", async () => {
-        mockMessages.create.mockResolvedValue({
-          emailMessage: "email message",
-          emailSubject: "email subject",
-        });
-
         const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
@@ -108,7 +100,7 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "AdminCreateUser",
           null,
@@ -117,21 +109,12 @@ describe("AdminCreateUser target", () => {
           "pwd",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          {
-            ...response.User,
-            Password: "pwd",
-            RefreshTokens: [],
           },
           {
             AttributeName: "email",
             DeliveryMedium: "EMAIL",
             Destination: "example@example.com",
-          },
-          { emailMessage: "email message", emailSubject: "email subject" }
+          }
         );
       });
 
@@ -150,17 +133,12 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=SMS", () => {
       it("sends a welcome sms to the user", async () => {
-        mockMessages.create.mockResolvedValue({
-          smsMessage: "sms message",
-        });
-
         const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
@@ -172,7 +150,7 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "AdminCreateUser",
           null,
@@ -181,21 +159,12 @@ describe("AdminCreateUser target", () => {
           "pwd",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          {
-            ...response.User,
-            Password: "pwd",
-            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
             DeliveryMedium: "SMS",
             Destination: "0400000000",
-          },
-          { smsMessage: "sms message" }
+          }
         );
       });
 
@@ -214,17 +183,12 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=default", () => {
       it("sends a welcome sms to the user", async () => {
-        mockMessages.create.mockResolvedValue({
-          smsMessage: "sms message",
-        });
-
         const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
@@ -235,7 +199,7 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "AdminCreateUser",
           null,
@@ -244,21 +208,12 @@ describe("AdminCreateUser target", () => {
           "pwd",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          {
-            ...response.User,
-            Password: "pwd",
-            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
             DeliveryMedium: "SMS",
             Destination: "0400000000",
-          },
-          { smsMessage: "sms message" }
+          }
         );
       });
 
@@ -279,17 +234,12 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
 
     describe("DesiredDeliveryMediums=EMAIL and SMS", () => {
       it("sends a welcome sms to a user with a phone_number and an email", async () => {
-        mockMessages.create.mockResolvedValue({
-          smsMessage: "sms message",
-        });
-
         const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
@@ -304,7 +254,7 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "AdminCreateUser",
           null,
@@ -313,30 +263,16 @@ describe("AdminCreateUser target", () => {
           "pwd",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          {
-            ...response.User,
-            Password: "pwd",
-            RefreshTokens: [],
           },
           {
             AttributeName: "phone_number",
             DeliveryMedium: "SMS",
             Destination: "0400000000",
-          },
-          { smsMessage: "sms message" }
+          }
         );
       });
 
       it("sends a welcome email to a user without a phone_number but with an email", async () => {
-        mockMessages.create.mockResolvedValue({
-          emailMessage: "email message",
-          emailSubject: "email subject",
-        });
-
         const response = await adminCreateUser(TestContext, {
           ClientMetadata: {
             client: "metadata",
@@ -348,7 +284,7 @@ describe("AdminCreateUser target", () => {
           UserPoolId: "test",
         });
 
-        expect(mockMessages.create).toHaveBeenCalledWith(
+        expect(mockMessages.deliver).toHaveBeenCalledWith(
           TestContext,
           "AdminCreateUser",
           null,
@@ -357,21 +293,12 @@ describe("AdminCreateUser target", () => {
           "pwd",
           {
             client: "metadata",
-          }
-        );
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          {
-            ...response.User,
-            Password: "pwd",
-            RefreshTokens: [],
           },
           {
             AttributeName: "email",
             DeliveryMedium: "EMAIL",
             Destination: "example@example.com",
-          },
-          { emailMessage: "email message", emailSubject: "email subject" }
+          }
         );
       });
 
@@ -390,8 +317,7 @@ describe("AdminCreateUser target", () => {
           )
         );
 
-        expect(mockMessages.create).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).not.toHaveBeenCalled();
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
       });
     });
   });

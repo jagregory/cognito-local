@@ -1,5 +1,5 @@
 import { Messages } from "../services";
 
 export const newMockMessages = (): jest.Mocked<Messages> => ({
-  create: jest.fn(),
+  deliver: jest.fn(),
 });

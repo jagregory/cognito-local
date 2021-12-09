@@ -15,14 +15,13 @@ export type ForgotPasswordTarget = Target<
 
 type ForgotPasswordServices = Pick<
   Services,
-  "cognito" | "clock" | "messageDelivery" | "messages" | "otp"
+  "cognito" | "clock" | "messages" | "otp"
 >;
 
 export const ForgotPassword =
   ({
     cognito,
     clock,
-    messageDelivery,
     messages,
     otp,
   }: ForgotPasswordServices): ForgotPasswordTarget =>
@@ -47,16 +46,16 @@ export const ForgotPassword =
     };
 
     const code = otp();
-    const message = await messages.create(
+    await messages.deliver(
       ctx,
       "ForgotPassword",
       req.ClientId,
       userPool.config.Id,
       user,
       code,
-      req.ClientMetadata
+      req.ClientMetadata,
+      deliveryDetails
     );
-    await messageDelivery.deliver(ctx, user, deliveryDetails, message);
 
     await userPool.saveUser(ctx, {
       ...user,

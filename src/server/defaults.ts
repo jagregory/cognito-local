@@ -66,8 +66,10 @@ export const createDefaultServer = async (
       clock,
       cognito: cognitoClient,
       config,
-      messageDelivery: new MessageDeliveryService(new ConsoleMessageSender()),
-      messages: new MessagesService(triggers),
+      messages: new MessagesService(
+        triggers,
+        new MessageDeliveryService(new ConsoleMessageSender())
+      ),
       otp,
       tokenGenerator: new JwtTokenGenerator(
         clock,

@@ -27,12 +27,7 @@ export type InitiateAuthTarget = Target<
 
 type InitiateAuthServices = Pick<
   Services,
-  | "cognito"
-  | "messageDelivery"
-  | "messages"
-  | "otp"
-  | "tokenGenerator"
-  | "triggers"
+  "cognito" | "messages" | "otp" | "tokenGenerator" | "triggers"
 >;
 
 const verifyMfaChallenge = async (
@@ -62,24 +57,19 @@ const verifyMfaChallenge = async (
   }
 
   const code = services.otp();
-  const message = await services.messages.create(
+  await services.messages.deliver(
     ctx,
     "Authentication",
     req.ClientId,
     userPool.config.Id,
     user,
     code,
-    req.ClientMetadata
-  );
-  await services.messageDelivery.deliver(
-    ctx,
-    user,
+    req.ClientMetadata,
     {
       DeliveryMedium: smsMfaOption.DeliveryMedium,
       AttributeName: smsMfaOption.AttributeName,
       Destination: deliveryDestination,
-    },
-    message
+    }
   );
 
   await userPool.saveUser(ctx, {

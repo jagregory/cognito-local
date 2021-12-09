@@ -1,4 +1,8 @@
 import { Context } from "./context";
+import {
+  DeliveryDetails,
+  MessageDelivery,
+} from "./messageDelivery/messageDelivery";
 import { Triggers } from "./triggers";
 import { User } from "./userPoolService";
 
@@ -21,25 +25,51 @@ type MessageSource =
   | "VerifyUserAttribute";
 
 export interface Messages {
-  create(
+  deliver(
     ctx: Context,
     source: MessageSource,
     clientId: string | null,
     userPoolId: string,
     user: User,
     code: string,
-    clientMetadata: Record<string, string> | undefined
-  ): Promise<Message>;
+    clientMetadata: Record<string, string> | undefined,
+    deliveryDetails: DeliveryDetails
+  ): Promise<void>;
 }
 
 export class MessagesService implements Messages {
   private readonly triggers: Triggers;
+  private readonly messageDelivery: MessageDelivery;
 
-  public constructor(triggers: Triggers) {
+  public constructor(triggers: Triggers, messageDelivery: MessageDelivery) {
     this.triggers = triggers;
+    this.messageDelivery = messageDelivery;
   }
 
-  public async create(
+  public async deliver(
+    ctx: Context,
+    source: MessageSource,
+    clientId: string | null,
+    userPoolId: string,
+    user: User,
+    code: string,
+    clientMetadata: Record<string, string> | undefined,
+    deliveryDetails: DeliveryDetails
+  ): Promise<void> {
+    const message = await this.create(
+      ctx,
+      source,
+      clientId,
+      userPoolId,
+      user,
+      code,
+      clientMetadata
+    );
+
+    await this.messageDelivery.deliver(ctx, user, deliveryDetails, message);
+  }
+
+  private async create(
     ctx: Context,
     source: MessageSource,
     clientId: string | null,
