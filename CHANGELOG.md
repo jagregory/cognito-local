@@ -1,3 +1,10 @@
+# [3.11.0](https://github.com/jagregory/cognito-local/compare/v3.10.0...v3.11.0) (2021-12-10)
+
+
+### Features
+
+* **api:** adminUpdateUserAttributes full support ([d3c5ebe](https://github.com/jagregory/cognito-local/commit/d3c5ebe3351166f8abf65490aa36621ab61ccd2a))
+
 # [3.10.0](https://github.com/jagregory/cognito-local/compare/v3.9.0...v3.10.0) (2021-12-09)
 
 
