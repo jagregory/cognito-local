@@ -19,7 +19,8 @@
     "start:watch": "nodemon",
     "test": "jest",
     "test:watch": "jest --watch",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.0",
@@ -91,12 +92,6 @@
       "prettier --write"
     ],
     "README.md": "markdown-toc -i --bullets=- --maxdepth=3"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
-    }
   },
   "engines": {
     "node": ">=12"
