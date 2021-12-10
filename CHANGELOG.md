@@ -1,3 +1,16 @@
+# [3.12.0](https://github.com/jagregory/cognito-local/compare/v3.11.0...v3.12.0) (2021-12-10)
+
+
+### Bug Fixes
+
+* **api:** save attribute code separately from confirmation code ([b18af6a](https://github.com/jagregory/cognito-local/commit/b18af6a75601c2dd9ab2f8f35c5df5fbd4bcf477))
+
+
+### Features
+
+* **api:** getUserAttributeVerificationCode full support ([90726a4](https://github.com/jagregory/cognito-local/commit/90726a42feb7537424562d97c0983c60450d7abd))
+* **api:** verifyUserAttribute full support ([320dd17](https://github.com/jagregory/cognito-local/commit/320dd172aaad98c841e69c00747c65f2dfd125cf))
+
 # [3.11.0](https://github.com/jagregory/cognito-local/compare/v3.10.0...v3.11.0) (2021-12-10)
 
 
