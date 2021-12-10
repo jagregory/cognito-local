@@ -183,8 +183,8 @@ cognito-local how to connect to your local Lambda server:
 | CustomMessage               | ForgotPassword                       | ✅      |
 | CustomMessage               | ResendCode                           | ❌      |
 | CustomMessage               | SignUp                               | ✅      |
-| CustomMessage               | UpdateUserAttribute                  | ❌      |
-| CustomMessage               | VerifyUserAttribute                  | ❌      |
+| CustomMessage               | UpdateUserAttribute                  | ✅      |
+| CustomMessage               | VerifyUserAttribute                  | ✅      |
 | DefineAuthChallenge         | \*                                   | ❌      |
 | PostAuthentication          | PostAuthentication_Authentication    | ✅      |
 | PostConfirmation            | ConfirmForgotPassword                | ✅      |
