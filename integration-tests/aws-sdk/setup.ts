@@ -15,6 +15,7 @@ import {
 } from "../../src/services";
 import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
 import { NoOpCache } from "../../src/services/dataStore/cache";
+import { DataStoreFactory } from "../../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
 import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
@@ -26,7 +27,10 @@ const rmdir = promisify(fs.rmdir);
 
 export const withCognitoSdk =
   (
-    fn: (cognito: () => AWS.CognitoIdentityServiceProvider) => void,
+    fn: (
+      cognito: () => AWS.CognitoIdentityServiceProvider,
+      dataStoreFactory: () => DataStoreFactory
+    ) => void,
     {
       logger = MockLogger as any,
       clock = new DateClock(),
@@ -36,12 +40,13 @@ export const withCognitoSdk =
     let dataDirectory: string;
     let httpServer: http.Server;
     let cognitoSdk: AWS.CognitoIdentityServiceProvider;
+    let dataStoreFactory: DataStoreFactory;
 
     beforeEach(async () => {
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
       const ctx = { logger };
 
-      const dataStoreFactory = new StormDBDataStoreFactory(
+      dataStoreFactory = new StormDBDataStoreFactory(
         dataDirectory,
         new NoOpCache()
       );
@@ -93,7 +98,10 @@ export const withCognitoSdk =
       });
     });
 
-    fn(() => cognitoSdk);
+    fn(
+      () => cognitoSdk,
+      () => dataStoreFactory
+    );
 
     afterEach((done) => {
       httpServer.close(() => {

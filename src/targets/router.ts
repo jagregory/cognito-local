@@ -25,6 +25,7 @@ import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
 import { AdminInitiateAuth } from "./adminInitiateAuth";
 import { RevokeToken } from "./revokeToken";
+import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
   AdminConfirmSignUp,
@@ -51,6 +52,7 @@ export const Targets = {
   RespondToAuthChallenge,
   RevokeToken,
   SignUp,
+  VerifyUserAttribute,
 } as const;
 
 type TargetName = keyof typeof Targets;

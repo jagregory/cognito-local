@@ -129,7 +129,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UpdateUserPoolClient             | ❌                   |
 | UpdateUserPoolDomain             | ❌                   |
 | VerifySoftwareToken              | ❌                   |
-| VerifyUserAttribute              | ❌                   |
+| VerifyUserAttribute              | ✅                   |
 
 > ¹ does not support pagination or query filters, all results and attributes will be returned in the first request.
 

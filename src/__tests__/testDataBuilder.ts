@@ -18,6 +18,7 @@ export const user = (partial?: Partial<User>): User => ({
     { Name: "sub", Value: v4() },
     { Name: "email", Value: `${id("example")}@example.com` },
   ],
+  AttributeVerificationCode: partial?.AttributeVerificationCode ?? undefined,
   ConfirmationCode: partial?.ConfirmationCode ?? undefined,
   Enabled: partial?.Enabled ?? true,
   MFACode: partial?.MFACode ?? undefined,
