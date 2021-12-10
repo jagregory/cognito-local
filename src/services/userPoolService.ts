@@ -80,6 +80,7 @@ export interface User {
 
   // extra attributes for Cognito Local
   Password: string;
+  AttributeVerificationCode?: string;
   ConfirmationCode?: string;
   MFACode?: string;
   RefreshTokens: string[];

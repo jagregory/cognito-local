@@ -165,6 +165,11 @@ export const AdminUpdateUserAttributes =
     ) {
       const code = otp();
 
+      await userPool.saveUser(ctx, {
+        ...updatedUser,
+        AttributeVerificationCode: code,
+      });
+
       await sendAttributeVerificationCode(
         ctx,
         userPool,
@@ -173,12 +178,6 @@ export const AdminUpdateUserAttributes =
         req,
         code
       );
-
-      await userPool.saveUser(ctx, {
-        ...updatedUser,
-        // TODO: should we have separate ConfirmationCode for MFA vs attribute confirming?
-        ConfirmationCode: code,
-      });
     }
 
     return {};

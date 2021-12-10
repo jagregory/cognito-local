@@ -240,6 +240,13 @@ describe("AdminUpdateUserAttributes target", () => {
               Destination: attributeValue("email", user.Attributes),
             }
           );
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              AttributeVerificationCode: "1234",
+            })
+          );
         });
       });
     });
