@@ -11,6 +11,7 @@ import { DeleteUser } from "./deleteUser";
 import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { ChangePassword } from "./changePassword";
+import { GetUserAttributeVerificationCode } from "./getUserAttributeVerificationCode";
 import { InitiateAuth } from "./initiateAuth";
 import { ListGroups } from "./listGroups";
 import { ListUserPools } from "./listUserPools";
@@ -45,6 +46,7 @@ export const Targets = {
   DescribeUserPoolClient,
   ForgotPassword,
   GetUser,
+  GetUserAttributeVerificationCode,
   InitiateAuth,
   ListGroups,
   ListUsers,
