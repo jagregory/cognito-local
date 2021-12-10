@@ -41,7 +41,8 @@ interface EventCommonParameters {
   userPoolId: string;
 }
 
-interface CustomMessageEvent extends EventCommonParameters {
+interface CustomMessageEvent extends Omit<EventCommonParameters, "clientId"> {
+  clientId: string | null;
   clientMetadata: Record<string, string> | undefined;
   codeParameter: string;
   triggerSource:

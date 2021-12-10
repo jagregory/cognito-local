@@ -3,7 +3,7 @@ import { withCognitoSdk } from "./setup";
 describe(
   "CognitoIdentityServiceProvider.adminConfirmSignUp",
   withCognitoSdk((Cognito) => {
-    it("creates a user with only the required parameters", async () => {
+    it("confirms a user", async () => {
       const client = Cognito();
 
       await client

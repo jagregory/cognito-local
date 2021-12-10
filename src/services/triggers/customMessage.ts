@@ -1,8 +1,6 @@
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { CognitoService } from "../index";
 import { CustomMessageTriggerResponse, Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { ResourceNotFoundError } from "../../errors";
 import { Trigger } from "./trigger";
 
 const AWS_USERNAME_PARAMETER = "{username}";
@@ -19,7 +17,7 @@ export type CustomMessageTrigger = Trigger<
       | "CustomMessage_VerifyUserAttribute"
       | "CustomMessage_Authentication";
     userPoolId: string;
-    clientId: string;
+    clientId: string | null;
     username: string;
     code: string;
     userAttributes: AttributeListType;
@@ -47,11 +45,10 @@ export type CustomMessageTrigger = Trigger<
 
 interface CustomMessageServices {
   lambda: Lambda;
-  cognitoClient: CognitoService;
 }
 
 export const CustomMessage =
-  ({ lambda, cognitoClient }: CustomMessageServices): CustomMessageTrigger =>
+  ({ lambda }: CustomMessageServices): CustomMessageTrigger =>
   async (
     ctx,
     {
@@ -64,11 +61,6 @@ export const CustomMessage =
       userPoolId,
     }
   ) => {
-    const userPool = await cognitoClient.getUserPoolForClientId(ctx, clientId);
-    if (!userPool) {
-      throw new ResourceNotFoundError();
-    }
-
     try {
       const response = await lambda.invoke(ctx, "CustomMessage", {
         clientId,

@@ -49,7 +49,7 @@ export class TriggersService implements Triggers {
   ) {
     this.lambda = lambda;
 
-    this.customMessage = CustomMessage({ lambda, cognitoClient });
+    this.customMessage = CustomMessage({ lambda });
     this.postAuthentication = PostAuthentication({ lambda });
     this.postConfirmation = PostConfirmation({ lambda });
     this.preSignUp = PreSignUp({ lambda });

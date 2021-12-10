@@ -22,7 +22,15 @@ describe("messages service", () => {
     mockMessageDelivery = newMockMessageDelivery();
   });
 
-  describe("authentication", () => {
+  describe.each([
+    "AdminCreateUser",
+    "Authentication",
+    "ForgotPassword",
+    "ResendCode",
+    "SignUp",
+    "UpdateUserAttribute",
+    "VerifyUserAttribute",
+  ] as const)("%s", (source) => {
     describe("CustomMessage lambda is configured", () => {
       describe("lambda returns a custom message", () => {
         it("delivers the customised message", async () => {
@@ -41,7 +49,7 @@ describe("messages service", () => {
           );
           await messages.deliver(
             TestContext,
-            "Authentication",
+            source,
             "clientId",
             "userPoolId",
             user,
@@ -58,7 +66,7 @@ describe("messages service", () => {
               client: "metadata",
             },
             code: "1234",
-            source: "CustomMessage_Authentication",
+            source: `CustomMessage_${source}`,
             userAttributes: user.Attributes,
             userPoolId: "userPoolId",
             username: user.Username,
@@ -91,7 +99,7 @@ describe("messages service", () => {
           );
           await messages.deliver(
             TestContext,
-            "Authentication",
+            source,
             "clientId",
             "userPoolId",
             user,
@@ -108,7 +116,7 @@ describe("messages service", () => {
               client: "metadata",
             },
             code: "1234",
-            source: "CustomMessage_Authentication",
+            source: `CustomMessage_${source}`,
             userAttributes: user.Attributes,
             userPoolId: "userPoolId",
             username: user.Username,
@@ -133,7 +141,7 @@ describe("messages service", () => {
         const messages = new MessagesService(mockTriggers, mockMessageDelivery);
         await messages.deliver(
           TestContext,
-          "Authentication",
+          source,
           "clientId",
           "userPoolId",
           user,
@@ -145,276 +153,6 @@ describe("messages service", () => {
         );
 
         expect(mockTriggers.customMessage).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          user,
-          deliveryDetails,
-          {
-            __code: "1234",
-          }
-        );
-      });
-    });
-  });
-
-  describe("forgotPassword", () => {
-    describe("CustomMessage lambda is configured", () => {
-      describe("lambda returns a custom message", () => {
-        it("delivers the customised message", async () => {
-          mockTriggers.enabled.mockImplementation((name) => {
-            return name === "CustomMessage";
-          });
-          mockTriggers.customMessage.mockResolvedValue({
-            smsMessage: "sms",
-            emailSubject: "email subject",
-            emailMessage: "email",
-          });
-
-          const messages = new MessagesService(
-            mockTriggers,
-            mockMessageDelivery
-          );
-          await messages.deliver(
-            TestContext,
-            "ForgotPassword",
-            "clientId",
-            "userPoolId",
-            user,
-            "1234",
-            {
-              client: "metadata",
-            },
-            deliveryDetails
-          );
-
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            code: "1234",
-            source: "CustomMessage_ForgotPassword",
-            userAttributes: user.Attributes,
-            userPoolId: "userPoolId",
-            username: user.Username,
-          });
-          expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
-            user,
-            deliveryDetails,
-            {
-              __code: "1234",
-              emailMessage: "email",
-              emailSubject: "email subject",
-              smsMessage: "sms",
-            }
-          );
-        });
-      });
-
-      describe("lambda does not return a custom message", () => {
-        it("delivers just the code", async () => {
-          mockTriggers.enabled.mockImplementation((name) => {
-            return name === "CustomMessage";
-          });
-          mockTriggers.customMessage.mockResolvedValue(null);
-
-          const messages = new MessagesService(
-            mockTriggers,
-            mockMessageDelivery
-          );
-          await messages.deliver(
-            TestContext,
-            "ForgotPassword",
-            "clientId",
-            "userPoolId",
-            user,
-            "1234",
-            {
-              client: "metadata",
-            },
-            deliveryDetails
-          );
-
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            code: "1234",
-            source: "CustomMessage_ForgotPassword",
-            userAttributes: user.Attributes,
-            userPoolId: "userPoolId",
-            username: user.Username,
-          });
-
-          expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
-            user,
-            deliveryDetails,
-            {
-              __code: "1234",
-            }
-          );
-        });
-      });
-    });
-
-    describe("CustomMessage lambda is not configured", () => {
-      it("delivers just the code", async () => {
-        mockTriggers.enabled.mockReturnValue(false);
-
-        const messages = new MessagesService(mockTriggers, mockMessageDelivery);
-        const message = await messages.deliver(
-          TestContext,
-          "ForgotPassword",
-          "clientId",
-          "userPoolId",
-          user,
-          "1234",
-          {
-            client: "metadata",
-          },
-          deliveryDetails
-        );
-
-        expect(mockTriggers.customMessage).not.toHaveBeenCalled();
-        expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
-          user,
-          deliveryDetails,
-          {
-            __code: "1234",
-          }
-        );
-      });
-    });
-  });
-
-  describe("signUp", () => {
-    describe("CustomMessage lambda is configured", () => {
-      describe("lambda returns a custom message", () => {
-        it("delivers the customised message", async () => {
-          mockTriggers.enabled.mockImplementation((name) => {
-            return name === "CustomMessage";
-          });
-          mockTriggers.customMessage.mockResolvedValue({
-            smsMessage: "sms",
-            emailSubject: "email subject",
-            emailMessage: "email",
-          });
-
-          const messages = new MessagesService(
-            mockTriggers,
-            mockMessageDelivery
-          );
-          await messages.deliver(
-            TestContext,
-            "SignUp",
-            "clientId",
-            "userPoolId",
-            user,
-            "1234",
-            {
-              client: "metadata",
-            },
-            deliveryDetails
-          );
-
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            code: "1234",
-            source: "CustomMessage_SignUp",
-            userAttributes: user.Attributes,
-            userPoolId: "userPoolId",
-            username: user.Username,
-          });
-
-          expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
-            user,
-            deliveryDetails,
-            {
-              __code: "1234",
-              emailMessage: "email",
-              emailSubject: "email subject",
-              smsMessage: "sms",
-            }
-          );
-        });
-      });
-
-      describe("lambda does not return a custom message", () => {
-        it("delivers just the code", async () => {
-          mockTriggers.enabled.mockImplementation((name) => {
-            return name === "CustomMessage";
-          });
-          mockTriggers.customMessage.mockResolvedValue(null);
-
-          const messages = new MessagesService(
-            mockTriggers,
-            mockMessageDelivery
-          );
-          await messages.deliver(
-            TestContext,
-            "SignUp",
-            "clientId",
-            "userPoolId",
-            user,
-            "1234",
-            {
-              client: "metadata",
-            },
-            deliveryDetails
-          );
-
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
-            clientId: "clientId",
-            clientMetadata: {
-              client: "metadata",
-            },
-            code: "1234",
-            source: "CustomMessage_SignUp",
-            userAttributes: user.Attributes,
-            userPoolId: "userPoolId",
-            username: user.Username,
-          });
-
-          expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
-            user,
-            deliveryDetails,
-            {
-              __code: "1234",
-            }
-          );
-        });
-      });
-    });
-
-    describe("CustomMessage lambda is not configured", () => {
-      it("delivers just the code", async () => {
-        mockTriggers.enabled.mockReturnValue(false);
-
-        const messages = new MessagesService(mockTriggers, mockMessageDelivery);
-        await messages.deliver(
-          TestContext,
-          "SignUp",
-          "clientId",
-          "userPoolId",
-          user,
-          "1234",
-          {
-            client: "metadata",
-          },
-          deliveryDetails
-        );
-
-        expect(mockTriggers.customMessage).not.toHaveBeenCalled();
-
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
           TestContext,
           user,

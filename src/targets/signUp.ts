@@ -2,11 +2,11 @@ import {
   SignUpRequest,
   SignUpResponse,
   UserStatusType,
-  VerifiedAttributesListType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import * as uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Messages, Services, UserPoolService } from "../services";
+import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attribute,
@@ -23,35 +23,6 @@ type SignUpServices = Pick<
   Services,
   "clock" | "cognito" | "messages" | "otp" | "triggers"
 >;
-
-const selectAppropriateDeliveryMethod = (
-  desiredDeliveryMediums: VerifiedAttributesListType,
-  user: User
-): DeliveryDetails | null => {
-  if (desiredDeliveryMediums.includes("phone_number")) {
-    const phoneNumber = attributeValue("phone_number", user.Attributes);
-    if (phoneNumber) {
-      return {
-        AttributeName: "phone_number",
-        DeliveryMedium: "SMS",
-        Destination: phoneNumber,
-      };
-    }
-  }
-
-  if (desiredDeliveryMediums.includes("email")) {
-    const email = attributeValue("email", user.Attributes);
-    if (email) {
-      return {
-        AttributeName: "email",
-        DeliveryMedium: "EMAIL",
-        Destination: email,
-      };
-    }
-  }
-
-  return null;
-};
 
 const deliverWelcomeMessage = async (
   ctx: Context,

@@ -1,22 +1,16 @@
-import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
-import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
 import { TestContext } from "../../__tests__/testContext";
 import { Lambda } from "../lambda";
-import { UserPoolService } from "../userPoolService";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
 
 describe("CustomMessage trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
   let customMessage: CustomMessageTrigger;
 
   beforeEach(() => {
     mockLambda = newMockLambda();
-    mockUserPoolService = newMockUserPoolService();
     customMessage = CustomMessage({
       lambda: mockLambda,
-      cognitoClient: newMockCognitoService(mockUserPoolService),
     });
   });
 
