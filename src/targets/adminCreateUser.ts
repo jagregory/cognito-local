@@ -128,20 +128,21 @@ export const AdminCreateUser =
     await userPool.saveUser(ctx, user);
 
     // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
-    // TODO: should send a message unless MessageAction=="SUPPRESS"
     // TODO: support MessageAction=="RESEND"
     // TODO: should generate a TemporaryPassword if one isn't set
     // TODO: support ForceAliasCreation
     // TODO: support PreSignIn lambda and ValidationData
 
-    await deliverWelcomeMessage(
-      ctx,
-      req,
-      temporaryPassword,
-      user,
-      messages,
-      userPool
-    );
+    if (req.MessageAction !== "SUPPRESS") {
+      await deliverWelcomeMessage(
+        ctx,
+        req,
+        temporaryPassword,
+        user,
+        messages,
+        userPool
+      );
+    }
 
     return {
       User: {

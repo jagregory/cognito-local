@@ -238,6 +238,46 @@ describe("AdminCreateUser target", () => {
       });
     });
 
+    describe("DesiredDeliveryMediums=EMAIL and SUPPRESS", () => {
+      it("dont send welcome message when message action is SUPPRESS", async () => {
+        const response = await adminCreateUser(TestContext, {
+          ClientMetadata: {
+            client: "metadata",
+          },
+          DesiredDeliveryMediums: ["EMAIL", "SMS"],
+          TemporaryPassword: "pwd",
+          UserAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "phone_number", Value: "0400000000" },
+          ],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+        });
+
+        expect(mockMessages.deliver).not.toHaveBeenCalled();
+      });
+
+      it("should send welcome message when message action is undefined", async () => {
+        const response = await adminCreateUser(TestContext, {
+          ClientMetadata: {
+            client: "metadata",
+          },
+          DesiredDeliveryMediums: ["EMAIL", "SMS"],
+          TemporaryPassword: "pwd",
+          UserAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "phone_number", Value: "0400000000" },
+          ],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: undefined,
+        });
+
+        expect(mockMessages.deliver).toHaveBeenCalled();
+      });
+    });
+
     describe("DesiredDeliveryMediums=EMAIL and SMS", () => {
       it("sends a welcome sms to a user with a phone_number and an email", async () => {
         const response = await adminCreateUser(TestContext, {

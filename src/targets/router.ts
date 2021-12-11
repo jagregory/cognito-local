@@ -2,6 +2,7 @@ import { Logger } from "../log";
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
+import { AdminRespondToAuthChallenge } from "./adminRespondToAuthChallenge";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateGroup } from "./createGroup";
@@ -34,6 +35,7 @@ export const Targets = {
   AdminGetUser,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
+  AdminRespondToAuthChallenge,
   ChangePassword,
   ConfirmForgotPassword,
   ConfirmSignUp,
