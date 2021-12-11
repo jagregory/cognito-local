@@ -2,7 +2,7 @@ import { UUID } from "../../src/__tests__/patterns";
 import { withCognitoSdk } from "./setup";
 
 describe(
-  "CognitoIdentityServiceProvider.updateUserAttributes",
+  "CognitoIdentityServiceProvider.deleteUserAttributes",
   withCognitoSdk((Cognito) => {
     it("updates a user's attributes", async () => {
       const client = Cognito();
@@ -26,11 +26,12 @@ describe(
         .adminCreateUser({
           UserAttributes: [
             { Name: "email", Value: "example@example.com" },
-            { Name: "phone_number", Value: "0400000000" },
+            { Name: "custom:example", Value: "1" },
           ],
           Username: "abc",
           UserPoolId: userPoolId,
           TemporaryPassword: "def",
+          DesiredDeliveryMediums: ["EMAIL"],
         })
         .promise();
 
@@ -63,14 +64,14 @@ describe(
       expect(user.UserAttributes).toEqual([
         { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },
-        { Name: "phone_number", Value: "0400000000" },
+        { Name: "custom:example", Value: "1" },
       ]);
 
       await client
-        .updateUserAttributes({
+        .deleteUserAttributes({
           AccessToken: initiateAuthResponse.AuthenticationResult
             ?.AccessToken as string,
-          UserAttributes: [{ Name: "email", Value: "example2@example.com" }],
+          UserAttributeNames: ["custom:example"],
         })
         .promise();
 
@@ -83,9 +84,7 @@ describe(
 
       expect(user.UserAttributes).toEqual([
         { Name: "sub", Value: expect.stringMatching(UUID) },
-        { Name: "email", Value: "example2@example.com" },
-        { Name: "phone_number", Value: "0400000000" },
-        { Name: "email_verified", Value: "false" },
+        { Name: "email", Value: "example@example.com" },
       ]);
     });
   })
