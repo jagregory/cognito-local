@@ -3,7 +3,11 @@ import {
   VerifyUserAttributeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
-import { InvalidParameterError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  InvalidParameterError,
+  NotAuthorizedError,
+} from "../errors";
 import { Services } from "../services";
 import { Token } from "../services/tokenGenerator";
 import { attribute, attributesAppend } from "../services/userPoolService";
@@ -38,10 +42,7 @@ export const VerifyUserAttribute =
     }
 
     if (req.Code !== user.AttributeVerificationCode) {
-      // this might not be the right error
-      throw new InvalidParameterError(
-        `Unable to verify attribute: ${req.AttributeName} no value set to verify`
-      );
+      throw new CodeMismatchError();
     }
 
     if (req.AttributeName === "email") {

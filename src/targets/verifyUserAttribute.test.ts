@@ -5,7 +5,11 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { InvalidParameterError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  InvalidParameterError,
+  NotAuthorizedError,
+} from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
@@ -144,10 +148,6 @@ describe("VerifyUserAttribute target", () => {
         AttributeName: "email",
         Code: "1234",
       })
-    ).rejects.toEqual(
-      new InvalidParameterError(
-        "Unable to verify attribute: email no value set to verify"
-      )
-    );
+    ).rejects.toEqual(new CodeMismatchError());
   });
 });
