@@ -26,14 +26,15 @@ import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
 import { AdminInitiateAuth } from "./adminInitiateAuth";
 import { RevokeToken } from "./revokeToken";
+import { UpdateUserAttributes } from "./updateUserAttributes";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
   AdminConfirmSignUp,
   AdminCreateUser,
   AdminDeleteUser,
-  AdminInitiateAuth,
   AdminGetUser,
+  AdminInitiateAuth,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
   ChangePassword,
@@ -49,11 +50,12 @@ export const Targets = {
   GetUserAttributeVerificationCode,
   InitiateAuth,
   ListGroups,
-  ListUsers,
   ListUserPools,
+  ListUsers,
   RespondToAuthChallenge,
   RevokeToken,
   SignUp,
+  UpdateUserAttributes,
   VerifyUserAttribute,
 } as const;
 

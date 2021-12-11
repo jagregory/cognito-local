@@ -1,11 +1,13 @@
 import {
-  AdminUpdateUserAttributesRequest,
-  AdminUpdateUserAttributesResponse,
+  UpdateUserAttributesRequest,
+  UpdateUserAttributesResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { InvalidParameterError, NotAuthorizedError } from "../errors";
+import jwt from "jsonwebtoken";
 import { Messages, Services, UserPoolService } from "../services";
+import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
+import { Token } from "../services/tokenGenerator";
 import {
   attributesAppend,
   defaultVerifiedAttributesIfModified,
@@ -20,7 +22,7 @@ const sendAttributeVerificationCode = async (
   userPool: UserPoolService,
   user: User,
   messages: Messages,
-  req: AdminUpdateUserAttributesRequest,
+  req: UpdateUserAttributesRequest,
   code: string
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
@@ -44,28 +46,39 @@ const sendAttributeVerificationCode = async (
     req.ClientMetadata,
     deliveryDetails
   );
+
+  return deliveryDetails;
 };
 
-export type AdminUpdateUserAttributesTarget = Target<
-  AdminUpdateUserAttributesRequest,
-  AdminUpdateUserAttributesResponse
+export type UpdateUserAttributesTarget = Target<
+  UpdateUserAttributesRequest,
+  UpdateUserAttributesResponse
 >;
 
-type AdminUpdateUserAttributesServices = Pick<
+type UpdateUserAttributesServices = Pick<
   Services,
   "clock" | "cognito" | "otp" | "messages"
 >;
 
-export const AdminUpdateUserAttributes =
+export const UpdateUserAttributes =
   ({
     clock,
     cognito,
     otp,
     messages,
-  }: AdminUpdateUserAttributesServices): AdminUpdateUserAttributesTarget =>
+  }: UpdateUserAttributesServices): UpdateUserAttributesTarget =>
   async (ctx, req) => {
-    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
-    const user = await userPool.getUserByUsername(ctx, req.Username);
+    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
+    if (!decodedToken) {
+      ctx.logger.info("Unable to decode token");
+      throw new InvalidParameterError();
+    }
+
+    const userPool = await cognito.getUserPoolForClientId(
+      ctx,
+      decodedToken.client_id
+    );
+    const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
       throw new NotAuthorizedError();
     }
@@ -104,7 +117,7 @@ export const AdminUpdateUserAttributes =
         AttributeVerificationCode: code,
       });
 
-      await sendAttributeVerificationCode(
+      const deliveryDetails = await sendAttributeVerificationCode(
         ctx,
         userPool,
         user,
@@ -112,7 +125,13 @@ export const AdminUpdateUserAttributes =
         req,
         code
       );
+
+      return {
+        CodeDeliveryDetailsList: [deliveryDetails],
+      };
     }
 
-    return {};
+    return {
+      CodeDeliveryDetailsList: [],
+    };
   };

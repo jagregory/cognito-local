@@ -2,9 +2,11 @@ import {
   AttributeListType,
   AttributeType,
   MFAOptionListType,
+  SchemaAttributesListType,
   UserPoolType,
   UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { InvalidParameterError } from "../errors";
 import { AppClient, newId } from "./appClient";
 import { Clock } from "./clock";
 import { Context } from "./context";
@@ -351,3 +353,67 @@ export class UserPoolServiceFactoryImpl implements UserPoolServiceFactory {
     );
   }
 }
+
+export const validatePermittedAttributeChanges = (
+  requestAttributes: AttributeListType,
+  schemaAttributes: SchemaAttributesListType
+): AttributeListType => {
+  for (const attr of requestAttributes) {
+    const attrSchema = schemaAttributes.find((x) => x.Name === attr.Name);
+    if (!attrSchema) {
+      throw new InvalidParameterError(
+        `user.${attr.Name}: Attribute does not exist in the schema.`
+      );
+    }
+    if (!attrSchema.Mutable) {
+      throw new InvalidParameterError(
+        `user.${attr.Name}: Attribute cannot be updated. (changing an immutable attribute)`
+      );
+    }
+  }
+
+  if (
+    attributesInclude("email_verified", requestAttributes) &&
+    !attributesInclude("email", requestAttributes)
+  ) {
+    throw new InvalidParameterError(
+      "Email is required to verify/un-verify an email"
+    );
+  }
+
+  if (
+    attributesInclude("phone_number_verified", requestAttributes) &&
+    !attributesInclude("phone_number", requestAttributes)
+  ) {
+    throw new InvalidParameterError(
+      "Phone Number is required to verify/un-verify a phone number"
+    );
+  }
+
+  return requestAttributes;
+};
+
+export const defaultVerifiedAttributesIfModified = (
+  attributes: AttributeListType
+): AttributeListType => {
+  const attributesToSet = [...attributes];
+  if (
+    attributesInclude("email", attributes) &&
+    !attributesInclude("email_verified", attributes)
+  ) {
+    attributesToSet.push(attribute("email_verified", "false"));
+  }
+  if (
+    attributesInclude("phone_number", attributes) &&
+    !attributesInclude("phone_number_verified", attributes)
+  ) {
+    attributesToSet.push(attribute("phone_number_verified", "false"));
+  }
+  return attributesToSet;
+};
+
+export const hasUnverifiedContactAttributes = (
+  userAttributesToSet: AttributeListType
+): boolean =>
+  attributeValue("email_verified", userAttributesToSet) === "false" ||
+  attributeValue("phone_number_verified", userAttributesToSet) === "false";
