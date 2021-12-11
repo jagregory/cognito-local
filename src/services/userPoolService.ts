@@ -66,6 +66,12 @@ export const attributesAppend = (
   return attributesFromRecord(attributeSet);
 };
 
+export const attributesRemove = (
+  attributes: AttributeListType | undefined,
+  ...toRemove: readonly string[]
+): AttributeListType =>
+  attributes?.filter((x) => !toRemove.includes(x.Name)) ?? [];
+
 export const customAttributes = (
   attributes: AttributeListType | undefined
 ): AttributeListType =>
