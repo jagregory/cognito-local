@@ -1,3 +1,17 @@
+# [3.13.0](https://github.com/jagregory/cognito-local/compare/v3.12.0...v3.13.0) (2021-12-11)
+
+
+### Bug Fixes
+
+* **api:** verifyUserAttributes throws CodeMismatchError ([b3b116c](https://github.com/jagregory/cognito-local/commit/b3b116c306807a828fbc1e52629ee213c2fbfca8))
+
+
+### Features
+
+* **api:** adminDeleteUserAttributes full support ([1a47086](https://github.com/jagregory/cognito-local/commit/1a470866d889657c7415bc176defbb821ac30a47))
+* **api:** deleteUserAttributes full support ([3d0e9a0](https://github.com/jagregory/cognito-local/commit/3d0e9a0c04740432d8bc6a3f128370566bc1aabc))
+* **api:** updateUserAttributes full support ([308c9c2](https://github.com/jagregory/cognito-local/commit/308c9c25de3292fa2632af69679af34f6c68586f))
+
 # [3.12.0](https://github.com/jagregory/cognito-local/compare/v3.11.0...v3.12.0) (2021-12-10)
 
 
