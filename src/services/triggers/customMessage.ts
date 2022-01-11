@@ -83,7 +83,7 @@ export const CustomMessage =
           .replace(AWS_USERNAME_PARAMETER, username),
       };
     } catch (ex) {
-      ctx.logger.error({ error: ex });
+      ctx.logger.error(ex);
       return null;
     }
   };

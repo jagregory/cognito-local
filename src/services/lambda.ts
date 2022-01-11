@@ -226,7 +226,7 @@ export class LambdaService implements Lambda {
         })
         .promise();
     } catch (ex) {
-      ctx.logger.error({ error: ex });
+      ctx.logger.error(ex);
       throw new UnexpectedLambdaExceptionError();
     }
 
@@ -239,11 +239,11 @@ export class LambdaService implements Lambda {
 
         return parsedPayload.response;
       } catch (err) {
-        ctx.logger.error({ error: err });
+        ctx.logger.error(err);
         throw new InvalidLambdaResponseError();
       }
     } else {
-      ctx.logger.error({ error: result.FunctionError });
+      ctx.logger.error(result.FunctionError);
       throw new UserLambdaValidationError(result.FunctionError);
     }
   }

@@ -45,6 +45,6 @@ export const PostConfirmation =
         userPoolId,
       });
     } catch (ex) {
-      ctx.logger.error({ error: ex });
+      ctx.logger.error(ex);
     }
   };

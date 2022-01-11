@@ -42,6 +42,6 @@ export const PostAuthentication =
         userPoolId,
       });
     } catch (err) {
-      ctx.logger.warn({ error: err }, "PostAuthentication error, ignored");
+      ctx.logger.warn(err, "PostAuthentication error, ignored");
     }
   };

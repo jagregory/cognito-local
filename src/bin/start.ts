@@ -36,6 +36,6 @@ createDefaultServer(logger)
     logger.info(`Cognito Local running on http://${url}`);
   })
   .catch((err) => {
-    logger.error({ error: err });
+    logger.error(err);
     process.exit(1);
   });
