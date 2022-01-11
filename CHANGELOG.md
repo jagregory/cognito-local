@@ -1,3 +1,11 @@
+## [3.13.1](https://github.com/jagregory/cognito-local/compare/v3.13.0...v3.13.1) (2022-01-11)
+
+
+### Bug Fixes
+
+* **api:** adminDeleteUser handles email usernames ([8faa78f](https://github.com/jagregory/cognito-local/commit/8faa78f0aff3f642d806aa4d38530665d6593166)), closes [#99](https://github.com/jagregory/cognito-local/issues/99)
+* **log:** errors not being logged correctly ([1ca2b99](https://github.com/jagregory/cognito-local/commit/1ca2b9948bb38b875601c3d7b6fdf481e963d2cb))
+
 # [3.13.0](https://github.com/jagregory/cognito-local/compare/v3.12.0...v3.13.0) (2021-12-11)
 
 
