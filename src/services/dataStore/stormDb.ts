@@ -16,7 +16,7 @@ export class StormDBDataStore implements DataStore {
   async delete(ctx: Context, key: string | string[]) {
     ctx.logger.debug({ key }, "DataStore.delete");
     (key instanceof Array ? key : [key])
-      .reduce((acc, k) => acc.get(k), this.db)
+      .reduce((acc, k) => acc.get([k]), this.db)
       .delete(false);
 
     ctx.logger.debug({ store: this.db.value() }, "DataStore.save");
