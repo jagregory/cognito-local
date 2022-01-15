@@ -1,3 +1,10 @@
+## [3.13.2](https://github.com/jagregory/cognito-local/compare/v3.13.1...v3.13.2) (2022-01-15)
+
+
+### Bug Fixes
+
+* **api:** createUserPool saves SchemaAttributes ([3301878](https://github.com/jagregory/cognito-local/commit/3301878e8d45296717992c6ad566fd5b17687a49)), closes [#93](https://github.com/jagregory/cognito-local/issues/93)
+
 ## [3.13.1](https://github.com/jagregory/cognito-local/compare/v3.13.0...v3.13.1) (2022-01-11)
 
 
