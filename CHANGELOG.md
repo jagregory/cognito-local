@@ -1,3 +1,10 @@
+## [3.13.3](https://github.com/jagregory/cognito-local/compare/v3.13.2...v3.13.3) (2022-01-15)
+
+
+### Bug Fixes
+
+* **api:** finish implementation of changePassword ([f649bfa](https://github.com/jagregory/cognito-local/commit/f649bfa8f8a14345268e3cd25560ccdbaace8a5d))
+
 ## [3.13.2](https://github.com/jagregory/cognito-local/compare/v3.13.1...v3.13.2) (2022-01-15)
 
 
