@@ -1,3 +1,4 @@
+import mergeWith from "lodash.mergewith";
 import * as path from "path";
 import { ResourceNotFoundError } from "../errors";
 import { UserPoolDefaults } from "../server/config";
@@ -309,11 +310,12 @@ export class CognitoServiceImpl implements CognitoService {
     const service = await this.userPoolServiceFactory.create(
       ctx,
       this.clients,
-      {
-        ...USER_POOL_AWS_DEFAULTS,
-        ...this.userPoolDefaultConfig,
-        ...userPool,
-      }
+      mergeWith(
+        {},
+        USER_POOL_AWS_DEFAULTS,
+        this.userPoolDefaultConfig,
+        userPool
+      )
     );
 
     return service.config;

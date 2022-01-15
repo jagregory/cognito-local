@@ -1,3 +1,4 @@
+import Pino from "pino";
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { UUID } from "../../src/__tests__/patterns";
 import { USER_POOL_AWS_DEFAULTS } from "../../src/services/cognitoService";
@@ -38,6 +39,7 @@ describe(
     },
     {
       clock,
+      logger: Pino(),
     }
   )
 );
