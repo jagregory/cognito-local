@@ -1,7 +1,7 @@
 import pino from "pino";
 
-export type Logger = {
-  child(bindings: pino.Bindings, options?: pino.ChildLoggerOptions): Logger;
+export type LogService = {
+  child(bindings: pino.Bindings, options?: pino.ChildLoggerOptions): LogService;
   debug: pino.LogFn;
   error: pino.LogFn;
   info: pino.LogFn;

@@ -1,5 +1,5 @@
-import { Logger } from "../log";
+import { LogService } from "./LogService";
 
 export interface Context {
-  readonly logger: Logger;
+  readonly logger: LogService;
 }
