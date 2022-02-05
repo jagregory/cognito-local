@@ -1,7 +1,7 @@
 import fs from "fs";
 import StormDB from "stormdb";
 import { promisify } from "util";
-import { TestContext } from "../src/__tests__/testContext";
+import { MockContext } from "../src/mocks/MockContext";
 import { InMemoryCache, NoOpCache } from "../src/services/dataStore/cache";
 import { DataStoreFactory } from "../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
@@ -26,13 +26,13 @@ describe("Data Store", () => {
   );
 
   it("creates a named database", async () => {
-    await factory.create(TestContext, "example", {});
+    await factory.create(MockContext, "example", {});
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
   });
 
   it("creates a named database with the defaults persisted", async () => {
-    await factory.create(TestContext, "example", { DefaultValue: true });
+    await factory.create(MockContext, "example", { DefaultValue: true });
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
@@ -45,7 +45,7 @@ describe("Data Store", () => {
   it("does not overwrite defaults if the file already exists", async () => {
     fs.writeFileSync(path + "/example.json", '{"Users":{"a":{"key":"value"}}}');
 
-    await factory.create(TestContext, "example", { Users: {} });
+    await factory.create(MockContext, "example", { Users: {} });
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
@@ -60,11 +60,11 @@ describe("Data Store", () => {
   });
 
   it("saves the default objects when a save occurs", async () => {
-    const dataStore = await factory.create(TestContext, "example", {
+    const dataStore = await factory.create(MockContext, "example", {
       DefaultValue: true,
     });
 
-    await dataStore.set(TestContext, "key", 1);
+    await dataStore.set(MockContext, "key", 1);
 
     const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
     expect(file).toEqual({
@@ -75,10 +75,10 @@ describe("Data Store", () => {
 
   describe("delete", () => {
     it("deletes a value", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, "key1", 1);
-      await dataStore.set(TestContext, "key2", 2);
+      await dataStore.set(MockContext, "key1", 1);
+      await dataStore.set(MockContext, "key2", 2);
 
       const fileBefore = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -89,7 +89,7 @@ describe("Data Store", () => {
         key2: 2,
       });
 
-      await dataStore.delete(TestContext, "key1");
+      await dataStore.delete(MockContext, "key1");
 
       const fileAfter = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -101,11 +101,11 @@ describe("Data Store", () => {
     });
 
     it("deletes a nested value using array syntax", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, ["key", "a", "b"], 1);
-      await dataStore.set(TestContext, ["key", "a", "c"], 2);
-      await dataStore.set(TestContext, "key2", 3);
+      await dataStore.set(MockContext, ["key", "a", "b"], 1);
+      await dataStore.set(MockContext, ["key", "a", "c"], 2);
+      await dataStore.set(MockContext, "key2", 3);
 
       const fileBefore = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -121,7 +121,7 @@ describe("Data Store", () => {
         key2: 3,
       });
 
-      await dataStore.delete(TestContext, ["key", "a", "b"]);
+      await dataStore.delete(MockContext, ["key", "a", "b"]);
 
       const fileAfter = JSON.parse(
         await readFile(path + "/example.json", "utf-8")
@@ -140,10 +140,10 @@ describe("Data Store", () => {
 
   describe("set", () => {
     it("saves a value", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, "key1", 1);
-      await dataStore.set(TestContext, "key2", 2);
+      await dataStore.set(MockContext, "key1", 1);
+      await dataStore.set(MockContext, "key2", 2);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -154,11 +154,11 @@ describe("Data Store", () => {
     });
 
     it("saves a date value", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
       const date = new Date();
 
-      await dataStore.set(TestContext, "SomethingDate", date);
+      await dataStore.set(MockContext, "SomethingDate", date);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -168,12 +168,12 @@ describe("Data Store", () => {
     });
 
     it("fails to save a date value with the wrong type", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
       const date = new Date();
 
       await expect(
-        dataStore.set(TestContext, "SomethingDate", date.getTime())
+        dataStore.set(MockContext, "SomethingDate", date.getTime())
       ).rejects.toEqual(
         new Error(
           "Serialize: Expected SomethingDate field to contain a Date, received a number"
@@ -182,9 +182,9 @@ describe("Data Store", () => {
     });
 
     it("saves a nested value using array syntax", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, ["key", "a", "b"], 1);
+      await dataStore.set(MockContext, ["key", "a", "b"], 1);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -198,9 +198,9 @@ describe("Data Store", () => {
     });
 
     it("saves a key with dots in as a single key-value pair", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, "key.a.b", 1);
+      await dataStore.set(MockContext, "key.a.b", 1);
 
       const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -210,9 +210,9 @@ describe("Data Store", () => {
     });
 
     it("replaces a value", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, "key", 1);
+      await dataStore.set(MockContext, "key", 1);
 
       let file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -220,7 +220,7 @@ describe("Data Store", () => {
         key: 1,
       });
 
-      await dataStore.set(TestContext, "key", 2);
+      await dataStore.set(MockContext, "key", 2);
 
       file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
 
@@ -232,13 +232,13 @@ describe("Data Store", () => {
 
   describe("getRoot", () => {
     it("returns entire db", async () => {
-      const dataStore = await factory.create(TestContext, "example", {
+      const dataStore = await factory.create(MockContext, "example", {
         DefaultValue: true,
       });
 
-      await dataStore.set(TestContext, "key", "value");
+      await dataStore.set(MockContext, "key", "value");
 
-      const result = await dataStore.getRoot(TestContext);
+      const result = await dataStore.getRoot(MockContext);
 
       expect(result).toEqual({ DefaultValue: true, key: "value" });
     });
@@ -246,43 +246,43 @@ describe("Data Store", () => {
 
   describe("get", () => {
     it("returns a default", async () => {
-      const dataStore = await factory.create(TestContext, "example", {
+      const dataStore = await factory.create(MockContext, "example", {
         DefaultValue: true,
       });
 
-      const result = await dataStore.get(TestContext, "DefaultValue");
+      const result = await dataStore.get(MockContext, "DefaultValue");
 
       expect(result).toEqual(true);
     });
 
     it("returns null if key doesn't exist", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      const result = await dataStore.get(TestContext, "invalid");
+      const result = await dataStore.get(MockContext, "invalid");
 
       expect(result).toBeNull();
     });
 
     it("returns existing value", async () => {
-      const dataStore = await factory.create(TestContext, "example", {});
+      const dataStore = await factory.create(MockContext, "example", {});
 
-      await dataStore.set(TestContext, "key", 1);
+      await dataStore.set(MockContext, "key", 1);
 
-      const result = await dataStore.get(TestContext, "key");
+      const result = await dataStore.get(MockContext, "key");
 
       expect(result).toEqual(1);
     });
 
     it("returns a date value", async () => {
-      const dataStore1 = await factory.create(TestContext, "example", {});
+      const dataStore1 = await factory.create(MockContext, "example", {});
 
       const date = new Date();
 
-      await dataStore1.set(TestContext, "SomethingDate", date);
+      await dataStore1.set(MockContext, "SomethingDate", date);
 
       // use a separate datastore to avoid caching
-      const dataStore2 = await factory.create(TestContext, "example", {});
-      const result = await dataStore2.get(TestContext, "SomethingDate");
+      const dataStore2 = await factory.create(MockContext, "example", {});
+      const result = await dataStore2.get(MockContext, "SomethingDate");
 
       expect(result).toEqual(date);
     });
@@ -299,8 +299,8 @@ describe("Data Store", () => {
       db.set("SomethingDate", date.getTime());
       await db.save();
 
-      const dataStore = await factory.create(TestContext, "example", {});
-      const result = await dataStore.get(TestContext, "SomethingDate");
+      const dataStore = await factory.create(MockContext, "example", {});
+      const result = await dataStore.get(MockContext, "SomethingDate");
 
       expect(result).toEqual(date);
     });
@@ -308,23 +308,23 @@ describe("Data Store", () => {
     it("supports caching data stores across creates for the same id", async () => {
       const factory = new StormDBDataStoreFactory(path, new InMemoryCache());
 
-      const dataStore1 = await factory.create(TestContext, "example", {});
-      const dataStore2 = await factory.create(TestContext, "example", {});
-      const dataStore3 = await factory.create(TestContext, "example2", {});
+      const dataStore1 = await factory.create(MockContext, "example", {});
+      const dataStore2 = await factory.create(MockContext, "example", {});
+      const dataStore3 = await factory.create(MockContext, "example2", {});
 
-      await dataStore1.set(TestContext, "One", 1);
-      await dataStore2.set(TestContext, "Two", 2);
-      await dataStore3.set(TestContext, "Three", 3);
+      await dataStore1.set(MockContext, "One", 1);
+      await dataStore2.set(MockContext, "Two", 2);
+      await dataStore3.set(MockContext, "Three", 3);
 
-      expect(await dataStore1.getRoot(TestContext)).toEqual({
+      expect(await dataStore1.getRoot(MockContext)).toEqual({
         One: 1,
         Two: 2,
       });
-      expect(await dataStore2.getRoot(TestContext)).toEqual({
+      expect(await dataStore2.getRoot(MockContext)).toEqual({
         One: 1,
         Two: 2,
       });
-      expect(await dataStore3.getRoot(TestContext)).toEqual({
+      expect(await dataStore3.getRoot(MockContext)).toEqual({
         Three: 3,
       });
     });

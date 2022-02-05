@@ -1,13 +1,13 @@
-import { newMockLambda } from "../../__tests__/mockLambda";
-import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
-import { TestContext } from "../../__tests__/testContext";
+import { MockLambda } from "../../mocks/MockLambda";
+import { MockUserPoolService } from "../../mocks/MockUserPoolService";
+import { MockContext } from "../../mocks/MockContext";
 import { Lambda } from "../lambda";
 import { attributesToRecord, UserPoolService } from "../userPoolService";
 import {
   PostAuthentication,
   PostAuthenticationTrigger,
 } from "./postAuthentication";
-import * as TDB from "../../__tests__/testDataBuilder";
+import { MockUser } from "../../mocks/MockUser";
 
 describe("PostAuthentication trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;
@@ -15,15 +15,15 @@ describe("PostAuthentication trigger", () => {
   let postAuthentication: PostAuthenticationTrigger;
 
   beforeEach(() => {
-    mockLambda = newMockLambda();
-    mockUserPoolService = newMockUserPoolService();
+    mockLambda = MockLambda();
+    mockUserPoolService = MockUserPoolService();
     postAuthentication = PostAuthentication({
       lambda: mockLambda,
     });
   });
 
   describe("PostAuthentication_Authentication", () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     it("swallows error when lambda fails", async () => {
       mockLambda.invoke.mockRejectedValue(new Error("Something bad happened"));
@@ -31,7 +31,7 @@ describe("PostAuthentication trigger", () => {
       // bit of an odd assertion, we're asserting that the promise was successfully resolved with undefined
       // if the promise rejects, this test would fail
       await expect(
-        postAuthentication(TestContext, {
+        postAuthentication(MockContext, {
           clientId: "clientId",
           clientMetadata: undefined,
           source: "PostAuthentication_Authentication",
@@ -45,7 +45,7 @@ describe("PostAuthentication trigger", () => {
     it("invokes the lambda", async () => {
       mockLambda.invoke.mockResolvedValue({});
 
-      await postAuthentication(TestContext, {
+      await postAuthentication(MockContext, {
         clientId: "clientId",
         clientMetadata: {
           client: "metadata",
@@ -57,7 +57,7 @@ describe("PostAuthentication trigger", () => {
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         "PostAuthentication",
         {
           clientId: "clientId",

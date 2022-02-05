@@ -1,12 +1,12 @@
-import { ClockFake } from "../../src/__tests__/clockFake";
-import { UUID } from "../../src/__tests__/patterns";
+import { MockClock } from "../../src/mocks/MockClock";
+import { UUID } from "../../src/mocks";
 import { withCognitoSdk } from "./setup";
 
 const currentDate = new Date();
 const roundedDate = new Date(currentDate.getTime());
 roundedDate.setMilliseconds(0);
 
-const clock = new ClockFake(currentDate);
+const clock = new MockClock(currentDate);
 
 describe(
   "CognitoIdentityServiceProvider.adminCreateUser",

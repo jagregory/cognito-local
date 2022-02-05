@@ -1,4 +1,4 @@
-import { TestContext } from "../__tests__/testContext";
+import { MockContext } from "../mocks/MockContext";
 import { UnsupportedError } from "../errors";
 import { Services } from "../services";
 import { Router, Targets } from "./router";
@@ -8,7 +8,7 @@ describe("Router", () => {
     const services = {} as Services;
     const route = Router(services)("invalid");
 
-    await expect(route(TestContext, null as any)).rejects.toEqual(
+    await expect(route(MockContext, null as any)).rejects.toEqual(
       new UnsupportedError('Unsupported x-amz-target header "invalid"')
     );
   });

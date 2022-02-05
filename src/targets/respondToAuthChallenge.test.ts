@@ -1,9 +1,9 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
-import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockClock } from "../mocks/MockClock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockTokenGenerator } from "../mocks/MockTokenGenerator";
+import { MockTriggers } from "../mocks/MockTriggers";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import {
   CodeMismatchError,
   InvalidParameterError,
@@ -15,7 +15,7 @@ import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
 } from "./respondToAuthChallenge";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../mocks/MockUser";
 
 const currentDate = new Date();
 
@@ -24,16 +24,16 @@ describe("RespondToAuthChallenge target", () => {
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: ClockFake;
+  let clock: MockClock;
 
   beforeEach(() => {
-    clock = new ClockFake(currentDate);
-    mockTokenGenerator = newMockTokenGenerator();
-    mockTriggers = newMockTriggers();
-    mockUserPoolService = newMockUserPoolService();
+    clock = new MockClock(currentDate);
+    mockTokenGenerator = MockTokenGenerator();
+    mockTriggers = MockTriggers();
+    mockUserPoolService = MockUserPoolService();
     respondToAuthChallenge = RespondToAuthChallenge({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
     });
@@ -43,7 +43,7 @@ describe("RespondToAuthChallenge target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      respondToAuthChallenge(TestContext, {
+      respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -57,7 +57,7 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses missing", async () => {
     await expect(
-      respondToAuthChallenge(TestContext, {
+      respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
       })
@@ -70,7 +70,7 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses.USERNAME is missing", async () => {
     await expect(
-      respondToAuthChallenge(TestContext, {
+      respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {},
@@ -84,7 +84,7 @@ describe("RespondToAuthChallenge target", () => {
     // we don't actually do anything with the session right now, but we still want to
     // replicate Cognito's behaviour if you don't provide it
     await expect(
-      respondToAuthChallenge(TestContext, {
+      respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -97,7 +97,7 @@ describe("RespondToAuthChallenge target", () => {
   });
 
   describe("ChallengeName=SMS_MFA", () => {
-    const user = TDB.user({
+    const user = MockUser({
       MFACode: "1234",
     });
 
@@ -109,7 +109,7 @@ describe("RespondToAuthChallenge target", () => {
       it("updates the user and removes the MFACode", async () => {
         const newDate = clock.advanceBy(1200);
 
-        await respondToAuthChallenge(TestContext, {
+        await respondToAuthChallenge(MockContext, {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -119,7 +119,7 @@ describe("RespondToAuthChallenge target", () => {
           Session: "Session",
         });
 
-        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
           ...user,
           MFACode: undefined,
           UserLastModifiedDate: newDate,
@@ -133,7 +133,7 @@ describe("RespondToAuthChallenge target", () => {
           RefreshToken: "refresh",
         });
 
-        const output = await respondToAuthChallenge(TestContext, {
+        const output = await respondToAuthChallenge(MockContext, {
           ClientId: "clientId",
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -153,7 +153,7 @@ describe("RespondToAuthChallenge target", () => {
         expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
         expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           user,
           "clientId",
           "test",
@@ -170,7 +170,7 @@ describe("RespondToAuthChallenge target", () => {
             (trigger) => trigger === "PostAuthentication"
           );
 
-          await respondToAuthChallenge(TestContext, {
+          await respondToAuthChallenge(MockContext, {
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
             ClientMetadata: {
@@ -184,7 +184,7 @@ describe("RespondToAuthChallenge target", () => {
           });
 
           expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             {
               clientId: "clientId",
               clientMetadata: {
@@ -205,7 +205,7 @@ describe("RespondToAuthChallenge target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await expect(
-          respondToAuthChallenge(TestContext, {
+          respondToAuthChallenge(MockContext, {
             ClientId: "clientId",
             ChallengeName: "SMS_MFA",
             ChallengeResponses: {
@@ -220,7 +220,7 @@ describe("RespondToAuthChallenge target", () => {
   });
 
   describe("ChallengeName=NEW_PASSWORD_REQUIRED", () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     beforeEach(() => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -228,7 +228,7 @@ describe("RespondToAuthChallenge target", () => {
 
     it("throws if NEW_PASSWORD missing", async () => {
       await expect(
-        respondToAuthChallenge(TestContext, {
+        respondToAuthChallenge(MockContext, {
           ClientId: "clientId",
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
@@ -244,7 +244,7 @@ describe("RespondToAuthChallenge target", () => {
     it("updates the user's password and status", async () => {
       const newDate = clock.advanceBy(1200);
 
-      await respondToAuthChallenge(TestContext, {
+      await respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -254,7 +254,7 @@ describe("RespondToAuthChallenge target", () => {
         Session: "Session",
       });
 
-      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
         ...user,
         Password: "foo",
         UserLastModifiedDate: newDate,
@@ -269,7 +269,7 @@ describe("RespondToAuthChallenge target", () => {
         RefreshToken: "refresh",
       });
 
-      const output = await respondToAuthChallenge(TestContext, {
+      const output = await respondToAuthChallenge(MockContext, {
         ClientId: "clientId",
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -289,7 +289,7 @@ describe("RespondToAuthChallenge target", () => {
       expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
       expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         user,
         "clientId",
         "test",
@@ -304,7 +304,7 @@ describe("RespondToAuthChallenge target", () => {
           (trigger) => trigger === "PostAuthentication"
         );
 
-        await respondToAuthChallenge(TestContext, {
+        await respondToAuthChallenge(MockContext, {
           ClientId: "clientId",
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
@@ -315,7 +315,7 @@ describe("RespondToAuthChallenge target", () => {
         });
 
         expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           {
             clientId: "clientId",
             source: "PostAuthentication_Authentication",

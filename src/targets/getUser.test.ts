@@ -1,32 +1,32 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
 import { GetUser, GetUserTarget } from "./getUser";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../mocks/MockUser";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     getUser = GetUser({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("parses token get user by sub", async () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    const output = await getUser(TestContext, {
+    const output = await getUser(MockContext, {
       AccessToken: jwt.sign(
         {
           sub: attributeValue("sub", user.Attributes),
@@ -57,7 +57,7 @@ describe("GetUser target", () => {
 
   it("throws if token isn't valid", async () => {
     await expect(
-      getUser(TestContext, {
+      getUser(MockContext, {
         AccessToken: "blah",
       })
     ).rejects.toBeInstanceOf(InvalidParameterError);
@@ -67,7 +67,7 @@ describe("GetUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      getUser(TestContext, {
+      getUser(MockContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",

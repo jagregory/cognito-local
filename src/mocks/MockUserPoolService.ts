@@ -1,7 +1,7 @@
 import { UserPoolService } from "../services";
 import { UserPool, UserPoolServiceFactory } from "../services/userPoolService";
 
-export const newMockUserPoolService = (
+export const MockUserPoolService = (
   config: UserPool = {
     Id: "test",
   }
@@ -18,8 +18,8 @@ export const newMockUserPoolService = (
   storeRefreshToken: jest.fn(),
 });
 
-export const newMockUserPoolServiceFactory = (
-  cognitoService: jest.Mocked<UserPoolService> = newMockUserPoolService()
+export const MockUserPoolServiceFactory = (
+  cognitoService: jest.Mocked<UserPoolService> = MockUserPoolService()
 ): jest.Mocked<UserPoolServiceFactory> => ({
   create: jest.fn().mockResolvedValue(cognitoService),
 });

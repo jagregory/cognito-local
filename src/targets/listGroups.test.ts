@@ -1,28 +1,28 @@
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { UserPoolService } from "../services";
 import { ListGroups, ListGroupsTarget } from "./listGroups";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockGroup } from "../mocks/MockGroup";
 
 describe("ListGroups target", () => {
   let listGroups: ListGroupsTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     listGroups = ListGroups({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("lists groups", async () => {
-    const group1 = TDB.group();
-    const group2 = TDB.group();
+    const group1 = MockGroup();
+    const group2 = MockGroup();
 
     mockUserPoolService.listGroups.mockResolvedValue([group1, group2]);
 
-    const output = await listGroups(TestContext, {
+    const output = await listGroups(MockContext, {
       UserPoolId: "userPoolId",
     });
 

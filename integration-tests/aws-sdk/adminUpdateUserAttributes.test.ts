@@ -1,4 +1,4 @@
-import { UUID } from "../../src/__tests__/patterns";
+import { UUID } from "../../src/mocks";
 import { withCognitoSdk } from "./setup";
 
 describe(

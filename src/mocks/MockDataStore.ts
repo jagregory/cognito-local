@@ -1,15 +1,15 @@
 import { DataStore } from "../services/dataStore/dataStore";
 import { DataStoreFactory } from "../services/dataStore/factory";
 
-export const newMockDataStore = (): jest.Mocked<DataStore> => ({
+export const MockDataStore = (): jest.Mocked<DataStore> => ({
   delete: jest.fn(),
   get: jest.fn(),
   getRoot: jest.fn(),
   set: jest.fn(),
 });
 
-export const newMockDataStoreFactory = (
-  dataStore: jest.Mocked<DataStore> = newMockDataStore()
+export const MockDataStoreFactory = (
+  dataStore: jest.Mocked<DataStore> = MockDataStore()
 ): jest.Mocked<DataStoreFactory> => ({
   create: jest.fn().mockResolvedValue(dataStore),
 });

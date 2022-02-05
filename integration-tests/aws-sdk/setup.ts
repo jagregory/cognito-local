@@ -4,8 +4,8 @@ import http from "http";
 import type { Logger } from "pino";
 import { promisify } from "util";
 import { createServer } from "../../src";
-import { MockLogger } from "../../src/__tests__/mockLogger";
-import { newMockMessageDelivery } from "../../src/__tests__/mockMessageDelivery";
+import { MockLogger } from "../../src/mocks/MockLogger";
+import { MockMessageDelivery } from "../../src/mocks/MockMessageDelivery";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
@@ -65,7 +65,7 @@ export const withCognitoSdk =
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
-        messages: new MessagesService(triggers, newMockMessageDelivery()),
+        messages: new MessagesService(triggers, MockMessageDelivery()),
         otp,
         triggers,
         tokenGenerator: new JwtTokenGenerator(

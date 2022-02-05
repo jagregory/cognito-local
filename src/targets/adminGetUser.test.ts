@@ -1,28 +1,29 @@
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
 import { AdminGetUser, AdminGetUserTarget } from "./adminGetUser";
+import { MockUser } from "../mocks/MockUser";
 
 describe("AdminGetUser target", () => {
   let adminGetUser: AdminGetUserTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     adminGetUser = AdminGetUser({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("gets the user", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
-    const result = await adminGetUser(TestContext, {
+    const result = await adminGetUser(MockContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
     });
@@ -38,12 +39,12 @@ describe("AdminGetUser target", () => {
   });
 
   it("handles trying to get an invalid user", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminGetUser(TestContext, {
+      adminGetUser(MockContext, {
         Username: existingUser.Username,
         UserPoolId: "test",
       })

@@ -1,6 +1,6 @@
 import { Clock } from "../services";
 
-export class ClockFake implements Clock {
+export class MockClock implements Clock {
   private currentValue: Date;
 
   constructor(initialValue: Date) {

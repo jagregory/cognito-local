@@ -1,31 +1,32 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { DeleteUser, DeleteUserTarget } from "./deleteUser";
+import { MockUser } from "../mocks/MockUser";
 
 describe("DeleteUser target", () => {
   let deleteUser: DeleteUserTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     deleteUser = DeleteUser({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("parses token get user by sub", async () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await deleteUser(TestContext, {
+    await deleteUser(MockContext, {
       AccessToken: jwt.sign(
         {
           sub: "0000-0000",
@@ -48,14 +49,14 @@ describe("DeleteUser target", () => {
     });
 
     expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       user
     );
   });
 
   it("throws if token isn't valid", async () => {
     await expect(
-      deleteUser(TestContext, {
+      deleteUser(MockContext, {
         AccessToken: "blah",
       })
     ).rejects.toBeInstanceOf(InvalidParameterError);
@@ -65,7 +66,7 @@ describe("DeleteUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      deleteUser(TestContext, {
+      deleteUser(MockContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",

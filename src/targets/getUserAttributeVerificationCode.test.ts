@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockMessages } from "../mocks/MockMessages";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { Messages, UserPoolService } from "../services";
@@ -12,7 +12,7 @@ import {
   GetUserAttributeVerificationCode,
   GetUserAttributeVerificationCodeTarget,
 } from "./getUserAttributeVerificationCode";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../mocks/MockUser";
 
 const validToken = jwt.sign(
   {
@@ -40,13 +40,13 @@ describe("GetUserAttributeVerificationCode target", () => {
   let mockMessages: jest.Mocked<Messages>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService({
+    mockUserPoolService = MockUserPoolService({
       Id: "test",
       AutoVerifiedAttributes: ["email"],
     });
-    mockMessages = newMockMessages();
+    mockMessages = MockMessages();
     getUserAttributeVerificationCode = GetUserAttributeVerificationCode({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       messages: mockMessages,
       otp: () => "1234",
     });
@@ -54,7 +54,7 @@ describe("GetUserAttributeVerificationCode target", () => {
 
   it("throws if token isn't valid", async () => {
     await expect(
-      getUserAttributeVerificationCode(TestContext, {
+      getUserAttributeVerificationCode(MockContext, {
         AccessToken: "blah",
         AttributeName: "email",
       })
@@ -65,7 +65,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      getUserAttributeVerificationCode(TestContext, {
+      getUserAttributeVerificationCode(MockContext, {
         AccessToken: validToken,
         AttributeName: "email",
       })
@@ -73,14 +73,14 @@ describe("GetUserAttributeVerificationCode target", () => {
   });
 
   it("throws if the user doesn't have a valid way to contact them", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Attributes: [],
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      getUserAttributeVerificationCode(TestContext, {
+      getUserAttributeVerificationCode(MockContext, {
         ClientMetadata: {
           client: "metadata",
         },
@@ -95,13 +95,13 @@ describe("GetUserAttributeVerificationCode target", () => {
   });
 
   it("delivers a OTP code to the user", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Attributes: [attribute("email", "example@example.com")],
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await getUserAttributeVerificationCode(TestContext, {
+    await getUserAttributeVerificationCode(MockContext, {
       ClientMetadata: {
         client: "metadata",
       },
@@ -110,7 +110,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     });
 
     expect(mockMessages.deliver).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       "VerifyUserAttribute",
       null,
       "test",
@@ -125,7 +125,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     );
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       expect.objectContaining({
         AttributeVerificationCode: "1234",
       })

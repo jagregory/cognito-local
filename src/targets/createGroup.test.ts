@@ -1,7 +1,7 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockClock } from "../mocks/MockClock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { UserPoolService } from "../services";
 import { CreateGroup, CreateGroupTarget } from "./createGroup";
 
@@ -12,15 +12,15 @@ describe("CreateGroup target", () => {
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     createGroup = CreateGroup({
-      clock: new ClockFake(originalDate),
-      cognito: newMockCognitoService(mockUserPoolService),
+      clock: new MockClock(originalDate),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("creates a group", async () => {
-    await createGroup(TestContext, {
+    await createGroup(MockContext, {
       Description: "Description",
       GroupName: "theGroupName",
       Precedence: 1,
@@ -28,7 +28,7 @@ describe("CreateGroup target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(MockContext, {
       CreationDate: originalDate,
       Description: "Description",
       GroupName: "theGroupName",

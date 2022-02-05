@@ -1,8 +1,8 @@
-import { newMockCognitoService } from "../../__tests__/mockCognitoService";
-import { newMockLambda } from "../../__tests__/mockLambda";
-import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
-import { UUID } from "../../__tests__/patterns";
-import { TestContext } from "../../__tests__/testContext";
+import { MockCognitoService } from "../../mocks/MockCognitoService";
+import { MockLambda } from "../../mocks/MockLambda";
+import { MockUserPoolService } from "../../mocks/MockUserPoolService";
+import { UUID } from "../../mocks";
+import { MockContext } from "../../mocks/MockContext";
 import { NotAuthorizedError } from "../../errors";
 import { DateClock } from "../clock";
 import { Lambda } from "../lambda";
@@ -15,11 +15,11 @@ describe("UserMigration trigger", () => {
   let userMigration: UserMigrationTrigger;
 
   beforeEach(() => {
-    mockLambda = newMockLambda();
-    mockUserPoolService = newMockUserPoolService();
+    mockLambda = MockLambda();
+    mockUserPoolService = MockUserPoolService();
     userMigration = UserMigration({
       clock: new DateClock(),
-      cognitoClient: newMockCognitoService(mockUserPoolService),
+      cognitoClient: MockCognitoService(mockUserPoolService),
       lambda: mockLambda,
     });
   });
@@ -29,7 +29,7 @@ describe("UserMigration trigger", () => {
       mockLambda.invoke.mockRejectedValue(new Error("Something bad happened"));
 
       await expect(
-        userMigration(TestContext, {
+        userMigration(MockContext, {
           clientId: "clientId",
           clientMetadata: undefined,
           password: "password",
@@ -50,7 +50,7 @@ describe("UserMigration trigger", () => {
         },
       });
 
-      const user = await userMigration(TestContext, {
+      const user = await userMigration(MockContext, {
         clientMetadata: {
           client: "metadata",
         },
@@ -65,7 +65,7 @@ describe("UserMigration trigger", () => {
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         "UserMigration",
         {
           clientId: "clientId",
@@ -98,7 +98,7 @@ describe("UserMigration trigger", () => {
         finalUserStatus: "RESET_REQUIRED",
       });
 
-      const user = await userMigration(TestContext, {
+      const user = await userMigration(MockContext, {
         clientId: "clientId",
         clientMetadata: undefined,
         password: "password",
