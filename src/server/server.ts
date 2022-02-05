@@ -4,7 +4,7 @@ import express from "express";
 import * as http from "http";
 import type { Logger } from "pino";
 import * as uuid from "uuid";
-import { CognitoError, unsupported, UnsupportedError } from "../errors";
+import { CognitoError, UnsupportedError } from "../errors";
 import { Router } from "../targets/router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import Pino from "pino-http";
@@ -105,7 +105,11 @@ export const createServer = (
             req.log.info("======");
           }
 
-          unsupported(ex.message, res, req.log);
+          req.log.error(`Cognito Local unsupported feature: ${ex.message}`);
+          res.status(500).json({
+            code: "CognitoLocal#Unsupported",
+            message: `Cognito Local unsupported feature: ${ex.message}`,
+          });
           return;
         } else if (ex instanceof CognitoError) {
           req.log.warn(ex, `Error handling target: ${target}`);
