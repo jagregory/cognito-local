@@ -10,7 +10,7 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import { Token } from "../services/tokenGenerator";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type ChangePasswordTarget = Target<
   ChangePasswordRequest,

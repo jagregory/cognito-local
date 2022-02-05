@@ -15,7 +15,7 @@ import {
   attributeValue,
   User,
 } from "../services/userPoolService";
-import { Context, Target } from "./router";
+import { Context, Target } from "../server/Router";
 
 export type SignUpTarget = Target<SignUpRequest, SignUpResponse>;
 

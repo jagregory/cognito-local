@@ -1,7 +1,7 @@
 import { AdminDeleteUserRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { UserNotFoundError } from "../errors";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type AdminDeleteUserTarget = Target<AdminDeleteUserRequest, {}>;
 

@@ -3,7 +3,7 @@ import {
   ListGroupsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type ListGroupsTarget = Target<ListGroupsRequest, ListGroupsResponse>;
 

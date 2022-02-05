@@ -5,7 +5,7 @@ import {
 import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type ConfirmSignUpTarget = Target<
   ConfirmSignUpRequest,

@@ -4,7 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type DescribeUserPoolClientTarget = Target<
   DescribeUserPoolClientRequest,

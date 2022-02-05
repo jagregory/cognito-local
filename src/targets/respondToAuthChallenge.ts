@@ -9,7 +9,7 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type RespondToAuthChallengeTarget = Target<
   RespondToAuthChallengeRequest,

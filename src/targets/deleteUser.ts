@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 import { Token } from "../services/tokenGenerator";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type DeleteUserTarget = Target<DeleteUserRequest, {}>;
 

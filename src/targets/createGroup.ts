@@ -4,7 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { Group } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "../server/Router";
 
 export type CreateGroupTarget = Target<CreateGroupRequest, CreateGroupResponse>;
 

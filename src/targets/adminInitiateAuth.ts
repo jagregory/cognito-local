@@ -9,7 +9,7 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
-import { Context, Target } from "./router";
+import { Context, Target } from "../server/Router";
 
 export type AdminInitiateAuthTarget = Target<
   AdminInitiateAuthRequest,

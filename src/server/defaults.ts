@@ -14,7 +14,7 @@ import { MessageDeliveryService } from "../services/messageDelivery/messageDeliv
 import { otp } from "../services/otp";
 import { JwtTokenGenerator } from "../services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../services/userPoolService";
-import { Router } from "../targets/router";
+import { Router } from "./Router";
 import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
 
