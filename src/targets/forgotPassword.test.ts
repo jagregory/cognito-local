@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
@@ -23,7 +23,7 @@ describe("ForgotPassword target", () => {
     mockOtp = jest.fn().mockReturnValue("1234");
     forgotPassword = ForgotPassword({
       cognito: MockCognitoService(mockUserPoolService),
-      clock: new MockClock(currentDate),
+      clock: new DateClock(currentDate),
       messages: mockMessages,
       otp: mockOtp,
     });

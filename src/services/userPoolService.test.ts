@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { MockDataStore, MockDataStoreFactory } from "../mocks/MockDataStore";
 import { MockContext } from "../mocks/MockContext";
@@ -22,7 +22,7 @@ describe("UserPoolServiceFactory", () => {
 
     const clientsDataStore = MockDataStore();
     const factory = new UserPoolServiceFactoryImpl(
-      new MockClock(new Date()),
+      new DateClock(new Date()),
       mockDataStoreFactory
     );
 
@@ -46,10 +46,10 @@ describe("User Pool Service", () => {
   let mockClientsDataStore: jest.Mocked<DataStore>;
   const currentDate = new Date(2020, 1, 2, 3, 4, 5);
 
-  let clock: MockClock;
+  let clock: DateClock;
 
   beforeEach(() => {
-    clock = new MockClock(currentDate);
+    clock = new DateClock(currentDate);
 
     mockClientsDataStore = MockDataStore();
   });

@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockTriggers } from "../mocks/MockTriggers";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
@@ -16,10 +16,10 @@ describe("ConfirmSignUp target", () => {
   let confirmSignUp: ConfirmSignUpTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
   let mockTriggers: jest.Mocked<Triggers>;
-  let clock: MockClock;
+  let clock: DateClock;
 
   beforeEach(() => {
-    clock = new MockClock(originalDate);
+    clock = new DateClock(originalDate);
 
     mockUserPoolService = MockUserPoolService();
     mockTriggers = MockTriggers();

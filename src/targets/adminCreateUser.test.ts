@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
@@ -21,7 +21,7 @@ describe("AdminCreateUser target", () => {
     mockMessages = MockMessages();
     adminCreateUser = AdminCreateUser({
       cognito: MockCognitoService(mockUserPoolService),
-      clock: new MockClock(originalDate),
+      clock: new DateClock(originalDate),
       messages: mockMessages,
     });
   });

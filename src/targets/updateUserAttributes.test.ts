@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
@@ -19,7 +19,7 @@ import {
 } from "./updateUserAttributes";
 import { MockUser } from "../mocks/MockUser";
 
-const clock = new MockClock(new Date());
+const clock = new DateClock(new Date());
 
 const validToken = jwt.sign(
   {

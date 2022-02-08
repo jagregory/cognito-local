@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
@@ -14,11 +14,11 @@ import { MockUser } from "../mocks/MockUser";
 describe("AdminSetUser target", () => {
   let adminSetUserPassword: AdminSetUserPasswordTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: MockClock;
+  let clock: DateClock;
 
   beforeEach(() => {
     mockUserPoolService = MockUserPoolService();
-    clock = new MockClock(new Date());
+    clock = new DateClock(new Date());
     adminSetUserPassword = AdminSetUserPassword({
       cognito: MockCognitoService(mockUserPoolService),
       clock,

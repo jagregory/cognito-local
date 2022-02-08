@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
@@ -14,7 +14,7 @@ describe("CreateGroup target", () => {
   beforeEach(() => {
     mockUserPoolService = MockUserPoolService();
     createGroup = CreateGroup({
-      clock: new MockClock(originalDate),
+      clock: new DateClock(originalDate),
       cognito: MockCognitoService(mockUserPoolService),
     });
   });

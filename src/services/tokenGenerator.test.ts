@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockTriggers } from "../mocks/MockTriggers";
 import { UUID } from "../mocks";
 import { MockContext } from "../mocks/MockContext";
@@ -15,7 +15,7 @@ describe("JwtTokenGenerator", () => {
   let tokenGenerator: TokenGenerator;
 
   const user = MockUser();
-  const clock = new MockClock(originalDate);
+  const clock = new DateClock(originalDate);
 
   beforeEach(() => {
     mockTriggers = MockTriggers();

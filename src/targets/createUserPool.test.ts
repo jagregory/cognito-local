@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
@@ -18,7 +18,7 @@ describe("CreateUserPool target", () => {
     mockCognitoService = MockCognitoService(MockUserPoolService());
     createUserPool = CreateUserPool({
       cognito: mockCognitoService,
-      clock: new MockClock(originalDate),
+      clock: new DateClock(originalDate),
     });
   });
 

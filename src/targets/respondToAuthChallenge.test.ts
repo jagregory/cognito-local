@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockTokenGenerator } from "../mocks/MockTokenGenerator";
 import { MockTriggers } from "../mocks/MockTriggers";
@@ -24,10 +24,10 @@ describe("RespondToAuthChallenge target", () => {
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: MockClock;
+  let clock: DateClock;
 
   beforeEach(() => {
-    clock = new MockClock(currentDate);
+    clock = new DateClock(currentDate);
     mockTokenGenerator = MockTokenGenerator();
     mockTriggers = MockTriggers();
     mockUserPoolService = MockUserPoolService();

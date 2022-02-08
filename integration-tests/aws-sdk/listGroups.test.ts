@@ -1,11 +1,11 @@
-import { MockClock } from "../../src/mocks/MockClock";
+import { DateClock } from "../../src/services/clock";
 import { withCognitoSdk } from "./setup";
 
 const originalDate = new Date();
 const roundedDate = new Date(originalDate.getTime());
 roundedDate.setMilliseconds(0);
 
-const clock = new MockClock(originalDate);
+const clock = new DateClock(originalDate);
 
 describe(
   "CognitoIdentityServiceProvider.listGroups",

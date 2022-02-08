@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
@@ -25,7 +25,7 @@ describe("ChangePassword target", () => {
     mockUserPoolService = MockUserPoolService();
     changePassword = ChangePassword({
       cognito: MockCognitoService(mockUserPoolService),
-      clock: new MockClock(currentDate),
+      clock: new DateClock(currentDate),
     });
   });
 

@@ -1,4 +1,4 @@
-import { MockClock } from "../mocks/MockClock";
+import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockTriggers } from "../mocks/MockTriggers";
@@ -32,7 +32,7 @@ describe("SignUp target", () => {
     mockTriggers = MockTriggers();
     signUp = SignUp({
       cognito: MockCognitoService(mockUserPoolService),
-      clock: new MockClock(now),
+      clock: new DateClock(now),
       messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
