@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { Logger } from "./log";
+import { LogService } from "./services/LogService";
 
 export class UnsupportedError extends Error {}
 
@@ -84,7 +84,11 @@ export class InvalidParameterError extends CognitoError {
   }
 }
 
-export const unsupported = (message: string, res: Response, logger: Logger) => {
+export const unsupported = (
+  message: string,
+  res: Response,
+  logger: LogService
+) => {
   logger.error(`Cognito Local unsupported feature: ${message}`);
   return res.status(500).json({
     code: "CognitoLocal#Unsupported",

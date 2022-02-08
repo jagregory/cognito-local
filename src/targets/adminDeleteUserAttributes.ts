@@ -5,7 +5,7 @@ import {
 import { NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 import { attributesRemove } from "../services/userPoolService";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type AdminDeleteUserAttributesTarget = Target<
   AdminDeleteUserAttributesRequest,

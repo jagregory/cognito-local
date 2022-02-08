@@ -1,4 +1,4 @@
-import { Logger } from "../log";
+import { LogService } from "../services/LogService";
 
 export const MockLogger = {
   info: jest.fn(),
@@ -8,4 +8,4 @@ export const MockLogger = {
   child() {
     return this;
   },
-} as Logger;
+} as LogService;

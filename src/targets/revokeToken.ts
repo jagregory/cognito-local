@@ -4,7 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { NotAuthorizedError } from "../errors";
 import { Services } from "../services";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type RevokeTokenTarget = Target<RevokeTokenRequest, RevokeTokenResponse>;
 

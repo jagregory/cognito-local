@@ -13,7 +13,8 @@ import {
   User,
   validatePermittedAttributeChanges,
 } from "../services/userPoolService";
-import { Context, Target } from "../server/Router";
+import { Target } from "./Target";
+import { Context } from "../services/context";
 
 const sendAttributeVerificationCode = async (
   ctx: Context,

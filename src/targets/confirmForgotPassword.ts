@@ -5,7 +5,7 @@ import {
 import { CodeMismatchError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type ConfirmForgotPasswordTarget = Target<
   ConfirmForgotPasswordRequest,

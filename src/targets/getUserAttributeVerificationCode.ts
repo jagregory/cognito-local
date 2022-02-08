@@ -8,7 +8,8 @@ import { InvalidParameterError, UserNotFoundError } from "../errors";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
 import { Token } from "../services/tokenGenerator";
 import { User } from "../services/userPoolService";
-import { Context, Target } from "../server/Router";
+import { Target } from "./Target";
+import { Context } from "../services/context";
 
 const sendAttributeVerificationCode = async (
   ctx: Context,

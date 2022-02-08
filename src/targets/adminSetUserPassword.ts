@@ -4,7 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UserNotFoundError } from "../errors";
 import { Services } from "../services";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type AdminSetUserPasswordTarget = Target<
   AdminSetUserPasswordRequest,

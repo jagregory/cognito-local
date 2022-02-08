@@ -6,7 +6,7 @@ import { UnsupportedError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import { attributeValue } from "../services/userPoolService";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type ForgotPasswordTarget = Target<
   ForgotPasswordRequest,

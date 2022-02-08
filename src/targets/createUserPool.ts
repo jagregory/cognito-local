@@ -6,7 +6,7 @@ import {
 import shortUUID from "short-uuid";
 import { Services } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 const REGION = "local";
 const ACCOUNT_ID = "local";

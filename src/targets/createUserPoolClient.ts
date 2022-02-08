@@ -3,7 +3,7 @@ import {
   CreateUserPoolClientResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
-import { Target } from "../server/Router";
+import { Target } from "./Target";
 
 export type CreateUserPoolClientTarget = Target<
   CreateUserPoolClientRequest,
