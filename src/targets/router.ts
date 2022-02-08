@@ -1,4 +1,4 @@
-import { Logger } from "../log";
+import { LogService } from "../services/LogService";
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
@@ -65,7 +65,7 @@ export const Targets = {
 
 type TargetName = keyof typeof Targets;
 
-export type Context = { readonly logger: Logger };
+export type Context = { readonly logger: LogService };
 export type Target<Req extends {}, Res extends {}> = (
   ctx: Context,
   req: Req
