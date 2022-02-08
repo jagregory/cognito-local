@@ -15,7 +15,7 @@ import {
   RespondToAuthChallenge,
   RespondToAuthChallengeTarget,
 } from "./respondToAuthChallenge";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 

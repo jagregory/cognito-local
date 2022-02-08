@@ -7,7 +7,7 @@ import {
   PostAuthentication,
   PostAuthenticationTrigger,
 } from "./postAuthentication";
-import { MockUser } from "../../mocks/MockUser";
+import { MockUser } from "../../models/UserModel";
 
 describe("PostAuthentication trigger", () => {
   let mockLambda: jest.Mocked<Lambda>;

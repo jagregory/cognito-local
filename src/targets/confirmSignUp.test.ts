@@ -8,7 +8,7 @@ import { CodeMismatchError, NotAuthorizedError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import { ConfirmSignUp, ConfirmSignUpTarget } from "./confirmSignUp";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const originalDate = new Date();
 

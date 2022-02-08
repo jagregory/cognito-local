@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { UUID } from "../../src/mocks";
+import { UUID } from "../../src/models";
 import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
 

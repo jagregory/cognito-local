@@ -14,7 +14,7 @@ import {
   Group,
   UserPoolServiceFactoryImpl,
 } from "./userPoolService";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("UserPoolServiceFactory", () => {
   it("creates a database", async () => {

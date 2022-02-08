@@ -4,7 +4,7 @@ import { MockContext } from "../mocks/MockContext";
 
 import { CognitoService } from "../services";
 import { ListUserPools, ListUserPoolsTarget } from "./listUserPools";
-import { MockUserPool } from "../mocks/MockUserPool";
+import { UserPoolModel } from "../models/UserPoolModel";
 
 describe("ListUserPools target", () => {
   let listUserPools: ListUserPoolsTarget;
@@ -18,8 +18,8 @@ describe("ListUserPools target", () => {
   });
 
   it("lists user pools", async () => {
-    const userPool1 = MockUserPool();
-    const userPool2 = MockUserPool();
+    const userPool1 = UserPoolModel();
+    const userPool2 = UserPoolModel();
 
     mockCognitoService.listUserPools.mockResolvedValue([userPool1, userPool2]);
 

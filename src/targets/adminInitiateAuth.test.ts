@@ -10,7 +10,7 @@ import {
   AdminInitiateAuth,
   AdminInitiateAuthTarget,
 } from "./adminInitiateAuth";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminInitiateAuth target", () => {
   let adminInitiateAuth: AdminInitiateAuthTarget;

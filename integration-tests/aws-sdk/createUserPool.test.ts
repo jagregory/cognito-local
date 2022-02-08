@@ -1,6 +1,6 @@
 import Pino from "pino";
 import { DateClock } from "../../src/services/clock";
-import { UUID } from "../../src/mocks";
+import { UUID } from "../../src/models";
 import { USER_POOL_AWS_DEFAULTS } from "../../src/services/cognitoService";
 import { withCognitoSdk } from "./setup";
 

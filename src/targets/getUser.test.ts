@@ -8,7 +8,7 @@ import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
 import { GetUser, GetUserTarget } from "./getUser";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;

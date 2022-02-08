@@ -9,7 +9,7 @@ import {
   AdminDeleteUserAttributes,
   AdminDeleteUserAttributesTarget,
 } from "./adminDeleteUserAttributes";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminDeleteUserAttributes target", () => {
   let adminDeleteUserAttributes: AdminDeleteUserAttributesTarget;

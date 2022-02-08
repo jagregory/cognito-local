@@ -3,7 +3,7 @@ import { MockMessages } from "../mocks/MockMessages";
 import { MockTokenGenerator } from "../mocks/MockTokenGenerator";
 import { MockTriggers } from "../mocks/MockTriggers";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
-import { UUID } from "../mocks";
+import { UUID } from "../models";
 import { MockContext } from "../mocks/MockContext";
 
 import {
@@ -16,7 +16,7 @@ import { Messages, Triggers, UserPoolService } from "../services";
 import { TokenGenerator } from "../services/tokenGenerator";
 import { attributesToRecord, User } from "../services/userPoolService";
 import { InitiateAuth, InitiateAuthTarget } from "./initiateAuth";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("InitiateAuth target", () => {
   let initiateAuth: InitiateAuthTarget;

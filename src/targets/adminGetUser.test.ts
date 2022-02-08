@@ -5,7 +5,7 @@ import { MockContext } from "../mocks/MockContext";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
 import { AdminGetUser, AdminGetUserTarget } from "./adminGetUser";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminGetUser target", () => {
   let adminGetUser: AdminGetUserTarget;

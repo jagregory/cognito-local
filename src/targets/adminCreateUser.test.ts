@@ -2,12 +2,12 @@ import { DateClock } from "../services/clock";
 import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
-import { UUID } from "../mocks";
+import { UUID } from "../models";
 import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Messages, UserPoolService } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const originalDate = new Date();
 

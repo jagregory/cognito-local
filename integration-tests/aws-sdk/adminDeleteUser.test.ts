@@ -1,5 +1,5 @@
 import { DateClock } from "../../src/services/clock";
-import { UUID } from "../../src/mocks";
+import { UUID } from "../../src/models";
 import { UserNotFoundError } from "../../src/errors";
 import { withCognitoSdk } from "./setup";
 

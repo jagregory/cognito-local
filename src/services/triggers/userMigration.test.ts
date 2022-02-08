@@ -1,7 +1,7 @@
 import { MockCognitoService } from "../../mocks/MockCognitoService";
 import { MockLambda } from "../../mocks/MockLambda";
 import { MockUserPoolService } from "../../mocks/MockUserPoolService";
-import { UUID } from "../../mocks";
+import { UUID } from "../../models";
 import { MockContext } from "../../mocks/MockContext";
 import { NotAuthorizedError } from "../../errors";
 import { DateClock } from "../clock";

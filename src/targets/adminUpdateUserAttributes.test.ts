@@ -14,7 +14,7 @@ import {
   AdminUpdateUserAttributes,
   AdminUpdateUserAttributesTarget,
 } from "./adminUpdateUserAttributes";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminUpdateUserAttributes target", () => {
   let adminUpdateUserAttributes: AdminUpdateUserAttributesTarget;

@@ -17,7 +17,7 @@ import {
   VerifyUserAttribute,
   VerifyUserAttributeTarget,
 } from "./verifyUserAttribute";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const clock = new DateClock(new Date());
 

@@ -3,7 +3,7 @@ import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
 import { UserPoolService } from "../services";
 import { ListUsers, ListUsersTarget } from "./listUsers";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;

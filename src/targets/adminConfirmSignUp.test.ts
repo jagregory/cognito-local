@@ -10,7 +10,7 @@ import {
   AdminConfirmSignUp,
   AdminConfirmSignUpTarget,
 } from "./adminConfirmSignUp";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 

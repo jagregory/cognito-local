@@ -4,7 +4,7 @@ import { MockContext } from "../mocks/MockContext";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
 import { MessagesService } from "./messages";
 import { Triggers } from "./triggers";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("messages service", () => {
   let mockTriggers: jest.Mocked<Triggers>;

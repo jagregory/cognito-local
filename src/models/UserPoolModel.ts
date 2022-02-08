@@ -1,15 +1,18 @@
-import { id } from "./";
+import { id } from ".";
 import { UserPool } from "../services/userPoolService";
 
-export const MockUserPool = (partial?: Partial<UserPool>): UserPool => {
+function userPoolArn(userPoolId: string) {
+  return `arn:aws:cognito-idp:local:local:userpool/${userPoolId}`;
+}
+
+export const UserPoolModel = (partial?: Partial<UserPool>): UserPool => {
   const userPoolId = partial?.Id ?? id("local_UserPool");
 
   return {
     AccountRecoverySetting: partial?.AccountRecoverySetting ?? undefined,
     AdminCreateUserConfig: partial?.AdminCreateUserConfig ?? undefined,
     AliasAttributes: partial?.AliasAttributes ?? undefined,
-    Arn:
-      partial?.Arn ?? `arn:aws:cognito-idp:local:local:userpool/${userPoolId}`,
+    Arn: partial?.Arn ?? userPoolArn(userPoolId),
     AutoVerifiedAttributes: partial?.AutoVerifiedAttributes ?? undefined,
     CreationDate: partial?.CreationDate ?? new Date(),
     CustomDomain: partial?.CustomDomain ?? undefined,

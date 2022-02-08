@@ -4,7 +4,7 @@ import { MockContext } from "../mocks/MockContext";
 
 import { CognitoService, UserPoolService } from "../services";
 import { RevokeToken, RevokeTokenTarget } from "./revokeToken";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminInitiateAuth target", () => {
   let revokeToken: RevokeTokenTarget;

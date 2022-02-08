@@ -8,7 +8,7 @@ import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { DeleteUser, DeleteUserTarget } from "./deleteUser";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("DeleteUser target", () => {
   let deleteUser: DeleteUserTarget;

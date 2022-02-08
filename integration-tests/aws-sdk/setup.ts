@@ -2,7 +2,6 @@ import * as AWS from "aws-sdk";
 import fs from "fs";
 import http from "http";
 import type { Logger } from "pino";
-import { promisify } from "util";
 import { createServer } from "../../src";
 import { MockLogger } from "../../src/mocks/MockLogger";
 import { MockMessageDelivery } from "../../src/mocks/MockMessageDelivery";
@@ -22,9 +21,6 @@ import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
 import { Router } from "../../src/targets/router";
 
-const mkdtemp = promisify(fs.mkdtemp);
-const rmdir = promisify(fs.rmdir);
-
 export const withCognitoSdk =
   (
     fn: (
@@ -43,7 +39,7 @@ export const withCognitoSdk =
     let dataStoreFactory: DataStoreFactory;
 
     beforeEach(async () => {
-      dataDirectory = await mkdtemp("/tmp/cognito-local:");
+      dataDirectory = fs.mkdtempSync("/tmp/cognito-local:");
       const ctx = { logger };
 
       dataStoreFactory = new StormDBDataStoreFactory(
@@ -105,9 +101,8 @@ export const withCognitoSdk =
 
     afterEach((done) => {
       httpServer.close(() => {
-        rmdir(dataDirectory, {
-          recursive: true,
-        }).then(done, done);
+        fs.rmSync(dataDirectory, { recursive: true });
+        done();
       });
     });
   };

@@ -10,7 +10,7 @@ import {
   ConfirmForgotPassword,
   ConfirmForgotPasswordTarget,
 } from "./confirmForgotPassword";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 

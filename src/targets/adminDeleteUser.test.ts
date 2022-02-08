@@ -5,7 +5,7 @@ import { MockContext } from "../mocks/MockContext";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
 import { AdminDeleteUser, AdminDeleteUserTarget } from "./adminDeleteUser";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminDeleteUser target", () => {
   let adminDeleteUser: AdminDeleteUserTarget;

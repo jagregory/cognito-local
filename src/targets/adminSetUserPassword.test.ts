@@ -9,7 +9,7 @@ import {
   AdminSetUserPassword,
   AdminSetUserPasswordTarget,
 } from "./adminSetUserPassword";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminSetUser target", () => {
   let adminSetUserPassword: AdminSetUserPasswordTarget;

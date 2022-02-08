@@ -1,4 +1,4 @@
-import { UUID } from "../../src/mocks";
+import { UUID } from "../../src/models";
 import { MockContext } from "../../src/mocks/MockContext";
 import { withCognitoSdk } from "./setup";
 import { User } from "../../src/services/userPoolService";

@@ -13,7 +13,7 @@ import {
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { ChangePassword, ChangePasswordTarget } from "./changePassword";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 

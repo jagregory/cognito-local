@@ -6,20 +6,16 @@ import {
   USER_POOL_AWS_DEFAULTS,
 } from "../src/services/cognitoService";
 import fs from "fs";
-import { promisify } from "util";
 import { NoOpCache } from "../src/services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
-
-const mkdtemp = promisify(fs.mkdtemp);
-const rmdir = promisify(fs.rmdir);
 
 describe("Cognito Service", () => {
   let dataDirectory: string;
   let factory: CognitoServiceFactory;
 
-  beforeEach(async () => {
-    dataDirectory = await mkdtemp("/tmp/cognito-local:");
+  beforeEach(() => {
+    dataDirectory = fs.mkdtempSync("/tmp/cognito-local:");
 
     const clock = new DateClock();
     const dataStoreFactory = new StormDBDataStoreFactory(
@@ -36,7 +32,7 @@ describe("Cognito Service", () => {
   });
 
   afterEach(() =>
-    rmdir(dataDirectory, {
+    fs.rmSync(dataDirectory, {
       recursive: true,
     })
   );

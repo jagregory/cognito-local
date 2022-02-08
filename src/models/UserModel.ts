@@ -1,4 +1,4 @@
-import { id } from "./";
+import { id } from ".";
 import { v4 } from "uuid";
 import { User } from "../services/userPoolService";
 

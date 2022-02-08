@@ -3,7 +3,7 @@ import { MockUserPoolService } from "../mocks/MockUserPoolService";
 import { MockContext } from "../mocks/MockContext";
 import { UserPoolService } from "../services";
 import { ListGroups, ListGroupsTarget } from "./listGroups";
-import { MockGroup } from "../mocks/MockGroup";
+import { GroupModel } from "../models/GroupModel";
 
 describe("ListGroups target", () => {
   let listGroups: ListGroupsTarget;
@@ -17,8 +17,8 @@ describe("ListGroups target", () => {
   });
 
   it("lists groups", async () => {
-    const group1 = MockGroup();
-    const group2 = MockGroup();
+    const group1 = GroupModel();
+    const group2 = GroupModel();
 
     mockUserPoolService.listGroups.mockResolvedValue([group1, group2]);
 

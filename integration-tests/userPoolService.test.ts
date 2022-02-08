@@ -1,15 +1,10 @@
 import fs from "fs";
-import { promisify } from "util";
 import { MockContext } from "../src/mocks/MockContext";
 import { CognitoService, DateClock, UserPoolService } from "../src/services";
 import { CognitoServiceFactoryImpl } from "../src/services/cognitoService";
 import { NoOpCache } from "../src/services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
-
-const mkdtemp = promisify(fs.mkdtemp);
-const readFile = promisify(fs.readFile);
-const rmdir = promisify(fs.rmdir);
 
 const validUsernameExamples = ["ExampleUsername", "example.username"];
 
@@ -18,7 +13,7 @@ describe("User Pool Service", () => {
   let cognitoClient: CognitoService;
 
   beforeEach(async () => {
-    dataDirectory = await mkdtemp("/tmp/cognito-local:");
+    dataDirectory = fs.mkdtempSync("/tmp/cognito-local:");
     const clock = new DateClock();
     const dataStoreFactory = new StormDBDataStoreFactory(
       dataDirectory,
@@ -34,7 +29,7 @@ describe("User Pool Service", () => {
   });
 
   afterEach(() =>
-    rmdir(dataDirectory, {
+    fs.rmSync(dataDirectory, {
       recursive: true,
     })
   );
@@ -66,7 +61,7 @@ describe("User Pool Service", () => {
         });
 
         const file = JSON.parse(
-          await readFile(dataDirectory + "/local.json", "utf-8")
+          fs.readFileSync(dataDirectory + "/local.json", "utf-8")
         );
 
         expect(file.Users).toEqual({
@@ -106,7 +101,7 @@ describe("User Pool Service", () => {
         });
 
         let file = JSON.parse(
-          await readFile(dataDirectory + "/local.json", "utf-8")
+          fs.readFileSync(dataDirectory + "/local.json", "utf-8")
         );
 
         expect(file.Users).toEqual({
@@ -141,7 +136,7 @@ describe("User Pool Service", () => {
         });
 
         file = JSON.parse(
-          await readFile(dataDirectory + "/local.json", "utf-8")
+          fs.readFileSync(dataDirectory + "/local.json", "utf-8")
         );
 
         expect(file.Users).toEqual({

@@ -1,26 +1,21 @@
 import fs from "fs";
 import StormDB from "stormdb";
-import { promisify } from "util";
 import { MockContext } from "../src/mocks/MockContext";
 import { InMemoryCache, NoOpCache } from "../src/services/dataStore/cache";
 import { DataStoreFactory } from "../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 
-const mkdtemp = promisify(fs.mkdtemp);
-const readFile = promisify(fs.readFile);
-const rmdir = promisify(fs.rmdir);
-
 describe("Data Store", () => {
   let path: string;
   let factory: DataStoreFactory;
 
-  beforeEach(async () => {
-    path = await mkdtemp("/tmp/cognito-local:");
+  beforeEach(() => {
+    path = fs.mkdtempSync("/tmp/cognito-local:");
     factory = new StormDBDataStoreFactory(path, new NoOpCache());
   });
 
   afterEach(() =>
-    rmdir(path, {
+    fs.rmSync(path, {
       recursive: true,
     })
   );
@@ -36,7 +31,7 @@ describe("Data Store", () => {
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
     expect(file).toEqual({
       DefaultValue: true,
     });
@@ -49,7 +44,7 @@ describe("Data Store", () => {
 
     expect(fs.existsSync(path + "/example.json")).toBe(true);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
     expect(file).toEqual({
       Users: {
         a: {
@@ -66,7 +61,7 @@ describe("Data Store", () => {
 
     await dataStore.set(MockContext, "key", 1);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
     expect(file).toEqual({
       DefaultValue: true,
       key: 1,
@@ -81,7 +76,7 @@ describe("Data Store", () => {
       await dataStore.set(MockContext, "key2", 2);
 
       const fileBefore = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        fs.readFileSync(path + "/example.json", "utf-8")
       );
 
       expect(fileBefore).toEqual({
@@ -92,7 +87,7 @@ describe("Data Store", () => {
       await dataStore.delete(MockContext, "key1");
 
       const fileAfter = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        fs.readFileSync(path + "/example.json", "utf-8")
       );
 
       expect(fileAfter).toEqual({
@@ -108,7 +103,7 @@ describe("Data Store", () => {
       await dataStore.set(MockContext, "key2", 3);
 
       const fileBefore = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        fs.readFileSync(path + "/example.json", "utf-8")
       );
 
       expect(fileBefore).toEqual({
@@ -124,7 +119,7 @@ describe("Data Store", () => {
       await dataStore.delete(MockContext, ["key", "a", "b"]);
 
       const fileAfter = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        fs.readFileSync(path + "/example.json", "utf-8")
       );
 
       expect(fileAfter).toEqual({
@@ -145,7 +140,7 @@ describe("Data Store", () => {
       await dataStore.set(MockContext, "key1", 1);
       await dataStore.set(MockContext, "key2", 2);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         key1: 1,
@@ -160,7 +155,7 @@ describe("Data Store", () => {
 
       await dataStore.set(MockContext, "SomethingDate", date);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         SomethingDate: date.toISOString(),
@@ -186,7 +181,7 @@ describe("Data Store", () => {
 
       await dataStore.set(MockContext, ["key", "a", "b"], 1);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         key: {
@@ -202,7 +197,7 @@ describe("Data Store", () => {
 
       await dataStore.set(MockContext, "key.a.b", 1);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         "key.a.b": 1,
@@ -214,7 +209,7 @@ describe("Data Store", () => {
 
       await dataStore.set(MockContext, "key", 1);
 
-      let file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      let file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         key: 1,
@@ -222,7 +217,7 @@ describe("Data Store", () => {
 
       await dataStore.set(MockContext, "key", 2);
 
-      file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      file = JSON.parse(fs.readFileSync(path + "/example.json", "utf-8"));
 
       expect(file).toEqual({
         key: 2,

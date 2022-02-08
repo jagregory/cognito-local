@@ -1,7 +1,7 @@
 import { Group } from "../services/userPoolService";
-import { id } from "./";
+import { id } from ".";
 
-export const MockGroup = (partial?: Partial<Group>): Group => ({
+export const GroupModel = (partial?: Partial<Group>): Group => ({
   CreationDate: partial?.CreationDate ?? new Date(),
   Description: partial?.Description ?? undefined,
   GroupName: partial?.GroupName ?? id("Group"),

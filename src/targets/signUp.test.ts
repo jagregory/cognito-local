@@ -3,7 +3,7 @@ import { MockCognitoService } from "../mocks/MockCognitoService";
 import { MockMessages } from "../mocks/MockMessages";
 import { MockTriggers } from "../mocks/MockTriggers";
 import { MockUserPoolService } from "../mocks/MockUserPoolService";
-import { UUID } from "../mocks";
+import { UUID } from "../models";
 import { MockContext } from "../mocks/MockContext";
 
 import {
@@ -13,7 +13,7 @@ import {
 } from "../errors";
 import { Messages, Triggers, UserPoolService } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;

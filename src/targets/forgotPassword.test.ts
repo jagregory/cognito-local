@@ -7,7 +7,7 @@ import { UserNotFoundError } from "../errors";
 import { Messages, UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
 import { ForgotPassword, ForgotPasswordTarget } from "./forgotPassword";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 

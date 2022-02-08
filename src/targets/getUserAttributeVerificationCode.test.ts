@@ -12,7 +12,7 @@ import {
   GetUserAttributeVerificationCode,
   GetUserAttributeVerificationCodeTarget,
 } from "./getUserAttributeVerificationCode";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const validToken = jwt.sign(
   {

@@ -17,7 +17,7 @@ import {
   UpdateUserAttributes,
   UpdateUserAttributesTarget,
 } from "./updateUserAttributes";
-import { MockUser } from "../mocks/MockUser";
+import { MockUser } from "../models/UserModel";
 
 const clock = new DateClock(new Date());
 

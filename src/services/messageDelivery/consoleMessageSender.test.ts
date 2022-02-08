@@ -1,5 +1,5 @@
 import { MockContext } from "../../mocks/MockContext";
-import { MockUser } from "../../mocks/MockUser";
+import { MockUser } from "../../models/UserModel";
 import { ConsoleMessageSender } from "./consoleMessageSender";
 
 describe("consoleMessageSender", () => {
