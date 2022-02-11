@@ -149,7 +149,10 @@ const refreshTokenAuthFlow = async (
 export const AdminInitiateAuth =
   (services: AdminInitiateAuthServices): AdminInitiateAuthTarget =>
   async (ctx, req) => {
-    if (req.AuthFlow === "ADMIN_USER_PASSWORD_AUTH") {
+    if (
+      req.AuthFlow === "ADMIN_USER_PASSWORD_AUTH" ||
+      req.AuthFlow === "ADMIN_NO_SRP_AUTH"
+    ) {
       return adminUserPasswordAuthFlow(ctx, services, req);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN_AUTH" ||

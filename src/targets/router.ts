@@ -3,6 +3,7 @@ import { Services } from "../services";
 import { UnsupportedError } from "../errors";
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
+import { AdminRespondToAuthChallenge } from "./adminRespondToAuthChallenge";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
 import { CreateGroup } from "./createGroup";
@@ -40,6 +41,7 @@ export const Targets = {
   AdminInitiateAuth,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
+  AdminRespondToAuthChallenge,
   ChangePassword,
   ConfirmForgotPassword,
   ConfirmSignUp,
