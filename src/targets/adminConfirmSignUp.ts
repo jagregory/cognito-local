@@ -5,7 +5,7 @@ import {
 import { Services } from "../services";
 import { NotAuthorizedError } from "../errors";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "./Target";
 
 export type AdminConfirmSignUpTarget = Target<
   AdminConfirmSignUpRequest,

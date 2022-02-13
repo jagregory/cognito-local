@@ -17,7 +17,8 @@ import {
   attributeValue,
   User,
 } from "../services/userPoolService";
-import { Context, Target } from "./router";
+import { Context } from "../services/context";
+import { Target } from "./Target";
 
 const generator = shortUUID(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!"

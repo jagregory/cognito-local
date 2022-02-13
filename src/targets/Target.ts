@@ -1,6 +1,5 @@
-import { LogService } from "../services/LogService";
-import { Services } from "../services";
-import { UnsupportedError } from "../errors";
+import { Context } from "../services/context";
+
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
@@ -63,47 +62,13 @@ export const Targets = {
   VerifyUserAttribute,
 } as const;
 
-type TargetName = keyof typeof Targets;
+export type TargetName = keyof typeof Targets;
 
-export type Context = { readonly logger: LogService };
 export type Target<Req extends {}, Res extends {}> = (
   ctx: Context,
   req: Req
 ) => Promise<Res>;
 
+//export const registerTarget = (target: Target) => Targets
 export const isSupportedTarget = (name: string): name is TargetName =>
   Object.keys(Targets).includes(name);
-
-// eslint-disable-next-line
-export type Route = (ctx: Context, req: any) => Promise<any>;
-export type Router = (target: string) => Route;
-
-export const Router =
-  (services: Services): Router =>
-  (target: string) => {
-    if (!isSupportedTarget(target)) {
-      return () =>
-        Promise.reject(
-          new UnsupportedError(`Unsupported x-amz-target header "${target}"`)
-        );
-    }
-
-    const t = Targets[target](services);
-
-    return async (ctx, req) => {
-      const targetLogger = ctx.logger.child({
-        target,
-      });
-
-      targetLogger.debug("start");
-      const res = await t(
-        {
-          ...ctx,
-          logger: targetLogger,
-        },
-        req
-      );
-      targetLogger.debug("end");
-      return res;
-    };
-  };

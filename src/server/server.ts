@@ -5,7 +5,7 @@ import * as http from "http";
 import type { Logger } from "pino";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
-import { Router } from "../targets/router";
+import { Router } from "./Router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import Pino from "pino-http";
 

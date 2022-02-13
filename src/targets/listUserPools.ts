@@ -4,7 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { UserPool } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "./Target";
 
 export type ListUserPoolsTarget = Target<
   ListUserPoolsRequest,

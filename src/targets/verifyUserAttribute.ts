@@ -11,7 +11,7 @@ import {
 import { Services } from "../services";
 import { Token } from "../services/tokenGenerator";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "./Target";
 
 export type VerifyUserAttributeTarget = Target<
   VerifyUserAttributeRequest,
