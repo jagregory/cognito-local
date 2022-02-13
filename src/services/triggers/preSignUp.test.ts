@@ -1,5 +1,5 @@
-import { newMockLambda } from "../../__tests__/mockLambda";
-import { TestContext } from "../../__tests__/testContext";
+import { MockLambda } from "../../mocks/MockLambda";
+import { MockContext } from "../../mocks/MockContext";
 import { Lambda } from "../lambda";
 import { PreSignUp, PreSignUpTrigger } from "./preSignUp";
 
@@ -8,7 +8,7 @@ describe("PreSignUp trigger", () => {
   let preSignUp: PreSignUpTrigger;
 
   beforeEach(() => {
-    mockLambda = newMockLambda();
+    mockLambda = MockLambda();
     preSignUp = PreSignUp({
       lambda: mockLambda,
     });
@@ -26,7 +26,7 @@ describe("PreSignUp trigger", () => {
         );
 
         await expect(
-          preSignUp(TestContext, {
+          preSignUp(MockContext, {
             clientId: "clientId",
             clientMetadata: undefined,
             source,
@@ -43,7 +43,7 @@ describe("PreSignUp trigger", () => {
       it("quietly completes", async () => {
         mockLambda.invoke.mockResolvedValue({});
 
-        await preSignUp(TestContext, {
+        await preSignUp(MockContext, {
           clientMetadata: {
             client: "metadata",
           },
@@ -58,7 +58,7 @@ describe("PreSignUp trigger", () => {
         });
 
         expect(mockLambda.invoke).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "PreSignUp",
           {
             clientId: "clientId",

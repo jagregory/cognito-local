@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockMessages } from "../mocks/MockMessages";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { Messages, UserPoolService } from "../services";
@@ -17,9 +17,9 @@ import {
   UpdateUserAttributes,
   UpdateUserAttributesTarget,
 } from "./updateUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../models/UserModel";
 
-const clock = new ClockFake(new Date());
+const clock = new DateClock(new Date());
 
 const validToken = jwt.sign(
   {
@@ -47,11 +47,11 @@ describe("UpdateUserAttributes target", () => {
   let mockMessages: jest.Mocked<Messages>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    mockMessages = newMockMessages();
+    mockUserPoolService = MockUserPoolService();
+    mockMessages = MockMessages();
     updateUserAttributes = UpdateUserAttributes({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       messages: mockMessages,
       otp: () => "1234",
     });
@@ -59,7 +59,7 @@ describe("UpdateUserAttributes target", () => {
 
   it("throws if the token is invalid", async () => {
     await expect(
-      updateUserAttributes(TestContext, {
+      updateUserAttributes(MockContext, {
         AccessToken: "invalid token",
         ClientMetadata: {
           client: "metadata",
@@ -73,7 +73,7 @@ describe("UpdateUserAttributes target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      updateUserAttributes(TestContext, {
+      updateUserAttributes(MockContext, {
         AccessToken: validToken,
         ClientMetadata: {
           client: "metadata",
@@ -84,7 +84,7 @@ describe("UpdateUserAttributes target", () => {
   });
 
   it("saves the updated attributes on the user", async () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
     mockUserPoolService.config.SchemaAttributes = [
@@ -94,7 +94,7 @@ describe("UpdateUserAttributes target", () => {
       },
     ];
 
-    await updateUserAttributes(TestContext, {
+    await updateUserAttributes(MockContext, {
       AccessToken: validToken,
       ClientMetadata: {
         client: "metadata",
@@ -102,7 +102,7 @@ describe("UpdateUserAttributes target", () => {
       UserAttributes: [attribute("custom:example", "1")],
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
@@ -137,10 +137,10 @@ describe("UpdateUserAttributes target", () => {
     });
 
     it("throws an invalid parameter error", async () => {
-      mockUserPoolService.getUserByUsername.mockResolvedValue(TDB.user());
+      mockUserPoolService.getUserByUsername.mockResolvedValue(MockUser());
 
       await expect(
-        updateUserAttributes(TestContext, {
+        updateUserAttributes(MockContext, {
           AccessToken: validToken,
           ClientMetadata: {
             client: "metadata",
@@ -155,11 +155,11 @@ describe("UpdateUserAttributes target", () => {
     "%s is in req.UserAttributes without the relevant verified attribute",
     (attr) => {
       it(`sets the ${attr}_verified attribute to false`, async () => {
-        const user = TDB.user();
+        const user = MockUser();
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await updateUserAttributes(TestContext, {
+        await updateUserAttributes(MockContext, {
           AccessToken: validToken,
           ClientMetadata: {
             client: "metadata",
@@ -167,7 +167,7 @@ describe("UpdateUserAttributes target", () => {
           UserAttributes: [attribute(attr, "new value")],
         });
 
-        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
           ...user,
           Attributes: attributesAppend(
             user.Attributes,
@@ -193,7 +193,7 @@ describe("UpdateUserAttributes target", () => {
     `("when $attributes is unverified", ({ attributes }) => {
       describe("the verification status was not affected by the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: attributes.map((attr: string) =>
               attribute(`${attr}_verified`, "false")
             ),
@@ -204,7 +204,7 @@ describe("UpdateUserAttributes target", () => {
             { Name: "example", Mutable: true },
           ];
 
-          await updateUserAttributes(TestContext, {
+          await updateUserAttributes(MockContext, {
             AccessToken: validToken,
             ClientMetadata: {
               client: "metadata",
@@ -218,14 +218,14 @@ describe("UpdateUserAttributes target", () => {
 
       describe("the verification status changed because of the update", () => {
         it("throws if the user doesn't have a valid way to contact them", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: [],
           });
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
           await expect(
-            updateUserAttributes(TestContext, {
+            updateUserAttributes(MockContext, {
               AccessToken: validToken,
               ClientMetadata: {
                 client: "metadata",
@@ -242,11 +242,11 @@ describe("UpdateUserAttributes target", () => {
         });
 
         it("delivers a OTP code to the user", async () => {
-          const user = TDB.user();
+          const user = MockUser();
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-          await updateUserAttributes(TestContext, {
+          await updateUserAttributes(MockContext, {
             AccessToken: validToken,
             ClientMetadata: {
               client: "metadata",
@@ -257,7 +257,7 @@ describe("UpdateUserAttributes target", () => {
           });
 
           expect(mockMessages.deliver).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             "UpdateUserAttribute",
             null,
             "test",
@@ -272,7 +272,7 @@ describe("UpdateUserAttributes target", () => {
           );
 
           expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             expect.objectContaining({
               AttributeVerificationCode: "1234",
             })
@@ -295,7 +295,7 @@ describe("UpdateUserAttributes target", () => {
     `("when $attributes is unverified", ({ attributes }) => {
       describe("the verification status was not affected by the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: attributes.map((attr: string) =>
               attribute(`${attr}_verified`, "false")
             ),
@@ -306,7 +306,7 @@ describe("UpdateUserAttributes target", () => {
             { Name: "example", Mutable: true },
           ];
 
-          await updateUserAttributes(TestContext, {
+          await updateUserAttributes(MockContext, {
             AccessToken: validToken,
             ClientMetadata: {
               client: "metadata",
@@ -320,11 +320,11 @@ describe("UpdateUserAttributes target", () => {
 
       describe("the verification status changed because of the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user();
+          const user = MockUser();
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-          await updateUserAttributes(TestContext, {
+          await updateUserAttributes(MockContext, {
             AccessToken: validToken,
             ClientMetadata: {
               client: "metadata",

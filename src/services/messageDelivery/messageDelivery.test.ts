@@ -1,4 +1,4 @@
-import { TestContext } from "../../__tests__/testContext";
+import { MockContext } from "../../mocks/MockContext";
 import { User } from "../userPoolService";
 import { MessageDeliveryService } from "./messageDelivery";
 import { MessageSender } from "./messageSender";
@@ -28,7 +28,7 @@ describe("Message Delivery", () => {
       const messageDelivery = new MessageDeliveryService(sender);
 
       await messageDelivery.deliver(
-        TestContext,
+        MockContext,
         user,
         {
           Destination: "example@example.com",
@@ -39,7 +39,7 @@ describe("Message Delivery", () => {
       );
 
       expect(sender.sendEmail).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         user,
         "example@example.com",
         message
@@ -61,7 +61,7 @@ describe("Message Delivery", () => {
       const messageDelivery = new MessageDeliveryService(sender);
 
       await messageDelivery.deliver(
-        TestContext,
+        MockContext,
         user,
         {
           Destination: "0123445670",
@@ -72,7 +72,7 @@ describe("Message Delivery", () => {
       );
 
       expect(sender.sendSms).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         user,
         "0123445670",
         message

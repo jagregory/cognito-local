@@ -1,15 +1,16 @@
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { newMockTriggers } from "../__tests__/mockTriggers";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockTokenGenerator } from "../mocks/MockTokenGenerator";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockTriggers } from "../mocks/MockTriggers";
+import { MockContext } from "../mocks/MockContext";
+
 import { CognitoService, Triggers, UserPoolService } from "../services";
 import { TokenGenerator } from "../services/tokenGenerator";
 import {
   AdminInitiateAuth,
   AdminInitiateAuthTarget,
 } from "./adminInitiateAuth";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminInitiateAuth target", () => {
   let adminInitiateAuth: AdminInitiateAuthTarget;
@@ -20,10 +21,10 @@ describe("AdminInitiateAuth target", () => {
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    mockCognitoService = newMockCognitoService(mockUserPoolService);
-    mockTriggers = newMockTriggers();
-    mockTokenGenerator = newMockTokenGenerator();
+    mockUserPoolService = MockUserPoolService();
+    mockCognitoService = MockCognitoService(mockUserPoolService);
+    mockTriggers = MockTriggers();
+    mockTokenGenerator = MockTokenGenerator();
     adminInitiateAuth = AdminInitiateAuth({
       triggers: mockTriggers,
       cognito: mockCognitoService,
@@ -38,11 +39,11 @@ describe("AdminInitiateAuth target", () => {
       RefreshToken: "refresh",
     });
 
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
-    const response = await adminInitiateAuth(TestContext, {
+    const response = await adminInitiateAuth(MockContext, {
       AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
       ClientId: "clientId",
       UserPoolId: "test",
@@ -56,7 +57,7 @@ describe("AdminInitiateAuth target", () => {
     });
 
     expect(mockUserPoolService.storeRefreshToken).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       response.AuthenticationResult?.RefreshToken,
       existingUser
     );
@@ -66,7 +67,7 @@ describe("AdminInitiateAuth target", () => {
     expect(response.AuthenticationResult?.RefreshToken).toEqual("refresh");
 
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       existingUser,
       "clientId",
       "test",
@@ -84,13 +85,13 @@ describe("AdminInitiateAuth target", () => {
       RefreshToken: "refresh",
     });
 
-    const existingUser = TDB.user({
+    const existingUser = MockUser({
       RefreshTokens: ["refresh token"],
     });
 
     mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
 
-    const response = await adminInitiateAuth(TestContext, {
+    const response = await adminInitiateAuth(MockContext, {
       AuthFlow: "REFRESH_TOKEN_AUTH",
       ClientId: "clientId",
       UserPoolId: "test",
@@ -103,7 +104,7 @@ describe("AdminInitiateAuth target", () => {
     });
 
     expect(mockUserPoolService.getUserByRefreshToken).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       "refresh token"
     );
     expect(mockUserPoolService.storeRefreshToken).not.toHaveBeenCalled();
@@ -115,7 +116,7 @@ describe("AdminInitiateAuth target", () => {
     expect(response.AuthenticationResult?.RefreshToken).not.toBeDefined();
 
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       existingUser,
       "clientId",
       "test",

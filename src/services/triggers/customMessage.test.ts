@@ -1,5 +1,5 @@
-import { newMockLambda } from "../../__tests__/mockLambda";
-import { TestContext } from "../../__tests__/testContext";
+import { MockLambda } from "../../mocks/MockLambda";
+import { MockContext } from "../../mocks/MockContext";
 import { Lambda } from "../lambda";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
 
@@ -8,7 +8,7 @@ describe("CustomMessage trigger", () => {
   let customMessage: CustomMessageTrigger;
 
   beforeEach(() => {
-    mockLambda = newMockLambda();
+    mockLambda = MockLambda();
     customMessage = CustomMessage({
       lambda: mockLambda,
     });
@@ -18,7 +18,7 @@ describe("CustomMessage trigger", () => {
     it("returns null", async () => {
       mockLambda.invoke.mockRejectedValue(new Error("Something bad happened"));
 
-      const message = await customMessage(TestContext, {
+      const message = await customMessage(MockContext, {
         clientId: "clientId",
         clientMetadata: undefined,
         code: "1234",
@@ -40,7 +40,7 @@ describe("CustomMessage trigger", () => {
         smsMessage: "hi {username} your code is {####}. via sms",
       });
 
-      const message = await customMessage(TestContext, {
+      const message = await customMessage(MockContext, {
         clientId: "clientId",
         clientMetadata: {
           client: "metadata",
@@ -53,7 +53,7 @@ describe("CustomMessage trigger", () => {
       });
 
       expect(mockLambda.invoke).toHaveBeenCalledWith(
-        TestContext,
+        MockContext,
         "CustomMessage",
         {
           clientId: "clientId",

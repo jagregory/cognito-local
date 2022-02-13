@@ -1,6 +1,6 @@
 import Pino from "pino";
-import { ClockFake } from "../../src/__tests__/clockFake";
-import { UUID } from "../../src/__tests__/patterns";
+import { DateClock } from "../../src/services/clock";
+import { UUID } from "../../src/models";
 import { USER_POOL_AWS_DEFAULTS } from "../../src/services/cognitoService";
 import { withCognitoSdk } from "./setup";
 
@@ -8,7 +8,7 @@ const currentDate = new Date();
 const roundedDate = new Date(currentDate.getTime());
 roundedDate.setMilliseconds(0);
 
-const clock = new ClockFake(currentDate);
+const clock = new DateClock(currentDate);
 
 describe(
   "CognitoIdentityServiceProvider.createUserPool",

@@ -1,11 +1,12 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import { CognitoService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import { CreateUserPool, CreateUserPoolTarget } from "./createUserPool";
+import { UserPoolModel } from "../models/UserPoolModel";
 
 const originalDate = new Date();
 
@@ -14,23 +15,23 @@ describe("CreateUserPool target", () => {
   let mockCognitoService: jest.Mocked<CognitoService>;
 
   beforeEach(() => {
-    mockCognitoService = newMockCognitoService(newMockUserPoolService());
+    mockCognitoService = MockCognitoService(MockUserPoolService());
     createUserPool = CreateUserPool({
       cognito: mockCognitoService,
-      clock: new ClockFake(originalDate),
+      clock: new DateClock(originalDate),
     });
   });
 
   it("creates a new user pool", async () => {
-    const createdUserPool = TDB.userPool();
+    const createdUserPool = UserPoolModel();
     mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
 
-    const result = await createUserPool(TestContext, {
+    const result = await createUserPool(MockContext, {
       PoolName: "test-pool",
     });
 
     expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       {
         Arn: expect.stringMatching(
           /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
@@ -49,10 +50,10 @@ describe("CreateUserPool target", () => {
   });
 
   it("creates a new user pool with a custom attribute", async () => {
-    const createdUserPool = TDB.userPool();
+    const createdUserPool = UserPoolModel();
     mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
 
-    const result = await createUserPool(TestContext, {
+    const result = await createUserPool(MockContext, {
       PoolName: "test-pool",
       Schema: [
         {
@@ -63,7 +64,7 @@ describe("CreateUserPool target", () => {
     });
 
     expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       {
         Arn: expect.stringMatching(
           /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
@@ -92,10 +93,10 @@ describe("CreateUserPool target", () => {
   });
 
   it("creates a new user pool with an overridden attribute", async () => {
-    const createdUserPool = TDB.userPool();
+    const createdUserPool = UserPoolModel();
     mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
 
-    const result = await createUserPool(TestContext, {
+    const result = await createUserPool(MockContext, {
       PoolName: "test-pool",
       Schema: [
         {
@@ -107,7 +108,7 @@ describe("CreateUserPool target", () => {
     });
 
     expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
-      TestContext,
+      MockContext,
       {
         Arn: expect.stringMatching(
           /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/

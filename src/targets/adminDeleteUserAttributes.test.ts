@@ -1,7 +1,7 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { NotAuthorizedError } from "../errors";
 import { UserPoolService } from "../services";
 import { attribute } from "../services/userPoolService";
@@ -9,25 +9,25 @@ import {
   AdminDeleteUserAttributes,
   AdminDeleteUserAttributesTarget,
 } from "./adminDeleteUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminDeleteUserAttributes target", () => {
   let adminDeleteUserAttributes: AdminDeleteUserAttributesTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: ClockFake;
+  let clock: DateClock;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    clock = new ClockFake(new Date());
+    mockUserPoolService = MockUserPoolService();
+    clock = new DateClock(new Date());
     adminDeleteUserAttributes = AdminDeleteUserAttributes({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("throws if the user doesn't exist", async () => {
     await expect(
-      adminDeleteUserAttributes(TestContext, {
+      adminDeleteUserAttributes(MockContext, {
         UserPoolId: "test",
         Username: "abc",
         UserAttributeNames: ["custom:example"],
@@ -36,7 +36,7 @@ describe("AdminDeleteUserAttributes target", () => {
   });
 
   it("saves the updated attributes on the user", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Attributes: [
         attribute("email", "example@example.com"),
         attribute("custom:example", "1"),
@@ -45,13 +45,13 @@ describe("AdminDeleteUserAttributes target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await adminDeleteUserAttributes(TestContext, {
+    await adminDeleteUserAttributes(MockContext, {
       UserPoolId: "test",
       Username: "abc",
       UserAttributeNames: ["custom:example"],
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: [attribute("email", "example@example.com")],
       UserLastModifiedDate: clock.get(),

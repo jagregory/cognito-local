@@ -1,13 +1,13 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { UUID } from "../__tests__/patterns";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockMessages } from "../mocks/MockMessages";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { UUID } from "../models";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Messages, UserPoolService } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
+import { MockUser } from "../models/UserModel";
 
 const originalDate = new Date();
 
@@ -17,17 +17,17 @@ describe("AdminCreateUser target", () => {
   let mockMessages: jest.Mocked<Messages>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    mockMessages = newMockMessages();
+    mockUserPoolService = MockUserPoolService();
+    mockMessages = MockMessages();
     adminCreateUser = AdminCreateUser({
-      cognito: newMockCognitoService(mockUserPoolService),
-      clock: new ClockFake(originalDate),
+      cognito: MockCognitoService(mockUserPoolService),
+      clock: new DateClock(originalDate),
       messages: mockMessages,
     });
   });
 
   it("saves a new user with a provided temporary password", async () => {
-    await adminCreateUser(TestContext, {
+    await adminCreateUser(MockContext, {
       TemporaryPassword: "pwd",
       UserAttributes: [
         { Name: "email", Value: "example@example.com" },
@@ -37,7 +37,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       Attributes: [
         {
           Name: "sub",
@@ -57,7 +57,7 @@ describe("AdminCreateUser target", () => {
   });
 
   it("saves a new user with a generated temporary password", async () => {
-    await adminCreateUser(TestContext, {
+    await adminCreateUser(MockContext, {
       UserAttributes: [
         { Name: "email", Value: "example@example.com" },
         { Name: "phone_number", Value: "0400000000" },
@@ -66,7 +66,7 @@ describe("AdminCreateUser target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       Attributes: [
         {
           Name: "sub",
@@ -88,7 +88,7 @@ describe("AdminCreateUser target", () => {
   describe("messages", () => {
     describe("DesiredDeliveryMediums=EMAIL", () => {
       it("sends a welcome email to the user", async () => {
-        const response = await adminCreateUser(TestContext, {
+        const response = await adminCreateUser(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -100,7 +100,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "AdminCreateUser",
           null,
           "test",
@@ -119,7 +119,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without email attribute", async () => {
         await expect(
-          adminCreateUser(TestContext, {
+          adminCreateUser(MockContext, {
             DesiredDeliveryMediums: ["EMAIL"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -138,7 +138,7 @@ describe("AdminCreateUser target", () => {
 
     describe("DesiredDeliveryMediums=SMS", () => {
       it("sends a welcome sms to the user", async () => {
-        const response = await adminCreateUser(TestContext, {
+        const response = await adminCreateUser(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -150,7 +150,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "AdminCreateUser",
           null,
           "test",
@@ -169,7 +169,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without phone_number attribute", async () => {
         await expect(
-          adminCreateUser(TestContext, {
+          adminCreateUser(MockContext, {
             DesiredDeliveryMediums: ["SMS"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -188,7 +188,7 @@ describe("AdminCreateUser target", () => {
 
     describe("DesiredDeliveryMediums=default", () => {
       it("sends a welcome sms to the user", async () => {
-        const response = await adminCreateUser(TestContext, {
+        const response = await adminCreateUser(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -199,7 +199,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "AdminCreateUser",
           null,
           "test",
@@ -218,7 +218,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for user without phone_number attribute", async () => {
         await expect(
-          adminCreateUser(TestContext, {
+          adminCreateUser(MockContext, {
             ClientMetadata: {
               client: "metadata",
             },
@@ -239,7 +239,7 @@ describe("AdminCreateUser target", () => {
 
     describe("DesiredDeliveryMediums=EMAIL and SMS", () => {
       it("sends a welcome sms to a user with a phone_number and an email", async () => {
-        const response = await adminCreateUser(TestContext, {
+        const response = await adminCreateUser(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -254,7 +254,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "AdminCreateUser",
           null,
           "test",
@@ -272,7 +272,7 @@ describe("AdminCreateUser target", () => {
       });
 
       it("sends a welcome email to a user without a phone_number but with an email", async () => {
-        const response = await adminCreateUser(TestContext, {
+        const response = await adminCreateUser(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -284,7 +284,7 @@ describe("AdminCreateUser target", () => {
         });
 
         expect(mockMessages.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "AdminCreateUser",
           null,
           "test",
@@ -303,7 +303,7 @@ describe("AdminCreateUser target", () => {
 
       it("fails for users without phone_number or email", async () => {
         await expect(
-          adminCreateUser(TestContext, {
+          adminCreateUser(MockContext, {
             DesiredDeliveryMediums: ["EMAIL", "SMS"],
             TemporaryPassword: "pwd",
             UserAttributes: [],
@@ -326,11 +326,11 @@ describe("AdminCreateUser target", () => {
   it.todo("can suppress the welcome message");
 
   it("handles creating a duplicate user", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     await expect(
-      adminCreateUser(TestContext, {
+      adminCreateUser(MockContext, {
         TemporaryPassword: "pwd",
         UserAttributes: existingUser.Attributes,
         Username: existingUser.Username,

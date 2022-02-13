@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
@@ -12,9 +12,9 @@ import {
   DeleteUserAttributes,
   DeleteUserAttributesTarget,
 } from "./deleteUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../models/UserModel";
 
-const clock = new ClockFake(new Date());
+const clock = new DateClock(new Date());
 
 const validToken = jwt.sign(
   {
@@ -41,10 +41,10 @@ describe("DeleteUserAttributes target", () => {
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     deleteUserAttributes = DeleteUserAttributes({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
@@ -52,7 +52,7 @@ describe("DeleteUserAttributes target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      deleteUserAttributes(TestContext, {
+      deleteUserAttributes(MockContext, {
         AccessToken: validToken,
         UserAttributeNames: ["custom:example"],
       })
@@ -61,7 +61,7 @@ describe("DeleteUserAttributes target", () => {
 
   it("throws if the token is invalid", async () => {
     await expect(
-      deleteUserAttributes(TestContext, {
+      deleteUserAttributes(MockContext, {
         AccessToken: "invalid token",
         UserAttributeNames: ["custom:example"],
       })
@@ -69,7 +69,7 @@ describe("DeleteUserAttributes target", () => {
   });
 
   it("saves the updated attributes on the user", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Attributes: [
         attribute("email", "example@example.com"),
         attribute("custom:example", "1"),
@@ -78,12 +78,12 @@ describe("DeleteUserAttributes target", () => {
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await deleteUserAttributes(TestContext, {
+    await deleteUserAttributes(MockContext, {
       AccessToken: validToken,
       UserAttributeNames: ["custom:example"],
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: [attribute("email", "example@example.com")],
       UserLastModifiedDate: clock.get(),

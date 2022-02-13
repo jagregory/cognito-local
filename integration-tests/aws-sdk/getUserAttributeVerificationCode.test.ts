@@ -1,5 +1,5 @@
-import { UUID } from "../../src/__tests__/patterns";
-import { TestContext } from "../../src/__tests__/testContext";
+import { UUID } from "../../src/models";
+import { MockContext } from "../../src/mocks/MockContext";
 import { withCognitoSdk } from "./setup";
 import { User } from "../../src/services/userPoolService";
 
@@ -62,8 +62,8 @@ describe(
         .promise();
 
       // get the user's code -- this is very nasty
-      const ds = await DataStoreFactory().create(TestContext, userPoolId, {});
-      const storedUser = (await ds.get(TestContext, ["Users", "abc"])) as User;
+      const ds = await DataStoreFactory().create(MockContext, userPoolId, {});
+      const storedUser = (await ds.get(MockContext, ["Users", "abc"])) as User;
 
       expect(storedUser.AttributeVerificationCode).toMatch(/^\d{4}$/);
     });

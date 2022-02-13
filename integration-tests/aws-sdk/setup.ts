@@ -2,10 +2,9 @@ import * as AWS from "aws-sdk";
 import fs from "fs";
 import http from "http";
 import type { Logger } from "pino";
-import { promisify } from "util";
 import { createServer } from "../../src";
-import { MockLogger } from "../../src/__tests__/mockLogger";
-import { newMockMessageDelivery } from "../../src/__tests__/mockMessageDelivery";
+import { MockLogger } from "../../src/mocks/MockLogger";
+import { MockMessageDelivery } from "../../src/mocks/MockMessageDelivery";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
@@ -21,9 +20,6 @@ import { otp } from "../../src/services/otp";
 import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
 import { Router } from "../../src/server/Router";
-
-const mkdtemp = promisify(fs.mkdtemp);
-const rmdir = promisify(fs.rmdir);
 
 export const withCognitoSdk =
   (
@@ -43,7 +39,7 @@ export const withCognitoSdk =
     let dataStoreFactory: DataStoreFactory;
 
     beforeEach(async () => {
-      dataDirectory = await mkdtemp("/tmp/cognito-local:");
+      dataDirectory = fs.mkdtempSync("/tmp/cognito-local:");
       const ctx = { logger };
 
       dataStoreFactory = new StormDBDataStoreFactory(
@@ -65,7 +61,7 @@ export const withCognitoSdk =
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
-        messages: new MessagesService(triggers, newMockMessageDelivery()),
+        messages: new MessagesService(triggers, MockMessageDelivery()),
         otp,
         triggers,
         tokenGenerator: new JwtTokenGenerator(
@@ -105,9 +101,8 @@ export const withCognitoSdk =
 
     afterEach((done) => {
       httpServer.close(() => {
-        rmdir(dataDirectory, {
-          recursive: true,
-        }).then(done, done);
+        fs.rmSync(dataDirectory, { recursive: true });
+        done();
       });
     });
   };

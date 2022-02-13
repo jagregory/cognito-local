@@ -1,8 +1,8 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockMessages } from "../__tests__/mockMessages";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockMessages } from "../mocks/MockMessages";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import { Messages, UserPoolService } from "../services";
 import {
@@ -14,21 +14,21 @@ import {
   AdminUpdateUserAttributes,
   AdminUpdateUserAttributesTarget,
 } from "./adminUpdateUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminUpdateUserAttributes target", () => {
   let adminUpdateUserAttributes: AdminUpdateUserAttributesTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: ClockFake;
+  let clock: DateClock;
   let mockMessages: jest.Mocked<Messages>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    clock = new ClockFake(new Date());
-    mockMessages = newMockMessages();
+    mockUserPoolService = MockUserPoolService();
+    clock = new DateClock(new Date());
+    mockMessages = MockMessages();
     adminUpdateUserAttributes = AdminUpdateUserAttributes({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       messages: mockMessages,
       otp: () => "1234",
     });
@@ -36,7 +36,7 @@ describe("AdminUpdateUserAttributes target", () => {
 
   it("throws if the user doesn't exist", async () => {
     await expect(
-      adminUpdateUserAttributes(TestContext, {
+      adminUpdateUserAttributes(MockContext, {
         ClientMetadata: {
           client: "metadata",
         },
@@ -48,7 +48,7 @@ describe("AdminUpdateUserAttributes target", () => {
   });
 
   it("saves the updated attributes on the user", async () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
     mockUserPoolService.config.SchemaAttributes = [
@@ -58,7 +58,7 @@ describe("AdminUpdateUserAttributes target", () => {
       },
     ];
 
-    await adminUpdateUserAttributes(TestContext, {
+    await adminUpdateUserAttributes(MockContext, {
       ClientMetadata: {
         client: "metadata",
       },
@@ -67,7 +67,7 @@ describe("AdminUpdateUserAttributes target", () => {
       Username: "abc",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
@@ -102,10 +102,10 @@ describe("AdminUpdateUserAttributes target", () => {
     });
 
     it("throws an invalid parameter error", async () => {
-      mockUserPoolService.getUserByUsername.mockResolvedValue(TDB.user());
+      mockUserPoolService.getUserByUsername.mockResolvedValue(MockUser());
 
       await expect(
-        adminUpdateUserAttributes(TestContext, {
+        adminUpdateUserAttributes(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -121,11 +121,11 @@ describe("AdminUpdateUserAttributes target", () => {
     "%s is in req.UserAttributes without the relevant verified attribute",
     (attr) => {
       it(`sets the ${attr}_verified attribute to false`, async () => {
-        const user = TDB.user();
+        const user = MockUser();
 
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-        await adminUpdateUserAttributes(TestContext, {
+        await adminUpdateUserAttributes(MockContext, {
           ClientMetadata: {
             client: "metadata",
           },
@@ -134,7 +134,7 @@ describe("AdminUpdateUserAttributes target", () => {
           Username: "abc",
         });
 
-        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
           ...user,
           Attributes: attributesAppend(
             user.Attributes,
@@ -160,7 +160,7 @@ describe("AdminUpdateUserAttributes target", () => {
     `("when $attributes is unverified", ({ attributes }) => {
       describe("the verification status was not affected by the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: attributes.map((attr: string) =>
               attribute(`${attr}_verified`, "false")
             ),
@@ -171,7 +171,7 @@ describe("AdminUpdateUserAttributes target", () => {
             { Name: "example", Mutable: true },
           ];
 
-          await adminUpdateUserAttributes(TestContext, {
+          await adminUpdateUserAttributes(MockContext, {
             ClientMetadata: {
               client: "metadata",
             },
@@ -186,14 +186,14 @@ describe("AdminUpdateUserAttributes target", () => {
 
       describe("the verification status changed because of the update", () => {
         it("throws if the user doesn't have a valid way to contact them", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: [],
           });
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
           await expect(
-            adminUpdateUserAttributes(TestContext, {
+            adminUpdateUserAttributes(MockContext, {
               ClientMetadata: {
                 client: "metadata",
               },
@@ -211,11 +211,11 @@ describe("AdminUpdateUserAttributes target", () => {
         });
 
         it("delivers a OTP code to the user", async () => {
-          const user = TDB.user();
+          const user = MockUser();
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-          await adminUpdateUserAttributes(TestContext, {
+          await adminUpdateUserAttributes(MockContext, {
             ClientMetadata: {
               client: "metadata",
             },
@@ -227,7 +227,7 @@ describe("AdminUpdateUserAttributes target", () => {
           });
 
           expect(mockMessages.deliver).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             "UpdateUserAttribute",
             null,
             "test",
@@ -242,7 +242,7 @@ describe("AdminUpdateUserAttributes target", () => {
           );
 
           expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             expect.objectContaining({
               AttributeVerificationCode: "1234",
             })
@@ -265,7 +265,7 @@ describe("AdminUpdateUserAttributes target", () => {
     `("when $attributes is unverified", ({ attributes }) => {
       describe("the verification status was not affected by the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user({
+          const user = MockUser({
             Attributes: attributes.map((attr: string) =>
               attribute(`${attr}_verified`, "false")
             ),
@@ -276,7 +276,7 @@ describe("AdminUpdateUserAttributes target", () => {
             { Name: "example", Mutable: true },
           ];
 
-          await adminUpdateUserAttributes(TestContext, {
+          await adminUpdateUserAttributes(MockContext, {
             ClientMetadata: {
               client: "metadata",
             },
@@ -291,11 +291,11 @@ describe("AdminUpdateUserAttributes target", () => {
 
       describe("the verification status changed because of the update", () => {
         it("does not deliver a OTP code to the user", async () => {
-          const user = TDB.user();
+          const user = MockUser();
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-          await adminUpdateUserAttributes(TestContext, {
+          await adminUpdateUserAttributes(MockContext, {
             ClientMetadata: {
               client: "metadata",
             },

@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import {
   InvalidParameterError,
   InvalidPasswordError,
@@ -13,6 +13,7 @@ import {
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { UserPoolService } from "../services";
 import { ChangePassword, ChangePasswordTarget } from "./changePassword";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 
@@ -21,16 +22,16 @@ describe("ChangePassword target", () => {
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     changePassword = ChangePassword({
-      cognito: newMockCognitoService(mockUserPoolService),
-      clock: new ClockFake(currentDate),
+      cognito: MockCognitoService(mockUserPoolService),
+      clock: new DateClock(currentDate),
     });
   });
 
   it("throws if token isn't valid", async () => {
     await expect(
-      changePassword(TestContext, {
+      changePassword(MockContext, {
         AccessToken: "blah",
         PreviousPassword: "abc",
         ProposedPassword: "def",
@@ -44,7 +45,7 @@ describe("ChangePassword target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      changePassword(TestContext, {
+      changePassword(MockContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",
@@ -73,14 +74,14 @@ describe("ChangePassword target", () => {
   });
 
   it("throws if previous password doesn't match", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Password: "previous-password",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      changePassword(TestContext, {
+      changePassword(MockContext, {
         AccessToken: jwt.sign(
           {
             sub: "0000-0000",
@@ -109,13 +110,13 @@ describe("ChangePassword target", () => {
   });
 
   it("updates the user's password if the previous password matches", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       Password: "previous-password",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await changePassword(TestContext, {
+    await changePassword(MockContext, {
       AccessToken: jwt.sign(
         {
           sub: "0000-0000",
@@ -139,7 +140,7 @@ describe("ChangePassword target", () => {
       ProposedPassword: "new-password",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Password: "new-password",
       UserLastModifiedDate: currentDate,

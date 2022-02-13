@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockTriggers } from "../__tests__/mockTriggers";
-import { UUID } from "../__tests__/patterns";
-import { TestContext } from "../__tests__/testContext";
+import { DateClock } from "../services/clock";
+import { MockTriggers } from "../mocks/MockTriggers";
+import { UUID } from "../models";
+import { MockContext } from "../mocks/MockContext";
 import { JwtTokenGenerator, TokenGenerator } from "./tokenGenerator";
 import { Triggers } from "./triggers";
-import * as TDB from "../__tests__/testDataBuilder";
 import { attributeValue } from "./userPoolService";
+import { MockUser } from "../models/UserModel";
 
 const originalDate = new Date();
 
@@ -14,11 +14,11 @@ describe("JwtTokenGenerator", () => {
   let mockTriggers: jest.Mocked<Triggers>;
   let tokenGenerator: TokenGenerator;
 
-  const user = TDB.user();
-  const clock = new ClockFake(originalDate);
+  const user = MockUser();
+  const clock = new DateClock(originalDate);
 
   beforeEach(() => {
-    mockTriggers = newMockTriggers();
+    mockTriggers = MockTriggers();
     tokenGenerator = new JwtTokenGenerator(clock, mockTriggers, {
       IssuerDomain: "http://example.com",
     });
@@ -39,7 +39,7 @@ describe("JwtTokenGenerator", () => {
       });
 
       const tokens = await tokenGenerator.generate(
-        TestContext,
+        MockContext,
         user,
         "clientId",
         "userPoolId",
@@ -75,7 +75,7 @@ describe("JwtTokenGenerator", () => {
       });
 
       const tokens = await tokenGenerator.generate(
-        TestContext,
+        MockContext,
         user,
         "clientId",
         "userPoolId",
@@ -108,7 +108,7 @@ describe("JwtTokenGenerator", () => {
       });
 
       const tokens = await tokenGenerator.generate(
-        TestContext,
+        MockContext,
         user,
         "clientId",
         "userPoolId",
@@ -159,7 +159,7 @@ describe("JwtTokenGenerator", () => {
         });
 
         const tokens = await tokenGenerator.generate(
-          TestContext,
+          MockContext,
           user,
           "clientId",
           "userPoolId",
@@ -179,7 +179,7 @@ describe("JwtTokenGenerator", () => {
       mockTriggers.enabled.mockReturnValue(false);
 
       const tokens = await tokenGenerator.generate(
-        TestContext,
+        MockContext,
         user,
         "clientId",
         "userPoolId",

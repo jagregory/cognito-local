@@ -1,28 +1,29 @@
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import { CognitoService } from "../services";
 import { ListUserPools, ListUserPoolsTarget } from "./listUserPools";
+import { UserPoolModel } from "../models/UserPoolModel";
 
 describe("ListUserPools target", () => {
   let listUserPools: ListUserPoolsTarget;
   let mockCognitoService: jest.Mocked<CognitoService>;
 
   beforeEach(() => {
-    mockCognitoService = newMockCognitoService(newMockUserPoolService());
+    mockCognitoService = MockCognitoService(MockUserPoolService());
     listUserPools = ListUserPools({
       cognito: mockCognitoService,
     });
   });
 
   it("lists user pools", async () => {
-    const userPool1 = TDB.userPool();
-    const userPool2 = TDB.userPool();
+    const userPool1 = UserPoolModel();
+    const userPool2 = UserPoolModel();
 
     mockCognitoService.listUserPools.mockResolvedValue([userPool1, userPool2]);
 
-    const output = await listUserPools(TestContext, {
+    const output = await listUserPools(MockContext, {
       MaxResults: 10,
     });
 

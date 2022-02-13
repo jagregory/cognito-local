@@ -1,5 +1,5 @@
-import { newMockLambda } from "../../__tests__/mockLambda";
-import { TestContext } from "../../__tests__/testContext";
+import { MockLambda } from "../../mocks/MockLambda";
+import { MockContext } from "../../mocks/MockContext";
 import { Lambda } from "../lambda";
 import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
 
@@ -8,7 +8,7 @@ describe("PostConfirmation trigger", () => {
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
-    mockLambda = newMockLambda();
+    mockLambda = MockLambda();
     postConfirmation = PostConfirmation({
       lambda: mockLambda,
     });
@@ -24,7 +24,7 @@ describe("PostConfirmation trigger", () => {
           new Error("Something bad happened")
         );
 
-        await postConfirmation(TestContext, {
+        await postConfirmation(MockContext, {
           userPoolId: "userPoolId",
           clientId: "clientId",
           username: "username",
@@ -38,7 +38,7 @@ describe("PostConfirmation trigger", () => {
       it("quietly completes", async () => {
         mockLambda.invoke.mockResolvedValue({});
 
-        await postConfirmation(TestContext, {
+        await postConfirmation(MockContext, {
           userPoolId: "userPoolId",
           clientId: "clientId",
           username: "example@example.com",
@@ -47,7 +47,7 @@ describe("PostConfirmation trigger", () => {
         });
 
         expect(mockLambda.invoke).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           "PostConfirmation",
           {
             clientId: "clientId",

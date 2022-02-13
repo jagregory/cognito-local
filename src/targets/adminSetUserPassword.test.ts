@@ -1,43 +1,44 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
 import {
   AdminSetUserPassword,
   AdminSetUserPasswordTarget,
 } from "./adminSetUserPassword";
+import { MockUser } from "../models/UserModel";
 
 describe("AdminSetUser target", () => {
   let adminSetUserPassword: AdminSetUserPasswordTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let clock: ClockFake;
+  let clock: DateClock;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    clock = new ClockFake(new Date());
+    mockUserPoolService = MockUserPoolService();
+    clock = new DateClock(new Date());
     adminSetUserPassword = AdminSetUserPassword({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       clock,
     });
   });
 
   it("sets a new temporary password by default", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword(TestContext, {
+    await adminSetUserPassword(MockContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -46,20 +47,20 @@ describe("AdminSetUser target", () => {
   });
 
   it("sets a new temporary password explicitly", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword(TestContext, {
+    await adminSetUserPassword(MockContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
       Permanent: false,
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -68,20 +69,20 @@ describe("AdminSetUser target", () => {
   });
 
   it("sets a permanent temporary password", async () => {
-    const existingUser = TDB.user();
+    const existingUser = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
 
     const newDate = clock.advanceBy(1200);
 
-    await adminSetUserPassword(TestContext, {
+    await adminSetUserPassword(MockContext, {
       Username: existingUser.Username,
       UserPoolId: "test",
       Password: "newPassword",
       Permanent: true,
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...existingUser,
       Password: "newPassword",
       UserLastModifiedDate: newDate,
@@ -93,7 +94,7 @@ describe("AdminSetUser target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminSetUserPassword(TestContext, {
+      adminSetUserPassword(MockContext, {
         Password: "Password",
         Username: "Username",
         UserPoolId: "test",

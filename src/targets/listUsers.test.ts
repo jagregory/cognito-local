@@ -1,28 +1,28 @@
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { UserPoolService } from "../services";
 import { ListUsers, ListUsersTarget } from "./listUsers";
-import * as TDB from "../__tests__/testDataBuilder";
+import { MockUser } from "../models/UserModel";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     listUsers = ListUsers({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("lists users and removes Cognito Local fields", async () => {
-    const user1 = TDB.user();
-    const user2 = TDB.user();
+    const user1 = MockUser();
+    const user2 = MockUser();
 
     mockUserPoolService.listUsers.mockResolvedValue([user1, user2]);
 
-    const output = await listUsers(TestContext, {
+    const output = await listUsers(MockContext, {
       UserPoolId: "userPoolId",
     });
 

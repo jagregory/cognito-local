@@ -1,16 +1,16 @@
-import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
-import { newMockTriggers } from "../__tests__/mockTriggers";
-import { TestContext } from "../__tests__/testContext";
+import { MockMessageDelivery } from "../mocks/MockMessageDelivery";
+import { MockTriggers } from "../mocks/MockTriggers";
+import { MockContext } from "../mocks/MockContext";
 import { MessageDelivery } from "./messageDelivery/messageDelivery";
 import { MessagesService } from "./messages";
-import * as TDB from "../__tests__/testDataBuilder";
 import { Triggers } from "./triggers";
+import { MockUser } from "../models/UserModel";
 
 describe("messages service", () => {
   let mockTriggers: jest.Mocked<Triggers>;
   let mockMessageDelivery: jest.Mocked<MessageDelivery>;
 
-  const user = TDB.user();
+  const user = MockUser();
   const deliveryDetails = {
     AttributeName: "email",
     DeliveryMedium: "EMAIL",
@@ -18,8 +18,8 @@ describe("messages service", () => {
   } as const;
 
   beforeEach(() => {
-    mockTriggers = newMockTriggers();
-    mockMessageDelivery = newMockMessageDelivery();
+    mockTriggers = MockTriggers();
+    mockMessageDelivery = MockMessageDelivery();
   });
 
   describe.each([
@@ -48,7 +48,7 @@ describe("messages service", () => {
             mockMessageDelivery
           );
           await messages.deliver(
-            TestContext,
+            MockContext,
             source,
             "clientId",
             "userPoolId",
@@ -60,7 +60,7 @@ describe("messages service", () => {
             deliveryDetails
           );
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(MockContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -73,7 +73,7 @@ describe("messages service", () => {
           });
 
           expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             user,
             deliveryDetails,
             {
@@ -98,7 +98,7 @@ describe("messages service", () => {
             mockMessageDelivery
           );
           await messages.deliver(
-            TestContext,
+            MockContext,
             source,
             "clientId",
             "userPoolId",
@@ -110,7 +110,7 @@ describe("messages service", () => {
             deliveryDetails
           );
 
-          expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
+          expect(mockTriggers.customMessage).toHaveBeenCalledWith(MockContext, {
             clientId: "clientId",
             clientMetadata: {
               client: "metadata",
@@ -123,7 +123,7 @@ describe("messages service", () => {
           });
 
           expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-            TestContext,
+            MockContext,
             user,
             deliveryDetails,
             {
@@ -140,7 +140,7 @@ describe("messages service", () => {
 
         const messages = new MessagesService(mockTriggers, mockMessageDelivery);
         await messages.deliver(
-          TestContext,
+          MockContext,
           source,
           "clientId",
           "userPoolId",
@@ -154,7 +154,7 @@ describe("messages service", () => {
 
         expect(mockTriggers.customMessage).not.toHaveBeenCalled();
         expect(mockMessageDelivery.deliver).toHaveBeenCalledWith(
-          TestContext,
+          MockContext,
           user,
           deliveryDetails,
           {

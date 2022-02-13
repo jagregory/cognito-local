@@ -1,9 +1,8 @@
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockTriggers } from "../__tests__/mockTriggers";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockTriggers } from "../mocks/MockTriggers";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
 import { NotAuthorizedError } from "../errors";
 import { Triggers, UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
@@ -11,10 +10,11 @@ import {
   AdminConfirmSignUp,
   AdminConfirmSignUpTarget,
 } from "./adminConfirmSignUp";
+import { MockUser } from "../models/UserModel";
 
 const currentDate = new Date();
 
-const clock = new ClockFake(currentDate);
+const clock = new DateClock(currentDate);
 
 describe("AdminConfirmSignUp target", () => {
   let adminConfirmSignUp: AdminConfirmSignUpTarget;
@@ -22,11 +22,11 @@ describe("AdminConfirmSignUp target", () => {
   let mockTriggers: jest.Mocked<Triggers>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
-    mockTriggers = newMockTriggers();
+    mockUserPoolService = MockUserPoolService();
+    mockTriggers = MockTriggers();
     adminConfirmSignUp = AdminConfirmSignUp({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
       triggers: mockTriggers,
     });
   });
@@ -35,7 +35,7 @@ describe("AdminConfirmSignUp target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      adminConfirmSignUp(TestContext, {
+      adminConfirmSignUp(MockContext, {
         ClientMetadata: {
           client: "metadata",
         },
@@ -46,11 +46,11 @@ describe("AdminConfirmSignUp target", () => {
   });
 
   it("updates the user's status", async () => {
-    const user = TDB.user();
+    const user = MockUser();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await adminConfirmSignUp(TestContext, {
+    await adminConfirmSignUp(MockContext, {
       ClientMetadata: {
         client: "metadata",
       },
@@ -58,7 +58,7 @@ describe("AdminConfirmSignUp target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       UserLastModifiedDate: currentDate,
       UserStatus: "CONFIRMED",
@@ -71,11 +71,11 @@ describe("AdminConfirmSignUp target", () => {
         (trigger) => trigger === "PostConfirmation"
       );
 
-      const user = TDB.user();
+      const user = MockUser();
 
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-      await adminConfirmSignUp(TestContext, {
+      await adminConfirmSignUp(MockContext, {
         ClientMetadata: {
           client: "metadata",
         },
@@ -83,7 +83,7 @@ describe("AdminConfirmSignUp target", () => {
         UserPoolId: "test",
       });
 
-      expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(TestContext, {
+      expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(MockContext, {
         clientId: null,
         clientMetadata: {
           client: "metadata",
@@ -103,11 +103,11 @@ describe("AdminConfirmSignUp target", () => {
     it("invokes the trigger", async () => {
       mockTriggers.enabled.mockReturnValue(false);
 
-      const user = TDB.user();
+      const user = MockUser();
 
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-      await adminConfirmSignUp(TestContext, {
+      await adminConfirmSignUp(MockContext, {
         ClientMetadata: {
           client: "metadata",
         },

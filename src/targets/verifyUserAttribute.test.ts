@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
-import { ClockFake } from "../__tests__/clockFake";
-import { newMockCognitoService } from "../__tests__/mockCognitoService";
-import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
-import { TestContext } from "../__tests__/testContext";
-import * as TDB from "../__tests__/testDataBuilder";
+import { DateClock } from "../services/clock";
+import { MockCognitoService } from "../mocks/MockCognitoService";
+import { MockUserPoolService } from "../mocks/MockUserPoolService";
+import { MockContext } from "../mocks/MockContext";
+
 import {
   CodeMismatchError,
   InvalidParameterError,
@@ -17,8 +17,9 @@ import {
   VerifyUserAttribute,
   VerifyUserAttributeTarget,
 } from "./verifyUserAttribute";
+import { MockUser } from "../models/UserModel";
 
-const clock = new ClockFake(new Date());
+const clock = new DateClock(new Date());
 
 const validToken = jwt.sign(
   {
@@ -45,27 +46,27 @@ describe("VerifyUserAttribute target", () => {
   let mockUserPoolService: jest.Mocked<UserPoolService>;
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = MockUserPoolService();
     verifyUserAttribute = VerifyUserAttribute({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: MockCognitoService(mockUserPoolService),
     });
   });
 
   it("verifies the user's email", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       AttributeVerificationCode: "1234",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await verifyUserAttribute(TestContext, {
+    await verifyUserAttribute(MockContext, {
       AccessToken: validToken,
       AttributeName: "email",
       Code: "1234",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
@@ -76,19 +77,19 @@ describe("VerifyUserAttribute target", () => {
   });
 
   it("verifies the user's phone_number", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       AttributeVerificationCode: "1234",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await verifyUserAttribute(TestContext, {
+    await verifyUserAttribute(MockContext, {
       AccessToken: validToken,
       AttributeName: "phone_number",
       Code: "1234",
     });
 
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(MockContext, {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
@@ -99,13 +100,13 @@ describe("VerifyUserAttribute target", () => {
   });
 
   it("does nothing for other attributes", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       AttributeVerificationCode: "1234",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    await verifyUserAttribute(TestContext, {
+    await verifyUserAttribute(MockContext, {
       AccessToken: validToken,
       AttributeName: "something else",
       Code: "1234",
@@ -116,7 +117,7 @@ describe("VerifyUserAttribute target", () => {
 
   it("throws if token isn't valid", async () => {
     await expect(
-      verifyUserAttribute(TestContext, {
+      verifyUserAttribute(MockContext, {
         AccessToken: "blah",
         AttributeName: "email",
         Code: "1234",
@@ -128,7 +129,7 @@ describe("VerifyUserAttribute target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      verifyUserAttribute(TestContext, {
+      verifyUserAttribute(MockContext, {
         AccessToken: validToken,
         AttributeName: "email",
         Code: "1234",
@@ -137,13 +138,13 @@ describe("VerifyUserAttribute target", () => {
   });
 
   it("throws if code doesn't match the user's AttributeVerificationCode", async () => {
-    const user = TDB.user({
+    const user = MockUser({
       AttributeVerificationCode: "5555",
     });
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
     await expect(
-      verifyUserAttribute(TestContext, {
+      verifyUserAttribute(MockContext, {
         AccessToken: validToken,
         AttributeName: "email",
         Code: "1234",
