@@ -18,7 +18,8 @@ import {
   MFAOption,
   User,
 } from "../services/userPoolService";
-import { Context, Target } from "./router";
+import { Target } from "./Target";
+import { Context } from "../services/context";
 
 export type InitiateAuthTarget = Target<
   InitiateAuthRequest,

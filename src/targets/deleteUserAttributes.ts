@@ -7,7 +7,7 @@ import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import { Services } from "../services";
 import { Token } from "../services/tokenGenerator";
 import { attributesRemove } from "../services/userPoolService";
-import { Target } from "./router";
+import { Target } from "./Target";
 
 export type DeleteUserAttributesTarget = Target<
   DeleteUserAttributesRequest,

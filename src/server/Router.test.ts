@@ -1,7 +1,8 @@
 import { MockContext } from "../mocks/MockContext";
 import { UnsupportedError } from "../errors";
 import { Services } from "../services";
-import { Router, Targets } from "./router";
+import { Router } from "./Router";
+import { Targets } from "../targets/Target";
 
 describe("Router", () => {
   it("returns an error handler for an invalid target", async () => {
