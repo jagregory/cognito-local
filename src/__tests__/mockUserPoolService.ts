@@ -7,7 +7,6 @@ export const newMockUserPoolService = (
   }
 ): jest.Mocked<UserPoolService> => ({
   config,
-  createAppClient: jest.fn(),
   deleteGroup: jest.fn(),
   deleteUser: jest.fn(),
   getGroupByGroupName: jest.fn(),
@@ -16,6 +15,7 @@ export const newMockUserPoolService = (
   listGroups: jest.fn(),
   listUsers: jest.fn(),
   removeUserFromGroup: jest.fn(),
+  saveAppClient: jest.fn(),
   saveGroup: jest.fn(),
   saveUser: jest.fn(),
   storeRefreshToken: jest.fn(),

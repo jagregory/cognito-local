@@ -28,14 +28,11 @@ export const GetUser =
       throw new UserNotFoundError();
     }
 
-    const output: GetUserResponse = {
-      Username: user.Username,
+    return {
+      MFAOptions: user.MFAOptions,
+      PreferredMfaSetting: user.PreferredMfaSetting,
       UserAttributes: user.Attributes,
+      UserMFASettingList: user.UserMFASettingList,
+      Username: user.Username,
     };
-
-    if (user.MFAOptions) {
-      output.MFAOptions = user.MFAOptions;
-    }
-
-    return output;
   };

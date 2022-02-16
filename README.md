@@ -66,7 +66,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | CreateResourceServer             | ❌                   |
 | CreateUserImportJob              | ❌                   |
 | CreateUserPool                   | ✅                   |
-| CreateUserPoolClient             | 🕒 (partial support) |
+| CreateUserPoolClient             | ✅                   |
 | CreateUserPoolDomain             | ❌                   |
 | DeleteGroup                      | ✅                   |
 | DeleteIdentityProvider           | ❌                   |
@@ -102,7 +102,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | ListResourceServers              | ❌                   |
 | ListTagsForResource              | ❌                   |
 | ListUserImportJobs               | ❌                   |
-| ListUserPoolClients              | ❌                   |
+| ListUserPoolClients              | ✅¹                  |
 | ListUserPools                    | ✅¹                  |
 | ListUsers                        | ✅¹                  |
 | ListUsersInGroup                 | ✅¹                  |

@@ -3,11 +3,13 @@ import {
   AttributeType,
   MFAOptionListType,
   SchemaAttributesListType,
+  StringType,
+  UserMFASettingListType,
   UserPoolType,
   UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { InvalidParameterError } from "../errors";
-import { AppClient, newId } from "./appClient";
+import { AppClient } from "./appClient";
 import { Clock } from "./clock";
 import { Context } from "./context";
 import { DataStore } from "./dataStore/dataStore";
@@ -78,13 +80,15 @@ export const customAttributes = (
   (attributes ?? []).filter((attr) => attr.Name.startsWith("custom:"));
 
 export interface User {
-  Username: string;
+  Attributes: AttributeListType;
+  Enabled: boolean;
+  MFAOptions?: MFAOptionListType;
+  PreferredMfaSetting?: StringType;
   UserCreateDate: Date;
   UserLastModifiedDate: Date;
-  Enabled: boolean;
+  UserMFASettingList?: UserMFASettingListType;
+  Username: string;
   UserStatus: UserStatusType;
-  Attributes: AttributeListType;
-  MFAOptions?: MFAOptionListType;
 
   // extra attributes for Cognito Local
   Password: string;
@@ -134,7 +138,7 @@ export type UserPool = UserPoolType & {
 export interface UserPoolService {
   readonly config: UserPool;
 
-  createAppClient(ctx: Context, name: string): Promise<AppClient>;
+  saveAppClient(ctx: Context, appClient: AppClient): Promise<void>;
   deleteGroup(ctx: Context, group: Group): Promise<void>;
   deleteUser(ctx: Context, user: User): Promise<void>;
   getGroupByGroupName(ctx: Context, groupName: string): Promise<Group | null>;
@@ -182,24 +186,16 @@ export class UserPoolServiceImpl implements UserPoolService {
     this.dataStore = dataStore;
   }
 
-  public async createAppClient(ctx: Context, name: string): Promise<AppClient> {
-    ctx.logger.debug({ name }, "UserPoolServiceImpl.createAppClient");
-    const id = newId();
-    const now = this.clock.get();
-
-    const appClient: AppClient = {
-      ClientId: id,
-      ClientName: name,
-      UserPoolId: this.config.Id,
-      CreationDate: now,
-      LastModifiedDate: now,
-      AllowedOAuthFlowsUserPoolClient: false,
-      RefreshTokenValidity: 30,
-    };
-
-    await this.clientsDataStore.set(ctx, ["Clients", id], appClient);
-
-    return appClient;
+  public async saveAppClient(
+    ctx: Context,
+    appClient: AppClient
+  ): Promise<void> {
+    ctx.logger.debug("UserPoolServiceImpl.saveAppClient");
+    await this.clientsDataStore.set(
+      ctx,
+      ["Clients", appClient.ClientId],
+      appClient
+    );
   }
 
   public async deleteGroup(ctx: Context, group: Group): Promise<void> {

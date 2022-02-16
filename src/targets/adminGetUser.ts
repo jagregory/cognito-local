@@ -2,8 +2,8 @@ import {
   AdminGetUserRequest,
   AdminGetUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
 import { UserNotFoundError } from "../errors";
+import { Services } from "../services";
 import { Target } from "./Target";
 
 export type AdminGetUserTarget = Target<

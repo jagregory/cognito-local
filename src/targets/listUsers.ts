@@ -3,6 +3,7 @@ import {
   ListUsersResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
+import { userToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type ListUsersTarget = Target<ListUsersRequest, ListUsersResponse>;
@@ -19,13 +20,6 @@ export const ListUsers =
     // TODO: support PaginationToken
 
     return {
-      Users: users.map((user) => ({
-        Username: user.Username,
-        UserCreateDate: user.UserCreateDate,
-        UserLastModifiedDate: user.UserLastModifiedDate,
-        Enabled: user.Enabled,
-        UserStatus: user.UserStatus,
-        Attributes: user.Attributes,
-      })),
+      Users: users.map(userToResponseObject),
     };
   };

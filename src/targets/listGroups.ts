@@ -3,6 +3,7 @@ import {
   ListGroupsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
+import { groupToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type ListGroupsTarget = Target<ListGroupsRequest, ListGroupsResponse>;
@@ -19,14 +20,6 @@ export const ListGroups =
     const groups = await userPool.listGroups(ctx);
 
     return {
-      Groups: groups.map((group) => ({
-        CreationDate: group.CreationDate,
-        Description: group.Description,
-        GroupName: group.GroupName,
-        LastModifiedDate: group.LastModifiedDate,
-        Precedence: group.Precedence,
-        RoleArn: group.RoleArn,
-        UserPoolId: req.UserPoolId,
-      })),
+      Groups: groups.map(groupToResponseObject(req.UserPoolId)),
     };
   };

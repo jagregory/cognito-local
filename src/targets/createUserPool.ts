@@ -6,6 +6,7 @@ import {
 import shortUUID from "short-uuid";
 import { Services } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
+import { userPoolToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 const REGION = "local";
@@ -107,6 +108,6 @@ export const CreateUserPool =
     });
 
     return {
-      UserPool: userPool,
+      UserPool: userPoolToResponseObject(userPool),
     };
   };

@@ -271,6 +271,10 @@ export interface CognitoService {
     ctx: Context,
     clientId: string
   ): Promise<UserPoolService>;
+  listAppClients(
+    ctx: Context,
+    userPoolId: string
+  ): Promise<readonly AppClient[]>;
   listUserPools(ctx: Context): Promise<readonly UserPool[]>;
 }
 
@@ -356,6 +360,20 @@ export class CognitoServiceImpl implements CognitoService {
   ): Promise<AppClient | null> {
     ctx.logger.debug({ clientId }, "CognitoServiceImpl.getAppClient");
     return this.clients.get(ctx, ["Clients", clientId]);
+  }
+
+  public async listAppClients(
+    ctx: Context,
+    userPoolId: string
+  ): Promise<readonly AppClient[]> {
+    ctx.logger.debug({ userPoolId }, "CognitoServiceImpl.listAppClients");
+    const clients = await this.clients.get<Record<string, AppClient>>(
+      ctx,
+      "Clients",
+      {}
+    );
+
+    return Object.values(clients).filter((x) => x.UserPoolId === userPoolId);
   }
 
   public async listUserPools(ctx: Context): Promise<readonly UserPool[]> {

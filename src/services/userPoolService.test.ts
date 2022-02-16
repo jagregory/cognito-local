@@ -5,6 +5,7 @@ import {
   newMockDataStoreFactory,
 } from "../__tests__/mockDataStore";
 import { TestContext } from "../__tests__/testContext";
+import { AppClient } from "./appClient";
 import { DataStore } from "./dataStore/dataStore";
 import {
   attributesFromRecord,
@@ -57,7 +58,7 @@ describe("User Pool Service", () => {
     mockClientsDataStore = newMockDataStore();
   });
 
-  describe("createAppClient", () => {
+  describe("saveAppClient", () => {
     it("saves an app client", async () => {
       const ds = newMockDataStore();
       ds.get.mockImplementation((ctx, key, defaults) =>
@@ -74,22 +75,21 @@ describe("User Pool Service", () => {
         }
       );
 
-      const result = await userPool.createAppClient(TestContext, "clientName");
-
-      expect(result).toEqual({
-        AllowedOAuthFlowsUserPoolClient: false,
-        ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
+      const appClient: AppClient = {
+        ClientId: "clientId",
         ClientName: "clientName",
         CreationDate: currentDate,
         LastModifiedDate: currentDate,
         RefreshTokenValidity: 30,
         UserPoolId: "local",
-      });
+      };
+
+      await userPool.saveAppClient(TestContext, appClient);
 
       expect(mockClientsDataStore.set).toHaveBeenCalledWith(
         TestContext,
-        ["Clients", result.ClientId],
-        result
+        ["Clients", "clientId"],
+        appClient
       );
     });
   });

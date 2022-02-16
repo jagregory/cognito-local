@@ -15,12 +15,10 @@ describe(
 
       expect(result).toEqual({
         UserPoolClient: {
-          AllowedOAuthFlowsUserPoolClient: false,
           ClientId: expect.stringMatching(/^[a-z0-9]{25}$/),
           ClientName: "test",
           CreationDate: expect.any(Date),
           LastModifiedDate: expect.any(Date),
-          RefreshTokenValidity: 30,
           UserPoolId: "test",
         },
       });

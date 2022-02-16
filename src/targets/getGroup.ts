@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { GroupNotFoundError } from "../errors";
 import { Services } from "../services";
+import { groupToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type GetGroupTarget = Target<GetGroupRequest, GetGroupResponse>;
@@ -18,14 +19,6 @@ export const GetGroup =
     }
 
     return {
-      Group: {
-        CreationDate: group.CreationDate,
-        Description: group.Description,
-        GroupName: group.GroupName,
-        LastModifiedDate: group.LastModifiedDate,
-        Precedence: group.Precedence,
-        RoleArn: group.RoleArn,
-        UserPoolId: req.UserPoolId,
-      },
+      Group: groupToResponseObject(req.UserPoolId)(group),
     };
   };

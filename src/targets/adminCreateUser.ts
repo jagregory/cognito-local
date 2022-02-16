@@ -11,13 +11,14 @@ import {
   UsernameExistsError,
 } from "../errors";
 import { Messages, Services, UserPoolService } from "../services";
+import { Context } from "../services/context";
 import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attributesInclude,
   attributeValue,
   User,
 } from "../services/userPoolService";
-import { Context } from "../services/context";
+import { userToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 const generator = shortUUID(
@@ -145,14 +146,6 @@ export const AdminCreateUser =
     );
 
     return {
-      User: {
-        Username: req.Username,
-        Attributes: attributes,
-        Enabled: true,
-        UserStatus: "FORCE_CHANGE_PASSWORD",
-        UserCreateDate: now,
-        UserLastModifiedDate: now,
-        MFAOptions: undefined,
-      },
+      User: userToResponseObject(user),
     };
   };

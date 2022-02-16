@@ -1,3 +1,4 @@
+import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
@@ -8,6 +9,8 @@ import {
   CreateUserPoolClientTarget,
 } from "./createUserPoolClient";
 
+const originalDate = new Date();
+
 describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
@@ -15,37 +18,35 @@ describe("CreateUserPoolClient target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     createUserPoolClient = CreateUserPoolClient({
+      clock: new ClockFake(originalDate),
       cognito: newMockCognitoService(mockUserPoolService),
     });
   });
 
   it("creates a new app client", async () => {
-    const createdAppClient: AppClient = {
-      RefreshTokenValidity: 30,
-      AllowedOAuthFlowsUserPoolClient: false,
-      LastModifiedDate: new Date(),
-      CreationDate: new Date(),
-      UserPoolId: "userPoolId",
-      ClientId: "abc",
-      ClientName: "clientName",
-    };
-    mockUserPoolService.createAppClient.mockResolvedValue(createdAppClient);
-
     const result = await createUserPoolClient(TestContext, {
       ClientName: "clientName",
       UserPoolId: "userPoolId",
     });
 
-    expect(mockUserPoolService.createAppClient).toHaveBeenCalledWith(
+    expect(mockUserPoolService.saveAppClient).toHaveBeenCalledWith(
       TestContext,
-      "clientName"
+      {
+        ClientId: expect.any(String),
+        ClientName: "clientName",
+        CreationDate: originalDate,
+        LastModifiedDate: originalDate,
+        UserPoolId: "userPoolId",
+      }
     );
 
     expect(result).toEqual({
       UserPoolClient: {
-        ...createdAppClient,
-        LastModifiedDate: new Date(createdAppClient.LastModifiedDate),
-        CreationDate: new Date(createdAppClient.CreationDate),
+        ClientId: expect.any(String),
+        ClientName: "clientName",
+        CreationDate: originalDate,
+        LastModifiedDate: originalDate,
+        UserPoolId: "userPoolId",
       },
     });
   });

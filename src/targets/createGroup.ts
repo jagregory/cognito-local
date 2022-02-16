@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { Services } from "../services";
 import { Group } from "../services/userPoolService";
+import { groupToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type CreateGroupTarget = Target<CreateGroupRequest, CreateGroupResponse>;
@@ -28,14 +29,6 @@ export const CreateGroup =
     await userPool.saveGroup(ctx, group);
 
     return {
-      Group: {
-        CreationDate: group.CreationDate,
-        Description: group.Description,
-        GroupName: group.GroupName,
-        LastModifiedDate: group.LastModifiedDate,
-        Precedence: group.Precedence,
-        RoleArn: group.RoleArn,
-        UserPoolId: req.UserPoolId,
-      },
+      Group: groupToResponseObject(req.UserPoolId)(group),
     };
   };

@@ -1,8 +1,35 @@
 import { v4 } from "uuid";
+import { AppClient } from "../services/appClient";
 import { Group, User, UserPool } from "../services/userPoolService";
 
 export const id = (prefix: string, number?: number) =>
   `${prefix}${number ?? Math.floor(Math.random() * 100000)}`;
+
+export const appClient = (partial?: Partial<AppClient>): AppClient => ({
+  AccessTokenValidity: partial?.AccessTokenValidity,
+  AllowedOAuthFlows: partial?.AllowedOAuthFlows,
+  AllowedOAuthFlowsUserPoolClient: partial?.AllowedOAuthFlowsUserPoolClient,
+  AllowedOAuthScopes: partial?.AllowedOAuthScopes,
+  AnalyticsConfiguration: partial?.AnalyticsConfiguration,
+  CallbackURLs: partial?.CallbackURLs,
+  ClientId: partial?.ClientId ?? id("AppClient"),
+  ClientName: partial?.ClientName ?? id("ClientName"),
+  ClientSecret: partial?.ClientSecret ?? undefined,
+  CreationDate: partial?.CreationDate ?? new Date(),
+  DefaultRedirectURI: partial?.DefaultRedirectURI,
+  EnableTokenRevocation: partial?.EnableTokenRevocation,
+  ExplicitAuthFlows: partial?.ExplicitAuthFlows,
+  IdTokenValidity: partial?.IdTokenValidity,
+  LastModifiedDate: partial?.LastModifiedDate ?? new Date(),
+  LogoutURLs: partial?.LogoutURLs,
+  PreventUserExistenceErrors: partial?.PreventUserExistenceErrors,
+  ReadAttributes: partial?.ReadAttributes,
+  RefreshTokenValidity: partial?.RefreshTokenValidity,
+  SupportedIdentityProviders: partial?.SupportedIdentityProviders,
+  TokenValidityUnits: partial?.TokenValidityUnits,
+  UserPoolId: partial?.UserPoolId ?? id("UserPool"),
+  WriteAttributes: partial?.WriteAttributes,
+});
 
 export const group = (partial?: Partial<Group>): Group => ({
   CreationDate: partial?.CreationDate ?? new Date(),

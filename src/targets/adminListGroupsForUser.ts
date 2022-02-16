@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UserNotFoundError } from "../errors";
 import { Services } from "../services";
+import { groupToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type AdminListGroupsForUserTarget = Target<
@@ -26,14 +27,6 @@ export const AdminListGroupsForUser =
     const usersGroups = groups.filter((x) => x.members?.includes(req.Username));
 
     return {
-      Groups: usersGroups.map((x) => ({
-        CreationDate: x.CreationDate,
-        Description: x.Description,
-        GroupName: x.GroupName,
-        LastModifiedDate: x.LastModifiedDate,
-        Precedence: x.Precedence,
-        RoleArn: x.RoleArn,
-        UserPoolId: req.UserPoolId,
-      })),
+      Groups: usersGroups.map(groupToResponseObject(req.UserPoolId)),
     };
   };

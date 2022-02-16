@@ -26,6 +26,7 @@ import { GetUser } from "./getUser";
 import { GetUserAttributeVerificationCode } from "./getUserAttributeVerificationCode";
 import { InitiateAuth } from "./initiateAuth";
 import { ListGroups } from "./listGroups";
+import { ListUserPoolClients } from "./listUserPoolClients";
 import { ListUserPools } from "./listUserPools";
 import { ListUsers } from "./listUsers";
 import { ListUsersInGroup } from "./listUsersInGroup";
@@ -64,6 +65,7 @@ export const Targets = {
   GetUserAttributeVerificationCode,
   InitiateAuth,
   ListGroups,
+  ListUserPoolClients,
   ListUserPools,
   ListUsers,
   ListUsersInGroup,

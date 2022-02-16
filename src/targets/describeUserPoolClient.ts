@@ -4,6 +4,7 @@ import {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { ResourceNotFoundError } from "../errors";
 import { Services } from "../services";
+import { appClientToResponseObject } from "./responses";
 import { Target } from "./Target";
 
 export type DescribeUserPoolClientTarget = Target<
@@ -20,10 +21,6 @@ export const DescribeUserPoolClient =
     }
 
     return {
-      UserPoolClient: {
-        ...client,
-        CreationDate: client.CreationDate,
-        LastModifiedDate: client.LastModifiedDate,
-      },
+      UserPoolClient: appClientToResponseObject(client),
     };
   };
