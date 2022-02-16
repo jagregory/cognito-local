@@ -24,11 +24,11 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.16.0",
-    "@codedependant/semantic-release-docker": "^3.1.2",
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
     "@jest/globals": "^27.0.6",
     "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/aws-lambda": "^8.10.85",
     "@types/body-parser": "^1.19.0",
@@ -109,9 +109,8 @@
       ["@semantic-release/github", {
         "addReleases": "top"
       }],
-      ["@codedependant/semantic-release-docker", {
-        "dockerLogin": false,
-        "dockerImage": "jagregory/cognito-local"
+      ["@semantic-release/exec", {
+        "publishCmd": "./scripts/dockerBuildPush.sh ${nextRelease.version}"
       }],
       ["@semantic-release/git", {
         "assets": ["CHANGELOG.md"]
