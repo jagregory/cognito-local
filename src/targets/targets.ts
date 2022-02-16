@@ -21,6 +21,7 @@ import { DeleteUser } from "./deleteUser";
 import { DeleteUserAttributes } from "./deleteUserAttributes";
 import { DeleteUserPool } from "./deleteUserPool";
 import { DeleteUserPoolClient } from "./deleteUserPoolClient";
+import { DescribeUserPool } from "./describeUserPool";
 import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { GetGroup } from "./getGroup";
@@ -37,6 +38,7 @@ import { RevokeToken } from "./revokeToken";
 import { SignUp } from "./signUp";
 import { UpdateGroup } from "./updateGroup";
 import { UpdateUserAttributes } from "./updateUserAttributes";
+import { UpdateUserPool } from "./updateUserPool";
 import { UpdateUserPoolClient } from "./updateUserPoolClient";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
 
@@ -63,6 +65,7 @@ export const Targets = {
   DeleteUserAttributes,
   DeleteUserPool,
   DeleteUserPoolClient,
+  DescribeUserPool,
   DescribeUserPoolClient,
   ForgotPassword,
   GetGroup,
@@ -79,6 +82,7 @@ export const Targets = {
   SignUp,
   UpdateGroup,
   UpdateUserAttributes,
+  UpdateUserPool,
   UpdateUserPoolClient,
   VerifyUserAttribute,
 } as const;

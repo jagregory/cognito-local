@@ -150,6 +150,7 @@ export interface UserPoolService {
   ): Promise<User | null>;
   listGroups(ctx: Context): Promise<readonly Group[]>;
   listUsers(ctx: Context): Promise<readonly User[]>;
+  update(ctx: Context, userPool: UserPool): Promise<void>;
   removeUserFromGroup(ctx: Context, group: Group, user: User): Promise<void>;
   saveGroup(ctx: Context, group: Group): Promise<void>;
   saveUser(ctx: Context, user: User): Promise<void>;
@@ -312,6 +313,11 @@ export class UserPoolServiceImpl implements UserPoolService {
     );
 
     return Object.values(users);
+  }
+
+  public async update(ctx: Context, userPool: UserPool): Promise<void> {
+    ctx.logger.debug({ userPoolId: userPool.Id }, "UserPoolServiceImpl.update");
+    await this.dataStore.set(ctx, "Options", userPool);
   }
 
   public async saveUser(ctx: Context, user: User): Promise<void> {

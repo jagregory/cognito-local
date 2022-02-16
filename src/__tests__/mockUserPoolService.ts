@@ -20,6 +20,7 @@ export const newMockUserPoolService = (
   saveGroup: jest.fn(),
   saveUser: jest.fn(),
   storeRefreshToken: jest.fn(),
+  update: jest.fn(),
 });
 
 export const newMockUserPoolServiceFactory = (

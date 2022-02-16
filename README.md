@@ -80,7 +80,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | DescribeResourceServer           | ❌                   |
 | DescribeRiskConfiguration        | ❌                   |
 | DescribeUserImportJob            | ❌                   |
-| DescribeUserPool                 | ❌                   |
+| DescribeUserPool                 | ✅                   |
 | DescribeUserPoolClient           | ✅                   |
 | DescribeUserPoolDomain           | ❌                   |
 | ForgetDevice                     | ❌                   |
@@ -125,7 +125,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UpdateIdentityProvider           | ❌                   |
 | UpdateResourceServer             | ❌                   |
 | UpdateUserAttributes             | ✅                   |
-| UpdateUserPool                   | ❌                   |
+| UpdateUserPool                   | ✅                   |
 | UpdateUserPoolClient             | ✅²                  |
 | UpdateUserPoolDomain             | ❌                   |
 | VerifySoftwareToken              | ❌                   |
