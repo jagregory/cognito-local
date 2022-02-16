@@ -1,3 +1,15 @@
+# [3.16.0](https://github.com/jagregory/cognito-local/compare/v3.15.0...v3.16.0) (2022-02-16)
+
+
+### Features
+
+* **api:** full support for groups ([1fc025c](https://github.com/jagregory/cognito-local/commit/1fc025cd664130124ccc4d077d5539420cc6d3f4))
+* **api:** support for DeleteUserPool ([9dd6f2d](https://github.com/jagregory/cognito-local/commit/9dd6f2dde124106f897d345d87658115d7baffdc))
+* **api:** support for DeleteUserPoolClient ([f5bca87](https://github.com/jagregory/cognito-local/commit/f5bca879c0286e4814b116af75d00850f50511b3))
+* **api:** support for ListUserPoolClients ([6e546ce](https://github.com/jagregory/cognito-local/commit/6e546ce6c7bcc6d711b41ab177ba40ed185401ee))
+* **api:** support for UpdateUserPoolClient ([4fa9de5](https://github.com/jagregory/cognito-local/commit/4fa9de5b7a7dca21eac6d2945b9d9273a1fb27d0))
+* **api:** updateUserPool and describeUserPool support ([fc62e8f](https://github.com/jagregory/cognito-local/commit/fc62e8f6328863e8fde549aec73f40c8c27c457b))
+
 # [3.15.0](https://github.com/jagregory/cognito-local/compare/v3.14.0...v3.15.0) (2022-02-16)
 
 
