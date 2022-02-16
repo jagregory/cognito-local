@@ -1,3 +1,10 @@
+# [3.15.0](https://github.com/jagregory/cognito-local/compare/v3.14.0...v3.15.0) (2022-02-16)
+
+
+### Features
+
+* **docker:** publish arm64 images (again) ([c1361b8](https://github.com/jagregory/cognito-local/commit/c1361b85978a8b9158b7b4f3ff50f8a09095e34c))
+
 # [3.14.0](https://github.com/jagregory/cognito-local/compare/v3.13.3...v3.14.0) (2022-02-16)
 
 
