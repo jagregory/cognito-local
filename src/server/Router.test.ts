@@ -2,7 +2,7 @@ import { TestContext } from "../__tests__/testContext";
 import { UnsupportedError } from "../errors";
 import { Services } from "../services";
 import { Router } from "./Router";
-import { Targets } from "../targets/Target";
+import { Targets } from "../targets/targets";
 
 describe("Router", () => {
   it("returns an error handler for an invalid target", async () => {

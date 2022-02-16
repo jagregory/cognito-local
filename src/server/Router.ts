@@ -1,6 +1,7 @@
 import { Services } from "../services";
 import { UnsupportedError } from "../errors";
-import { Targets, isSupportedTarget } from "../targets/Target";
+import { isSupportedTarget } from "../targets/Target";
+import { Targets } from "../targets/targets";
 import { Context } from "../services/context";
 
 // eslint-disable-next-line

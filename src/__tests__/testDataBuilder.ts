@@ -11,6 +11,7 @@ export const group = (partial?: Partial<Group>): Group => ({
   LastModifiedDate: partial?.LastModifiedDate ?? new Date(),
   Precedence: partial?.Precedence ?? undefined,
   RoleArn: partial?.RoleArn ?? undefined,
+  members: partial?.members ?? undefined,
 });
 
 export const user = (partial?: Partial<User>): User => ({

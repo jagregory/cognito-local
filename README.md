@@ -30,7 +30,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | Feature                          | Support              |
 | -------------------------------- | -------------------- |
 | AddCustomAttributes              | ❌                   |
-| AdminAddUserToGroup              | ❌                   |
+| AdminAddUserToGroup              | ✅                   |
 | AdminConfirmSignUp               | ✅                   |
 | AdminCreateUser                  | 🕒 (partial support) |
 | AdminDeleteUser                  | ✅                   |
@@ -44,9 +44,9 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminInitiateAuth                | 🕒 (partial support) |
 | AdminLinkProviderForUser         | ❌                   |
 | AdminListDevices                 | ❌                   |
-| AdminListGroupsForUser           | ❌                   |
+| AdminListGroupsForUser           | ✅                   |
 | AdminListUserAuthEvents          | ❌                   |
-| AdminRemoveUserFromGroup         | ❌                   |
+| AdminRemoveUserFromGroup         | ✅                   |
 | AdminResetUserPassword           | ❌                   |
 | AdminRespondToAuthChallenge      | ❌                   |
 | AdminSetUserMFAPreference        | ❌                   |
@@ -68,10 +68,10 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | CreateUserPool                   | ✅                   |
 | CreateUserPoolClient             | 🕒 (partial support) |
 | CreateUserPoolDomain             | ❌                   |
-| DeleteGroup                      | ❌                   |
+| DeleteGroup                      | ✅                   |
 | DeleteIdentityProvider           | ❌                   |
 | DeleteResourceServer             | ❌                   |
-| DeleteUser                       | ✅                   |
+| DeleteUser                       | ✅²                  |
 | DeleteUserAttributes             | ✅                   |
 | DeleteUserPool                   | ❌                   |
 | DeleteUserPoolClient             | ❌                   |
@@ -87,7 +87,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | ForgotPassword                   | 🕒 (partial support) |
 | GetCSVHeader                     | ❌                   |
 | GetDevice                        | ❌                   |
-| GetGroup                         | ❌                   |
+| GetGroup                         | ✅²                  |
 | GetIdentityProviderByIdentifier  | ❌                   |
 | GetSigningCertificate            | ❌                   |
 | GetUICustomization               | ❌                   |
@@ -105,7 +105,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | ListUserPoolClients              | ❌                   |
 | ListUserPools                    | ✅¹                  |
 | ListUsers                        | ✅¹                  |
-| ListUsersInGroup                 | ❌                   |
+| ListUsersInGroup                 | ✅¹                  |
 | ResendConfirmationCode           | ❌                   |
 | RespondToAuthChallenge           | 🕒 (partial support) |
 | RevokeToken                      | 🕒 (partial support) |
@@ -121,7 +121,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UntagResource                    | ❌                   |
 | UpdateAuthEventFeedback          | ❌                   |
 | UpdateDeviceStatus               | ❌                   |
-| UpdateGroup                      | ❌                   |
+| UpdateGroup                      | ✅                   |
 | UpdateIdentityProvider           | ❌                   |
 | UpdateResourceServer             | ❌                   |
 | UpdateUserAttributes             | ✅                   |
@@ -132,6 +132,8 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | VerifyUserAttribute              | ✅                   |
 
 > ¹ does not support pagination or query filters, all results and attributes will be returned in the first request.
+>
+> ² "requires developer credentials" is not enforced
 
 Additional supported features:
 

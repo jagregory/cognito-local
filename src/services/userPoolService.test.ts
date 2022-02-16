@@ -94,6 +94,32 @@ describe("User Pool Service", () => {
     });
   });
 
+  describe("saveGroup", () => {
+    const group = TDB.group();
+
+    it("saves the group", async () => {
+      const ds = newMockDataStore();
+
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
+      );
+
+      await userPool.saveGroup(TestContext, group);
+
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", group.GroupName],
+        group
+      );
+    });
+  });
+
   describe("saveUser", () => {
     const user = TDB.user();
 
@@ -120,11 +146,44 @@ describe("User Pool Service", () => {
     });
   });
 
+  describe("deleteGroup", () => {
+    const group = TDB.group();
+
+    it("deletes the group", async () => {
+      const ds = newMockDataStore();
+
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
+      );
+
+      await userPool.deleteGroup(TestContext, group);
+
+      expect(ds.delete).toHaveBeenCalledWith(TestContext, [
+        "Groups",
+        group.GroupName,
+      ]);
+    });
+  });
+
   describe("deleteUser", () => {
     const user = TDB.user();
 
     it("deletes the user", async () => {
       const ds = newMockDataStore();
+
+      ds.get.mockImplementation((ctx, key) => {
+        if (key === "Groups") {
+          return Promise.resolve([]);
+        }
+
+        return Promise.resolve(null);
+      });
 
       const userPool = new UserPoolServiceImpl(
         mockClientsDataStore,
@@ -142,6 +201,125 @@ describe("User Pool Service", () => {
         "Users",
         user.Username,
       ]);
+    });
+
+    it("removes the user from any groups they're assigned to", async () => {
+      const group1 = TDB.group({
+        members: [user.Username],
+      });
+      const group2 = TDB.group({
+        members: [user.Username],
+      });
+      const group3 = TDB.group();
+      const groups = {
+        [group1.GroupName]: group1,
+        [group2.GroupName]: group2,
+        [group3.GroupName]: group3,
+      };
+
+      const ds = newMockDataStore();
+      ds.get.mockImplementation((ctx, key) => {
+        if (key === "Groups") {
+          return Promise.resolve(groups);
+        } else if (Array.isArray(key) && key[0] === "Groups") {
+          return Promise.resolve(groups[key[1]]);
+        }
+
+        return Promise.resolve(null);
+      });
+
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
+      );
+
+      const newDate = new Date();
+      clock.advanceTo(newDate);
+
+      await userPool.deleteUser(TestContext, user);
+
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", group1.GroupName],
+        {
+          ...group1,
+          LastModifiedDate: newDate,
+          members: [],
+        }
+      );
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", group2.GroupName],
+        {
+          ...group2,
+          LastModifiedDate: newDate,
+          members: [],
+        }
+      );
+      expect(ds.set).not.toHaveBeenCalledWith(TestContext, [
+        "Groups",
+        group3.GroupName,
+      ]);
+    });
+  });
+
+  describe("getGroupsByGroupName", () => {
+    const group = TDB.group({
+      GroupName: "1",
+    });
+
+    let userPool: UserPoolService;
+
+    beforeEach(() => {
+      const options = {
+        Id: "local",
+      };
+      const groups: Record<string, Group> = {
+        [group.GroupName]: group,
+      };
+
+      const ds = newMockDataStore();
+      ds.get.mockImplementation((ctx, key) => {
+        if (key === "Groups") {
+          return Promise.resolve(groups);
+        } else if (key === "Options") {
+          return Promise.resolve(options);
+        } else if (Array.isArray(key) && key[0] === "Groups") {
+          return Promise.resolve(groups[key[1]]);
+        }
+
+        return Promise.resolve(null);
+      });
+
+      userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        options
+      );
+    });
+
+    it("returns null if group doesn't exist", async () => {
+      const foundGroup = await userPool.getGroupByGroupName(
+        TestContext,
+        "invalid"
+      );
+
+      expect(foundGroup).toBeNull();
+    });
+
+    it("returns existing group by their group name", async () => {
+      const foundGroup = await userPool.getGroupByGroupName(
+        TestContext,
+        group.GroupName
+      );
+
+      expect(foundGroup).toEqual(group);
     });
   });
 

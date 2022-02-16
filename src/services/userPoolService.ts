@@ -119,6 +119,11 @@ export interface Group {
    * The date the group was created.
    */
   CreationDate: Date;
+
+  /**
+   * The group's membership, a list of Usernames
+   */
+  members?: readonly string[];
 }
 
 // just use the types from the sdk, but make Id required
@@ -130,7 +135,9 @@ export interface UserPoolService {
   readonly config: UserPool;
 
   createAppClient(ctx: Context, name: string): Promise<AppClient>;
+  deleteGroup(ctx: Context, group: Group): Promise<void>;
   deleteUser(ctx: Context, user: User): Promise<void>;
+  getGroupByGroupName(ctx: Context, groupName: string): Promise<Group | null>;
   getUserByUsername(ctx: Context, username: string): Promise<User | null>;
   getUserByRefreshToken(
     ctx: Context,
@@ -138,6 +145,7 @@ export interface UserPoolService {
   ): Promise<User | null>;
   listGroups(ctx: Context): Promise<readonly Group[]>;
   listUsers(ctx: Context): Promise<readonly User[]>;
+  removeUserFromGroup(ctx: Context, group: Group, user: User): Promise<void>;
   saveGroup(ctx: Context, group: Group): Promise<void>;
   saveUser(ctx: Context, user: User): Promise<void>;
   storeRefreshToken(
@@ -194,12 +202,32 @@ export class UserPoolServiceImpl implements UserPoolService {
     return appClient;
   }
 
+  public async deleteGroup(ctx: Context, group: Group): Promise<void> {
+    ctx.logger.debug(
+      { groupName: group.GroupName },
+      "UserPoolServiceImpl.deleteGroup"
+    );
+    await this.dataStore.delete(ctx, ["Groups", group.GroupName]);
+  }
+
   public async deleteUser(ctx: Context, user: User): Promise<void> {
     ctx.logger.debug(
       { username: user.Username },
       "UserPoolServiceImpl.deleteUser"
     );
+
     await this.dataStore.delete(ctx, ["Users", user.Username]);
+    await this.removeUserFromAllGroups(ctx, user);
+  }
+
+  public async getGroupByGroupName(
+    ctx: Context,
+    groupName: string
+  ): Promise<Group | null> {
+    ctx.logger.debug("UserPoolServiceImpl.getGroupByGroupName");
+    const result = await this.dataStore.get<Group>(ctx, ["Groups", groupName]);
+
+    return result ?? null;
   }
 
   public async getUserByUsername(
@@ -293,6 +321,42 @@ export class UserPoolServiceImpl implements UserPoolService {
     );
 
     return Object.values(groups);
+  }
+
+  public async removeUserFromGroup(
+    ctx: Context,
+    group: Group,
+    user: User
+  ): Promise<void> {
+    ctx.logger.debug(
+      { username: user.Username, groupName: group.GroupName },
+      "UserPoolServiceImpl.removeUserFromGroup"
+    );
+
+    const groupMembers = new Set(group.members ?? []);
+    if (groupMembers.has(user.Username)) {
+      groupMembers.delete(user.Username);
+      await this.saveGroup(ctx, {
+        ...group,
+        LastModifiedDate: this.clock.get(),
+        members: Array.from(groupMembers),
+      });
+    }
+  }
+
+  private async removeUserFromAllGroups(
+    ctx: Context,
+    user: User
+  ): Promise<void> {
+    ctx.logger.debug(
+      { username: user.Username },
+      "UserPoolServiceImpl.removeUserFromAllGroups"
+    );
+    const groups = await this.listGroups(ctx);
+
+    await Promise.all(
+      groups.map((group) => this.removeUserFromGroup(ctx, group, user))
+    );
   }
 
   async saveGroup(ctx: Context, group: Group): Promise<void> {

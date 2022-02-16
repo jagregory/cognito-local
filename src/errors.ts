@@ -46,8 +46,14 @@ export class PasswordResetRequiredError extends CognitoError {
 }
 
 export class ResourceNotFoundError extends CognitoError {
+  public constructor(message?: string) {
+    super("ResourceNotFoundException", message ?? "Resource not found");
+  }
+}
+
+export class GroupNotFoundError extends ResourceNotFoundError {
   public constructor() {
-    super("ResourceNotFoundException", "Resource not found");
+    super("Group not found");
   }
 }
 
