@@ -126,7 +126,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UpdateResourceServer             | ❌                   |
 | UpdateUserAttributes             | ✅                   |
 | UpdateUserPool                   | ❌                   |
-| UpdateUserPoolClient             | ❌                   |
+| UpdateUserPoolClient             | ✅²                  |
 | UpdateUserPoolDomain             | ❌                   |
 | VerifySoftwareToken              | ❌                   |
 | VerifyUserAttribute              | ✅                   |

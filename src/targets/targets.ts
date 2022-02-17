@@ -37,6 +37,7 @@ import { RevokeToken } from "./revokeToken";
 import { SignUp } from "./signUp";
 import { UpdateGroup } from "./updateGroup";
 import { UpdateUserAttributes } from "./updateUserAttributes";
+import { UpdateUserPoolClient } from "./updateUserPoolClient";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
@@ -78,5 +79,6 @@ export const Targets = {
   SignUp,
   UpdateGroup,
   UpdateUserAttributes,
+  UpdateUserPoolClient,
   VerifyUserAttribute,
 } as const;
