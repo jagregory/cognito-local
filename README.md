@@ -74,7 +74,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | DeleteUser                       | ✅²                  |
 | DeleteUserAttributes             | ✅                   |
 | DeleteUserPool                   | ❌                   |
-| DeleteUserPoolClient             | ❌                   |
+| DeleteUserPoolClient             | ✅²                  |
 | DeleteUserPoolDomain             | ❌                   |
 | DescribeIdentityProvider         | ❌                   |
 | DescribeResourceServer           | ❌                   |

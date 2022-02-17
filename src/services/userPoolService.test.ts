@@ -146,6 +146,31 @@ describe("User Pool Service", () => {
     });
   });
 
+  describe("deleteAppClient", () => {
+    const appClient = TDB.appClient();
+
+    it("deletes the user pool client", async () => {
+      const clientsDs = newMockDataStore();
+
+      const userPool = new UserPoolServiceImpl(
+        clientsDs,
+        clock,
+        newMockDataStore(),
+        {
+          Id: "local",
+          UsernameAttributes: [],
+        }
+      );
+
+      await userPool.deleteAppClient(TestContext, appClient);
+
+      expect(clientsDs.delete).toHaveBeenCalledWith(TestContext, [
+        "Clients",
+        appClient.ClientId,
+      ]);
+    });
+  });
+
   describe("deleteGroup", () => {
     const group = TDB.group();
 

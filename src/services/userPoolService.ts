@@ -139,6 +139,7 @@ export interface UserPoolService {
   readonly config: UserPool;
 
   saveAppClient(ctx: Context, appClient: AppClient): Promise<void>;
+  deleteAppClient(ctx: Context, appClient: AppClient): Promise<void>;
   deleteGroup(ctx: Context, group: Group): Promise<void>;
   deleteUser(ctx: Context, user: User): Promise<void>;
   getGroupByGroupName(ctx: Context, groupName: string): Promise<Group | null>;
@@ -196,6 +197,17 @@ export class UserPoolServiceImpl implements UserPoolService {
       ["Clients", appClient.ClientId],
       appClient
     );
+  }
+
+  public async deleteAppClient(
+    ctx: Context,
+    appClient: AppClient
+  ): Promise<void> {
+    ctx.logger.debug(
+      { clientId: appClient.ClientId },
+      "UserPoolServiceImpl.deleteAppClient"
+    );
+    await this.clientsDataStore.delete(ctx, ["Clients", appClient.ClientId]);
   }
 
   public async deleteGroup(ctx: Context, group: Group): Promise<void> {
