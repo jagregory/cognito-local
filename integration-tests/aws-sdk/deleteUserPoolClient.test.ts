@@ -3,7 +3,7 @@ import { withCognitoSdk } from "./setup";
 describe(
   "CognitoIdentityServiceProvider.deleteUserPoolClient",
   withCognitoSdk((Cognito) => {
-    it("deletes a group", async () => {
+    it("deletes a user pool client", async () => {
       const client = Cognito();
 
       // create the user pool client

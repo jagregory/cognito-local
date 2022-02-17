@@ -75,4 +75,22 @@ describe("Cognito Service", () => {
       { ...USER_POOL_AWS_DEFAULTS, Id: "test-pool-3" },
     ]);
   });
+
+  it("deletes user pools", async () => {
+    const cognitoService = await factory.create(TestContext, {});
+
+    const up1 = await cognitoService.getUserPool(TestContext, "test-pool-1");
+    const up2 = await cognitoService.getUserPool(TestContext, "test-pool-2");
+
+    expect(fs.existsSync(`${dataDirectory}/test-pool-1.json`)).toBe(true);
+    expect(fs.existsSync(`${dataDirectory}/test-pool-2.json`)).toBe(true);
+
+    await cognitoService.deleteUserPool(TestContext, up1.config);
+
+    expect(fs.existsSync(`${dataDirectory}/test-pool-1.json`)).not.toBe(true);
+
+    await cognitoService.deleteUserPool(TestContext, up2.config);
+
+    expect(fs.existsSync(`${dataDirectory}/test-pool-2.json`)).not.toBe(true);
+  });
 });

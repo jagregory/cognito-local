@@ -12,10 +12,7 @@ import {
   UserPoolService,
   UserPoolServiceFactory,
 } from "./userPoolService";
-import fs from "fs";
-import { promisify } from "util";
-
-const readdir = promisify(fs.readdir);
+import fs from "fs/promises";
 
 const CLIENTS_DATABASE_NAME = "clients";
 
@@ -265,6 +262,7 @@ export const USER_POOL_AWS_DEFAULTS: UserPoolDefaults = {
 
 export interface CognitoService {
   createUserPool(ctx: Context, userPool: UserPool): Promise<UserPool>;
+  deleteUserPool(ctx: Context, userPool: UserPool): Promise<void>;
   getAppClient(ctx: Context, clientId: string): Promise<AppClient | null>;
   getUserPool(ctx: Context, userPoolId: string): Promise<UserPoolService>;
   getUserPoolForClientId(
@@ -325,6 +323,14 @@ export class CognitoServiceImpl implements CognitoService {
     return service.config;
   }
 
+  public async deleteUserPool(ctx: Context, userPool: UserPool): Promise<void> {
+    ctx.logger.debug(
+      { userPoolId: userPool.Id },
+      "CognitoServiceImpl.deleteUserPool"
+    );
+    await fs.rm(path.join(this.dataDirectory, `${userPool.Id}.json`));
+  }
+
   public async getUserPool(
     ctx: Context,
     userPoolId: string
@@ -378,7 +384,9 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async listUserPools(ctx: Context): Promise<readonly UserPool[]> {
     ctx.logger.debug("CognitoServiceImpl.listUserPools");
-    const entries = await readdir(this.dataDirectory, { withFileTypes: true });
+    const entries = await fs.readdir(this.dataDirectory, {
+      withFileTypes: true,
+    });
 
     return Promise.all(
       entries
