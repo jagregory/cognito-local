@@ -1,3 +1,10 @@
+## [3.16.1](https://github.com/jagregory/cognito-local/compare/v3.16.0...v3.16.1) (2022-02-18)
+
+
+### Bug Fixes
+
+* updating a user pool updates cached options ([dc2b10e](https://github.com/jagregory/cognito-local/commit/dc2b10ed1e19ede81ecc9b3d9d15e4e09ee5b72b))
+
 # [3.16.0](https://github.com/jagregory/cognito-local/compare/v3.15.0...v3.16.0) (2022-02-16)
 
 
