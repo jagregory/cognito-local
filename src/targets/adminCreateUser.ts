@@ -84,7 +84,7 @@ const deliverWelcomeMessage = async (
     ctx,
     "AdminCreateUser",
     null,
-    userPool.config.Id,
+    userPool.options.Id,
     user,
     temporaryPassword,
     req.ClientMetadata,

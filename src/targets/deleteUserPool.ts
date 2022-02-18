@@ -16,7 +16,7 @@ export const DeleteUserPool =
       throw new ResourceNotFoundError();
     }
 
-    await cognito.deleteUserPool(ctx, userPool.config);
+    await cognito.deleteUserPool(ctx, userPool.options);
 
     return {};
   };

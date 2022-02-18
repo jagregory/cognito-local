@@ -44,7 +44,7 @@ export const ConfirmSignUp =
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",
         username: updatedUser.Username,
-        userPoolId: userPool.config.Id,
+        userPoolId: userPool.options.Id,
 
         // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
         // into every place we send attributes to lambdas

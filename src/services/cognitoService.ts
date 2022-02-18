@@ -320,7 +320,7 @@ export class CognitoServiceImpl implements CognitoService {
       )
     );
 
-    return service.config;
+    return service.options;
   }
 
   public async deleteUserPool(ctx: Context, userPool: UserPool): Promise<void> {
@@ -403,7 +403,7 @@ export class CognitoServiceImpl implements CognitoService {
             path.basename(x.name, path.extname(x.name))
           );
 
-          return userPool.config;
+          return userPool.options;
         })
     );
   }

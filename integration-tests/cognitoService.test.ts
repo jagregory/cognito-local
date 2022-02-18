@@ -85,11 +85,11 @@ describe("Cognito Service", () => {
     expect(fs.existsSync(`${dataDirectory}/test-pool-1.json`)).toBe(true);
     expect(fs.existsSync(`${dataDirectory}/test-pool-2.json`)).toBe(true);
 
-    await cognitoService.deleteUserPool(TestContext, up1.config);
+    await cognitoService.deleteUserPool(TestContext, up1.options);
 
     expect(fs.existsSync(`${dataDirectory}/test-pool-1.json`)).not.toBe(true);
 
-    await cognitoService.deleteUserPool(TestContext, up2.config);
+    await cognitoService.deleteUserPool(TestContext, up2.options);
 
     expect(fs.existsSync(`${dataDirectory}/test-pool-2.json`)).not.toBe(true);
   });

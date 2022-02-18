@@ -20,7 +20,7 @@ const sendAttributeVerificationCode = async (
   code: string
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
-    userPool.config.AutoVerifiedAttributes ?? [],
+    userPool.options.AutoVerifiedAttributes ?? [],
     user
   );
   if (!deliveryDetails) {
@@ -34,7 +34,7 @@ const sendAttributeVerificationCode = async (
     ctx,
     "VerifyUserAttribute",
     null,
-    userPool.config.Id,
+    userPool.options.Id,
     user,
     code,
     req.ClientMetadata,

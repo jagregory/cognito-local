@@ -33,7 +33,7 @@ describe("UpdateUserPool target", () => {
       MfaConfiguration: "OPTIONAL",
     });
 
-    expect(userPoolService.update).toHaveBeenCalledWith(TestContext, {
+    expect(userPoolService.updateOptions).toHaveBeenCalledWith(TestContext, {
       ...existingUserPool,
       MfaConfiguration: "OPTIONAL",
     });

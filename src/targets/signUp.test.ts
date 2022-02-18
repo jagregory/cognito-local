@@ -412,7 +412,7 @@ describe("SignUp target", () => {
   describe("messages", () => {
     describe("UserPool.AutoVerifiedAttributes=default", () => {
       beforeEach(() => {
-        mockUserPoolService.config.AutoVerifiedAttributes = undefined;
+        mockUserPoolService.options.AutoVerifiedAttributes = undefined;
       });
 
       it("does not send a confirmation code", async () => {
@@ -435,7 +435,7 @@ describe("SignUp target", () => {
 
     describe("UserPool.AutoVerifiedAttributes=email", () => {
       beforeEach(() => {
-        mockUserPoolService.config.AutoVerifiedAttributes = ["email"];
+        mockUserPoolService.options.AutoVerifiedAttributes = ["email"];
       });
 
       it("sends a confirmation code to the user's email address", async () => {
@@ -504,7 +504,7 @@ describe("SignUp target", () => {
 
     describe("UserPool.AutoVerifiedAttributes=phone_number", () => {
       beforeEach(() => {
-        mockUserPoolService.config.AutoVerifiedAttributes = ["phone_number"];
+        mockUserPoolService.options.AutoVerifiedAttributes = ["phone_number"];
       });
 
       it("sends a confirmation code to the user's phone number", async () => {
@@ -573,7 +573,7 @@ describe("SignUp target", () => {
 
     describe("UserPool.AutoVerifiedAttributes=phone_number and email", () => {
       beforeEach(() => {
-        mockUserPoolService.config.AutoVerifiedAttributes = [
+        mockUserPoolService.options.AutoVerifiedAttributes = [
           "email",
           "phone_number",
         ];

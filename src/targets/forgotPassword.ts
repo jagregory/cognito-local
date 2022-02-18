@@ -50,7 +50,7 @@ export const ForgotPassword =
       ctx,
       "ForgotPassword",
       req.ClientId,
-      userPool.config.Id,
+      userPool.options.Id,
       user,
       code,
       req.ClientMetadata,

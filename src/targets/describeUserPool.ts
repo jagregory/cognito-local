@@ -21,6 +21,6 @@ export const DescribeUserPool =
     }
 
     return {
-      UserPool: userPoolToResponseObject(userPool.config),
+      UserPool: userPoolToResponseObject(userPool.options),
     };
   };

@@ -136,7 +136,7 @@ export type UserPool = UserPoolType & {
 };
 
 export interface UserPoolService {
-  readonly config: UserPool;
+  readonly options: UserPool;
 
   saveAppClient(ctx: Context, appClient: AppClient): Promise<void>;
   deleteAppClient(ctx: Context, appClient: AppClient): Promise<void>;
@@ -150,7 +150,7 @@ export interface UserPoolService {
   ): Promise<User | null>;
   listGroups(ctx: Context): Promise<readonly Group[]>;
   listUsers(ctx: Context): Promise<readonly User[]>;
-  update(ctx: Context, userPool: UserPool): Promise<void>;
+  updateOptions(ctx: Context, userPool: UserPool): Promise<void>;
   removeUserFromGroup(ctx: Context, group: Group, user: User): Promise<void>;
   saveGroup(ctx: Context, group: Group): Promise<void>;
   saveUser(ctx: Context, user: User): Promise<void>;
@@ -174,7 +174,11 @@ export class UserPoolServiceImpl implements UserPoolService {
   private readonly clock: Clock;
   private readonly dataStore: DataStore;
 
-  public readonly config: UserPool;
+  private _options: UserPool;
+
+  public get options(): UserPool {
+    return this._options;
+  }
 
   public constructor(
     clientsDataStore: DataStore,
@@ -183,7 +187,7 @@ export class UserPoolServiceImpl implements UserPoolService {
     config: UserPool
   ) {
     this.clientsDataStore = clientsDataStore;
-    this.config = config;
+    this._options = config;
     this.clock = clock;
     this.dataStore = dataStore;
   }
@@ -245,9 +249,10 @@ export class UserPoolServiceImpl implements UserPoolService {
   ): Promise<User | null> {
     ctx.logger.debug({ username }, "UserPoolServiceImpl.getUserByUsername");
 
-    const aliasEmailEnabled = this.config.UsernameAttributes?.includes("email");
+    const aliasEmailEnabled =
+      this.options.UsernameAttributes?.includes("email");
     const aliasPhoneNumberEnabled =
-      this.config.UsernameAttributes?.includes("phone_number");
+      this.options.UsernameAttributes?.includes("phone_number");
 
     const userByUsername = await this.dataStore.get<User>(ctx, [
       "Users",
@@ -315,9 +320,13 @@ export class UserPoolServiceImpl implements UserPoolService {
     return Object.values(users);
   }
 
-  public async update(ctx: Context, userPool: UserPool): Promise<void> {
-    ctx.logger.debug({ userPoolId: userPool.Id }, "UserPoolServiceImpl.update");
+  public async updateOptions(ctx: Context, userPool: UserPool): Promise<void> {
+    ctx.logger.debug(
+      { userPoolId: userPool.Id },
+      "UserPoolServiceImpl.updateOptions"
+    );
     await this.dataStore.set(ctx, "Options", userPool);
+    this._options = userPool;
   }
 
   public async saveUser(ctx: Context, user: User): Promise<void> {

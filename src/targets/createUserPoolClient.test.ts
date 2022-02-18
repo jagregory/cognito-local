@@ -3,7 +3,6 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import { UserPoolService } from "../services";
-import { AppClient } from "../services/appClient";
 import {
   CreateUserPoolClient,
   CreateUserPoolClientTarget,

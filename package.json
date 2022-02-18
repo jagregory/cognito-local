@@ -13,7 +13,7 @@
     "format": "prettier --write src/**/*.ts integration-tests/**/*.ts",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
-    "lint": "eslint src/**/*.ts && tsc --noEmit",
+    "lint": "eslint --cache src/**/*.ts && tsc --noEmit",
     "start": "COGNITO_LOCAL_DEVMODE=1 ts-node src/bin/start.ts",
     "start:debug": "COGNITO_LOCAL_DEVMODE=1 DEBUG=1 node -r ts-node/register --inspect=9230 --enable-source-maps src/bin/start.ts",
     "start:watch": "nodemon",
@@ -87,8 +87,8 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix",
-      "tsc --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
+      "eslint --fix --cache",
+      "tsc --target es2019 --moduleResolution node --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
       "prettier --write"
     ],
     "README.md": "markdown-toc -i --bullets=- --maxdepth=3"

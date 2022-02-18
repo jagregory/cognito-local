@@ -152,7 +152,7 @@ describe("InitiateAuth target", () => {
     describe("when password matches", () => {
       describe("when MFA is ON", () => {
         beforeEach(() => {
-          mockUserPoolService.config.MfaConfiguration = "ON";
+          mockUserPoolService.options.MfaConfiguration = "ON";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -257,7 +257,7 @@ describe("InitiateAuth target", () => {
 
       describe("when MFA is OPTIONAL", () => {
         beforeEach(() => {
-          mockUserPoolService.config.MfaConfiguration = "OPTIONAL";
+          mockUserPoolService.options.MfaConfiguration = "OPTIONAL";
         });
 
         describe("when user has SMS_MFA configured", () => {
@@ -395,7 +395,7 @@ describe("InitiateAuth target", () => {
         const user = TDB.user();
 
         beforeEach(() => {
-          mockUserPoolService.config.MfaConfiguration = "OFF";
+          mockUserPoolService.options.MfaConfiguration = "OFF";
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
         });
 

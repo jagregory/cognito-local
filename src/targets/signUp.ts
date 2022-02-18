@@ -35,10 +35,10 @@ const deliverWelcomeMessage = async (
   clientMetadata: Record<string, string> | undefined
 ): Promise<DeliveryDetails | null> => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
-    userPool.config.AutoVerifiedAttributes ?? [],
+    userPool.options.AutoVerifiedAttributes ?? [],
     user
   );
-  if (!deliveryDetails && !userPool.config.AutoVerifiedAttributes) {
+  if (!deliveryDetails && !userPool.options.AutoVerifiedAttributes) {
     // From the console: When Cognito's default verification method is not enabled, you must use APIs or Lambda triggers
     // to verify phone numbers and email addresses as well as to confirm user accounts.
     return null;
@@ -53,7 +53,7 @@ const deliverWelcomeMessage = async (
     ctx,
     "SignUp",
     clientId,
-    userPool.config.Id,
+    userPool.options.Id,
     user,
     code,
     clientMetadata,
@@ -88,7 +88,7 @@ export const SignUp =
           source: "PreSignUp_SignUp",
           userAttributes: attributes,
           username: req.Username,
-          userPoolId: userPool.config.Id,
+          userPoolId: userPool.options.Id,
           validationData: undefined,
         });
 
@@ -142,7 +142,7 @@ export const SignUp =
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",
         username: updatedUser.Username,
-        userPoolId: userPool.config.Id,
+        userPoolId: userPool.options.Id,
 
         // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
         // into every place we send attributes to lambdas

@@ -87,7 +87,7 @@ export const RespondToAuthChallenge =
         source: "PostAuthentication_Authentication",
         userAttributes: user.Attributes,
         username: user.Username,
-        userPoolId: userPool.config.Id,
+        userPoolId: userPool.options.Id,
       });
     }
 
@@ -97,7 +97,7 @@ export const RespondToAuthChallenge =
         ctx,
         user,
         req.ClientId,
-        userPool.config.Id,
+        userPool.options.Id,
         req.ClientMetadata,
         "Authentication"
       ),

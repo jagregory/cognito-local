@@ -650,4 +650,47 @@ describe("User Pool Service", () => {
       expect(groups[0].GroupName).toEqual("theGroupName");
     });
   });
+
+  describe("updateOptions", () => {
+    it("updates the options in the datastore", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      await userPool.updateOptions(TestContext, {
+        Id: "test",
+        MfaConfiguration: "ON",
+      });
+
+      expect(ds.set).toHaveBeenCalledWith(TestContext, "Options", {
+        Id: "test",
+        MfaConfiguration: "ON",
+      });
+    });
+
+    it("updates the cached options", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      await userPool.updateOptions(TestContext, {
+        Id: "test",
+        MfaConfiguration: "ON",
+      });
+
+      expect(userPool.options.MfaConfiguration).toEqual("ON");
+    });
+  });
 });

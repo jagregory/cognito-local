@@ -27,7 +27,7 @@ const sendAttributeVerificationCode = async (
   code: string
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
-    userPool.config.AutoVerifiedAttributes ?? [],
+    userPool.options.AutoVerifiedAttributes ?? [],
     user
   );
   if (!deliveryDetails) {
@@ -41,7 +41,7 @@ const sendAttributeVerificationCode = async (
     ctx,
     "UpdateUserAttribute",
     null,
-    userPool.config.Id,
+    userPool.options.Id,
     user,
     code,
     req.ClientMetadata,
@@ -91,7 +91,7 @@ export const UpdateUserAttributes =
         // or before we started explicitly saving the defaults. Fallback on the AWS defaults in
         // this case, otherwise checks against the schema for default attributes like email will
         // fail.
-        userPool.config.SchemaAttributes ??
+        userPool.options.SchemaAttributes ??
           USER_POOL_AWS_DEFAULTS.SchemaAttributes ??
           []
       )
@@ -108,7 +108,7 @@ export const UpdateUserAttributes =
     // deliberately only check the affected user attributes, not the combined attributes
     // e.g. a user with email_verified=false that you don't touch the email attributes won't get notified
     if (
-      userPool.config.AutoVerifiedAttributes?.length &&
+      userPool.options.AutoVerifiedAttributes?.length &&
       hasUnverifiedContactAttributes(userAttributesToSet)
     ) {
       const code = otp();

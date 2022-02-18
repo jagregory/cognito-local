@@ -62,7 +62,7 @@ const verifyMfaChallenge = async (
     ctx,
     "Authentication",
     req.ClientId,
-    userPool.config.Id,
+    userPool.options.Id,
     user,
     code,
     req.ClientMetadata,
@@ -99,7 +99,7 @@ const verifyPasswordChallenge = async (
     ctx,
     user,
     req.ClientId,
-    userPool.config.Id,
+    userPool.options.Id,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
     //
@@ -152,7 +152,7 @@ const userPasswordAuthFlow = async (
       password: req.AuthParameters.PASSWORD,
       userAttributes: [],
       username: req.AuthParameters.USERNAME,
-      userPoolId: userPool.config.Id,
+      userPoolId: userPool.options.Id,
 
       // UserMigration triggered by InitiateAuth passes the request ClientMetadata as ValidationData and nothing as
       // the ClientMetadata.
@@ -177,9 +177,9 @@ const userPasswordAuthFlow = async (
   }
 
   if (
-    (userPool.config.MfaConfiguration === "OPTIONAL" &&
+    (userPool.options.MfaConfiguration === "OPTIONAL" &&
       (user.MFAOptions ?? []).length > 0) ||
-    userPool.config.MfaConfiguration === "ON"
+    userPool.options.MfaConfiguration === "ON"
   ) {
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
@@ -195,7 +195,7 @@ const userPasswordAuthFlow = async (
       source: "PostAuthentication_Authentication",
       userAttributes: user.Attributes,
       username: user.Username,
-      userPoolId: userPool.config.Id,
+      userPoolId: userPool.options.Id,
     });
   }
 
@@ -233,7 +233,7 @@ const refreshTokenAuthFlow = async (
     ctx,
     user,
     req.ClientId,
-    userPool.config.Id,
+    userPool.options.Id,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
     //

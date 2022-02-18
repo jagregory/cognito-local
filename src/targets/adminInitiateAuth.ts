@@ -54,7 +54,7 @@ const adminUserPasswordAuthFlow = async (
     user = await services.triggers.userMigration(ctx, {
       clientMetadata: {},
       validationData: {},
-      userPoolId: userPool.config.Id,
+      userPoolId: userPool.options.Id,
       clientId: req.ClientId,
       username: req.AuthParameters.USERNAME,
       password: req.AuthParameters.PASSWORD,
@@ -74,7 +74,7 @@ const adminUserPasswordAuthFlow = async (
     ctx,
     user,
     req.ClientId,
-    userPool.config.Id,
+    userPool.options.Id,
     req.ClientMetadata,
     "Authentication"
   );
@@ -127,7 +127,7 @@ const refreshTokenAuthFlow = async (
     ctx,
     user,
     req.ClientId,
-    userPool.config.Id,
+    userPool.options.Id,
     req.ClientMetadata,
     "RefreshTokens"
   );

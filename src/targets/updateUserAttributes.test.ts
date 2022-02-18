@@ -87,7 +87,7 @@ describe("UpdateUserAttributes target", () => {
     const user = TDB.user();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
-    mockUserPoolService.config.SchemaAttributes = [
+    mockUserPoolService.options.SchemaAttributes = [
       {
         Name: "custom:example",
         Mutable: true,
@@ -120,7 +120,7 @@ describe("UpdateUserAttributes target", () => {
     ${"phone_number_verified without an phone_number attribute"} | ${"phone_number_verified"} | ${"Phone Number is required to verify/un-verify a phone number"}
   `("req.UserAttributes contains $desc", ({ attribute, expectedError }) => {
     beforeEach(() => {
-      mockUserPoolService.config.SchemaAttributes = [
+      mockUserPoolService.options.SchemaAttributes = [
         {
           Name: "email_verified",
           Mutable: true,
@@ -182,7 +182,7 @@ describe("UpdateUserAttributes target", () => {
 
   describe("user pool has auto verified attributes enabled", () => {
     beforeEach(() => {
-      mockUserPoolService.config.AutoVerifiedAttributes = ["email"];
+      mockUserPoolService.options.AutoVerifiedAttributes = ["email"];
     });
 
     describe.each`
@@ -200,7 +200,7 @@ describe("UpdateUserAttributes target", () => {
           });
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
-          mockUserPoolService.config.SchemaAttributes = [
+          mockUserPoolService.options.SchemaAttributes = [
             { Name: "example", Mutable: true },
           ];
 
@@ -284,7 +284,7 @@ describe("UpdateUserAttributes target", () => {
 
   describe("user pool does not have auto verified attributes", () => {
     beforeEach(() => {
-      mockUserPoolService.config.AutoVerifiedAttributes = [];
+      mockUserPoolService.options.AutoVerifiedAttributes = [];
     });
 
     describe.each`
@@ -302,7 +302,7 @@ describe("UpdateUserAttributes target", () => {
           });
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
-          mockUserPoolService.config.SchemaAttributes = [
+          mockUserPoolService.options.SchemaAttributes = [
             { Name: "example", Mutable: true },
           ];
 

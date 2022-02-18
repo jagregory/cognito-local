@@ -19,7 +19,7 @@ export const UpdateUserPool =
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
 
     const updatedUserPool: UserPool = {
-      ...userPool.config,
+      ...userPool.options,
       AccountRecoverySetting: req.AccountRecoverySetting,
       AdminCreateUserConfig: req.AdminCreateUserConfig,
       AutoVerifiedAttributes: req.AutoVerifiedAttributes,
@@ -38,7 +38,7 @@ export const UpdateUserPool =
       VerificationMessageTemplate: req.VerificationMessageTemplate,
     };
 
-    await userPool.update(ctx, updatedUserPool);
+    await userPool.updateOptions(ctx, updatedUserPool);
 
     return {};
   };
