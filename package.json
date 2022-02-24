@@ -30,6 +30,7 @@
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^9.0.0",
     "@types/aws-lambda": "^8.10.85",
     "@types/body-parser": "^1.19.0",
     "@types/cors": "^2.8.6",
@@ -106,6 +107,7 @@
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
+      "@semantic-release/npm",
       ["@semantic-release/exec", {
         "publishCmd": "./scripts/dockerBuildPush.sh ${nextRelease.version}"
       }],
