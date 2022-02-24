@@ -1,3 +1,10 @@
+## [3.16.2](https://github.com/jagregory/cognito-local/compare/v3.16.1...v3.16.2) (2022-02-24)
+
+
+### Bug Fixes
+
+* **build:** publish npm packages ([faaf12b](https://github.com/jagregory/cognito-local/commit/faaf12b37aa74bd4c2db4f6c4d29d6172e0236d1))
+
 ## [3.16.1](https://github.com/jagregory/cognito-local/compare/v3.16.0...v3.16.1) (2022-02-18)
 
 
