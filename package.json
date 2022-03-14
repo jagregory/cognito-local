@@ -60,7 +60,7 @@
     "typescript": "^4.5.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.1045.0",
+    "aws-sdk": "^2.1092.0",
     "body-parser": "^1.19.0",
     "boxen": "^5.1.2",
     "cors": "^2.8.5",
