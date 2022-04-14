@@ -48,7 +48,7 @@ describe("RespondToAuthChallenge target", () => {
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
           USERNAME: "username",
-          SMS_MFA_CODE: "1234",
+          SMS_MFA_CODE: "123456",
         },
         Session: "Session",
       })
@@ -98,7 +98,7 @@ describe("RespondToAuthChallenge target", () => {
 
   describe("ChallengeName=SMS_MFA", () => {
     const user = TDB.user({
-      MFACode: "1234",
+      MFACode: "123456",
     });
 
     beforeEach(() => {
@@ -114,7 +114,7 @@ describe("RespondToAuthChallenge target", () => {
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
             USERNAME: user.Username,
-            SMS_MFA_CODE: "1234",
+            SMS_MFA_CODE: "123456",
           },
           Session: "Session",
         });
@@ -138,7 +138,7 @@ describe("RespondToAuthChallenge target", () => {
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
             USERNAME: user.Username,
-            SMS_MFA_CODE: "1234",
+            SMS_MFA_CODE: "123456",
           },
           Session: "Session",
           ClientMetadata: {
@@ -178,7 +178,7 @@ describe("RespondToAuthChallenge target", () => {
             },
             ChallengeResponses: {
               USERNAME: user.Username,
-              SMS_MFA_CODE: "1234",
+              SMS_MFA_CODE: "123456",
             },
             Session: "Session",
           });

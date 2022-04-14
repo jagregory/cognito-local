@@ -28,7 +28,7 @@ describe("InitiateAuth target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     mockMessages = newMockMessages();
-    mockOtp = jest.fn().mockReturnValue("1234");
+    mockOtp = jest.fn().mockReturnValue("123456");
     mockTriggers = newMockTriggers();
     mockTokenGenerator = newMockTokenGenerator();
     initiateAuth = InitiateAuth({
@@ -194,7 +194,7 @@ describe("InitiateAuth target", () => {
               "clientId",
               "test",
               user,
-              "1234",
+              "123456",
               undefined,
               {
                 AttributeName: "phone_number",
@@ -208,7 +208,7 @@ describe("InitiateAuth target", () => {
               TestContext,
               {
                 ...user,
-                MFACode: "1234",
+                MFACode: "123456",
               }
             );
           });
@@ -302,7 +302,7 @@ describe("InitiateAuth target", () => {
               "clientId",
               "test",
               user,
-              "1234",
+              "123456",
               {
                 client: "metadata",
               },
@@ -318,7 +318,7 @@ describe("InitiateAuth target", () => {
               TestContext,
               {
                 ...user,
-                MFACode: "1234",
+                MFACode: "123456",
               }
             );
           });

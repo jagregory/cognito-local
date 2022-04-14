@@ -94,7 +94,7 @@ describe("User Pool Service", () => {
           Username: username,
           Password: "hunter3",
           UserStatus: "UNCONFIRMED",
-          ConfirmationCode: "1234",
+          ConfirmationCode: "123456",
           Attributes: [
             { Name: "sub", Value: "uuid-1234" },
             { Name: "email", Value: "example@example.com" },
@@ -114,7 +114,7 @@ describe("User Pool Service", () => {
             Username: username,
             Password: "hunter3",
             UserStatus: "UNCONFIRMED",
-            ConfirmationCode: "1234",
+            ConfirmationCode: "123456",
             Attributes: [
               { Name: "sub", Value: "uuid-1234" },
               { Name: "email", Value: "example@example.com" },

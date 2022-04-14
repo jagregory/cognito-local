@@ -417,7 +417,7 @@ describe("SignUp target", () => {
 
       it("does not send a confirmation code", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-        mockOtp.mockReturnValue("1234");
+        mockOtp.mockReturnValue("123456");
 
         await signUp(TestContext, {
           ClientId: "clientId",
@@ -440,7 +440,7 @@ describe("SignUp target", () => {
 
       it("sends a confirmation code to the user's email address", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-        mockOtp.mockReturnValue("1234");
+        mockOtp.mockReturnValue("123456");
 
         await signUp(TestContext, {
           ClientId: "clientId",
@@ -472,7 +472,7 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234",
+          "123456",
           {
             client: "metadata",
           },
@@ -509,7 +509,7 @@ describe("SignUp target", () => {
 
       it("sends a confirmation code to the user's phone number", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-        mockOtp.mockReturnValue("1234");
+        mockOtp.mockReturnValue("123456");
 
         await signUp(TestContext, {
           ClientId: "clientId",
@@ -541,7 +541,7 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234",
+          "123456",
           {
             client: "metadata",
           },
@@ -581,7 +581,7 @@ describe("SignUp target", () => {
 
       it("sends a confirmation code to the user's phone number if they have both attributes", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-        mockOtp.mockReturnValue("1234");
+        mockOtp.mockReturnValue("123456");
 
         await signUp(TestContext, {
           ClientId: "clientId",
@@ -617,7 +617,7 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234",
+          "123456",
           {
             client: "metadata",
           },
@@ -631,7 +631,7 @@ describe("SignUp target", () => {
 
       it("sends a confirmation code to the user's email if they only have an email", async () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-        mockOtp.mockReturnValue("1234");
+        mockOtp.mockReturnValue("123456");
 
         await signUp(TestContext, {
           ClientId: "clientId",
@@ -663,7 +663,7 @@ describe("SignUp target", () => {
           "clientId",
           "test",
           createdUser,
-          "1234",
+          "123456",
           {
             client: "metadata",
           },
@@ -696,7 +696,7 @@ describe("SignUp target", () => {
 
   it("saves the confirmation code on the user for comparison when confirming", async () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
-    mockOtp.mockReturnValue("1234");
+    mockOtp.mockReturnValue("123456");
 
     await signUp(TestContext, {
       ClientId: "clientId",
@@ -710,7 +710,7 @@ describe("SignUp target", () => {
         { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },
       ],
-      ConfirmationCode: "1234",
+      ConfirmationCode: "123456",
       Enabled: true,
       Password: "pwd",
       UserCreateDate: now,
