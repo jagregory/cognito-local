@@ -20,7 +20,7 @@ describe("ForgotPassword target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     mockMessages = newMockMessages();
-    mockOtp = jest.fn().mockReturnValue("1234");
+    mockOtp = jest.fn().mockReturnValue("123456");
     forgotPassword = ForgotPassword({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(currentDate),
@@ -57,7 +57,7 @@ describe("ForgotPassword target", () => {
       "clientId",
       "test",
       user,
-      "1234",
+      "123456",
       { client: "metadata" },
       {
         AttributeName: "email",
@@ -88,7 +88,7 @@ describe("ForgotPassword target", () => {
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       ...user,
       UserLastModifiedDate: currentDate,
-      ConfirmationCode: "1234",
+      ConfirmationCode: "123456",
     });
   });
 });

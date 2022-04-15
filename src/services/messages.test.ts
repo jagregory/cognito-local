@@ -53,7 +53,7 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234",
+            "123456",
             {
               client: "metadata",
             },
@@ -65,7 +65,7 @@ describe("messages service", () => {
             clientMetadata: {
               client: "metadata",
             },
-            code: "1234",
+            code: "123456",
             source: `CustomMessage_${source}`,
             userAttributes: user.Attributes,
             userPoolId: "userPoolId",
@@ -77,7 +77,7 @@ describe("messages service", () => {
             user,
             deliveryDetails,
             {
-              __code: "1234",
+              __code: "123456",
               emailMessage: "email",
               emailSubject: "email subject",
               smsMessage: "sms",
@@ -103,7 +103,7 @@ describe("messages service", () => {
             "clientId",
             "userPoolId",
             user,
-            "1234",
+            "123456",
             {
               client: "metadata",
             },
@@ -115,7 +115,7 @@ describe("messages service", () => {
             clientMetadata: {
               client: "metadata",
             },
-            code: "1234",
+            code: "123456",
             source: `CustomMessage_${source}`,
             userAttributes: user.Attributes,
             userPoolId: "userPoolId",
@@ -127,7 +127,7 @@ describe("messages service", () => {
             user,
             deliveryDetails,
             {
-              __code: "1234",
+              __code: "123456",
             }
           );
         });
@@ -145,7 +145,7 @@ describe("messages service", () => {
           "clientId",
           "userPoolId",
           user,
-          "1234",
+          "123456",
           {
             client: "metadata",
           },
@@ -158,7 +158,7 @@ describe("messages service", () => {
           user,
           deliveryDetails,
           {
-            __code: "1234",
+            __code: "123456",
           }
         );
       });

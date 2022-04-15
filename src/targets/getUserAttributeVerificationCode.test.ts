@@ -48,7 +48,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     getUserAttributeVerificationCode = GetUserAttributeVerificationCode({
       cognito: newMockCognitoService(mockUserPoolService),
       messages: mockMessages,
-      otp: () => "1234",
+      otp: () => "123456",
     });
   });
 
@@ -115,7 +115,7 @@ describe("GetUserAttributeVerificationCode target", () => {
       null,
       "test",
       user,
-      "1234",
+      "123456",
       { client: "metadata" },
       {
         AttributeName: "email",
@@ -127,7 +127,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
       TestContext,
       expect.objectContaining({
-        AttributeVerificationCode: "1234",
+        AttributeVerificationCode: "123456",
       })
     );
   });

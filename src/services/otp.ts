@@ -1,4 +1,4 @@
 export const otp = (): string =>
-  Math.floor(Math.random() * 9999)
+  Math.floor(Math.random() * 999999)
     .toString()
-    .padStart(4, "0");
+    .padStart(6, "0");

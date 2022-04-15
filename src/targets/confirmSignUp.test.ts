@@ -36,7 +36,7 @@ describe("ConfirmSignUp target", () => {
       confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: "janice",
-        ConfirmationCode: "1234",
+        ConfirmationCode: "123456",
         ForceAliasCreation: false,
       })
     ).rejects.toBeInstanceOf(NotAuthorizedError);
@@ -44,7 +44,7 @@ describe("ConfirmSignUp target", () => {
 
   it("throws if confirmation code doesn't match stored value", async () => {
     const user = TDB.user({
-      ConfirmationCode: "4567",
+      ConfirmationCode: "456789",
       UserStatus: "UNCONFIRMED",
     });
 
@@ -54,7 +54,7 @@ describe("ConfirmSignUp target", () => {
       confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
-        ConfirmationCode: "1234",
+        ConfirmationCode: "123456",
       })
     ).rejects.toBeInstanceOf(CodeMismatchError);
   });
@@ -62,7 +62,7 @@ describe("ConfirmSignUp target", () => {
   describe("when code matches", () => {
     it("updates the user's confirmed status", async () => {
       const user = TDB.user({
-        ConfirmationCode: "4567",
+        ConfirmationCode: "456789",
         UserStatus: "UNCONFIRMED",
       });
 
@@ -74,7 +74,7 @@ describe("ConfirmSignUp target", () => {
       await confirmSignUp(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
-        ConfirmationCode: "4567",
+        ConfirmationCode: "456789",
       });
 
       expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
@@ -90,7 +90,7 @@ describe("ConfirmSignUp target", () => {
         mockTriggers.enabled.mockReturnValue(true);
 
         const user = TDB.user({
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           UserStatus: "UNCONFIRMED",
         });
 
@@ -102,7 +102,7 @@ describe("ConfirmSignUp target", () => {
             client: "metadata",
           },
           Username: "janice",
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           ForceAliasCreation: false,
         });
 
@@ -130,7 +130,7 @@ describe("ConfirmSignUp target", () => {
         mockTriggers.enabled.mockReturnValue(false);
 
         const user = TDB.user({
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           UserStatus: "UNCONFIRMED",
         });
 
@@ -139,7 +139,7 @@ describe("ConfirmSignUp target", () => {
         await confirmSignUp(TestContext, {
           ClientId: "clientId",
           Username: user.Username,
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
         });
 
         expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();

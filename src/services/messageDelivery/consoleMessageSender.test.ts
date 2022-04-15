@@ -14,7 +14,7 @@ describe("consoleMessageSender", () => {
   describe.each(["sendEmail", "sendSms"] as const)("%s", (fn) => {
     it("prints the message to the console", async () => {
       await sender[fn](TestContext, user, destination, {
-        __code: "1234",
+        __code: "123456",
       });
 
       expect(TestContext.logger.info).toHaveBeenCalledWith(
@@ -24,13 +24,13 @@ describe("consoleMessageSender", () => {
         expect.stringMatching(/Destination:\s+example@example.com/)
       );
       expect(TestContext.logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Code:\s+1234/)
+        expect.stringMatching(/Code:\s+123456/)
       );
     });
 
     it("doesn't print undefined fields", async () => {
       await sender[fn](TestContext, user, destination, {
-        __code: "1234",
+        __code: "123456",
         emailMessage: undefined,
       });
 
@@ -41,7 +41,7 @@ describe("consoleMessageSender", () => {
 
     it("prints additional fields", async () => {
       await sender[fn](TestContext, user, destination, {
-        __code: "1234",
+        __code: "123456",
         emailMessage: "this is the email message",
       });
 

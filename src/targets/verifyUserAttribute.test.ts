@@ -54,7 +54,7 @@ describe("VerifyUserAttribute target", () => {
 
   it("verifies the user's email", async () => {
     const user = TDB.user({
-      AttributeVerificationCode: "1234",
+      AttributeVerificationCode: "123456",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -62,7 +62,7 @@ describe("VerifyUserAttribute target", () => {
     await verifyUserAttribute(TestContext, {
       AccessToken: validToken,
       AttributeName: "email",
-      Code: "1234",
+      Code: "123456",
     });
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
@@ -77,7 +77,7 @@ describe("VerifyUserAttribute target", () => {
 
   it("verifies the user's phone_number", async () => {
     const user = TDB.user({
-      AttributeVerificationCode: "1234",
+      AttributeVerificationCode: "123456",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -85,7 +85,7 @@ describe("VerifyUserAttribute target", () => {
     await verifyUserAttribute(TestContext, {
       AccessToken: validToken,
       AttributeName: "phone_number",
-      Code: "1234",
+      Code: "123456",
     });
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
@@ -100,7 +100,7 @@ describe("VerifyUserAttribute target", () => {
 
   it("does nothing for other attributes", async () => {
     const user = TDB.user({
-      AttributeVerificationCode: "1234",
+      AttributeVerificationCode: "123456",
     });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -108,7 +108,7 @@ describe("VerifyUserAttribute target", () => {
     await verifyUserAttribute(TestContext, {
       AccessToken: validToken,
       AttributeName: "something else",
-      Code: "1234",
+      Code: "123456",
     });
 
     expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe("VerifyUserAttribute target", () => {
       verifyUserAttribute(TestContext, {
         AccessToken: "blah",
         AttributeName: "email",
-        Code: "1234",
+        Code: "123456",
       })
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
@@ -131,7 +131,7 @@ describe("VerifyUserAttribute target", () => {
       verifyUserAttribute(TestContext, {
         AccessToken: validToken,
         AttributeName: "email",
-        Code: "1234",
+        Code: "123456",
       })
     ).rejects.toEqual(new NotAuthorizedError());
   });
@@ -146,7 +146,7 @@ describe("VerifyUserAttribute target", () => {
       verifyUserAttribute(TestContext, {
         AccessToken: validToken,
         AttributeName: "email",
-        Code: "1234",
+        Code: "123456",
       })
     ).rejects.toEqual(new CodeMismatchError());
   });

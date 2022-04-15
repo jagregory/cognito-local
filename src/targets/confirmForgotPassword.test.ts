@@ -40,7 +40,7 @@ describe("ConfirmForgotPassword target", () => {
       confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: "janice",
-        ConfirmationCode: "1234",
+        ConfirmationCode: "123456",
         Password: "newPassword",
       })
     ).rejects.toBeInstanceOf(UserNotFoundError);
@@ -48,7 +48,7 @@ describe("ConfirmForgotPassword target", () => {
 
   it("throws if confirmation code doesn't match stored value", async () => {
     const user = TDB.user({
-      ConfirmationCode: "4567",
+      ConfirmationCode: "456789",
       UserStatus: "UNCONFIRMED",
     });
 
@@ -58,7 +58,7 @@ describe("ConfirmForgotPassword target", () => {
       confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: "janice",
-        ConfirmationCode: "1234",
+        ConfirmationCode: "123456",
         Password: "newPassword",
       })
     ).rejects.toBeInstanceOf(CodeMismatchError);
@@ -67,7 +67,7 @@ describe("ConfirmForgotPassword target", () => {
   describe("when code matches", () => {
     it("updates the user's password", async () => {
       const user = TDB.user({
-        ConfirmationCode: "4567",
+        ConfirmationCode: "456789",
         UserStatus: "UNCONFIRMED",
       });
 
@@ -79,7 +79,7 @@ describe("ConfirmForgotPassword target", () => {
       await confirmForgotPassword(TestContext, {
         ClientId: "clientId",
         Username: user.Username,
-        ConfirmationCode: "4567",
+        ConfirmationCode: "456789",
         Password: "newPassword",
       });
 
@@ -97,7 +97,7 @@ describe("ConfirmForgotPassword target", () => {
         mockTriggers.enabled.mockReturnValue(true);
 
         const user = TDB.user({
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           UserStatus: "UNCONFIRMED",
         });
 
@@ -109,7 +109,7 @@ describe("ConfirmForgotPassword target", () => {
             client: "metadata",
           },
           Username: user.Username,
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           Password: "newPassword",
         });
 
@@ -137,7 +137,7 @@ describe("ConfirmForgotPassword target", () => {
         mockTriggers.enabled.mockReturnValue(false);
 
         const user = TDB.user({
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           UserStatus: "UNCONFIRMED",
         });
 
@@ -146,7 +146,7 @@ describe("ConfirmForgotPassword target", () => {
         await confirmForgotPassword(TestContext, {
           ClientId: "clientId",
           Username: user.Username,
-          ConfirmationCode: "4567",
+          ConfirmationCode: "456789",
           Password: "newPassword",
         });
 

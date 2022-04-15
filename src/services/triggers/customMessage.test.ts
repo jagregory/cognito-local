@@ -21,7 +21,7 @@ describe("CustomMessage trigger", () => {
       const message = await customMessage(TestContext, {
         clientId: "clientId",
         clientMetadata: undefined,
-        code: "1234",
+        code: "123456",
         source: "CustomMessage_ForgotPassword",
         userAttributes: [],
         username: "username",
@@ -45,7 +45,7 @@ describe("CustomMessage trigger", () => {
         clientMetadata: {
           client: "metadata",
         },
-        code: "1234",
+        code: "123456",
         source: "CustomMessage_ForgotPassword",
         userAttributes: [{ Name: "user", Value: "attribute" }],
         username: "example@example.com",
@@ -73,11 +73,11 @@ describe("CustomMessage trigger", () => {
 
       expect(message).not.toBeNull();
       expect(message?.emailMessage).toEqual(
-        "hi example@example.com your code is 1234. via email"
+        "hi example@example.com your code is 123456. via email"
       );
       expect(message?.emailSubject).toEqual("email subject");
       expect(message?.smsMessage).toEqual(
-        "hi example@example.com your code is 1234. via sms"
+        "hi example@example.com your code is 123456. via sms"
       );
     });
   });

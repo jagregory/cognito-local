@@ -30,7 +30,7 @@ describe("AdminUpdateUserAttributes target", () => {
       clock,
       cognito: newMockCognitoService(mockUserPoolService),
       messages: mockMessages,
-      otp: () => "1234",
+      otp: () => "123456",
     });
   });
 
@@ -232,7 +232,7 @@ describe("AdminUpdateUserAttributes target", () => {
             null,
             "test",
             user,
-            "1234",
+            "123456",
             { client: "metadata" },
             {
               AttributeName: "email",
@@ -244,7 +244,7 @@ describe("AdminUpdateUserAttributes target", () => {
           expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
             TestContext,
             expect.objectContaining({
-              AttributeVerificationCode: "1234",
+              AttributeVerificationCode: "123456",
             })
           );
         });
