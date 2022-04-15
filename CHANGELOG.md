@@ -1,3 +1,10 @@
+## [3.16.3](https://github.com/jagregory/cognito-local/compare/v3.16.2...v3.16.3) (2022-04-15)
+
+
+### Bug Fixes
+
+* confirmation ode from 4-digit to 6-digit ([#194](https://github.com/jagregory/cognito-local/issues/194)) ([e2053fe](https://github.com/jagregory/cognito-local/commit/e2053fe2ad149c6aa1ec49b46b0eb10ef46dd0bd))
+
 ## [3.16.2](https://github.com/jagregory/cognito-local/compare/v3.16.1...v3.16.2) (2022-02-24)
 
 
