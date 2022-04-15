@@ -65,7 +65,7 @@ describe(
       const ds = await DataStoreFactory().create(TestContext, userPoolId, {});
       const storedUser = (await ds.get(TestContext, ["Users", "abc"])) as User;
 
-      expect(storedUser.AttributeVerificationCode).toMatch(/^\d{4}$/);
+      expect(storedUser.AttributeVerificationCode).toMatch(/^\d{6}$/);
     });
   })
 );
