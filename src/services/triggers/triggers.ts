@@ -1,6 +1,11 @@
 import { Clock } from "../clock";
 import { CognitoService } from "../cognitoService";
+import { CryptoService } from "../crypto";
 import { Lambda } from "../lambda";
+import {
+  CustomEmailSender,
+  CustomEmailSenderTrigger,
+} from "./customEmailSender";
 import { CustomMessage, CustomMessageTrigger } from "./customMessage";
 import {
   PostAuthentication,
@@ -15,6 +20,7 @@ import {
 import { UserMigration, UserMigrationTrigger } from "./userMigration";
 
 type SupportedTriggers =
+  | "CustomEmailSender"
   | "CustomMessage"
   | "UserMigration"
   | "PostAuthentication"
@@ -25,6 +31,7 @@ type SupportedTriggers =
 export interface Triggers {
   enabled(trigger: SupportedTriggers): boolean;
   customMessage: CustomMessageTrigger;
+  customEmailSender: CustomEmailSenderTrigger;
   postAuthentication: PostAuthenticationTrigger;
   postConfirmation: PostConfirmationTrigger;
   preSignUp: PreSignUpTrigger;
@@ -36,6 +43,7 @@ export class TriggersService implements Triggers {
   private readonly lambda: Lambda;
 
   public readonly customMessage: CustomMessageTrigger;
+  public readonly customEmailSender: CustomEmailSenderTrigger;
   public readonly postAuthentication: PostAuthenticationTrigger;
   public readonly postConfirmation: PostConfirmationTrigger;
   public readonly preSignUp: PreSignUpTrigger;
@@ -45,10 +53,12 @@ export class TriggersService implements Triggers {
   public constructor(
     clock: Clock,
     cognitoClient: CognitoService,
-    lambda: Lambda
+    lambda: Lambda,
+    crypto: CryptoService
   ) {
     this.lambda = lambda;
 
+    this.customEmailSender = CustomEmailSender({ lambda, crypto });
     this.customMessage = CustomMessage({ lambda });
     this.postAuthentication = PostAuthentication({ lambda });
     this.postConfirmation = PostConfirmation({ lambda });

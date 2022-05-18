@@ -41,6 +41,20 @@ interface EventCommonParameters {
   userPoolId: string;
 }
 
+interface CustomEmailSenderEvent
+  extends Omit<EventCommonParameters, "clientId"> {
+  clientId: string | null;
+  code: string;
+  clientMetadata: Record<string, string> | undefined;
+  triggerSource:
+    | "CustomEmailSender_AdminCreateUser"
+    | "CustomEmailSender_ForgotPassword"
+    | "CustomEmailSender_ResendCode"
+    | "CustomEmailSender_SignUp"
+    | "CustomEmailSender_UpdateUserAttribute"
+    | "CustomEmailSender_VerifyUserAttribute";
+}
+
 interface CustomMessageEvent extends Omit<EventCommonParameters, "clientId"> {
   clientId: string | null;
   clientMetadata: Record<string, string> | undefined;
@@ -130,6 +144,7 @@ export interface FunctionConfig {
   PreSignUp?: string;
   PreTokenGeneration?: string;
   UserMigration?: string;
+  CustomEmailSender?: string;
 }
 
 export type CustomMessageTriggerResponse =
@@ -143,6 +158,8 @@ export type PostAuthenticationTriggerResponse =
   PostAuthenticationTriggerEvent["response"];
 export type PostConfirmationTriggerResponse =
   PostConfirmationTriggerEvent["response"];
+export type CustomEmailSenderTriggerResponse =
+  CustomEmailSenderTriggerEvent["response"];
 
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
@@ -176,6 +193,11 @@ export interface Lambda {
     lambda: "PostConfirmation",
     event: PostConfirmationEvent
   ): Promise<PostConfirmationTriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "CustomEmailSender",
+    event: CustomEmailSenderEvent
+  ): Promise<CustomEmailSenderTriggerResponse>;
 }
 
 export class LambdaService implements Lambda {
@@ -196,6 +218,7 @@ export class LambdaService implements Lambda {
     trigger: keyof FunctionConfig,
     event:
       | CustomMessageEvent
+      | CustomEmailSenderEvent
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
@@ -251,6 +274,7 @@ export class LambdaService implements Lambda {
   private createLambdaEvent(
     event:
       | CustomMessageEvent
+      | CustomEmailSenderEvent
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
@@ -398,6 +422,27 @@ export class LambdaService implements Lambda {
         };
       }
 
+      case "CustomEmailSender_SignUp":
+      case "CustomEmailSender_ResendCode":
+      case "CustomEmailSender_ForgotPassword":
+      case "CustomEmailSender_UpdateUserAttribute":
+      case "CustomEmailSender_VerifyUserAttribute":
+      case "CustomEmailSender_AdminCreateUser":
+        return {
+          version,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          callerContext,
+          request: {
+            type: "customEmailSenderRequestV1",
+            code: event.code,
+            userAttributes: event.userAttributes,
+            clientMetadata: event.clientMetadata,
+          },
+          response: {},
+        };
       default: {
         throw new Error("Unsupported Trigger Source");
       }

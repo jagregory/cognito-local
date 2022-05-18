@@ -15,6 +15,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
   - [Updating your application](#updating-your-application)
   - [Creating your first User Pool](#creating-your-first-user-pool)
 - [Configuration](#configuration)
+  - [Custom Email Sender Trigger](#custom-email-sender-trigger)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
   - [User Pools and Clients](#user-pools-and-clients)
 - [Known Limitations](#known-limitations)
@@ -179,7 +180,13 @@ cognito-local how to connect to your local Lambda server:
 | Trigger                     | Operation                            | Support |
 | --------------------------- | ------------------------------------ | ------- |
 | CreateAuthChallenge         | \*                                   | ❌      |
-| CustomEmailSender           | \*                                   | ❌      |
+| CustomEmailSender           | CustomEmailSender_SignUp             | ✅      |
+| CustomEmailSender           | CustomEmailSender_ResendCode         | ✅      |
+| CustomEmailSender           | CustomEmailSender_ForgotPassword     | ✅      |
+| CustomEmailSender           | CustomEmailSender_UpdateUserAttribute| ✅      |
+| CustomEmailSender           | CustomEmailSender_VerifyUserAttribute| ✅      |
+| CustomEmailSender           | CustomEmailSender_AdminCreateUser    | ✅      |
+| CustomEmailSender           | CustomEmailSender_AccountTakeOver... | ❌      |
 | CustomMessage               | AdminCreateUser                      | ✅      |
 | CustomMessage               | Authentication                       | ✅      |
 | CustomMessage               | ForgotPassword                       | ✅      |
@@ -314,6 +321,13 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |
 | `UserPoolDefaults.UsernameAttributes`      | `string[]` | `["email"]`             | Username alias attributes                                   |
+| `KMSConfig`                                | `object`   |                         | Any setting you would pass to the AWS.KMS Node.js client    |
+| `KMSConfig.KMSKeyId`                       | `string`   | `local`                 | The KMSKeyId to pass to encrypt the code                    |
+| `KMSConfig.KMSKeyAlias`                    | `string`   | `local`                 | The KMSKeyAlias to pass to encrypt the code                 |
+| `KMSConfig.credentials.accessKeyId`        | `string`   | `local`                 |                                                             |
+| `KMSConfig.credentials.secretAccessKey`    | `string`   | `local`                 |                                                             |
+| `KMSConfig.endpoint`                       | `string`   | `local`                 |                                                             |
+| `KMSConfig.region`                         | `string`   | `local`                 |                                                             |
 
 The default config is:
 
@@ -332,8 +346,74 @@ The default config is:
   "TriggerFunctions": {},
   "UserPoolDefaults": {
     "UsernameAttributes": ["email"]
+  },
+  "KMSConfig": {
+    "credentials": {
+      "accessKeyId": "local",
+      "secretAccessKey": "local",
+    },
+    "region": "local",
   }
 }
+```
+
+### Custom Email Sender Trigger
+To use a the custom email sender trigger you **must** provide the `KMSKeyID` and `KMSKeyAlias` properties in the `KMSConfig` property in the `.cognito/config.json` file.
+
+One way of setting this up locally is as follows:
+
+You can use the (local kms)[https://github.com/nsmithuk/local-kms] package to simulate a locally running KMS service.
+
+Create a `./local-kms/seed.yml` file and populate it with the KMS Key and the KMS Alias:
+
+```yml
+Keys:
+  Symmetric:
+    Aes:
+      - Metadata:
+          KeyId: bc436485-5092-42b8-92a3-0aa8b93536c
+        BackingKeys:
+          - 5cdaead27fe7da2de47945d73cd6d79e36494e73802f3cd3869f1d2cb0b5d7a9
+Aliases:
+  - AliasName: alias/testing
+    TargetKeyId: bc436485-5092-42b8-92a3-0aa8b93536c
+```
+
+We can use docker-compose to start local-kms:
+
+```yml
+local-kms:
+        image: nsmithuk/local-kms
+        volumes:
+            - ./local-kms/:/init
+        environment:
+            KMS_ACCOUNT_ID: '999999999'
+            KMS_REGION: 'us-west-2'
+```
+
+This will expose the `local-kms` service in the docker network at `http://local-kms:8080`. It will also create a KMS Key with arn: `arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c` and an KMS Alias with arn `arn:aws:kms:us-west-2:999999999:alias/testing`.
+
+Now in our cognito-local `.cognito/config.json` file we just need to populate it with these values:
+
+```yml
+"TriggerFunctions": {
+    "CustomEmailSender": "your-custom-email-sender-trigger-function-here"
+},
+"KMSConfig": {
+    "KMSKeyId": "arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c",
+    "KMSKeyAlias": "arn:aws:kms:us-west-2:999999999:alias/testing",
+    "endpoint": "http://local-kms:8080"
+}
+```
+
+Your custom email sender trigger should now be called with the encrypted code. You can then decrypt it following (aws' documentation)[https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-email-sender.html]. However, make sure to use the same `local-kms` endpoint, KMS Key and KMS Alias when decrypting the code:
+
+```ts
+ const kmsKeyringNode = new kmsSdk.KmsKeyringNode({
+      generatorKeyId: 'arn:aws:kms:us-west-2:999999999:alias/testing',
+      keyIds: ['arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c'],
+      clientProvider: () => new AWS.KMS({ endpoint: 'http://local-kms:8080' }),
+});
 ```
 
 ### HTTPS endpoints with self-signed certificates

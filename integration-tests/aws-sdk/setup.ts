@@ -21,6 +21,7 @@ import { otp } from "../../src/services/otp";
 import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
 import { Router } from "../../src/server/Router";
+import { CryptoService } from "../../src/services/crypto";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const rmdir = promisify(fs.rmdir);
@@ -57,10 +58,16 @@ export const withCognitoSdk =
         new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
       );
       const cognitoClient = await cognitoServiceFactory.create(ctx, {});
-      const triggers = new TriggersService(clock, cognitoClient, {
-        enabled: jest.fn().mockReturnValue(false),
-        invoke: jest.fn(),
-      });
+      const triggers = new TriggersService(
+        clock,
+        cognitoClient,
+        {
+          enabled: jest.fn().mockReturnValue(false),
+          invoke: jest.fn(),
+        },
+        new CryptoService({ KMSKeyId: "", KMSKeyAlias: "" })
+      );
+
       const router = Router({
         clock,
         cognito: cognitoClient,

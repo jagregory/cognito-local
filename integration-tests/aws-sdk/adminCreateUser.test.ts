@@ -18,7 +18,7 @@ describe(
         const createUserResult = await client
           .adminCreateUser({
             UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
-            Username: "abc",
+            Username: "example@example.com",
             UserPoolId: "test",
           })
           .promise();
@@ -31,12 +31,13 @@ describe(
                 Value: expect.stringMatching(UUID),
               },
               { Name: "phone_number", Value: "0400000000" },
+              { Name: "email", Value: "example@example.com" },
             ],
             Enabled: true,
             UserCreateDate: roundedDate,
             UserLastModifiedDate: roundedDate,
             UserStatus: "FORCE_CHANGE_PASSWORD",
-            Username: "abc",
+            Username: "example@example.com",
           },
         });
       });

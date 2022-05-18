@@ -2,6 +2,7 @@ import { Triggers } from "../services";
 
 export const newMockTriggers = (): jest.Mocked<Triggers> => ({
   customMessage: jest.fn(),
+  customEmailSender: jest.fn(),
   enabled: jest.fn(),
   postAuthentication: jest.fn(),
   postConfirmation: jest.fn(),

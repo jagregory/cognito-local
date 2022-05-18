@@ -56,6 +56,21 @@ export class MessagesService implements Messages {
     clientMetadata: Record<string, string> | undefined,
     deliveryDetails: DeliveryDetails
   ): Promise<void> {
+    if (
+      this.triggers.enabled("CustomEmailSender") &&
+      source !== "Authentication"
+    ) {
+      return this.customDelivery(
+        ctx,
+        source,
+        clientId,
+        userPoolId,
+        user,
+        code,
+        clientMetadata
+      );
+    }
+
     const message = await this.create(
       ctx,
       source,
@@ -99,5 +114,25 @@ export class MessagesService implements Messages {
     return {
       __code: code,
     };
+  }
+
+  private async customDelivery(
+    ctx: Context,
+    source: Exclude<MessageSource, "Authentication">,
+    clientId: string | null,
+    userPoolId: string,
+    user: User,
+    code: string,
+    clientMetadata: Record<string, string> | undefined
+  ): Promise<void> {
+    await this.triggers.customEmailSender(ctx, {
+      clientId: clientId ?? AWS_ADMIN_CLIENT_ID,
+      clientMetadata,
+      code,
+      source: `CustomEmailSender_${source}`,
+      userAttributes: user.Attributes,
+      username: user.Username,
+      userPoolId,
+    });
   }
 }

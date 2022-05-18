@@ -38,9 +38,9 @@
     "@types/jest": "^25.2.1",
     "@types/jsonwebtoken": "^8.5.6",
     "@types/lodash.mergewith": "^4.6.6",
+    "@types/node": "^16.11.11",
     "@types/supertest": "^2.0.11",
     "@types/uuid": "^8.3.3",
-    "@types/node": "^16.11.11",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "esbuild": "^0.14.2",
@@ -60,7 +60,8 @@
     "typescript": "^4.5.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.1045.0",
+    "@aws-crypto/client-node": "^3.1.1",
+    "aws-sdk": "2.1136.0",
     "body-parser": "^1.19.0",
     "boxen": "^5.1.2",
     "cors": "^2.8.5",
@@ -102,21 +103,34 @@
     "url": "https://github.com/jagregory/cognito-local.git"
   },
   "release": {
-    "branches": ["master"],
+    "branches": [
+      "master"
+    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
       "@semantic-release/npm",
-      ["@semantic-release/exec", {
-        "publishCmd": "./scripts/dockerBuildPush.sh ${nextRelease.version}"
-      }],
-      ["@semantic-release/github", {
-        "addReleases": "top"
-      }],
-      ["@semantic-release/git", {
-        "assets": ["CHANGELOG.md"]
-      }]
+      [
+        "@semantic-release/exec",
+        {
+          "publishCmd": "./scripts/dockerBuildPush.sh ${nextRelease.version}"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "addReleases": "top"
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md"
+          ]
+        }
+      ]
     ]
   }
 }

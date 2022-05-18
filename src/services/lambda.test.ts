@@ -6,6 +6,7 @@ import {
 import { LambdaService } from "./lambda";
 import * as AWS from "aws-sdk";
 import { version } from "aws-sdk/package.json";
+import { CryptoService } from "./crypto";
 
 describe("Lambda function invoker", () => {
   let mockLambdaClient: jest.Mocked<AWS.Lambda>;
@@ -530,6 +531,65 @@ describe("Lambda function invoker", () => {
               emailMessage: "",
               emailSubject: "",
             },
+          }),
+        });
+      });
+    });
+
+    describe.each([
+      "CustomEmailSender_SignUp",
+      "CustomEmailSender_ResendCode",
+      "CustomEmailSender_ForgotPassword",
+      "CustomEmailSender_UpdateUserAttribute",
+      "CustomEmailSender_VerifyUserAttribute",
+      "CustomEmailSender_AdminCreateUser",
+    ] as const)("%s", (source) => {
+      it("invokes the lambda function with the code parameter", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "some": "json" }',
+        });
+
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+
+        const lambda = new LambdaService(
+          {
+            CustomEmailSender: "MyLambdaName",
+          },
+          mockLambdaClient
+        );
+
+        await lambda.invoke(TestContext, "CustomEmailSender", {
+          code: "code",
+          clientId: "clientId",
+          clientMetadata: {
+            client: "metadata",
+          },
+          triggerSource: source,
+          userAttributes: {},
+          username: "username",
+          userPoolId: "userPoolId",
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyLambdaName",
+          InvocationType: "RequestResponse",
+          Payload: expect.jsonMatching({
+            version: "0",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: source,
+            userName: "username",
+            request: {
+              type: "customEmailSenderRequestV1",
+              code: "code",
+              userAttributes: {},
+              clientMetadata: { client: "metadata" },
+            },
+            response: {},
           }),
         });
       });
