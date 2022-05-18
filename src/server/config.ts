@@ -4,6 +4,7 @@ import { FunctionConfig } from "../services/lambda";
 import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokenGenerator";
 import mergeWith from "lodash.mergewith";
+import { KMSConfig } from "../services/crypto";
 
 export type UserPoolDefaults = Omit<
   UserPool,
@@ -14,6 +15,7 @@ export interface Config {
   LambdaClient: AWS.Lambda.ClientConfiguration;
   TriggerFunctions: FunctionConfig;
   UserPoolDefaults: UserPoolDefaults;
+  KMSConfig?: AWS.KMS.ClientConfiguration & KMSConfig;
   TokenConfig: TokenConfig;
 }
 
@@ -32,6 +34,13 @@ export const DefaultConfig: Config = {
   TokenConfig: {
     // TODO: this needs to match the actual host/port we started the server on
     IssuerDomain: "http://localhost:9229",
+  },
+  KMSConfig: {
+    credentials: {
+      accessKeyId: "local",
+      secretAccessKey: "local",
+    },
+    region: "local",
   },
 };
 

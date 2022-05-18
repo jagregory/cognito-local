@@ -13,6 +13,8 @@ import {
 } from "../errors";
 import { Messages, Triggers, UserPoolService } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
+import { Config, DefaultConfig } from "../server/config";
+import _ from "lodash";
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
@@ -21,6 +23,7 @@ describe("SignUp target", () => {
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let now: Date;
+  let config: Config;
 
   beforeEach(() => {
     now = new Date(2020, 1, 2, 3, 4, 5);
@@ -29,11 +32,13 @@ describe("SignUp target", () => {
     mockMessages = newMockMessages();
     mockOtp = jest.fn();
     mockTriggers = newMockTriggers();
+    config = _.cloneDeep(DefaultConfig);
     signUp = SignUp({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),
       messages: mockMessages,
       otp: mockOtp,
+      config,
       triggers: mockTriggers,
     });
   });
@@ -309,6 +314,8 @@ describe("SignUp target", () => {
     });
 
     it("does not verify the user's email if the lambda returns autoVerifyEmail=true but the user does not have an email attribute", async () => {
+      config.UserPoolDefaults.UsernameAttributes = [];
+
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
         autoConfirmUser: false,
@@ -336,6 +343,8 @@ describe("SignUp target", () => {
     });
 
     it("verifies the user's phone_number if the lambda returns autoVerifyPhone=true and the user has an phone_number attribute", async () => {
+      config.UserPoolDefaults.UsernameAttributes = [];
+
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
         autoConfirmUser: false,
@@ -367,6 +376,8 @@ describe("SignUp target", () => {
     });
 
     it("does not verify the user's phone_number if the lambda returns autoVerifyPhone=true but the user does not have a phone_number attribute", async () => {
+      config.UserPoolDefaults.UsernameAttributes = [];
+
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       mockTriggers.preSignUp.mockResolvedValue({
         autoConfirmUser: false,

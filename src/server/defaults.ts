@@ -17,6 +17,7 @@ import { UserPoolServiceFactoryImpl } from "../services/userPoolService";
 import { Router } from "./Router";
 import { loadConfig } from "./config";
 import { createServer, Server } from "./server";
+import { CryptoService } from "../services/crypto";
 
 export const createDefaultServer = async (
   logger: pino.Logger
@@ -58,7 +59,8 @@ export const createDefaultServer = async (
     new LambdaService(
       config.TriggerFunctions,
       new AWS.Lambda(config.LambdaClient)
-    )
+    ),
+    new CryptoService(config.KMSConfig)
   );
 
   return createServer(

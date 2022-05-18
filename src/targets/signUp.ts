@@ -22,7 +22,7 @@ export type SignUpTarget = Target<SignUpRequest, SignUpResponse>;
 
 type SignUpServices = Pick<
   Services,
-  "clock" | "cognito" | "messages" | "otp" | "triggers"
+  "clock" | "cognito" | "messages" | "otp" | "triggers" | "config"
 >;
 
 const deliverWelcomeMessage = async (
@@ -64,7 +64,14 @@ const deliverWelcomeMessage = async (
 };
 
 export const SignUp =
-  ({ clock, cognito, messages, otp, triggers }: SignUpServices): SignUpTarget =>
+  ({
+    clock,
+    cognito,
+    messages,
+    otp,
+    triggers,
+    config,
+  }: SignUpServices): SignUpTarget =>
   async (ctx, req) => {
     // TODO: This should behave differently depending on if PreventUserExistenceErrors
     // is enabled on the updatedUser pool. This will be the default after Feb 2020.
@@ -95,7 +102,14 @@ export const SignUp =
       if (autoConfirmUser) {
         userStatus = "CONFIRMED";
       }
-      if (attributesInclude("email", attributes) && autoVerifyEmail) {
+      const isEmailUsername =
+        config.UserPoolDefaults.UsernameAttributes?.includes("email");
+      const hasEmailAttribute = attributesInclude("email", attributes);
+
+      if (isEmailUsername && !hasEmailAttribute) {
+        attributes.push({ Name: "email", Value: req.Username });
+      }
+      if ((isEmailUsername || hasEmailAttribute) && autoVerifyEmail) {
         attributes.push({ Name: "email_verified", Value: "true" });
       }
       if (attributesInclude("phone_number", attributes) && autoVerifyPhone) {

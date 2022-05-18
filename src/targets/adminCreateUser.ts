@@ -30,7 +30,10 @@ export type AdminCreateUserTarget = Target<
   AdminCreateUserResponse
 >;
 
-type AdminCreateUserServices = Pick<Services, "clock" | "cognito" | "messages">;
+type AdminCreateUserServices = Pick<
+  Services,
+  "clock" | "cognito" | "messages" | "config"
+>;
 
 const selectAppropriateDeliveryMethod = (
   desiredDeliveryMediums: DeliveryMediumListType,
@@ -97,6 +100,7 @@ export const AdminCreateUser =
     clock,
     cognito,
     messages,
+    config,
   }: AdminCreateUserServices): AdminCreateUserTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
@@ -115,6 +119,14 @@ export const AdminCreateUser =
 
     const temporaryPassword =
       req.TemporaryPassword ?? generator.new().slice(0, 6);
+
+    const isEmailUsername =
+      config.UserPoolDefaults.UsernameAttributes?.includes("email");
+    const hasEmailAttribute = attributesInclude("email", attributes);
+
+    if (isEmailUsername && !hasEmailAttribute) {
+      attributes.push({ Name: "email", Value: req.Username });
+    }
 
     const user: User = {
       Username: req.Username,
