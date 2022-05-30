@@ -8,7 +8,11 @@ import { Triggers } from "./triggers";
 import * as TDB from "../__tests__/testDataBuilder";
 import { attributeValue } from "./userPoolService";
 
-const originalDate = new Date();
+const originalDate = new Date(2022, 4, 30, 17, 30, 0, 0);
+const ONE_MINUTE = 60;
+const ONE_HOUR = ONE_MINUTE * 60;
+const ONE_DAY = ONE_HOUR * 24;
+const SEVEN_DAYS = ONE_DAY * 7;
 
 describe("JwtTokenGenerator", () => {
   let mockTriggers: jest.Mocked<Triggers>;
@@ -41,8 +45,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
-        "clientId",
-        "userPoolId",
+        TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
       );
@@ -77,8 +80,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
-        "clientId",
-        "userPoolId",
+        TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
       );
@@ -110,8 +112,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
-        "clientId",
-        "userPoolId",
+        TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
       );
@@ -161,8 +162,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
-          "clientId",
-          "userPoolId",
+          TDB.appClient(),
           { client: "metadata" },
           "RefreshTokens"
         );
@@ -178,22 +178,23 @@ describe("JwtTokenGenerator", () => {
     it("generates the default tokens", async () => {
       mockTriggers.enabled.mockReturnValue(false);
 
+      const userPoolClient = TDB.appClient();
+
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
-        "clientId",
-        "userPoolId",
+        userPoolClient,
         { client: "metadata" },
         "RefreshTokens"
       );
 
       expect(jwt.decode(tokens.AccessToken)).toEqual({
         auth_time: expect.any(Number),
-        client_id: "clientId",
+        client_id: userPoolClient.ClientId,
         event_id: expect.stringMatching(UUID),
-        exp: expect.any(Number),
-        iat: expect.any(Number),
-        iss: "http://example.com/userPoolId",
+        exp: Math.floor(originalDate.getTime() / 1000) + ONE_DAY,
+        iat: Math.floor(originalDate.getTime() / 1000),
+        iss: `http://example.com/${userPoolClient.UserPoolId}`,
         jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: attributeValue("sub", user.Attributes),
@@ -203,14 +204,14 @@ describe("JwtTokenGenerator", () => {
 
       expect(jwt.decode(tokens.IdToken)).toEqual({
         "cognito:username": user.Username,
-        aud: "clientId",
+        aud: userPoolClient.ClientId,
         auth_time: expect.any(Number),
         email: attributeValue("email", user.Attributes),
         email_verified: false,
         event_id: expect.stringMatching(UUID),
-        exp: expect.any(Number),
-        iat: expect.any(Number),
-        iss: "http://example.com/userPoolId",
+        exp: Math.floor(originalDate.getTime() / 1000) + ONE_DAY,
+        iat: Math.floor(originalDate.getTime() / 1000),
+        iss: `http://example.com/${userPoolClient.UserPoolId}`,
         jti: expect.stringMatching(UUID),
         sub: attributeValue("sub", user.Attributes),
         token_use: "id",
@@ -219,10 +220,144 @@ describe("JwtTokenGenerator", () => {
       expect(jwt.decode(tokens.RefreshToken)).toEqual({
         "cognito:username": user.Username,
         email: attributeValue("email", user.Attributes),
-        exp: expect.any(Number),
-        iat: expect.any(Number),
-        iss: "http://example.com/userPoolId",
+        exp: Math.floor(originalDate.getTime() / 1000) + SEVEN_DAYS,
+        iat: Math.floor(originalDate.getTime() / 1000),
+        iss: `http://example.com/${userPoolClient.UserPoolId}`,
         jti: expect.stringMatching(UUID),
+      });
+    });
+  });
+
+  describe("expiration configuration", () => {
+    describe("no token validity configured", () => {
+      it("generates default expiration times", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const userPoolClient = TDB.appClient({
+          AccessTokenValidity: undefined,
+          IdTokenValidity: undefined,
+          RefreshTokenValidity: undefined,
+          TokenValidityUnits: undefined,
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          userPoolClient,
+          { client: "metadata" },
+          "RefreshTokens"
+        );
+
+        expect((jwt.decode(tokens.AccessToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + ONE_DAY
+        );
+        expect((jwt.decode(tokens.IdToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + ONE_DAY
+        );
+        expect((jwt.decode(tokens.RefreshToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + SEVEN_DAYS
+        );
+      });
+    });
+
+    describe("no token validity configured but has units configured", () => {
+      it("generates default expiration times", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const userPoolClient = TDB.appClient({
+          AccessTokenValidity: undefined,
+          IdTokenValidity: undefined,
+          RefreshTokenValidity: undefined,
+          TokenValidityUnits: {
+            AccessToken: "seconds",
+            IdToken: "seconds",
+            RefreshToken: "seconds",
+          },
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          userPoolClient,
+          { client: "metadata" },
+          "RefreshTokens"
+        );
+
+        expect((jwt.decode(tokens.AccessToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + ONE_DAY
+        );
+        expect((jwt.decode(tokens.IdToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + ONE_DAY
+        );
+        expect((jwt.decode(tokens.RefreshToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + SEVEN_DAYS
+        );
+      });
+    });
+
+    describe("token validity configured but no units configured", () => {
+      it("generates uses configured validity times with default units", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const userPoolClient = TDB.appClient({
+          AccessTokenValidity: 10,
+          IdTokenValidity: 20,
+          RefreshTokenValidity: 30,
+          TokenValidityUnits: undefined,
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          userPoolClient,
+          { client: "metadata" },
+          "RefreshTokens"
+        );
+
+        expect((jwt.decode(tokens.AccessToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 10 * ONE_HOUR
+        );
+        expect((jwt.decode(tokens.IdToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 20 * ONE_HOUR
+        );
+        expect((jwt.decode(tokens.RefreshToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 30 * ONE_DAY
+        );
+      });
+    });
+
+    describe("token validity and units configured", () => {
+      it("generates uses configured validity times with configured units", async () => {
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const userPoolClient = TDB.appClient({
+          AccessTokenValidity: 10,
+          IdTokenValidity: 20,
+          RefreshTokenValidity: 30,
+          TokenValidityUnits: {
+            AccessToken: "seconds",
+            IdToken: "minutes",
+            RefreshToken: "hours",
+          },
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          userPoolClient,
+          { client: "metadata" },
+          "RefreshTokens"
+        );
+
+        expect((jwt.decode(tokens.AccessToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 10
+        );
+        expect((jwt.decode(tokens.IdToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 20 * ONE_MINUTE
+        );
+        expect((jwt.decode(tokens.RefreshToken) as any).exp).toEqual(
+          Math.floor(originalDate.getTime() / 1000) + 30 * ONE_HOUR
+        );
       });
     });
   });

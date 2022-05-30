@@ -58,6 +58,11 @@ describe("UpdateUserPoolClient target", () => {
         AccessTokenValidity: 50,
         ClientName: "new client name",
         LastModifiedDate: newDate,
+        TokenValidityUnits: {
+          AccessToken: "hours",
+          IdToken: "minutes",
+          RefreshToken: "days",
+        },
       }
     );
 
@@ -66,6 +71,11 @@ describe("UpdateUserPoolClient target", () => {
       AccessTokenValidity: 50,
       ClientName: "new client name",
       LastModifiedDate: newDate,
+      TokenValidityUnits: {
+        AccessToken: "hours",
+        IdToken: "minutes",
+        RefreshToken: "days",
+      },
     });
   });
 

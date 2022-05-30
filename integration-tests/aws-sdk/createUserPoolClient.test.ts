@@ -20,6 +20,11 @@ describe(
           CreationDate: expect.any(Date),
           LastModifiedDate: expect.any(Date),
           UserPoolId: "test",
+          TokenValidityUnits: {
+            AccessToken: "hours",
+            IdToken: "minutes",
+            RefreshToken: "days",
+          },
         },
       });
 

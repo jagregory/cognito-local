@@ -36,6 +36,11 @@ describe("CreateUserPoolClient target", () => {
         CreationDate: originalDate,
         LastModifiedDate: originalDate,
         UserPoolId: "userPoolId",
+        TokenValidityUnits: {
+          AccessToken: "hours",
+          IdToken: "minutes",
+          RefreshToken: "days",
+        },
       }
     );
 
@@ -46,6 +51,11 @@ describe("CreateUserPoolClient target", () => {
         CreationDate: originalDate,
         LastModifiedDate: originalDate,
         UserPoolId: "userPoolId",
+        TokenValidityUnits: {
+          AccessToken: "hours",
+          IdToken: "minutes",
+          RefreshToken: "days",
+        },
       },
     });
   });
