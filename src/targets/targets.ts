@@ -29,6 +29,7 @@ import { ForgotPassword } from "./forgotPassword";
 import { GetGroup } from "./getGroup";
 import { GetUser } from "./getUser";
 import { GetUserAttributeVerificationCode } from "./getUserAttributeVerificationCode";
+import { GetUserPoolMfaConfig } from "./getUserPoolMfaConfig";
 import { InitiateAuth } from "./initiateAuth";
 import { ListGroups } from "./listGroups";
 import { ListUserPoolClients } from "./listUserPoolClients";
@@ -75,6 +76,7 @@ export const Targets = {
   GetGroup,
   GetUser,
   GetUserAttributeVerificationCode,
+  GetUserPoolMfaConfig,
   InitiateAuth,
   ListGroups,
   ListUserPoolClients,
