@@ -3,6 +3,7 @@ import { GroupOverrideDetails } from "aws-lambda/trigger/cognito-user-pool-trigg
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
+import { AppClient } from "./appClient";
 import { Clock } from "./clock";
 import { Context } from "./context";
 import { Triggers } from "./triggers";
@@ -12,6 +13,8 @@ import {
   customAttributes,
   User,
 } from "./userPoolService";
+
+type ValidityUnit = "seconds" | "minutes" | "hours" | "days" | string;
 
 export interface TokenConfig {
   IssuerDomain?: string;
@@ -86,8 +89,7 @@ export interface TokenGenerator {
   generate(
     ctx: Context,
     user: User,
-    clientId: string,
-    userPoolId: string,
+    userPoolClient: AppClient,
     clientMetadata: Record<string, string> | undefined,
     source:
       | "AuthenticateDevice"
@@ -97,6 +99,12 @@ export interface TokenGenerator {
       | "RefreshTokens"
   ): Promise<Tokens>;
 }
+
+const formatExpiration = (
+  duration: number | undefined,
+  unit: ValidityUnit,
+  fallback: string
+): string => (duration ? `${duration}${unit}` : fallback);
 
 export class JwtTokenGenerator implements TokenGenerator {
   private readonly clock: Clock;
@@ -116,8 +124,7 @@ export class JwtTokenGenerator implements TokenGenerator {
   public async generate(
     ctx: Context,
     user: User,
-    clientId: string,
-    userPoolId: string,
+    userPoolClient: AppClient,
     clientMetadata: Record<string, string> | undefined,
     source:
       | "AuthenticateDevice"
@@ -138,6 +145,7 @@ export class JwtTokenGenerator implements TokenGenerator {
         attributeValue("email_verified", user.Attributes) ?? false
       ),
       event_id: eventId,
+      iat: authTime,
       jti: uuid.v4(),
       sub,
       token_use: "id",
@@ -146,7 +154,7 @@ export class JwtTokenGenerator implements TokenGenerator {
 
     if (this.triggers.enabled("PreTokenGeneration")) {
       const result = await this.triggers.preTokenGeneration(ctx, {
-        clientId,
+        clientId: userPoolClient.ClientId,
         clientMetadata,
         source,
         userAttributes: user.Attributes,
@@ -157,20 +165,21 @@ export class JwtTokenGenerator implements TokenGenerator {
           iamRolesToOverride: undefined,
           preferredRole: undefined,
         },
-        userPoolId,
+        userPoolId: userPoolClient.UserPoolId,
       });
 
       idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
     }
 
-    const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolId}`;
+    const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
 
     return {
       AccessToken: jwt.sign(
         {
           auth_time: authTime,
-          client_id: clientId,
+          client_id: userPoolClient.ClientId,
           event_id: eventId,
+          iat: authTime,
           jti: uuid.v4(),
           scope: "aws.cognito.signin.user.admin", // TODO: scopes
           sub,
@@ -181,15 +190,23 @@ export class JwtTokenGenerator implements TokenGenerator {
         {
           algorithm: "RS256",
           issuer,
-          expiresIn: "24h",
+          expiresIn: formatExpiration(
+            userPoolClient.AccessTokenValidity,
+            userPoolClient.TokenValidityUnits?.AccessToken ?? "hours",
+            "24h"
+          ),
           keyid: "CognitoLocal",
         }
       ),
       IdToken: jwt.sign(idToken, PrivateKey.pem, {
         algorithm: "RS256",
         issuer,
-        expiresIn: "24h",
-        audience: clientId,
+        expiresIn: formatExpiration(
+          userPoolClient.IdTokenValidity,
+          userPoolClient.TokenValidityUnits?.IdToken ?? "hours",
+          "24h"
+        ),
+        audience: userPoolClient.ClientId,
         keyid: "CognitoLocal",
       }),
       // this content is for debugging purposes only
@@ -198,13 +215,18 @@ export class JwtTokenGenerator implements TokenGenerator {
         {
           "cognito:username": user.Username,
           email: attributeValue("email", user.Attributes),
+          iat: authTime,
           jti: uuid.v4(),
         },
         PrivateKey.pem,
         {
           algorithm: "RS256",
           issuer,
-          expiresIn: "7d",
+          expiresIn: formatExpiration(
+            userPoolClient.RefreshTokenValidity,
+            userPoolClient.TokenValidityUnits?.RefreshToken ?? "days",
+            "7d"
+          ),
         }
       ),
     };

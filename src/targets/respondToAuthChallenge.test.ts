@@ -25,15 +25,22 @@ describe("RespondToAuthChallenge target", () => {
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
   let clock: ClockFake;
+  const userPoolClient = TDB.appClient();
 
   beforeEach(() => {
     clock = new ClockFake(currentDate);
     mockTokenGenerator = newMockTokenGenerator();
     mockTriggers = newMockTriggers();
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = newMockUserPoolService({
+      Id: userPoolClient.UserPoolId,
+    });
+
+    const mockCognitoService = newMockCognitoService(mockUserPoolService);
+    mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
+
     respondToAuthChallenge = RespondToAuthChallenge({
       clock,
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: mockCognitoService,
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
     });
@@ -85,7 +92,7 @@ describe("RespondToAuthChallenge target", () => {
     // replicate Cognito's behaviour if you don't provide it
     await expect(
       respondToAuthChallenge(TestContext, {
-        ClientId: "clientId",
+        ClientId: userPoolClient.ClientId,
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
           USERNAME: "abc",
@@ -110,7 +117,7 @@ describe("RespondToAuthChallenge target", () => {
         const newDate = clock.advanceBy(1200);
 
         await respondToAuthChallenge(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
             USERNAME: user.Username,
@@ -134,7 +141,7 @@ describe("RespondToAuthChallenge target", () => {
         });
 
         const output = await respondToAuthChallenge(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
             USERNAME: user.Username,
@@ -155,8 +162,7 @@ describe("RespondToAuthChallenge target", () => {
         expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
           TestContext,
           user,
-          "clientId",
-          "test",
+          userPoolClient,
           {
             client: "metadata",
           },
@@ -171,7 +177,7 @@ describe("RespondToAuthChallenge target", () => {
           );
 
           await respondToAuthChallenge(TestContext, {
-            ClientId: "clientId",
+            ClientId: userPoolClient.ClientId,
             ChallengeName: "SMS_MFA",
             ClientMetadata: {
               client: "metadata",
@@ -186,14 +192,14 @@ describe("RespondToAuthChallenge target", () => {
           expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
             TestContext,
             {
-              clientId: "clientId",
+              clientId: userPoolClient.ClientId,
               clientMetadata: {
                 client: "metadata",
               },
               source: "PostAuthentication_Authentication",
               userAttributes: user.Attributes,
               username: user.Username,
-              userPoolId: "test",
+              userPoolId: userPoolClient.UserPoolId,
             }
           );
         });
@@ -206,7 +212,7 @@ describe("RespondToAuthChallenge target", () => {
 
         await expect(
           respondToAuthChallenge(TestContext, {
-            ClientId: "clientId",
+            ClientId: userPoolClient.ClientId,
             ChallengeName: "SMS_MFA",
             ChallengeResponses: {
               USERNAME: user.Username,
@@ -229,7 +235,7 @@ describe("RespondToAuthChallenge target", () => {
     it("throws if NEW_PASSWORD missing", async () => {
       await expect(
         respondToAuthChallenge(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
             USERNAME: user.Username,
@@ -245,7 +251,7 @@ describe("RespondToAuthChallenge target", () => {
       const newDate = clock.advanceBy(1200);
 
       await respondToAuthChallenge(TestContext, {
-        ClientId: "clientId",
+        ClientId: userPoolClient.ClientId,
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
           USERNAME: user.Username,
@@ -270,7 +276,7 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       const output = await respondToAuthChallenge(TestContext, {
-        ClientId: "clientId",
+        ClientId: userPoolClient.ClientId,
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
           USERNAME: user.Username,
@@ -291,8 +297,7 @@ describe("RespondToAuthChallenge target", () => {
       expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
         TestContext,
         user,
-        "clientId",
-        "test",
+        userPoolClient,
         { client: "metadata" },
         "Authentication"
       );
@@ -305,7 +310,7 @@ describe("RespondToAuthChallenge target", () => {
         );
 
         await respondToAuthChallenge(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
             USERNAME: user.Username,
@@ -317,11 +322,11 @@ describe("RespondToAuthChallenge target", () => {
         expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
           TestContext,
           {
-            clientId: "clientId",
+            clientId: userPoolClient.ClientId,
             source: "PostAuthentication_Authentication",
             userAttributes: user.Attributes,
             username: user.Username,
-            userPoolId: "test",
+            userPoolId: userPoolClient.UserPoolId,
           }
         );
       });

@@ -24,15 +24,22 @@ describe("InitiateAuth target", () => {
   let mockOtp: jest.MockedFunction<() => string>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
+  const userPoolClient = TDB.appClient();
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = newMockUserPoolService({
+      Id: userPoolClient.UserPoolId,
+    });
     mockMessages = newMockMessages();
     mockOtp = jest.fn().mockReturnValue("123456");
     mockTriggers = newMockTriggers();
     mockTokenGenerator = newMockTokenGenerator();
+
+    const mockCognitoService = newMockCognitoService(mockUserPoolService);
+    mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
+
     initiateAuth = InitiateAuth({
-      cognito: newMockCognitoService(mockUserPoolService),
+      cognito: mockCognitoService,
       messages: mockMessages,
       otp: mockOtp,
       triggers: mockTriggers,
@@ -44,7 +51,7 @@ describe("InitiateAuth target", () => {
     it("throws if AuthParameters not provided", async () => {
       await expect(
         initiateAuth(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           AuthFlow: "USER_PASSWORD_AUTH",
         })
       ).rejects.toEqual(
@@ -59,7 +66,7 @@ describe("InitiateAuth target", () => {
 
       await expect(
         initiateAuth(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
             USERNAME: user.Username,
@@ -78,7 +85,7 @@ describe("InitiateAuth target", () => {
 
       await expect(
         initiateAuth(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
             USERNAME: user.Username,
@@ -109,18 +116,18 @@ describe("InitiateAuth target", () => {
               USERNAME: user.Username,
               PASSWORD: user.Password,
             },
-            ClientId: "clientId",
+            ClientId: userPoolClient.ClientId,
             ClientMetadata: {
               client: "metadata",
             },
           });
 
           expect(mockTriggers.userMigration).toHaveBeenCalledWith(TestContext, {
-            clientId: "clientId",
+            clientId: userPoolClient.ClientId,
             clientMetadata: undefined,
             password: user.Password,
             userAttributes: [],
-            userPoolId: "test",
+            userPoolId: userPoolClient.UserPoolId,
             username: user.Username,
             validationData: { client: "metadata" },
           });
@@ -137,7 +144,7 @@ describe("InitiateAuth target", () => {
 
           await expect(
             initiateAuth(TestContext, {
-              ClientId: "clientId",
+              ClientId: userPoolClient.ClientId,
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: "username",
@@ -178,7 +185,7 @@ describe("InitiateAuth target", () => {
 
           it("sends MFA code to user", async () => {
             const output = await initiateAuth(TestContext, {
-              ClientId: "clientId",
+              ClientId: userPoolClient.ClientId,
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: user.Username,
@@ -191,8 +198,8 @@ describe("InitiateAuth target", () => {
             expect(mockMessages.deliver).toHaveBeenCalledWith(
               TestContext,
               "Authentication",
-              "clientId",
-              "test",
+              userPoolClient.ClientId,
+              userPoolClient.UserPoolId,
               user,
               "123456",
               undefined,
@@ -220,7 +227,7 @@ describe("InitiateAuth target", () => {
               );
 
               await initiateAuth(TestContext, {
-                ClientId: "clientId",
+                ClientId: userPoolClient.ClientId,
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
                   USERNAME: user.Username,
@@ -243,7 +250,7 @@ describe("InitiateAuth target", () => {
           it("throws an exception", async () => {
             await expect(
               initiateAuth(TestContext, {
-                ClientId: "clientId",
+                ClientId: userPoolClient.ClientId,
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
                   USERNAME: user.Username,
@@ -283,7 +290,7 @@ describe("InitiateAuth target", () => {
 
           it("sends MFA code to user", async () => {
             const output = await initiateAuth(TestContext, {
-              ClientId: "clientId",
+              ClientId: userPoolClient.ClientId,
               ClientMetadata: {
                 client: "metadata",
               },
@@ -299,8 +306,8 @@ describe("InitiateAuth target", () => {
             expect(mockMessages.deliver).toHaveBeenCalledWith(
               TestContext,
               "Authentication",
-              "clientId",
-              "test",
+              userPoolClient.ClientId,
+              userPoolClient.UserPoolId,
               user,
               "123456",
               {
@@ -330,7 +337,7 @@ describe("InitiateAuth target", () => {
               );
 
               await initiateAuth(TestContext, {
-                ClientId: "clientId",
+                ClientId: userPoolClient.ClientId,
                 AuthFlow: "USER_PASSWORD_AUTH",
                 AuthParameters: {
                   USERNAME: user.Username,
@@ -360,7 +367,7 @@ describe("InitiateAuth target", () => {
             });
 
             const output = await initiateAuth(TestContext, {
-              ClientId: "clientId",
+              ClientId: userPoolClient.ClientId,
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: user.Username,
@@ -382,8 +389,7 @@ describe("InitiateAuth target", () => {
             expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
               TestContext,
               user,
-              "clientId",
-              "test",
+              userPoolClient,
               undefined,
               "Authentication"
             );
@@ -407,7 +413,7 @@ describe("InitiateAuth target", () => {
           });
 
           const output = await initiateAuth(TestContext, {
-            ClientId: "clientId",
+            ClientId: userPoolClient.ClientId,
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: user.Username,
@@ -427,8 +433,7 @@ describe("InitiateAuth target", () => {
           expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
             TestContext,
             user,
-            "clientId",
-            "test",
+            userPoolClient,
             undefined,
             "Authentication"
           );
@@ -447,7 +452,7 @@ describe("InitiateAuth target", () => {
             );
 
             await initiateAuth(TestContext, {
-              ClientId: "clientId",
+              ClientId: userPoolClient.ClientId,
               AuthFlow: "USER_PASSWORD_AUTH",
               AuthParameters: {
                 USERNAME: user.Username,
@@ -458,11 +463,11 @@ describe("InitiateAuth target", () => {
             expect(mockTriggers.postAuthentication).toHaveBeenCalledWith(
               TestContext,
               {
-                clientId: "clientId",
+                clientId: userPoolClient.ClientId,
                 source: "PostAuthentication_Authentication",
                 userAttributes: user.Attributes,
                 username: user.Username,
-                userPoolId: "test",
+                userPoolId: userPoolClient.UserPoolId,
               }
             );
           });
@@ -481,7 +486,7 @@ describe("InitiateAuth target", () => {
 
       it("responds with a NEW_PASSWORD_REQUIRED challenge", async () => {
         const response = await initiateAuth(TestContext, {
-          ClientId: "clientId",
+          ClientId: userPoolClient.ClientId,
           AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
             USERNAME: user.Username,
@@ -507,7 +512,7 @@ describe("InitiateAuth target", () => {
           );
 
           await initiateAuth(TestContext, {
-            ClientId: "clientId",
+            ClientId: userPoolClient.ClientId,
             AuthFlow: "USER_PASSWORD_AUTH",
             AuthParameters: {
               USERNAME: user.Username,
@@ -537,7 +542,7 @@ describe("InitiateAuth target", () => {
 
       const response = await initiateAuth(TestContext, {
         AuthFlow: "REFRESH_TOKEN_AUTH",
-        ClientId: "clientId",
+        ClientId: userPoolClient.ClientId,
         AuthParameters: {
           REFRESH_TOKEN: "refresh token",
         },
@@ -555,8 +560,7 @@ describe("InitiateAuth target", () => {
       expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
         TestContext,
         existingUser,
-        "clientId",
-        "test",
+        userPoolClient,
         undefined,
         "RefreshTokens"
       );

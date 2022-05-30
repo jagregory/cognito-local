@@ -12,6 +12,7 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services, UserPoolService } from "../services";
+import { AppClient } from "../services/appClient";
 import {
   attributesToRecord,
   attributeValue,
@@ -93,13 +94,13 @@ const verifyPasswordChallenge = async (
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
+  userPoolClient: AppClient,
   services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
-    req.ClientId,
-    userPool.options.Id,
+    userPoolClient,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
     //
@@ -131,6 +132,7 @@ const userPasswordAuthFlow = async (
   ctx: Context,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
+  userPoolClient: AppClient,
   services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   if (!req.AuthParameters) {
@@ -184,7 +186,14 @@ const userPasswordAuthFlow = async (
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
 
-  const result = verifyPasswordChallenge(ctx, user, req, userPool, services);
+  const result = verifyPasswordChallenge(
+    ctx,
+    user,
+    req,
+    userPool,
+    userPoolClient,
+    services
+  );
 
   if (services.triggers.enabled("PostAuthentication")) {
     await services.triggers.postAuthentication(ctx, {
@@ -205,6 +214,8 @@ const userPasswordAuthFlow = async (
 const refreshTokenAuthFlow = async (
   ctx: Context,
   req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  userPoolClient: AppClient,
   services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
   if (!req.AuthParameters) {
@@ -217,10 +228,6 @@ const refreshTokenAuthFlow = async (
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
   }
 
-  const userPool = await services.cognito.getUserPoolForClientId(
-    ctx,
-    req.ClientId
-  );
   const user = await userPool.getUserByRefreshToken(
     ctx,
     req.AuthParameters.REFRESH_TOKEN
@@ -232,8 +239,7 @@ const refreshTokenAuthFlow = async (
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
-    req.ClientId,
-    userPool.options.Id,
+    userPoolClient,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
     //
@@ -264,14 +270,21 @@ export const InitiateAuth =
       ctx,
       req.ClientId
     );
+    const userPoolClient = await services.cognito.getAppClient(
+      ctx,
+      req.ClientId
+    );
+    if (!userPoolClient) {
+      throw new NotAuthorizedError();
+    }
 
     if (req.AuthFlow === "USER_PASSWORD_AUTH") {
-      return userPasswordAuthFlow(ctx, req, userPool, services);
+      return userPasswordAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN" ||
       req.AuthFlow === "REFRESH_TOKEN_AUTH"
     ) {
-      return refreshTokenAuthFlow(ctx, req, services);
+      return refreshTokenAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else {
       throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
     }

@@ -18,10 +18,14 @@ describe("AdminInitiateAuth target", () => {
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
+  const userPoolClient = TDB.appClient();
 
   beforeEach(() => {
-    mockUserPoolService = newMockUserPoolService();
+    mockUserPoolService = newMockUserPoolService({
+      Id: userPoolClient.UserPoolId,
+    });
     mockCognitoService = newMockCognitoService(mockUserPoolService);
+    mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
     mockTriggers = newMockTriggers();
     mockTokenGenerator = newMockTokenGenerator();
     adminInitiateAuth = AdminInitiateAuth({
@@ -44,8 +48,8 @@ describe("AdminInitiateAuth target", () => {
 
     const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
-      ClientId: "clientId",
-      UserPoolId: "test",
+      ClientId: userPoolClient.ClientId,
+      UserPoolId: userPoolClient.UserPoolId,
       AuthParameters: {
         USERNAME: existingUser.Username,
         PASSWORD: existingUser.Password,
@@ -68,8 +72,7 @@ describe("AdminInitiateAuth target", () => {
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
       TestContext,
       existingUser,
-      "clientId",
-      "test",
+      userPoolClient,
       {
         client: "metadata",
       },
@@ -92,8 +95,8 @@ describe("AdminInitiateAuth target", () => {
 
     const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "REFRESH_TOKEN_AUTH",
-      ClientId: "clientId",
-      UserPoolId: "test",
+      ClientId: userPoolClient.ClientId,
+      UserPoolId: userPoolClient.UserPoolId,
       AuthParameters: {
         REFRESH_TOKEN: "refresh token",
       },
@@ -117,8 +120,7 @@ describe("AdminInitiateAuth target", () => {
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
       TestContext,
       existingUser,
-      "clientId",
-      "test",
+      userPoolClient,
       {
         client: "metadata",
       },

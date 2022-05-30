@@ -42,11 +42,13 @@ export const RespondToAuthChallenge =
     }
 
     const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const userPoolClient = await cognito.getAppClient(ctx, req.ClientId);
+
     const user = await userPool.getUserByUsername(
       ctx,
       req.ChallengeResponses.USERNAME
     );
-    if (!user) {
+    if (!user || !userPoolClient) {
       throw new NotAuthorizedError();
     }
 
@@ -96,8 +98,7 @@ export const RespondToAuthChallenge =
       AuthenticationResult: await tokenGenerator.generate(
         ctx,
         user,
-        req.ClientId,
-        userPool.options.Id,
+        userPoolClient,
         req.ClientMetadata,
         "Authentication"
       ),

@@ -43,7 +43,11 @@ export const CreateUserPoolClient =
       ReadAttributes: req.ReadAttributes,
       RefreshTokenValidity: req.RefreshTokenValidity,
       SupportedIdentityProviders: req.SupportedIdentityProviders,
-      TokenValidityUnits: req.TokenValidityUnits,
+      TokenValidityUnits: {
+        AccessToken: req.TokenValidityUnits?.AccessToken ?? "hours",
+        IdToken: req.TokenValidityUnits?.IdToken ?? "minutes",
+        RefreshToken: req.TokenValidityUnits?.RefreshToken ?? "days",
+      },
       UserPoolId: req.UserPoolId,
       WriteAttributes: req.WriteAttributes,
     };

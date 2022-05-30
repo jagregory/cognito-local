@@ -43,6 +43,7 @@ const adminUserPasswordAuthFlow = async (
     ctx,
     req.ClientId
   );
+  const userPoolClient = await services.cognito.getAppClient(ctx, req.ClientId);
   let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
 
   if (!user && services.triggers.enabled("UserMigration")) {
@@ -62,7 +63,7 @@ const adminUserPasswordAuthFlow = async (
     });
   }
 
-  if (!user) {
+  if (!user || !userPoolClient) {
     throw new NotAuthorizedError();
   }
 
@@ -73,8 +74,7 @@ const adminUserPasswordAuthFlow = async (
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
-    req.ClientId,
-    userPool.options.Id,
+    userPoolClient,
     req.ClientMetadata,
     "Authentication"
   );
@@ -115,19 +115,19 @@ const refreshTokenAuthFlow = async (
     ctx,
     req.ClientId
   );
+  const userPoolClient = await services.cognito.getAppClient(ctx, req.ClientId);
   const user = await userPool.getUserByRefreshToken(
     ctx,
     req.AuthParameters.REFRESH_TOKEN
   );
-  if (!user) {
+  if (!user || !userPoolClient) {
     throw new NotAuthorizedError();
   }
 
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
-    req.ClientId,
-    userPool.options.Id,
+    userPoolClient,
     req.ClientMetadata,
     "RefreshTokens"
   );

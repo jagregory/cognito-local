@@ -56,8 +56,20 @@ export const UpdateUserPoolClient =
         req.RefreshTokenValidity ?? appClient.RefreshTokenValidity,
       SupportedIdentityProviders:
         req.SupportedIdentityProviders ?? appClient.SupportedIdentityProviders,
-      TokenValidityUnits:
-        req.TokenValidityUnits ?? appClient.TokenValidityUnits,
+      TokenValidityUnits: {
+        AccessToken:
+          req.TokenValidityUnits?.AccessToken ??
+          appClient.TokenValidityUnits?.AccessToken ??
+          "hours",
+        IdToken:
+          req.TokenValidityUnits?.IdToken ??
+          appClient.TokenValidityUnits?.IdToken ??
+          "minutes",
+        RefreshToken:
+          req.TokenValidityUnits?.RefreshToken ??
+          appClient.TokenValidityUnits?.RefreshToken ??
+          "days",
+      },
       WriteAttributes: req.WriteAttributes ?? appClient.WriteAttributes,
     };
 
