@@ -14,6 +14,7 @@ export const newMockUserPoolService = (
   getUserByRefreshToken: jest.fn(),
   getUserByUsername: jest.fn(),
   listGroups: jest.fn(),
+  listUserGroupMembership: jest.fn(),
   listUsers: jest.fn(),
   options: config,
   removeUserFromGroup: jest.fn(),

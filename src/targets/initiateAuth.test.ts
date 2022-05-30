@@ -365,6 +365,7 @@ describe("InitiateAuth target", () => {
               IdToken: "id",
               RefreshToken: "refresh",
             });
+            mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
             const output = await initiateAuth(TestContext, {
               ClientId: userPoolClient.ClientId,
@@ -389,6 +390,7 @@ describe("InitiateAuth target", () => {
             expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
               TestContext,
               user,
+              [],
               userPoolClient,
               undefined,
               "Authentication"
@@ -411,6 +413,7 @@ describe("InitiateAuth target", () => {
             IdToken: "id",
             RefreshToken: "refresh",
           });
+          mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
           const output = await initiateAuth(TestContext, {
             ClientId: userPoolClient.ClientId,
@@ -433,6 +436,7 @@ describe("InitiateAuth target", () => {
           expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
             TestContext,
             user,
+            [],
             userPoolClient,
             undefined,
             "Authentication"
@@ -539,6 +543,7 @@ describe("InitiateAuth target", () => {
       });
 
       mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
       const response = await initiateAuth(TestContext, {
         AuthFlow: "REFRESH_TOKEN_AUTH",
@@ -560,6 +565,7 @@ describe("InitiateAuth target", () => {
       expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
         TestContext,
         existingUser,
+        [],
         userPoolClient,
         undefined,
         "RefreshTokens"

@@ -45,6 +45,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
+        [],
         TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
@@ -80,6 +81,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
+        [],
         TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
@@ -112,6 +114,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
+        [],
         TDB.appClient(),
         { client: "metadata" },
         "RefreshTokens"
@@ -162,6 +165,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
+          [],
           TDB.appClient(),
           { client: "metadata" },
           "RefreshTokens"
@@ -183,6 +187,7 @@ describe("JwtTokenGenerator", () => {
       const tokens = await tokenGenerator.generate(
         TestContext,
         user,
+        [],
         userPoolClient,
         { client: "metadata" },
         "RefreshTokens"
@@ -243,6 +248,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
+          [],
           userPoolClient,
           { client: "metadata" },
           "RefreshTokens"
@@ -278,6 +284,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
+          [],
           userPoolClient,
           { client: "metadata" },
           "RefreshTokens"
@@ -309,6 +316,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
+          [],
           userPoolClient,
           { client: "metadata" },
           "RefreshTokens"
@@ -344,6 +352,7 @@ describe("JwtTokenGenerator", () => {
         const tokens = await tokenGenerator.generate(
           TestContext,
           user,
+          [],
           userPoolClient,
           { client: "metadata" },
           "RefreshTokens"
@@ -359,6 +368,71 @@ describe("JwtTokenGenerator", () => {
           Math.floor(originalDate.getTime() / 1000) + 30 * ONE_HOUR
         );
       });
+    });
+  });
+
+  describe("groups", () => {
+    it("does not include a cognito:groups claim if the user has no groups", async () => {
+      mockTriggers.enabled.mockReturnValue(false);
+
+      const userPoolClient = TDB.appClient({
+        AccessTokenValidity: 10,
+        IdTokenValidity: 20,
+        RefreshTokenValidity: 30,
+        TokenValidityUnits: {
+          AccessToken: "seconds",
+          IdToken: "minutes",
+          RefreshToken: "hours",
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        userPoolClient,
+        { client: "metadata" },
+        "RefreshTokens"
+      );
+
+      expect(
+        (jwt.decode(tokens.AccessToken) as any)["cognito:groups"]
+      ).toBeUndefined();
+      expect(
+        (jwt.decode(tokens.IdToken) as any)["cognito:groups"]
+      ).toBeUndefined();
+    });
+
+    it("includes a cognito:groups claim with the user's groups", async () => {
+      mockTriggers.enabled.mockReturnValue(false);
+
+      const userPoolClient = TDB.appClient({
+        AccessTokenValidity: 10,
+        IdTokenValidity: 20,
+        RefreshTokenValidity: 30,
+        TokenValidityUnits: {
+          AccessToken: "seconds",
+          IdToken: "minutes",
+          RefreshToken: "hours",
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        ["group1", "group2"],
+        userPoolClient,
+        { client: "metadata" },
+        "RefreshTokens"
+      );
+
+      expect((jwt.decode(tokens.AccessToken) as any)["cognito:groups"]).toEqual(
+        ["group1", "group2"]
+      );
+      expect((jwt.decode(tokens.IdToken) as any)["cognito:groups"]).toEqual([
+        "group1",
+        "group2",
+      ]);
     });
   });
 });

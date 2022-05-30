@@ -71,9 +71,12 @@ const adminUserPasswordAuthFlow = async (
     throw new InvalidPasswordError();
   }
 
+  const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
+    userGroups,
     userPoolClient,
     req.ClientMetadata,
     "Authentication"
@@ -124,9 +127,12 @@ const refreshTokenAuthFlow = async (
     throw new NotAuthorizedError();
   }
 
+  const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
+    userGroups,
     userPoolClient,
     req.ClientMetadata,
     "RefreshTokens"

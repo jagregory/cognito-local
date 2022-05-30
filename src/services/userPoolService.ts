@@ -151,6 +151,7 @@ export interface UserPoolService {
   ): Promise<User | null>;
   listGroups(ctx: Context): Promise<readonly Group[]>;
   listUsers(ctx: Context): Promise<readonly User[]>;
+  listUserGroupMembership(ctx: Context, user: User): Promise<readonly string[]>;
   updateOptions(ctx: Context, userPool: UserPool): Promise<void>;
   removeUserFromGroup(ctx: Context, group: Group, user: User): Promise<void>;
   saveGroup(ctx: Context, group: Group): Promise<void>;
@@ -408,6 +409,26 @@ export class UserPoolServiceImpl implements UserPoolService {
     ctx.logger.debug({ group }, "UserPoolServiceImpl.saveGroup");
 
     await this.dataStore.set<Group>(ctx, ["Groups", group.GroupName], group);
+  }
+
+  async listUserGroupMembership(
+    ctx: Context,
+    user: User
+  ): Promise<readonly string[]> {
+    ctx.logger.debug(
+      { username: user.Username },
+      "UserPoolServiceImpl.listUserGroupMembership"
+    );
+
+    // could optimise this by dual-writing group membership to both the group and
+    // the user records, but for an initial version this is probably fine unless
+    // you have a lot of groups
+    const groups = await this.listGroups(ctx);
+
+    return groups
+      .filter((x) => x.members?.includes(user.Username))
+      .map((x) => x.GroupName)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   async storeRefreshToken(
