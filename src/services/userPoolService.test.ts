@@ -693,4 +693,85 @@ describe("User Pool Service", () => {
       expect(userPool.options.MfaConfiguration).toEqual("ON");
     });
   });
+
+  describe("addUserToGroup", () => {
+    it("updates the group's members", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      const user = TDB.user();
+      const group = TDB.group();
+
+      await userPool.addUserToGroup(TestContext, group, user);
+
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", group.GroupName],
+        {
+          ...group,
+          LastModifiedDate: clock.get(),
+          members: [user.Username],
+        }
+      );
+    });
+
+    it("only adds the user once", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      const user = TDB.user();
+      const group = TDB.group({
+        members: [user.Username],
+      });
+
+      await userPool.addUserToGroup(TestContext, group, user);
+
+      expect(ds.set).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("removeUserFromGroup", () => {
+    it("updates the group's members", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      const user = TDB.user();
+      const group = TDB.group({
+        members: [user.Username],
+      });
+
+      await userPool.removeUserFromGroup(TestContext, group, user);
+
+      expect(ds.set).toHaveBeenCalledWith(
+        TestContext,
+        ["Groups", group.GroupName],
+        {
+          ...group,
+          LastModifiedDate: clock.get(),
+          members: [],
+        }
+      );
+    });
+  });
 });

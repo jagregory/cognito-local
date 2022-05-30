@@ -1,18 +1,14 @@
 import { AdminAddUserToGroupRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { GroupNotFoundError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
-import { Group } from "../services/userPoolService";
 import { Target } from "./Target";
 
 export type AdminAddUserToGroupTarget = Target<AdminAddUserToGroupRequest, {}>;
 
-type AdminAddUserToGroupServices = Pick<Services, "clock" | "cognito">;
+type AdminAddUserToGroupServices = Pick<Services, "cognito">;
 
 export const AdminAddUserToGroup =
-  ({
-    clock,
-    cognito,
-  }: AdminAddUserToGroupServices): AdminAddUserToGroupTarget =>
+  ({ cognito }: AdminAddUserToGroupServices): AdminAddUserToGroupTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
 
@@ -26,16 +22,7 @@ export const AdminAddUserToGroup =
       throw new UserNotFoundError();
     }
 
-    const groupUsers = new Set(group.members ?? []);
-    groupUsers.add(user.Username);
-
-    const updatedGroup: Group = {
-      ...group,
-      LastModifiedDate: clock.get(),
-      members: Array.from(groupUsers.values()),
-    };
-
-    await userPool.saveGroup(ctx, updatedGroup);
+    await userPool.addUserToGroup(ctx, group, user);
 
     return {};
   };

@@ -22,7 +22,6 @@ describe("AdminAddUserToGroup target", () => {
     clock = new ClockFake(originalDate);
 
     adminAddUserToGroup = AdminAddUserToGroup({
-      clock,
       cognito: newMockCognitoService(mockUserPoolService),
     });
   });
@@ -43,41 +42,11 @@ describe("AdminAddUserToGroup target", () => {
       UserPoolId: "test",
     });
 
-    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
-      ...existingGroup,
-      LastModifiedDate: newDate,
-      members: [existingUser.Username],
-    });
-  });
-
-  it("adds the user to a group only once", async () => {
-    const existingGroup = TDB.group();
-    const existingUser = TDB.user();
-
-    mockUserPoolService.getGroupByGroupName.mockResolvedValue(existingGroup);
-    mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
-
-    const newDate = new Date();
-    clock.advanceTo(newDate);
-
-    await adminAddUserToGroup(TestContext, {
-      GroupName: existingGroup.GroupName,
-      Username: existingUser.Username,
-      UserPoolId: "test",
-    });
-
-    // try add a second time
-    await adminAddUserToGroup(TestContext, {
-      GroupName: existingGroup.GroupName,
-      Username: existingUser.Username,
-      UserPoolId: "test",
-    });
-
-    expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
-      ...existingGroup,
-      LastModifiedDate: newDate,
-      members: [existingUser.Username],
-    });
+    expect(mockUserPoolService.addUserToGroup).toHaveBeenCalledWith(
+      TestContext,
+      existingGroup,
+      existingUser
+    );
   });
 
   it("throws if the group doesn't exist", async () => {
