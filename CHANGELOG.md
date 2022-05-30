@@ -1,3 +1,18 @@
+# [3.18.0](https://github.com/jagregory/cognito-local/compare/v3.17.1...v3.18.0) (2022-05-30)
+
+
+### Bug Fixes
+
+* include groups in tokens ([46e9445](https://github.com/jagregory/cognito-local/commit/46e94456859fe25031dddc42f2d8865979e72294)), closes [#176](https://github.com/jagregory/cognito-local/issues/176)
+
+
+### Features
+
+* **api:** support for CustomEmailSender ([5da5c7c](https://github.com/jagregory/cognito-local/commit/5da5c7c29bb1405936577767501b1ed8d3fb1c75))
+* **api:** support for CustomEmailSender ([8dcaf10](https://github.com/jagregory/cognito-local/commit/8dcaf10bca72280be804bad3dd561711fd865191))
+* support configurable expiration for tokens ([bae6da5](https://github.com/jagregory/cognito-local/commit/bae6da5f4f05598f46067bd195bbf70e63607f31)), closes [#220](https://github.com/jagregory/cognito-local/issues/220)
+* support for adminEnable/DisableUser ([3b20f82](https://github.com/jagregory/cognito-local/commit/3b20f82ba263fc41aff5aa53ff6e68d65485da82))
+
 ## [3.17.1](https://github.com/jagregory/cognito-local/compare/v3.17.0...v3.17.1) (2022-05-30)
 
 
