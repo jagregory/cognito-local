@@ -138,6 +138,7 @@ export type UserPool = UserPoolType & {
 export interface UserPoolService {
   readonly options: UserPool;
 
+  addUserToGroup(ctx: Context, group: Group, user: User): Promise<void>;
   saveAppClient(ctx: Context, appClient: AppClient): Promise<void>;
   deleteAppClient(ctx: Context, appClient: AppClient): Promise<void>;
   deleteGroup(ctx: Context, group: Group): Promise<void>;
@@ -344,6 +345,27 @@ export class UserPoolServiceImpl implements UserPoolService {
     );
 
     return Object.values(groups);
+  }
+
+  public async addUserToGroup(
+    ctx: Context,
+    group: Group,
+    user: User
+  ): Promise<void> {
+    ctx.logger.debug(
+      { username: user.Username, groupName: group.GroupName },
+      "UserPoolServiceImpl.addUserToFromGroup"
+    );
+
+    const groupMembers = new Set(group.members ?? []);
+    if (!groupMembers.has(user.Username)) {
+      groupMembers.add(user.Username);
+      await this.saveGroup(ctx, {
+        ...group,
+        LastModifiedDate: this.clock.get(),
+        members: Array.from(groupMembers),
+      });
+    }
   }
 
   public async removeUserFromGroup(
