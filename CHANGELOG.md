@@ -1,3 +1,11 @@
+# [3.17.0](https://github.com/jagregory/cognito-local/compare/v3.16.3...v3.17.0) (2022-05-30)
+
+
+### Features
+
+* support configurable expiration for tokens ([675fab5](https://github.com/jagregory/cognito-local/commit/675fab504c1550d58d970b75a5fb57f228af6c4a)), closes [#220](https://github.com/jagregory/cognito-local/issues/220)
+* support for adminEnable/DisableUser ([462af6e](https://github.com/jagregory/cognito-local/commit/462af6eb13850ed34f325d6d1054c1b3c7a5b2dc))
+
 ## [3.16.3](https://github.com/jagregory/cognito-local/compare/v3.16.2...v3.16.3) (2022-04-15)
 
 
