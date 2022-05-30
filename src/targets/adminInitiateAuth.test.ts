@@ -45,6 +45,7 @@ describe("AdminInitiateAuth target", () => {
     const existingUser = TDB.user();
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+    mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
     const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
@@ -72,6 +73,7 @@ describe("AdminInitiateAuth target", () => {
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
       TestContext,
       existingUser,
+      [],
       userPoolClient,
       {
         client: "metadata",
@@ -92,6 +94,7 @@ describe("AdminInitiateAuth target", () => {
     });
 
     mockUserPoolService.getUserByRefreshToken.mockResolvedValue(existingUser);
+    mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
     const response = await adminInitiateAuth(TestContext, {
       AuthFlow: "REFRESH_TOKEN_AUTH",
@@ -120,6 +123,7 @@ describe("AdminInitiateAuth target", () => {
     expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
       TestContext,
       existingUser,
+      [],
       userPoolClient,
       {
         client: "metadata",

@@ -139,6 +139,7 @@ describe("RespondToAuthChallenge target", () => {
           IdToken: "id",
           RefreshToken: "refresh",
         });
+        mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
         const output = await respondToAuthChallenge(TestContext, {
           ClientId: userPoolClient.ClientId,
@@ -162,6 +163,7 @@ describe("RespondToAuthChallenge target", () => {
         expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
           TestContext,
           user,
+          [],
           userPoolClient,
           {
             client: "metadata",
@@ -274,6 +276,7 @@ describe("RespondToAuthChallenge target", () => {
         IdToken: "id",
         RefreshToken: "refresh",
       });
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
       const output = await respondToAuthChallenge(TestContext, {
         ClientId: userPoolClient.ClientId,
@@ -297,6 +300,7 @@ describe("RespondToAuthChallenge target", () => {
       expect(mockTokenGenerator.generate).toHaveBeenCalledWith(
         TestContext,
         user,
+        [],
         userPoolClient,
         { client: "metadata" },
         "Authentication"

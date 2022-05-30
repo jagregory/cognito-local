@@ -14,7 +14,7 @@ const logger = Pino(
     singleLine: true,
     messageFormat: (log, messageKey) =>
       `${log["reqId"] ?? "NONE"} ${log["target"] ?? "NONE"} ${log[messageKey]}`,
-  }) as any
+  }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
 );
 
 createDefaultServer(logger)

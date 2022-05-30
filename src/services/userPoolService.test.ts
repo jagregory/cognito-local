@@ -204,7 +204,7 @@ describe("User Pool Service", () => {
 
       ds.get.mockImplementation((ctx, key) => {
         if (key === "Groups") {
-          return Promise.resolve([]);
+          return Promise.resolve({});
         }
 
         return Promise.resolve(null);
@@ -772,6 +772,54 @@ describe("User Pool Service", () => {
           members: [],
         }
       );
+    });
+  });
+
+  describe("listUserGroupMembership", () => {
+    it("returns all the groups that the user is a member", async () => {
+      const ds = newMockDataStore();
+      const userPool = new UserPoolServiceImpl(
+        mockClientsDataStore,
+        clock,
+        ds,
+        {
+          Id: "test",
+        }
+      );
+
+      const user = TDB.user();
+      const group1 = TDB.group({
+        GroupName: "Group1",
+        members: [user.Username],
+      });
+      const group2 = TDB.group({
+        GroupName: "Group2",
+        members: [user.Username],
+      });
+      const group3 = TDB.group({
+        GroupName: "Group3",
+        members: [],
+      });
+      const groups = {
+        [group1.GroupName]: group1,
+        [group2.GroupName]: group2,
+        [group3.GroupName]: group3,
+      };
+
+      ds.get.mockImplementation((ctx, key) => {
+        if (key === "Groups") {
+          return Promise.resolve(groups);
+        }
+
+        return Promise.resolve(null);
+      });
+
+      const groupMembership = await userPool.listUserGroupMembership(
+        TestContext,
+        user
+      );
+
+      expect(groupMembership).toEqual([group1.GroupName, group2.GroupName]);
     });
   });
 });

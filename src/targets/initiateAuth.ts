@@ -97,9 +97,12 @@ const verifyPasswordChallenge = async (
   userPoolClient: AppClient,
   services: InitiateAuthServices
 ): Promise<InitiateAuthResponse> => {
+  const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
+    userGroups,
     userPoolClient,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
@@ -236,9 +239,12 @@ const refreshTokenAuthFlow = async (
     throw new NotAuthorizedError();
   }
 
+  const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
   const tokens = await services.tokenGenerator.generate(
     ctx,
     user,
+    userGroups,
     userPoolClient,
     // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
     // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.

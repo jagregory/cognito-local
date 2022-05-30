@@ -93,11 +93,14 @@ export const RespondToAuthChallenge =
       });
     }
 
+    const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
     return {
       ChallengeParameters: {},
       AuthenticationResult: await tokenGenerator.generate(
         ctx,
         user,
+        userGroups,
         userPoolClient,
         req.ClientMetadata,
         "Authentication"

@@ -58,10 +58,15 @@ const RESERVED_CLAIMS = [
   "token_use",
 ];
 
+type RawToken = Record<
+  string,
+  string | number | boolean | undefined | readonly string[]
+>;
+
 const applyTokenOverrides = (
-  token: Record<string, string | number | boolean | undefined>,
+  token: RawToken,
   overrides: TokenOverrides
-): Record<string, string | number | boolean | undefined> => {
+): RawToken => {
   // TODO: support group overrides
 
   const claimsToSuppress = (overrides?.claimsToSuppress ?? []).filter(
@@ -89,6 +94,7 @@ export interface TokenGenerator {
   generate(
     ctx: Context,
     user: User,
+    userGroups: readonly string[],
     userPoolClient: AppClient,
     clientMetadata: Record<string, string> | undefined,
     source:
@@ -124,6 +130,7 @@ export class JwtTokenGenerator implements TokenGenerator {
   public async generate(
     ctx: Context,
     user: User,
+    userGroups: readonly string[],
     userPoolClient: AppClient,
     clientMetadata: Record<string, string> | undefined,
     source:
@@ -137,7 +144,18 @@ export class JwtTokenGenerator implements TokenGenerator {
     const authTime = Math.floor(this.clock.get().getTime() / 1000);
     const sub = attributeValue("sub", user.Attributes);
 
-    let idToken: Record<string, string | number | boolean | undefined> = {
+    const accessToken: RawToken = {
+      auth_time: authTime,
+      client_id: userPoolClient.ClientId,
+      event_id: eventId,
+      iat: authTime,
+      jti: uuid.v4(),
+      scope: "aws.cognito.signin.user.admin", // TODO: scopes
+      sub,
+      token_use: "access",
+      username: user.Username,
+    };
+    let idToken: RawToken = {
       "cognito:username": user.Username,
       auth_time: authTime,
       email: attributeValue("email", user.Attributes),
@@ -151,6 +169,11 @@ export class JwtTokenGenerator implements TokenGenerator {
       token_use: "id",
       ...attributesToRecord(customAttributes(user.Attributes)),
     };
+
+    if (userGroups.length) {
+      accessToken["cognito:groups"] = userGroups;
+      idToken["cognito:groups"] = userGroups;
+    }
 
     if (this.triggers.enabled("PreTokenGeneration")) {
       const result = await this.triggers.preTokenGeneration(ctx, {
@@ -174,30 +197,16 @@ export class JwtTokenGenerator implements TokenGenerator {
     const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
 
     return {
-      AccessToken: jwt.sign(
-        {
-          auth_time: authTime,
-          client_id: userPoolClient.ClientId,
-          event_id: eventId,
-          iat: authTime,
-          jti: uuid.v4(),
-          scope: "aws.cognito.signin.user.admin", // TODO: scopes
-          sub,
-          token_use: "access",
-          username: user.Username,
-        },
-        PrivateKey.pem,
-        {
-          algorithm: "RS256",
-          issuer,
-          expiresIn: formatExpiration(
-            userPoolClient.AccessTokenValidity,
-            userPoolClient.TokenValidityUnits?.AccessToken ?? "hours",
-            "24h"
-          ),
-          keyid: "CognitoLocal",
-        }
-      ),
+      AccessToken: jwt.sign(accessToken, PrivateKey.pem, {
+        algorithm: "RS256",
+        issuer,
+        expiresIn: formatExpiration(
+          userPoolClient.AccessTokenValidity,
+          userPoolClient.TokenValidityUnits?.AccessToken ?? "hours",
+          "24h"
+        ),
+        keyid: "CognitoLocal",
+      }),
       IdToken: jwt.sign(idToken, PrivateKey.pem, {
         algorithm: "RS256",
         issuer,
