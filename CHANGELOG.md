@@ -1,3 +1,10 @@
+## [3.17.1](https://github.com/jagregory/cognito-local/compare/v3.17.0...v3.17.1) (2022-05-30)
+
+
+### Bug Fixes
+
+* include groups in tokens ([996dcde](https://github.com/jagregory/cognito-local/commit/996dcde4ebfa7b8d1d4825345aaaec645610144d)), closes [#176](https://github.com/jagregory/cognito-local/issues/176)
+
 # [3.17.0](https://github.com/jagregory/cognito-local/compare/v3.16.3...v3.17.0) (2022-05-30)
 
 
