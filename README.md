@@ -36,8 +36,8 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminDeleteUser                  | ✅                   |
 | AdminDeleteUserAttributes        | ✅                   |
 | AdminDisableProviderForUser      | ❌                   |
-| AdminDisableUser                 | ❌                   |
-| AdminEnableUser                  | ❌                   |
+| AdminDisableUser                 | ✅                   |
+| AdminEnableUser                  | ✅                   |
 | AdminForgetDevice                | ❌                   |
 | AdminGetDevice                   | ❌                   |
 | AdminGetUser                     | ✅                   |

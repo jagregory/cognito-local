@@ -4,6 +4,8 @@ import { AdminCreateUser } from "./adminCreateUser";
 import { AdminDeleteUser } from "./adminDeleteUser";
 
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
+import { AdminDisableUser } from "./adminDisableUser";
+import { AdminEnableUser } from "./adminEnableUser";
 import { AdminGetUser } from "./adminGetUser";
 import { AdminInitiateAuth } from "./adminInitiateAuth";
 import { AdminListGroupsForUser } from "./adminListGroupsForUser";
@@ -48,6 +50,8 @@ export const Targets = {
   AdminCreateUser,
   AdminDeleteUser,
   AdminDeleteUserAttributes,
+  AdminDisableUser,
+  AdminEnableUser,
   AdminGetUser,
   AdminInitiateAuth,
   AdminListGroupsForUser,
