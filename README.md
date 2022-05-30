@@ -177,39 +177,39 @@ cognito-local how to connect to your local Lambda server:
 
 #### Supported Lambda Triggers
 
-| Trigger                     | Operation                            | Support |
-| --------------------------- | ------------------------------------ | ------- |
-| CreateAuthChallenge         | \*                                   | ❌      |
-| CustomEmailSender           | CustomEmailSender_SignUp             | ✅      |
-| CustomEmailSender           | CustomEmailSender_ResendCode         | ✅      |
-| CustomEmailSender           | CustomEmailSender_ForgotPassword     | ✅      |
-| CustomEmailSender           | CustomEmailSender_UpdateUserAttribute| ✅      |
-| CustomEmailSender           | CustomEmailSender_VerifyUserAttribute| ✅      |
-| CustomEmailSender           | CustomEmailSender_AdminCreateUser    | ✅      |
-| CustomEmailSender           | CustomEmailSender_AccountTakeOver... | ❌      |
-| CustomMessage               | AdminCreateUser                      | ✅      |
-| CustomMessage               | Authentication                       | ✅      |
-| CustomMessage               | ForgotPassword                       | ✅      |
-| CustomMessage               | ResendCode                           | ❌      |
-| CustomMessage               | SignUp                               | ✅      |
-| CustomMessage               | UpdateUserAttribute                  | ✅      |
-| CustomMessage               | VerifyUserAttribute                  | ✅      |
-| DefineAuthChallenge         | \*                                   | ❌      |
-| PostAuthentication          | PostAuthentication_Authentication    | ✅      |
-| PostConfirmation            | ConfirmForgotPassword                | ✅      |
-| PostConfirmation            | ConfirmSignUp                        | ✅      |
-| PreAuthentication           | \*                                   | ❌      |
-| PreSignUp                   | PreSignUp_AdminCreateUser            | ❌      |
-| PreSignUp                   | PreSignUp_ExternalProvider           | ❌      |
-| PreSignUp                   | PreSignUp_SignUp                     | ✅      |
-| PreTokenGeneration          | TokenGeneration_AuthenticateDevice   | ❌      |
-| PreTokenGeneration          | TokenGeneration_Authentication       | ✅      |
-| PreTokenGeneration          | TokenGeneration_HostedAuth           | ❌      |
-| PreTokenGeneration          | TokenGeneration_NewPasswordChallenge | ❌      |
-| PreTokenGeneration          | TokenGeneration_RefreshTokens        | ✅      |
-| UserMigration               | Authentication                       | ✅      |
-| UserMigration               | ForgotPassword                       | ❌      |
-| VerifyAuthChallengeResponse | \*                                   | ❌      |
+| Trigger                     | Operation                                     | Support |
+| --------------------------- | --------------------------------------------- | ------- |
+| CreateAuthChallenge         | \*                                            | ❌      |
+| CustomEmailSender           | CustomEmailSender_SignUp                      | ✅      |
+| CustomEmailSender           | CustomEmailSender_ResendCode                  | ✅      |
+| CustomEmailSender           | CustomEmailSender_ForgotPassword              | ✅      |
+| CustomEmailSender           | CustomEmailSender_UpdateUserAttribute         | ✅      |
+| CustomEmailSender           | CustomEmailSender_VerifyUserAttribute         | ✅      |
+| CustomEmailSender           | CustomEmailSender_AdminCreateUser             | ✅      |
+| CustomEmailSender           | CustomEmailSender_AccountTakeOverNotification | ❌      |
+| CustomMessage               | AdminCreateUser                               | ✅      |
+| CustomMessage               | Authentication                                | ✅      |
+| CustomMessage               | ForgotPassword                                | ✅      |
+| CustomMessage               | ResendCode                                    | ❌      |
+| CustomMessage               | SignUp                                        | ✅      |
+| CustomMessage               | UpdateUserAttribute                           | ✅      |
+| CustomMessage               | VerifyUserAttribute                           | ✅      |
+| DefineAuthChallenge         | \*                                            | ❌      |
+| PostAuthentication          | PostAuthentication_Authentication             | ✅      |
+| PostConfirmation            | ConfirmForgotPassword                         | ✅      |
+| PostConfirmation            | ConfirmSignUp                                 | ✅      |
+| PreAuthentication           | \*                                            | ❌      |
+| PreSignUp                   | PreSignUp_AdminCreateUser                     | ❌      |
+| PreSignUp                   | PreSignUp_ExternalProvider                    | ❌      |
+| PreSignUp                   | PreSignUp_SignUp                              | ✅      |
+| PreTokenGeneration          | TokenGeneration_AuthenticateDevice            | ❌      |
+| PreTokenGeneration          | TokenGeneration_Authentication                | ✅      |
+| PreTokenGeneration          | TokenGeneration_HostedAuth                    | ❌      |
+| PreTokenGeneration          | TokenGeneration_NewPasswordChallenge          | ❌      |
+| PreTokenGeneration          | TokenGeneration_RefreshTokens                 | ✅      |
+| UserMigration               | Authentication                                | ✅      |
+| UserMigration               | ForgotPassword                                | ❌      |
+| VerifyAuthChallengeResponse | \*                                            | ❌      |
 
 #### Known limitations
 
@@ -355,15 +355,17 @@ The default config is:
   "KMSConfig": {
     "credentials": {
       "accessKeyId": "local",
-      "secretAccessKey": "local",
+      "secretAccessKey": "local"
     },
-    "region": "local",
+    "region": "local"
   }
 }
 ```
 
 ### Custom Email Sender Trigger
-To use a the custom email sender trigger you **must** provide the `KMSKeyID` and `KMSKeyAlias` properties in the `KMSConfig` property in the `.cognito/config.json` file.
+
+To use a the custom email sender trigger you **must** provide the `KMSKeyID` and `KMSKeyAlias` properties in the
+`KMSConfig` property in the `.cognito/config.json` file.
 
 One way of setting this up locally is as follows:
 
@@ -388,36 +390,42 @@ We can use docker-compose to start local-kms:
 
 ```yml
 local-kms:
-        image: nsmithuk/local-kms
-        volumes:
-            - ./local-kms/:/init
-        environment:
-            KMS_ACCOUNT_ID: '999999999'
-            KMS_REGION: 'us-west-2'
+  image: nsmithuk/local-kms
+  volumes:
+    - ./local-kms/:/init
+  environment:
+    KMS_ACCOUNT_ID: "999999999"
+    KMS_REGION: "us-west-2"
 ```
 
-This will expose the `local-kms` service in the docker network at `http://local-kms:8080`. It will also create a KMS Key with arn: `arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c` and an KMS Alias with arn `arn:aws:kms:us-west-2:999999999:alias/testing`.
+This will expose the `local-kms` service in the docker network at `http://local-kms:8080`. It will also create a KMS Key
+with arn: `arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c` and an KMS Alias with arn
+`arn:aws:kms:us-west-2:999999999:alias/testing`.
 
 Now in our cognito-local `.cognito/config.json` file we just need to populate it with these values:
 
 ```yml
 "TriggerFunctions": {
-    "CustomEmailSender": "your-custom-email-sender-trigger-function-here"
+  "CustomEmailSender": "your-custom-email-sender-trigger-function-here"
 },
 "KMSConfig": {
-    "KMSKeyId": "arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c",
-    "KMSKeyAlias": "arn:aws:kms:us-west-2:999999999:alias/testing",
-    "endpoint": "http://local-kms:8080"
+  "KMSKeyId": "arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c",
+  "KMSKeyAlias": "arn:aws:kms:us-west-2:999999999:alias/testing",
+  "endpoint": "http://local-kms:8080"
 }
 ```
 
-Your custom email sender trigger should now be called with the encrypted code. You can then decrypt it following (aws' documentation)[https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-email-sender.html]. However, make sure to use the same `local-kms` endpoint, KMS Key and KMS Alias when decrypting the code:
+Your custom email sender trigger should now be called with the encrypted code. You can then decrypt it following
+[the AWS documentation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-custom-email-sender.html).
+However, make sure to use the same `local-kms` endpoint, KMS Key and KMS Alias when decrypting the code:
 
 ```ts
- const kmsKeyringNode = new kmsSdk.KmsKeyringNode({
-      generatorKeyId: 'arn:aws:kms:us-west-2:999999999:alias/testing',
-      keyIds: ['arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c'],
-      clientProvider: () => new AWS.KMS({ endpoint: 'http://local-kms:8080' }),
+const kmsKeyringNode = new kmsSdk.KmsKeyringNode({
+  generatorKeyId: "arn:aws:kms:us-west-2:999999999:alias/testing",
+  keyIds: [
+    "arn:aws:kms:us-west-2:999999999:key/bc436485-5092-42b8-92a3-0aa8b93536c",
+  ],
+  clientProvider: () => new AWS.KMS({ endpoint: "http://local-kms:8080" }),
 });
 ```
 

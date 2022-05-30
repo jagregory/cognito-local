@@ -14,7 +14,6 @@ import {
 import { Messages, Triggers, UserPoolService } from "../services";
 import { SignUp, SignUpTarget } from "./signUp";
 import { Config, DefaultConfig } from "../server/config";
-import _ from "lodash";
 
 describe("SignUp target", () => {
   let signUp: SignUpTarget;
@@ -32,7 +31,7 @@ describe("SignUp target", () => {
     mockMessages = newMockMessages();
     mockOtp = jest.fn();
     mockTriggers = newMockTriggers();
-    config = _.cloneDeep(DefaultConfig);
+    config = DefaultConfig;
     signUp = SignUp({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(now),

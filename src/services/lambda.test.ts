@@ -6,7 +6,6 @@ import {
 import { LambdaService } from "./lambda";
 import * as AWS from "aws-sdk";
 import { version } from "aws-sdk/package.json";
-import { CryptoService } from "./crypto";
 
 describe("Lambda function invoker", () => {
   let mockLambdaClient: jest.Mocked<AWS.Lambda>;

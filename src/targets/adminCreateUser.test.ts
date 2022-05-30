@@ -9,7 +9,6 @@ import { InvalidParameterError, UsernameExistsError } from "../errors";
 import { Messages, UserPoolService } from "../services";
 import { AdminCreateUser, AdminCreateUserTarget } from "./adminCreateUser";
 import { Config, DefaultConfig } from "../server/config";
-import _ from "lodash";
 
 const originalDate = new Date();
 
@@ -22,7 +21,7 @@ describe("AdminCreateUser target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     mockMessages = newMockMessages();
-    config = _.cloneDeep(DefaultConfig);
+    config = DefaultConfig;
     adminCreateUser = AdminCreateUser({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(originalDate),
