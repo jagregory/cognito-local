@@ -285,6 +285,11 @@ of the command you just ran.
 You may commit this file to version control if you would like all your team to use a common User Pool when developing,
 or you can have each team member run the above command when they first start using Cognito Local.
 
+> **Regarding credentials:** the AWS CLI requires credentials to be configured before it will execute any commands
+> against cognito-local. If you're seeing errors about regions or credentials, make sure you have some kind of AWS
+> credentials configured in the terminal you're running the aws-cli from. You can use dummy credentials if necessary:
+> `AWS_ACCESS_KEY_ID=123 AWS_SECRET_ACCESS_KEY=123 aws --endpoint http://localhost:9229 cognito-idp ...`
+
 ## Configuration
 
 You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda
