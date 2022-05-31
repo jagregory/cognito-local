@@ -70,7 +70,7 @@
     "lodash.mergewith": "^4.6.2",
     "pino": "^7.11.0",
     "pino-http": "^6.3.3",
-    "pino-pretty": "^7.2.0",
+    "pino-pretty": "^7.6.1",
     "short-uuid": "^4.2.0",
     "stormdb": "^0.5.2",
     "uuid": "^8.3.2"
