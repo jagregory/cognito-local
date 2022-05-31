@@ -4637,11 +4637,6 @@ fastest-levenshtein@^1.0.12:
   resolved "https://registry.yarnpkg.com/fastest-levenshtein/-/fastest-levenshtein-1.0.12.tgz#9990f7d3a88cc5a9ffd1f1745745251700d497e2"
   integrity sha512-On2N+BpYJ15xIC974QNVuYGMOlEVt4s0EOI3wwMqOmK1fdDY+FN/zltPV8vosq4ad4c/gJ1KHScUn/6AWIgiow==
 
-fastify-warning@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/fastify-warning/-/fastify-warning-0.2.0.tgz#e717776026a4493dc9a2befa44db6d17f618008f"
-  integrity sha512-s1EQguBw/9qtc1p/WTY4eq9WMRIACkj+HTcOIK1in4MV5aFaQC9ZCIt0dJ7pr5bIf4lPpHvAtP2ywpTNgs7hqw==
-
 fastq@^1.6.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/fastq/-/fastq-1.7.0.tgz#fcd79a08c5bd7ec5b55cd3f5c4720db551929801"
@@ -8738,22 +8733,22 @@ pino-std-serializers@^5.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-5.0.0.tgz#ad2a5b9b332efba2cedb4d16d0c2f31ea792107e"
   integrity sha512-YC5Lv+nNxY51oicb/t8VX/sA3dnecCXeQ7heir+H+c4fbg3LD65NFdrfP3Y2ufR0Y/EYbEs5UDxHIB9NwCmYyQ==
 
-pino@^7.0.5, pino@^7.5.1:
-  version "7.5.1"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-7.5.1.tgz#6e4cd3389e9365caf64039d4b83dcfa84ed43fee"
-  integrity sha512-Wzo2G7CLaRHKOz3+Ex006LC5Xi0xEUm+mwm/h0NKzuKZONdekcbmjXg7vWDoO8hVTGX+1RuUy2fwlzvZ24EI5A==
+pino@^7.0.5, pino@^7.11.0:
+  version "7.11.0"
+  resolved "https://registry.yarnpkg.com/pino/-/pino-7.11.0.tgz#0f0ea5c4683dc91388081d44bff10c83125066f6"
+  integrity sha512-dMACeu63HtRLmCG8VKdy4cShCPKaYDR4youZqoSWLxl5Gu99HUw8bw75thbPv9Nip+H+QYX8o3ZJbTdVZZ2TVg==
   dependencies:
+    atomic-sleep "^1.0.0"
     fast-redact "^3.0.0"
-    fastify-warning "^0.2.0"
-    get-caller-file "^2.0.5"
     on-exit-leak-free "^0.2.0"
     pino-abstract-transport v0.5.0
     pino-std-serializers "^4.0.0"
+    process-warning "^1.0.0"
     quick-format-unescaped "^4.0.3"
     real-require "^0.1.0"
     safe-stable-stringify "^2.1.0"
     sonic-boom "^2.2.1"
-    thread-stream "^0.13.0"
+    thread-stream "^0.15.1"
 
 pirates@^4.0.1:
   version "4.0.1"
@@ -8848,6 +8843,11 @@ process-nextick-args@~2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
+
+process-warning@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/process-warning/-/process-warning-1.0.0.tgz#980a0b25dc38cd6034181be4b7726d89066b4616"
+  integrity sha512-du4wfLyj4yCZq1VupnVSZmRsPJsNuxoDQFdCFHLaYiEbFBD7QE0a+I4D7hOxrVnh78QE/YipFAj9lXHiXocV+Q==
 
 progress@^2.0.0:
   version "2.0.3"
@@ -10223,10 +10223,10 @@ text-table@^0.2.0, text-table@~0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
-thread-stream@^0.13.0:
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/thread-stream/-/thread-stream-0.13.0.tgz#c68054bdea250c5d8d400caa3233a150d5461cca"
-  integrity sha512-kTMZeX4Dzlb1zZ00/01aerGaTw2i8NE4sWF0TvF1uXewRhCiUjCvatQkvxIvFqauWG2ADFS2Wpd3qBeYL9i3dg==
+thread-stream@^0.15.1:
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/thread-stream/-/thread-stream-0.15.2.tgz#fb95ad87d2f1e28f07116eb23d85aba3bc0425f4"
+  integrity sha512-UkEhKIg2pD+fjkHQKyJO3yoIvAP3N6RlNFt2dUhcS1FGvCD1cQa1M/PGknCLFIyZdtJOWQjejp7bdNqmN7zwdA==
   dependencies:
     real-require "^0.1.0"
 
