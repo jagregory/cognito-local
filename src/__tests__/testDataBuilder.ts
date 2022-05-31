@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { AppClient } from "../services/appClient";
+import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import { Group, User, UserPool } from "../services/userPoolService";
 
 export const id = (prefix: string, number?: number) =>
@@ -84,7 +85,8 @@ export const userPool = (partial?: Partial<UserPool>): UserPool => {
     MfaConfiguration: partial?.MfaConfiguration ?? undefined,
     Name: partial?.Name ?? undefined,
     Policies: partial?.Policies ?? undefined,
-    SchemaAttributes: partial?.SchemaAttributes ?? undefined,
+    SchemaAttributes:
+      partial?.SchemaAttributes ?? USER_POOL_AWS_DEFAULTS.SchemaAttributes,
     SmsAuthenticationMessage: partial?.SmsAuthenticationMessage ?? undefined,
     SmsConfiguration: partial?.SmsConfiguration ?? undefined,
     SmsConfigurationFailure: partial?.SmsConfigurationFailure ?? undefined,

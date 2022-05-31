@@ -1,3 +1,4 @@
+import { AddCustomAttributes } from "./addCustomAttributes";
 import { AdminAddUserToGroup } from "./adminAddUserToGroup";
 import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminCreateUser } from "./adminCreateUser";
@@ -46,6 +47,7 @@ import { UpdateUserPoolClient } from "./updateUserPoolClient";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
+  AddCustomAttributes,
   AdminAddUserToGroup,
   AdminConfirmSignUp,
   AdminCreateUser,
