@@ -30,7 +30,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 | Feature                          | Support              |
 | -------------------------------- | -------------------- |
-| AddCustomAttributes              | ❌                   |
+| AddCustomAttributes              | ✅                   |
 | AdminAddUserToGroup              | ✅                   |
 | AdminConfirmSignUp               | ✅                   |
 | AdminCreateUser                  | 🕒 (partial support) |
