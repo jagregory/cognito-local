@@ -23,7 +23,7 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.16.0",
+    "@babel/preset-typescript": "^7.17.12",
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
     "@jest/globals": "^27.0.6",
