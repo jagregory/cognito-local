@@ -106,12 +106,10 @@ export const AdminCreateUser =
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const existingUser = await userPool.getUserByUsername(ctx, req.Username);
     const supressWelcomeMessage =
-      req.MessageAction === "SUPRESS";
+      req.MessageAction === "SUPPRESS";
 
-    const resendWelcomeMessage = 
-      req.MessageAction === "RESEND";
 
-    if (existingUser && resendWelcomeMessage) {
+    if (existingUser && req.MessageAction === "RESEND") {
       throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
     } else if (existingUser) {
       throw new UsernameExistsError();
