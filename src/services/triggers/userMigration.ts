@@ -92,7 +92,7 @@ export const UserMigration =
       Password: password,
       UserCreateDate: now,
       UserLastModifiedDate: now,
-      Username: uuid.v4(),
+      Username: result.userAttributes?.username || uuid.v4(),
       UserStatus: result.finalUserStatus ?? "CONFIRMED",
       RefreshTokens: [],
     };
