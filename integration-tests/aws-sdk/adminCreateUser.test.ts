@@ -41,6 +41,33 @@ describe(
           },
         });
       });
+
+      it("creates a user without email if supressed is passed",async () => {
+        const client = Cognito();
+        const createUserResult = await client
+          .adminCreateUser({
+            MessageAction: "SUPPRESS",
+            Username: "example@example.com",
+            UserPoolId: "test",
+          })
+          .promise();
+
+          expect(createUserResult).toEqual({
+            User: {
+              Attributes: [
+                {
+                  Name: "sub",
+                  Value: expect.stringMatching(UUID),
+                },
+              ],
+              Enabled: true,
+              UserCreateDate: roundedDate,
+              UserLastModifiedDate: roundedDate,
+              UserStatus: "FORCE_CHANGE_PASSWORD",
+              Username: "example@example.com",
+            },
+          });
+      });
     },
     {
       clock,
