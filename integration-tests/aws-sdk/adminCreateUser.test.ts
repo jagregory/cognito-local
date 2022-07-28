@@ -48,7 +48,7 @@ describe(
           .adminCreateUser({
             MessageAction: "SUPPRESS",
             Username: "example@example.com",
-            UserPoolId: "test",
+            UserPoolId: "test"
           })
           .promise();
 
@@ -64,7 +64,7 @@ describe(
               UserCreateDate: roundedDate,
               UserLastModifiedDate: roundedDate,
               UserStatus: "FORCE_CHANGE_PASSWORD",
-              Username: "example@example.com",
+              Username: "example@example.com"
             },
           });
       });

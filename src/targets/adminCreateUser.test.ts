@@ -341,7 +341,7 @@ describe("AdminCreateUser target", () => {
           TemporaryPassword: "pwd",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "user-supplied",
-          UserPoolId: "test",
+          UserPoolId: "test"
       });
 
       expect(mockMessages.deliver).not.toHaveBeenCalled();
@@ -360,7 +360,7 @@ describe("AdminCreateUser target", () => {
           UserLastModifiedDate: originalDate,
           UserStatus: "FORCE_CHANGE_PASSWORD",
           Username: "user-supplied",
-          RefreshTokens: [],
+          RefreshTokens: []
       });
 
   });
