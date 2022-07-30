@@ -444,7 +444,7 @@ describe("InitiateAuth target", () => {
         });
 
         describe("when Post Authentication trigger is enabled", () => {
-          it("invokes the trigger", async () => {
+          it("invokes the trigger before generating tokens", async () => {
             mockTokenGenerator.generate.mockResolvedValue({
               AccessToken: "access",
               IdToken: "id",
@@ -474,6 +474,10 @@ describe("InitiateAuth target", () => {
                 userPoolId: userPoolClient.UserPoolId,
               }
             );
+
+            expect(
+              mockTriggers.postAuthentication as jest.Mock
+            ).toHaveBeenCalledBefore(mockTokenGenerator.generate as jest.Mock);
           });
         });
       });

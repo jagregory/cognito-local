@@ -189,15 +189,6 @@ const userPasswordAuthFlow = async (
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
 
-  const result = verifyPasswordChallenge(
-    ctx,
-    user,
-    req,
-    userPool,
-    userPoolClient,
-    services
-  );
-
   if (services.triggers.enabled("PostAuthentication")) {
     await services.triggers.postAuthentication(ctx, {
       clientId: req.ClientId,
@@ -211,7 +202,14 @@ const userPasswordAuthFlow = async (
     });
   }
 
-  return result;
+  return verifyPasswordChallenge(
+    ctx,
+    user,
+    req,
+    userPool,
+    userPoolClient,
+    services
+  );
 };
 
 const refreshTokenAuthFlow = async (
