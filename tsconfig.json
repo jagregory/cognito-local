@@ -9,6 +9,15 @@
     "strict": true,
     "target": "ES2019"
   },
-  "include": ["./setupTests.ts", "src/**/*.ts", "integration-tests/**/*.ts"],
-  "exclude": ["lib"]
+  "include": [
+    "./setupTests.ts",
+    "src/**/*.ts",
+    "integration-tests/**/*.ts"
+  ],
+  "exclude": [
+    "lib"
+  ],
+  "files": [
+    "global.d.ts"
+  ]
 }
