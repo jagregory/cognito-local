@@ -1,3 +1,16 @@
+# [3.21.0](https://github.com/jagregory/cognito-local/compare/v3.20.0...v3.21.0) (2022-08-01)
+
+
+### Bug Fixes
+
+* use username from user migration response ([0bb8d95](https://github.com/jagregory/cognito-local/commit/0bb8d952decbe8136485177ecc6e88fdabeb1a4e))
+* use username from user migration response ([afe2372](https://github.com/jagregory/cognito-local/commit/afe23724dd91c1bc8de7b3d7deef8371eda22fcf))
+
+
+### Features
+
+* suppress send welcome message ([12e7af8](https://github.com/jagregory/cognito-local/commit/12e7af8f51e416e3b43ee41ed6db3f8aba3b66b6))
+
 # [3.20.0](https://github.com/jagregory/cognito-local/compare/v3.19.0...v3.20.0) (2022-05-31)
 
 
