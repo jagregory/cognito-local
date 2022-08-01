@@ -93,6 +93,33 @@ describe("UserMigration trigger", () => {
       expect(user.UserStatus).toEqual("CONFIRMED");
     });
 
+    it("uses username from response if present", async () => {
+      mockLambda.invoke.mockResolvedValue({
+        userAttributes: {
+          email: "example@example.com",
+          username: "thisuser",
+        },
+      });
+
+      const user = await userMigration(TestContext, {
+        clientMetadata: {
+          client: "metadata",
+        },
+        userPoolId: "userPoolId",
+        clientId: "clientId",
+        username: "example@example.com", // username may be an email when migration is from a login attempt
+        password: "password",
+        userAttributes: [], // there won't be any attributes yet because we don't know who the user is
+        validationData: {
+          validation: "data",
+        },
+      });
+
+      expect(mockLambda.invoke).toBeCalled();
+      expect(user).not.toBeNull();
+      expect(user.Username).toEqual("thisuser");
+    });
+
     it("sets user to RESET_REQUIRED if finalUserStatus is RESET_REQUIRED in response", async () => {
       mockLambda.invoke.mockResolvedValue({
         finalUserStatus: "RESET_REQUIRED",
