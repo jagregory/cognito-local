@@ -183,8 +183,7 @@ export class JwtTokenGenerator implements TokenGenerator {
         userAttributes: user.Attributes,
         username: user.Username,
         groupConfiguration: {
-          // TODO: this should be populated from the user's groups
-          groupsToOverride: undefined,
+          groupsToOverride: userGroups,
           iamRolesToOverride: undefined,
           preferredRole: undefined,
         },
