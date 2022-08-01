@@ -1,3 +1,12 @@
+## [3.21.1](https://github.com/jagregory/cognito-local/compare/v3.21.0...v3.21.1) (2022-08-01)
+
+
+### Bug Fixes
+
+* **initiateAuth:** invoke post auth lambda before generating tokens ([8330a9f](https://github.com/jagregory/cognito-local/commit/8330a9f5dc247e3a9e63c6a0667fa8183c6f3a7c)), closes [#281](https://github.com/jagregory/cognito-local/issues/281)
+* **initiateAuth:** invoke post auth lambda before generating tokens [281] ([8c06e2a](https://github.com/jagregory/cognito-local/commit/8c06e2aef43dccef11c46614a5f7575f6f3b4c95))
+* **initiateAuth:** invoke post auth lambda before generating tokens [281] ([1b16f04](https://github.com/jagregory/cognito-local/commit/1b16f047ac18ce81a8e6d43e147d934b59e139d6))
+
 # [3.21.0](https://github.com/jagregory/cognito-local/compare/v3.20.0...v3.21.0) (2022-08-01)
 
 
