@@ -4,8 +4,8 @@ import http from "http";
 import type { Logger } from "pino";
 import { promisify } from "util";
 import { createServer } from "../../src";
+import { FakeMessageDeliveryService } from "../../src/__tests__/FakeMessageDeliveryService";
 import { MockLogger } from "../../src/__tests__/mockLogger";
-import { newMockMessageDelivery } from "../../src/__tests__/mockMessageDelivery";
 import { DefaultConfig } from "../../src/server/config";
 import {
   Clock,
@@ -30,7 +30,10 @@ export const withCognitoSdk =
   (
     fn: (
       cognito: () => AWS.CognitoIdentityServiceProvider,
-      dataStoreFactory: () => DataStoreFactory
+      services: {
+        readonly dataStoreFactory: () => DataStoreFactory;
+        readonly messageDelivery: () => FakeMessageDeliveryService;
+      }
     ) => void,
     {
       logger = MockLogger as any,
@@ -42,6 +45,7 @@ export const withCognitoSdk =
     let httpServer: http.Server;
     let cognitoSdk: AWS.CognitoIdentityServiceProvider;
     let dataStoreFactory: DataStoreFactory;
+    let fakeMessageDeliveryService: FakeMessageDeliveryService;
 
     beforeEach(async () => {
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
@@ -68,11 +72,12 @@ export const withCognitoSdk =
         new CryptoService({ KMSKeyId: "", KMSKeyAlias: "" })
       );
 
+      fakeMessageDeliveryService = new FakeMessageDeliveryService();
       const router = Router({
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
-        messages: new MessagesService(triggers, newMockMessageDelivery()),
+        messages: new MessagesService(triggers, fakeMessageDeliveryService),
         otp,
         triggers,
         tokenGenerator: new JwtTokenGenerator(
@@ -105,10 +110,10 @@ export const withCognitoSdk =
       });
     });
 
-    fn(
-      () => cognitoSdk,
-      () => dataStoreFactory
-    );
+    fn(() => cognitoSdk, {
+      dataStoreFactory: () => dataStoreFactory,
+      messageDelivery: () => fakeMessageDeliveryService,
+    });
 
     afterEach((done) => {
       httpServer.close(() => {

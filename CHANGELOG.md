@@ -1,3 +1,10 @@
+# [3.20.0](https://github.com/jagregory/cognito-local/compare/v3.19.0...v3.20.0) (2022-05-31)
+
+
+### Features
+
+* **api:** support for addCustomAttribute ([7932176](https://github.com/jagregory/cognito-local/commit/79321763c2401c82d119df24b1c931d0d1541889))
+
 # [3.19.0](https://github.com/jagregory/cognito-local/compare/v3.18.0...v3.19.0) (2022-05-30)
 
 

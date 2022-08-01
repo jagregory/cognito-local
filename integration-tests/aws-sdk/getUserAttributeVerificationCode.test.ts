@@ -5,7 +5,7 @@ import { User } from "../../src/services/userPoolService";
 
 describe(
   "CognitoIdentityServiceProvider.getUserAttributeVerificationCode",
-  withCognitoSdk((Cognito, DataStoreFactory) => {
+  withCognitoSdk((Cognito, { dataStoreFactory }) => {
     it("sends a verification code for a user's attribute", async () => {
       const client = Cognito();
 
@@ -62,7 +62,7 @@ describe(
         .promise();
 
       // get the user's code -- this is very nasty
-      const ds = await DataStoreFactory().create(TestContext, userPoolId, {});
+      const ds = await dataStoreFactory().create(TestContext, userPoolId, {});
       const storedUser = (await ds.get(TestContext, ["Users", "abc"])) as User;
 
       expect(storedUser.AttributeVerificationCode).toMatch(/^\d{6}$/);

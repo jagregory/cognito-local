@@ -105,6 +105,8 @@ export const AdminCreateUser =
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const existingUser = await userPool.getUserByUsername(ctx, req.Username);
+    const supressWelcomeMessage = req.MessageAction === "SUPPRESS";
+
     if (existingUser && req.MessageAction === "RESEND") {
       throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
     } else if (existingUser) {
@@ -142,20 +144,21 @@ export const AdminCreateUser =
     await userPool.saveUser(ctx, user);
 
     // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
-    // TODO: should send a message unless MessageAction=="SUPPRESS"
     // TODO: support MessageAction=="RESEND"
     // TODO: should generate a TemporaryPassword if one isn't set
     // TODO: support ForceAliasCreation
     // TODO: support PreSignIn lambda and ValidationData
 
-    await deliverWelcomeMessage(
-      ctx,
-      req,
-      temporaryPassword,
-      user,
-      messages,
-      userPool
-    );
+    if (!supressWelcomeMessage) {
+      await deliverWelcomeMessage(
+        ctx,
+        req,
+        temporaryPassword,
+        user,
+        messages,
+        userPool
+      );
+    }
 
     return {
       User: userToResponseObject(user),

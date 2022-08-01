@@ -331,7 +331,38 @@ describe("AdminCreateUser target", () => {
 
   it.todo("can create an alias to an existing user");
   it.todo("can resend the welcome message");
-  it.todo("can suppress the welcome message");
+
+  it("can suppress the welcome message", async () => {
+    await adminCreateUser(TestContext, {
+      ClientMetadata: {
+        client: "metadata",
+      },
+      MessageAction: "SUPPRESS",
+      TemporaryPassword: "pwd",
+      UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+      Username: "user-supplied",
+      UserPoolId: "test",
+    });
+
+    expect(mockMessages.deliver).not.toHaveBeenCalled();
+
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+      Attributes: [
+        {
+          Name: "sub",
+          Value: expect.stringMatching(UUID),
+        },
+        { Name: "email", Value: "example@example.com" },
+      ],
+      Enabled: true,
+      Password: "pwd",
+      UserCreateDate: originalDate,
+      UserLastModifiedDate: originalDate,
+      UserStatus: "FORCE_CHANGE_PASSWORD",
+      Username: "user-supplied",
+      RefreshTokens: [],
+    });
+  });
 
   it("handles creating a duplicate user", async () => {
     const existingUser = TDB.user();
