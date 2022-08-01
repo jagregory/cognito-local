@@ -105,9 +105,7 @@ export const AdminCreateUser =
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const existingUser = await userPool.getUserByUsername(ctx, req.Username);
-    const supressWelcomeMessage =
-      req.MessageAction === "SUPPRESS";
-
+    const supressWelcomeMessage = req.MessageAction === "SUPPRESS";
 
     if (existingUser && req.MessageAction === "RESEND") {
       throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
@@ -151,8 +149,7 @@ export const AdminCreateUser =
     // TODO: support ForceAliasCreation
     // TODO: support PreSignIn lambda and ValidationData
 
-    if(!supressWelcomeMessage){
-
+    if (!supressWelcomeMessage) {
       await deliverWelcomeMessage(
         ctx,
         req,
