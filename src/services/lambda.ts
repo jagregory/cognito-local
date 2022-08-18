@@ -367,12 +367,12 @@ export class LambdaService implements Lambda {
           },
           response: {
             claimsOverrideDetails: {
-              claimsToAddOrOverride: null,
-              claimsToSuppress: null,
+              claimsToAddOrOverride: [],
+              claimsToSuppress: [],
               groupOverrideDetails: {
-                groupsToOverride: null,
-                iamRolesToOverride: null,
-                preferredRoll: null
+                groupsToOverride: [],
+                iamRolesToOverride: [],
+                preferredRole: null
               }
             },
           },
