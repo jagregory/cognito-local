@@ -362,7 +362,7 @@ export class LambdaService implements Lambda {
           userName: event.username,
           request: {
             userAttributes: event.userAttributes,
-            groupConfiguration: {},
+            groupConfiguration: event.groupConfiguration,
             clientMetadata: event.clientMetadata,
           },
           response: {

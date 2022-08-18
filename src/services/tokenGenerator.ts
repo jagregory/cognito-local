@@ -184,8 +184,8 @@ export class JwtTokenGenerator implements TokenGenerator {
         username: user.Username,
         groupConfiguration: {
           groupsToOverride: userGroups,
-          iamRolesToOverride: undefined,
-          preferredRole: undefined,
+          iamRolesToOverride: [],
+          preferredRole: '',
         },
         userPoolId: userPoolClient.UserPoolId,
       });
