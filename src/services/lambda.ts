@@ -366,7 +366,15 @@ export class LambdaService implements Lambda {
             clientMetadata: event.clientMetadata,
           },
           response: {
-            claimsOverrideDetails: {},
+            claimsOverrideDetails: {
+              claimsToAddOrOverride: null,
+              claimsToSuppress: null,
+              groupOverrideDetails: {
+                groupsToOverride: null,
+                iamRolesToOverride: null,
+                preferredRoll: null
+              }
+            },
           },
         };
       }
