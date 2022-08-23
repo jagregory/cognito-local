@@ -299,7 +299,7 @@ or you can have each team member run the above command when they first start usi
 
 ## Configuration
 
-You do not need to supply a config unless you need to customise the behaviour of Congito Local. If you are using Lambda
+You do not need to supply a config unless you need to customise the behaviour of Cognito Local. If you are using Lambda
 triggers with local Lambdas, you will definitely need to override `LambdaClient.endpoint` at a minimum.
 
 Before starting Cognito Local, create a config file if one doesn't already exist:
@@ -369,7 +369,7 @@ To use a the custom email sender trigger you **must** provide the `KMSKeyID` and
 
 One way of setting this up locally is as follows:
 
-You can use the (local kms)[https://github.com/nsmithuk/local-kms] package to simulate a locally running KMS service.
+You can use the [local kms](https://github.com/nsmithuk/local-kms) package to simulate a locally running KMS service.
 
 Create a `./local-kms/seed.yml` file and populate it with the KMS Key and the KMS Alias:
 
