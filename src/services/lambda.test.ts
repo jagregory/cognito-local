@@ -443,6 +443,11 @@ describe("Lambda function invoker", () => {
           clientMetadata: {
             client: "metadata",
           },
+          groupConfiguration: {
+            groupsToOverride: ["group1", "group2"],
+            iamRolesToOverride: ["role1", "role2"],
+            preferredRole: "preferredRole",
+          },
         });
 
         expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
@@ -461,9 +466,22 @@ describe("Lambda function invoker", () => {
               clientMetadata: {
                 client: "metadata",
               },
-              groupConfiguration: {},
+              groupConfiguration: {
+                groupsToOverride: ["group1", "group2"],
+                iamRolesToOverride: ["role1", "role2"],
+                preferredRole: "preferredRole",
+              },
             },
-            response: { claimsOverrideDetails: {} },
+            response: {
+              claimsOverrideDetails: {
+                claimsToAddOrOverride: {},
+                claimsToSuppress: [],
+                groupOverrideDetails: {
+                  groupsToOverride: [],
+                  iamRolesToOverride: [],
+                },
+              },
+            },
             userName: "username",
           }),
         });

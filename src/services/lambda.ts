@@ -372,7 +372,7 @@ export class LambdaService implements Lambda {
               groupOverrideDetails: {
                 groupsToOverride: [],
                 iamRolesToOverride: [],
-                preferredRole: null,
+                preferredRole: undefined,
               },
             },
           },
