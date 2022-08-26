@@ -190,7 +190,9 @@ export class JwtTokenGenerator implements TokenGenerator {
         userPoolId: userPoolClient.UserPoolId,
       });
 
-      console.log(`claimsOverrideDetails: ${result.claimsOverrideDetails}`);
+      ctx.logger.info(
+        `claimsOverrideDetails: ${JSON.stringify(result.claimsOverrideDetails)}`
+      );
 
       idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
     }
