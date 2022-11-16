@@ -1,14 +1,17 @@
 import {
+  DeliveryMediumType,
   AdminInitiateAuthRequest,
   AdminInitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { v4 } from "uuid";
 import {
   InvalidParameterError,
   InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
-import { Services } from "../services";
+import { Services, UserPoolService } from "../services";
+import { attributeValue, MFAOption, User } from "../services/userPoolService";
 import { Target } from "./Target";
 import { Context } from "../services/context";
 
@@ -19,8 +22,66 @@ export type AdminInitiateAuthTarget = Target<
 
 type AdminInitiateAuthServices = Pick<
   Services,
-  "cognito" | "triggers" | "tokenGenerator"
+  "cognito" | "messages" | "otp" | "triggers" | "tokenGenerator"
 >;
+
+const verifyMfaChallenge = async (
+  ctx: Context,
+  user: User,
+  req: AdminInitiateAuthRequest,
+  userPool: UserPoolService,
+  services: AdminInitiateAuthServices
+): Promise<AdminInitiateAuthResponse> => {
+  if (!user.MFAOptions?.length) {
+    throw new NotAuthorizedError();
+  }
+  const smsMfaOption = user.MFAOptions?.find(
+    (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
+      x.DeliveryMedium === "SMS"
+  );
+  if (!smsMfaOption) {
+    throw new UnsupportedError("MFA challenge without SMS");
+  }
+
+  const deliveryDestination = attributeValue(
+    smsMfaOption.AttributeName,
+    user.Attributes
+  );
+  if (!deliveryDestination) {
+    throw new UnsupportedError(`SMS_MFA without ${smsMfaOption.AttributeName}`);
+  }
+
+  const code = services.otp();
+  await services.messages.deliver(
+    ctx,
+    "Authentication",
+    req.ClientId,
+    userPool.options.Id,
+    user,
+    code,
+    req.ClientMetadata,
+    {
+      DeliveryMedium: smsMfaOption.DeliveryMedium,
+      AttributeName: smsMfaOption.AttributeName,
+      Destination: deliveryDestination,
+    }
+  );
+
+  await userPool.saveUser(ctx, {
+    ...user,
+    MFACode: code,
+  });
+
+  return {
+    ChallengeName: "SMS_MFA",
+    ChallengeParameters: {
+      CODE_DELIVERY_DELIVERY_MEDIUM: "SMS",
+      CODE_DELIVERY_DESTINATION: deliveryDestination,
+      USER_ID_FOR_SRP: user.Username,
+    },
+    Session: v4(),
+  };
+};
 
 const adminUserPasswordAuthFlow = async (
   ctx: Context,
@@ -69,6 +130,14 @@ const adminUserPasswordAuthFlow = async (
 
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
+  }
+
+  if (
+    (userPool.options.MfaConfiguration === "OPTIONAL" &&
+      (user.MFAOptions ?? []).length > 0) ||
+    userPool.options.MfaConfiguration === "ON"
+  ) {
+    return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
