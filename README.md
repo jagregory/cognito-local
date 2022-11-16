@@ -1,8 +1,8 @@
 # Cognito Local
 
-![CI](https://github.com/LHV-UK/cognito-local/workflows/CI/badge.svg)
+![CI](https://github.com/jagregory/cognito-local/workflows/CI/badge.svg)
 
-A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/), forked from [cognito-local](https://github.com/jagregory/cognito-local) until we are able to procure and hookup localstack pro
+A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
 <!-- toc -->
 
