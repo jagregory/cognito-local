@@ -20,12 +20,12 @@ export type AdminInitiateAuthTarget = Target<
   AdminInitiateAuthResponse
 >;
 
-type AdminInitiateAuthServices = Pick<
+export type AdminInitiateAuthServices = Pick<
   Services,
   "cognito" | "messages" | "otp" | "triggers" | "tokenGenerator"
 >;
 
-const verifyMfaChallenge = async (
+export const verifyMfaChallenge = async (
   ctx: Context,
   user: User,
   req: AdminInitiateAuthRequest,
@@ -130,6 +130,14 @@ const adminUserPasswordAuthFlow = async (
 
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
+  }
+
+  if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+    return {
+      ChallengeName: "NEW_PASSWORD_REQUIRED",
+      ChallengeParameters: { USER_ID_FOR_SRP: user.Username },
+      Session: v4(),
+    };
   }
 
   if (

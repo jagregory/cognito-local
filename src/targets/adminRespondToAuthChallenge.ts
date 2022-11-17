@@ -1,4 +1,5 @@
 import {
+  AdminInitiateAuthRequest,
   AdminRespondToAuthChallengeRequest,
   AdminRespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -9,6 +10,10 @@ import {
   UnsupportedError,
 } from "../errors";
 import { Services } from "../services";
+import {
+  AdminInitiateAuthServices,
+  verifyMfaChallenge,
+} from "./adminInitiateAuth";
 import { Target } from "./Target";
 
 export type AdminRespondToAuthChallengeTarget = Target<
@@ -18,13 +23,15 @@ export type AdminRespondToAuthChallengeTarget = Target<
 
 type AdminRespondToAuthChallengeService = Pick<
   Services,
-  "clock" | "cognito" | "triggers" | "tokenGenerator"
+  "clock" | "cognito" | "messages" | "otp" | "triggers" | "tokenGenerator"
 >;
 
 export const AdminRespondToAuthChallenge =
   ({
     clock,
     cognito,
+    messages,
+    otp,
     triggers,
     tokenGenerator,
   }: AdminRespondToAuthChallengeService): AdminRespondToAuthChallengeTarget =>
@@ -76,6 +83,25 @@ export const AdminRespondToAuthChallenge =
         UserLastModifiedDate: clock.get(),
         UserStatus: "CONFIRMED",
       });
+
+      if (
+        (userPool.options.MfaConfiguration === "OPTIONAL" &&
+          (user.MFAOptions ?? []).length > 0) ||
+        userPool.options.MfaConfiguration === "ON"
+      ) {
+        const services: AdminInitiateAuthServices = {
+          cognito,
+          messages,
+          otp,
+          triggers,
+          tokenGenerator,
+        };
+        const mfaReq: AdminInitiateAuthRequest = {
+          ...req,
+          AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        };
+        return verifyMfaChallenge(ctx, user, mfaReq, userPool, services);
+      }
     } else {
       throw new UnsupportedError(
         `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`
