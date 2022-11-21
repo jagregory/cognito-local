@@ -7,6 +7,7 @@ import { v4 } from "uuid";
 import {
   InvalidParameterError,
   InvalidPasswordError,
+  MFAMethodNotFoundException,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
@@ -48,7 +49,7 @@ export const verifyMfaChallenge = async (
     user.Attributes
   );
   if (!deliveryDestination) {
-    throw new UnsupportedError(`SMS_MFA without ${smsMfaOption.AttributeName}`);
+    throw new MFAMethodNotFoundException();
   }
 
   const code = services.otp();
