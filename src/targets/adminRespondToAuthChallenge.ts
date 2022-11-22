@@ -1,7 +1,8 @@
 import {
+  AdminInitiateAuthRequest,
+  AdminRespondToAuthChallengeRequest,
+  AdminRespondToAuthChallengeResponse,
   DeliveryMediumType,
-  RespondToAuthChallengeRequest,
-  RespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
   CodeMismatchError,
@@ -13,25 +14,31 @@ import {
 } from "../errors";
 import { Services } from "../services";
 import { attributeValue, MFAOption } from "../services/userPoolService";
+import {
+  AdminInitiateAuthServices,
+  verifyMfaChallenge,
+} from "./adminInitiateAuth";
 import { Target } from "./Target";
 
-export type RespondToAuthChallengeTarget = Target<
-  RespondToAuthChallengeRequest,
-  RespondToAuthChallengeResponse
+export type AdminRespondToAuthChallengeTarget = Target<
+  AdminRespondToAuthChallengeRequest,
+  AdminRespondToAuthChallengeResponse
 >;
 
-type RespondToAuthChallengeService = Pick<
+type AdminRespondToAuthChallengeService = Pick<
   Services,
-  "clock" | "cognito" | "triggers" | "tokenGenerator"
+  "clock" | "cognito" | "messages" | "otp" | "triggers" | "tokenGenerator"
 >;
 
-export const RespondToAuthChallenge =
+export const AdminRespondToAuthChallenge =
   ({
     clock,
     cognito,
+    messages,
+    otp,
     triggers,
     tokenGenerator,
-  }: RespondToAuthChallengeService): RespondToAuthChallengeTarget =>
+  }: AdminRespondToAuthChallengeService): AdminRespondToAuthChallengeTarget =>
   async (ctx, req) => {
     if (!req.ChallengeResponses) {
       throw new InvalidParameterError(
@@ -64,6 +71,7 @@ export const RespondToAuthChallenge =
         (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
           x.DeliveryMedium === "SMS"
       );
+      console.log(smsMfaOption);
       if (!smsMfaOption) {
         throw new MFAMethodNotFoundException();
       }
@@ -99,6 +107,25 @@ export const RespondToAuthChallenge =
         UserLastModifiedDate: clock.get(),
         UserStatus: "CONFIRMED",
       });
+
+      if (
+        (userPool.options.MfaConfiguration === "OPTIONAL" &&
+          (user.MFAOptions ?? []).length > 0) ||
+        userPool.options.MfaConfiguration === "ON"
+      ) {
+        const services: AdminInitiateAuthServices = {
+          cognito,
+          messages,
+          otp,
+          triggers,
+          tokenGenerator,
+        };
+        const mfaReq: AdminInitiateAuthRequest = {
+          ...req,
+          AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        };
+        return verifyMfaChallenge(ctx, user, mfaReq, userPool, services);
+      }
     } else {
       throw new UnsupportedError(
         `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`

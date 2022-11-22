@@ -33,6 +33,15 @@ export class CodeMismatchError extends CognitoError {
   }
 }
 
+export class MFAMethodNotFoundException extends CognitoError {
+  public constructor() {
+    super(
+      "MFAMethodNotFoundException",
+      "No MFA mechanism registered in the account"
+    );
+  }
+}
+
 export class InvalidPasswordError extends CognitoError {
   public constructor() {
     super("InvalidPasswordException", "Invalid password");

@@ -7,9 +7,11 @@ import { v4 } from "uuid";
 import {
   InvalidParameterError,
   InvalidPasswordError,
+  MFAMethodNotFoundException,
   NotAuthorizedError,
   PasswordResetRequiredError,
   UnsupportedError,
+  UserNotFoundError,
 } from "../errors";
 import { Services, UserPoolService } from "../services";
 import { AppClient } from "../services/appClient";
@@ -47,7 +49,7 @@ const verifyMfaChallenge = async (
       x.DeliveryMedium === "SMS"
   );
   if (!smsMfaOption) {
-    throw new UnsupportedError("MFA challenge without SMS");
+    throw new MFAMethodNotFoundException();
   }
 
   const deliveryDestination = attributeValue(
@@ -55,7 +57,7 @@ const verifyMfaChallenge = async (
     user.Attributes
   );
   if (!deliveryDestination) {
-    throw new UnsupportedError(`SMS_MFA without ${smsMfaOption.AttributeName}`);
+    throw new MFAMethodNotFoundException();
   }
 
   const code = services.otp();

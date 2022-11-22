@@ -9,21 +9,24 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import { Triggers, UserPoolService } from "../services";
+import { Messages, Triggers, UserPoolService } from "../services";
 import { TokenGenerator } from "../services/tokenGenerator";
 import {
-  RespondToAuthChallenge,
-  RespondToAuthChallengeTarget,
-} from "./respondToAuthChallenge";
+  AdminRespondToAuthChallenge,
+  AdminRespondToAuthChallengeTarget,
+} from "./adminRespondToAuthChallenge";
 import * as TDB from "../__tests__/testDataBuilder";
+import { newMockMessages } from "../__tests__/mockMessages";
 
 const currentDate = new Date();
 
 describe("RespondToAuthChallenge target", () => {
-  let respondToAuthChallenge: RespondToAuthChallengeTarget;
+  let adminRespondToAuthChallenge: AdminRespondToAuthChallengeTarget;
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockMessages: jest.Mocked<Messages>;
+  let mockOtp: jest.MockedFunction<() => string>;
   let clock: ClockFake;
   const userPoolClient = TDB.appClient();
 
@@ -31,6 +34,8 @@ describe("RespondToAuthChallenge target", () => {
     clock = new ClockFake(currentDate);
     mockTokenGenerator = newMockTokenGenerator();
     mockTriggers = newMockTriggers();
+    mockMessages = newMockMessages();
+    mockOtp = jest.fn().mockReturnValue("123456");
     mockUserPoolService = newMockUserPoolService({
       Id: userPoolClient.UserPoolId,
     });
@@ -38,8 +43,10 @@ describe("RespondToAuthChallenge target", () => {
     const mockCognitoService = newMockCognitoService(mockUserPoolService);
     mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
 
-    respondToAuthChallenge = RespondToAuthChallenge({
+    adminRespondToAuthChallenge = AdminRespondToAuthChallenge({
       clock,
+      messages: mockMessages,
+      otp: mockOtp,
       cognito: mockCognitoService,
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
@@ -50,7 +57,8 @@ describe("RespondToAuthChallenge target", () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await expect(
-      respondToAuthChallenge(TestContext, {
+      adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -64,7 +72,8 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses missing", async () => {
     await expect(
-      respondToAuthChallenge(TestContext, {
+      adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
       })
@@ -77,7 +86,8 @@ describe("RespondToAuthChallenge target", () => {
 
   it("throws if ChallengeResponses.USERNAME is missing", async () => {
     await expect(
-      respondToAuthChallenge(TestContext, {
+      adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {},
@@ -91,7 +101,8 @@ describe("RespondToAuthChallenge target", () => {
     // we don't actually do anything with the session right now, but we still want to
     // replicate Cognito's behaviour if you don't provide it
     await expect(
-      respondToAuthChallenge(TestContext, {
+      adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: userPoolClient.ClientId,
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {
@@ -121,7 +132,8 @@ describe("RespondToAuthChallenge target", () => {
       it("updates the user and removes the MFACode", async () => {
         const newDate = clock.advanceBy(1200);
 
-        await respondToAuthChallenge(TestContext, {
+        await adminRespondToAuthChallenge(TestContext, {
+          UserPoolId: "poolId",
           ClientId: userPoolClient.ClientId,
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -146,7 +158,8 @@ describe("RespondToAuthChallenge target", () => {
         });
         mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
-        const output = await respondToAuthChallenge(TestContext, {
+        const output = await adminRespondToAuthChallenge(TestContext, {
+          UserPoolId: "poolId",
           ClientId: userPoolClient.ClientId,
           ChallengeName: "SMS_MFA",
           ChallengeResponses: {
@@ -183,7 +196,8 @@ describe("RespondToAuthChallenge target", () => {
             (trigger) => trigger === "PostAuthentication"
           );
 
-          await respondToAuthChallenge(TestContext, {
+          await adminRespondToAuthChallenge(TestContext, {
+            UserPoolId: "poolId",
             ClientId: userPoolClient.ClientId,
             ChallengeName: "SMS_MFA",
             ClientMetadata: {
@@ -218,7 +232,8 @@ describe("RespondToAuthChallenge target", () => {
         mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
         await expect(
-          respondToAuthChallenge(TestContext, {
+          adminRespondToAuthChallenge(TestContext, {
+            UserPoolId: "poolId",
             ClientId: userPoolClient.ClientId,
             ChallengeName: "SMS_MFA",
             ChallengeResponses: {
@@ -241,7 +256,8 @@ describe("RespondToAuthChallenge target", () => {
 
     it("throws if NEW_PASSWORD missing", async () => {
       await expect(
-        respondToAuthChallenge(TestContext, {
+        adminRespondToAuthChallenge(TestContext, {
+          UserPoolId: "poolId",
           ClientId: userPoolClient.ClientId,
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {
@@ -257,7 +273,8 @@ describe("RespondToAuthChallenge target", () => {
     it("updates the user's password and status", async () => {
       const newDate = clock.advanceBy(1200);
 
-      await respondToAuthChallenge(TestContext, {
+      await adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: userPoolClient.ClientId,
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -283,7 +300,8 @@ describe("RespondToAuthChallenge target", () => {
       });
       mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
 
-      const output = await respondToAuthChallenge(TestContext, {
+      const output = await adminRespondToAuthChallenge(TestContext, {
+        UserPoolId: "poolId",
         ClientId: userPoolClient.ClientId,
         ChallengeName: "NEW_PASSWORD_REQUIRED",
         ChallengeResponses: {
@@ -318,7 +336,8 @@ describe("RespondToAuthChallenge target", () => {
           (trigger) => trigger === "PostAuthentication"
         );
 
-        await respondToAuthChallenge(TestContext, {
+        await adminRespondToAuthChallenge(TestContext, {
+          UserPoolId: "poolId",
           ClientId: userPoolClient.ClientId,
           ChallengeName: "NEW_PASSWORD_REQUIRED",
           ChallengeResponses: {

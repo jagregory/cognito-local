@@ -3,7 +3,6 @@ import { AdminAddUserToGroup } from "./adminAddUserToGroup";
 import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminCreateUser } from "./adminCreateUser";
 import { AdminDeleteUser } from "./adminDeleteUser";
-
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
 import { AdminDisableUser } from "./adminDisableUser";
 import { AdminEnableUser } from "./adminEnableUser";
@@ -11,7 +10,9 @@ import { AdminGetUser } from "./adminGetUser";
 import { AdminInitiateAuth } from "./adminInitiateAuth";
 import { AdminListGroupsForUser } from "./adminListGroupsForUser";
 import { AdminRemoveUserFromGroup } from "./adminRemoveUserFromGroup";
+import { AdminRespondToAuthChallenge } from "./adminRespondToAuthChallenge";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
+import { AdminSetUserSettings } from "./adminSetUserSettings";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
 import { ChangePassword } from "./changePassword";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
@@ -59,7 +60,9 @@ export const Targets = {
   AdminInitiateAuth,
   AdminListGroupsForUser,
   AdminRemoveUserFromGroup,
+  AdminRespondToAuthChallenge,
   AdminSetUserPassword,
+  AdminSetUserSettings,
   AdminUpdateUserAttributes,
   ChangePassword,
   ConfirmForgotPassword,
