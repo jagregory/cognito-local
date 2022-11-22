@@ -106,6 +106,11 @@ describe("RespondToAuthChallenge target", () => {
   describe("ChallengeName=SMS_MFA", () => {
     const user = TDB.user({
       MFACode: "123456",
+      MFAOptions: [{ DeliveryMedium: "SMS", AttributeName: "phone_number" }],
+      Attributes: [
+        { Name: "phone_number", Value: "+447900000001" },
+        { Name: "phone_number_verified", Value: "true" },
+      ],
     });
 
     beforeEach(() => {

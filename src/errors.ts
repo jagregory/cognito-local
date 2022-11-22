@@ -37,7 +37,7 @@ export class MFAMethodNotFoundException extends CognitoError {
   public constructor() {
     super(
       "MFAMethodNotFoundException",
-      "No MFA mechanism registered in the account."
+      "No MFA mechanism registered in the account"
     );
   }
 }

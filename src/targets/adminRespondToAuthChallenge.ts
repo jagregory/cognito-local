@@ -2,14 +2,18 @@ import {
   AdminInitiateAuthRequest,
   AdminRespondToAuthChallengeRequest,
   AdminRespondToAuthChallengeResponse,
+  DeliveryMediumType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
   CodeMismatchError,
   InvalidParameterError,
+  MFAMethodNotFoundException,
   NotAuthorizedError,
   UnsupportedError,
+  UserNotFoundError,
 } from "../errors";
 import { Services } from "../services";
+import { attributeValue, MFAOption } from "../services/userPoolService";
 import {
   AdminInitiateAuthServices,
   verifyMfaChallenge,
@@ -60,6 +64,26 @@ export const AdminRespondToAuthChallenge =
     }
 
     if (req.ChallengeName === "SMS_MFA") {
+      if (!user.MFAOptions?.length) {
+        throw new NotAuthorizedError();
+      }
+      const smsMfaOption = user.MFAOptions?.find(
+        (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
+          x.DeliveryMedium === "SMS"
+      );
+      console.log(smsMfaOption);
+      if (!smsMfaOption) {
+        throw new MFAMethodNotFoundException();
+      }
+
+      const deliveryDestinationVerified = attributeValue(
+        `${smsMfaOption.AttributeName}_verified`,
+        user.Attributes
+      );
+      if (!deliveryDestinationVerified) {
+        throw new UserNotFoundError();
+      }
+
       if (user.MFACode !== req.ChallengeResponses.SMS_MFA_CODE) {
         throw new CodeMismatchError();
       }

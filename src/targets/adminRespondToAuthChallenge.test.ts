@@ -9,13 +9,14 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import { Triggers, UserPoolService } from "../services";
+import { Messages, Triggers, UserPoolService } from "../services";
 import { TokenGenerator } from "../services/tokenGenerator";
 import {
   AdminRespondToAuthChallenge,
   AdminRespondToAuthChallengeTarget,
 } from "./adminRespondToAuthChallenge";
 import * as TDB from "../__tests__/testDataBuilder";
+import { newMockMessages } from "../__tests__/mockMessages";
 
 const currentDate = new Date();
 
@@ -24,6 +25,8 @@ describe("RespondToAuthChallenge target", () => {
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
   let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockMessages: jest.Mocked<Messages>;
+  let mockOtp: jest.MockedFunction<() => string>;
   let clock: ClockFake;
   const userPoolClient = TDB.appClient();
 
@@ -31,6 +34,8 @@ describe("RespondToAuthChallenge target", () => {
     clock = new ClockFake(currentDate);
     mockTokenGenerator = newMockTokenGenerator();
     mockTriggers = newMockTriggers();
+    mockMessages = newMockMessages();
+    mockOtp = jest.fn().mockReturnValue("123456");
     mockUserPoolService = newMockUserPoolService({
       Id: userPoolClient.UserPoolId,
     });
@@ -40,6 +45,8 @@ describe("RespondToAuthChallenge target", () => {
 
     adminRespondToAuthChallenge = AdminRespondToAuthChallenge({
       clock,
+      messages: mockMessages,
+      otp: mockOtp,
       cognito: mockCognitoService,
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
@@ -110,6 +117,11 @@ describe("RespondToAuthChallenge target", () => {
   describe("ChallengeName=SMS_MFA", () => {
     const user = TDB.user({
       MFACode: "123456",
+      MFAOptions: [{ DeliveryMedium: "SMS", AttributeName: "phone_number" }],
+      Attributes: [
+        { Name: "phone_number", Value: "+447900000001" },
+        { Name: "phone_number_verified", Value: "true" },
+      ],
     });
 
     beforeEach(() => {

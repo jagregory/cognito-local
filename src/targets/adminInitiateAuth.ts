@@ -10,6 +10,7 @@ import {
   MFAMethodNotFoundException,
   NotAuthorizedError,
   UnsupportedError,
+  UserNotFoundError,
 } from "../errors";
 import { Services, UserPoolService } from "../services";
 import { attributeValue, MFAOption, User } from "../services/userPoolService";
@@ -41,7 +42,7 @@ export const verifyMfaChallenge = async (
       x.DeliveryMedium === "SMS"
   );
   if (!smsMfaOption) {
-    throw new UnsupportedError("MFA challenge without SMS");
+    throw new MFAMethodNotFoundException();
   }
 
   const deliveryDestination = attributeValue(
