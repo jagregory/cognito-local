@@ -5,6 +5,7 @@ import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
 import { UserPoolService } from "../services";
 import { AdminGetUser, AdminGetUserTarget } from "./adminGetUser";
+import { attributeValue } from "../services/userPoolService";
 
 describe("AdminGetUser target", () => {
   let adminGetUser: AdminGetUserTarget;
@@ -32,7 +33,7 @@ describe("AdminGetUser target", () => {
       UserAttributes: existingUser.Attributes,
       UserCreateDate: new Date(existingUser.UserCreateDate),
       UserLastModifiedDate: new Date(existingUser.UserLastModifiedDate),
-      Username: existingUser.Username,
+      Username: attributeValue("sub", existingUser.Attributes),
       UserStatus: existingUser.UserStatus,
     });
   });

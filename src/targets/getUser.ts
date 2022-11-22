@@ -7,6 +7,7 @@ import { InvalidParameterError, UserNotFoundError } from "../errors";
 import { Services } from "../services";
 import { Token } from "../services/tokenGenerator";
 import { Target } from "./Target";
+import { attributeValue } from "../services/userPoolService";
 
 export type GetUserTarget = Target<GetUserRequest, GetUserResponse>;
 
@@ -33,6 +34,6 @@ export const GetUser =
       PreferredMfaSetting: user.PreferredMfaSetting,
       UserAttributes: user.Attributes,
       UserMFASettingList: user.UserMFASettingList,
-      Username: user.Username,
+      Username: attributeValue("sub", user.Attributes)!,
     };
   };

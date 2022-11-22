@@ -3,12 +3,8 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import {
-  GroupNotFoundError,
-  InvalidParameterError,
-  UserNotFoundError,
-} from "../errors";
-import { CognitoService, UserPoolService } from "../services";
+import { InvalidParameterError } from "../errors";
+import { CognitoService } from "../services";
 import {
   AddCustomAttributes,
   AddCustomAttributesTarget,
