@@ -120,7 +120,7 @@ export const AdminCreateUser =
     const now = clock.get();
 
     const temporaryPassword =
-      req.TemporaryPassword ?? generator.new().slice(0, 6);
+      req.TemporaryPassword ?? process.env.CODE ?? generator.new().slice(0, 6);
 
     const isEmailUsername =
       config.UserPoolDefaults.UsernameAttributes?.includes("email");
