@@ -8,6 +8,8 @@ import {
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
+import { v4 } from "uuid";
+import { attributesToRecord, User } from "../services/userPoolService";
 import { Services } from "../services";
 import { Target } from "./Target";
 import { Context } from "../services/context";
@@ -21,6 +23,16 @@ type AdminInitiateAuthServices = Pick<
   Services,
   "cognito" | "triggers" | "tokenGenerator"
 >;
+
+const newPasswordChallenge = (user: User): AdminInitiateAuthResponse => ({
+  ChallengeName: "NEW_PASSWORD_REQUIRED",
+  ChallengeParameters: {
+    USER_ID_FOR_SRP: user.Username,
+    requiredAttributes: JSON.stringify([]),
+    userAttributes: JSON.stringify(attributesToRecord(user.Attributes)),
+  },
+  Session: v4(),
+});
 
 const adminUserPasswordAuthFlow = async (
   ctx: Context,
@@ -69,6 +81,9 @@ const adminUserPasswordAuthFlow = async (
 
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
+  }
+  if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+    return newPasswordChallenge(user);
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
