@@ -63,6 +63,22 @@ export const createServer = (
     });
   });
 
+  app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
+    const proxyHost = req.headers["x-forwarded-host"];
+    const host = proxyHost ? proxyHost : req.headers.host;
+    const userPoolURL = `http://${host}/${req.params.userPoolId}`;
+
+    res.status(200).json({
+      authorization_endpoint: `${userPoolURL}/oauth2/auth`,
+      grant_types_supported: ["client_credentials"],
+      id_token_signing_alg_values_supported: ["RS256"],
+      issuer: userPoolURL,
+      jwks_uri: `${userPoolURL}/.well-known/jwks.json`,
+      token_endpoint: `${userPoolURL}/oauth2/token`,
+      token_endpoint_auth_methods_supported: ["client_secret_basic"],
+    });
+  });
+
   app.get("/health", (req, res) => {
     res.status(200).json({ ok: true });
   });
