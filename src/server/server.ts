@@ -7,6 +7,10 @@ import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import { Router } from "./Router";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import { CognitoService } from "../services/cognitoService";
+import { AppClient } from "../services/appClient";
+import PrivateKey from "../keys/cognitoLocal.private.json";
+import jwt from "jsonwebtoken";
 import Pino from "pino-http";
 
 export interface ServerOptions {
@@ -23,6 +27,7 @@ export interface Server {
 export const createServer = (
   router: Router,
   logger: Logger,
+  cognito: CognitoService,
   options: Partial<ServerOptions> = {}
 ): Server => {
   const pino = Pino({
@@ -46,6 +51,9 @@ export const createServer = (
   app.use(
     bodyParser.json({
       type: "application/x-amz-json-1.1",
+    }),
+    bodyParser.urlencoded({
+      extended: true,
     })
   );
 
@@ -57,6 +65,110 @@ export const createServer = (
 
   app.get("/health", (req, res) => {
     res.status(200).json({ ok: true });
+  });
+
+  /**
+   * Generate a new access token for client credentials flow.
+   */
+  app.post("/:userPoolId/oauth2/token", async (req, res) => {
+    const contentType = req.headers["content-type"];
+
+    if (!contentType?.includes("application/x-www-form-urlencoded")) {
+      res.status(400).json({
+        error: "invalid_request",
+        description: "content-type must be 'application/x-www-form-urlencoded'",
+      });
+      return;
+    }
+
+    const grantType = req.body.grant_type;
+
+    if (grantType !== "client_credentials") {
+      res.status(400).json({
+        error: "unsupported_grant_type",
+        description: "only 'client_credentials' grant type is supported",
+      });
+      return;
+    }
+
+    const authHeader = req.headers.authorization?.split(" ");
+
+    if (
+      authHeader === undefined ||
+      authHeader.length !== 2 ||
+      authHeader[0] !== "Basic"
+    ) {
+      res.status(400).json({
+        error: "invalid_request",
+        description:
+          "authorization header must be present and use HTTP Basic authentication scheme",
+      });
+      return;
+    }
+
+    const [clientId, clientSecret] = Buffer.from(authHeader[1], "base64")
+      .toString("ascii")
+      .split(":");
+
+    let userPoolClient: AppClient | null;
+
+    try {
+      userPoolClient = await cognito.getAppClient(
+        { logger: req.log },
+        clientId
+      );
+    } catch (e) {
+      res.status(500).json({
+        error: "server_error",
+        description: "failed to retrieve user pool client",
+      });
+      return;
+    }
+
+    if (!userPoolClient || userPoolClient.ClientSecret !== clientSecret) {
+      res.status(400).json({
+        error: "invalid_client",
+        description: "invalid client id or secret",
+      });
+      return;
+    }
+
+    if (!userPoolClient.AllowedOAuthFlows?.includes(grantType)) {
+      res.status(400).json({
+        error: "unsupported_grant_type",
+        description: `grant type '${grantType}' is not supported by this client`,
+      });
+      return;
+    }
+
+    if (!userPoolClient.AllowedOAuthScopes?.includes(req.body.scope)) {
+      res.status(400).json({
+        error: "invalid_scope",
+        description: `invalid scope '${req.body.scope}'`,
+      });
+      return;
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+
+    const accessToken = {
+      sub: clientId,
+      client_id: clientId,
+      scope: req.body.scope,
+      jti: uuid.v4(),
+      auth_time: now,
+      iat: now,
+      token_use: "access",
+    };
+
+    res.status(200).json({
+      access_token: jwt.sign(accessToken, PrivateKey.pem, {
+        algorithm: "RS256",
+        issuer: `https://cognito-idp.{region}.amazonaws.com/${userPoolClient.UserPoolId}`,
+        expiresIn: 3600,
+        keyid: "CognitoLocal",
+      }),
+    });
   });
 
   app.post("/", (req, res) => {
