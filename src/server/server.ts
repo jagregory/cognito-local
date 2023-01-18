@@ -57,6 +57,10 @@ export const createServer = (
     })
   );
 
+  app.get("/health", (req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   app.get("/:userPoolId/.well-known/jwks.json", (req, res) => {
     res.status(200).json({
       keys: [PublicKey.jwk],
@@ -69,8 +73,8 @@ export const createServer = (
     const userPoolURL = `http://${host}/${req.params.userPoolId}`;
 
     res.status(200).json({
-      authorization_endpoint: `${userPoolURL}/oauth2/auth`,
-      grant_types_supported: ["client_credentials"],
+      authorization_endpoint: `${userPoolURL}/oauth2/authorize`,
+      grant_types_supported: ["client_credentials", "authorization_code"],
       id_token_signing_alg_values_supported: ["RS256"],
       issuer: userPoolURL,
       jwks_uri: `${userPoolURL}/.well-known/jwks.json`,
@@ -79,12 +83,14 @@ export const createServer = (
     });
   });
 
-  app.get("/health", (req, res) => {
-    res.status(200).json({ ok: true });
+  app.get("/:userPoolId/oauth2/authorize", (req, res) => {
+    res.redirect(
+      `${req.query.redirect_uri}?code=AUTHORIZATION_CODE&state=${req.query.state}`
+    );
   });
 
   /**
-   * Generate a new access token for client credentials flow.
+   * Generate a new access token for client credentials and authorization code flows.
    */
   app.post("/:userPoolId/oauth2/token", async (req, res) => {
     const contentType = req.headers["content-type"];
@@ -99,10 +105,14 @@ export const createServer = (
 
     const grantType = req.body.grant_type;
 
-    if (grantType !== "client_credentials") {
+    if (
+      grantType !== "client_credentials" &&
+      grantType !== "authorization_code"
+    ) {
       res.status(400).json({
         error: "unsupported_grant_type",
-        description: "only 'client_credentials' grant type is supported",
+        description:
+          "only 'client_credentials' and 'authorization_code' grant types are supported",
       });
       return;
     }
@@ -157,12 +167,22 @@ export const createServer = (
       return;
     }
 
-    if (!userPoolClient.AllowedOAuthScopes?.includes(req.body.scope)) {
-      res.status(400).json({
-        error: "invalid_scope",
-        description: `invalid scope '${req.body.scope}'`,
-      });
-      return;
+    if (grantType === "client_credentials") {
+      if (!userPoolClient.AllowedOAuthScopes?.includes(req.body.scope)) {
+        res.status(400).json({
+          error: "invalid_scope",
+          description: `invalid scope '${req.body.scope}'`,
+        });
+        return;
+      }
+    } else if (grantType === "authorization_code") {
+      if (req.body.code !== "AUTHORIZATION_CODE") {
+        res.status(400).json({
+          error: "invalid_grant",
+          description: "invalid authorization code",
+        });
+        return;
+      }
     }
 
     const now = Math.floor(Date.now() / 1000);
