@@ -256,7 +256,7 @@ export class LambdaService implements Lambda {
     ctx.logger.debug(
       `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
     );
-    if (result.StatusCode === 200) {
+    if (!result.FunctionError) {
       try {
         const parsedPayload = JSON.parse(result.Payload as string);
 
@@ -266,7 +266,18 @@ export class LambdaService implements Lambda {
         throw new InvalidLambdaResponseError();
       }
     } else {
-      ctx.logger.error(result.FunctionError);
+      ctx.logger.error({ result }, result.FunctionError);
+
+      if (result.FunctionError === "Unhandled" && result.Payload) {
+        const parsedPayload = JSON.parse(result.Payload as string);
+
+        if (parsedPayload.errorMessage) {
+          throw new UserLambdaValidationError(
+            `${functionName} failed with error ${parsedPayload.errorMessage}.`
+          );
+        }
+      }
+
       throw new UserLambdaValidationError(result.FunctionError);
     }
   }
