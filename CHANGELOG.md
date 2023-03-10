@@ -1,3 +1,11 @@
+# [3.22.0](https://github.com/jagregory/cognito-local/compare/v3.21.2...v3.22.0) (2023-03-10)
+
+
+### Features
+
+* **confirmationCodes:** add CODE environment variable to pre-define the confirmation codes ([2c823f0](https://github.com/jagregory/cognito-local/commit/2c823f0fe08c9d74754857f2433044d401ddb683))
+* **confirmationCodes:** update README file ([9143469](https://github.com/jagregory/cognito-local/commit/9143469744a9eab86ac40e372e0be21992d1c503))
+
 ## [3.21.2](https://github.com/jagregory/cognito-local/compare/v3.21.1...v3.21.2) (2023-03-10)
 
 
