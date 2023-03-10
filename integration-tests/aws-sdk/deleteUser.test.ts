@@ -62,7 +62,7 @@ describe(
             UserPoolId: "test",
           })
           .promise()
-      ).rejects.toEqual(new UserNotFoundError("User does not exist"));
+      ).rejects.toEqual(new UserNotFoundError("User does not exist."));
     });
   })
 );

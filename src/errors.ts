@@ -5,7 +5,7 @@ export class CognitoError extends Error {
 
   public constructor(code: string, message: string) {
     super(message);
-    this.code = `CognitoLocal#${code}`;
+    this.code = `${code}`;
   }
 }
 
@@ -16,7 +16,7 @@ export class NotAuthorizedError extends CognitoError {
 }
 
 export class UserNotFoundError extends CognitoError {
-  public constructor(message = "User not found") {
+  public constructor(message = "User not found.") {
     super("UserNotFoundException", message);
   }
 }
