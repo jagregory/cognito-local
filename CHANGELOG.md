@@ -1,3 +1,11 @@
+## [3.21.2](https://github.com/jagregory/cognito-local/compare/v3.21.1...v3.21.2) (2023-03-10)
+
+
+### Bug Fixes
+
+* **errorFormat:** make exception format more consistent with real Cognito exceptions ([e67576b](https://github.com/jagregory/cognito-local/commit/e67576b85571a7d905be0e86c76aaec623ba5eb0))
+* **tests:** newer node versions were starting express in ipv6 ([efc08a7](https://github.com/jagregory/cognito-local/commit/efc08a7d56024b4bdb22c4e1617a9f6b7e197acb))
+
 ## [3.21.1](https://github.com/jagregory/cognito-local/compare/v3.21.0...v3.21.1) (2022-08-01)
 
 
