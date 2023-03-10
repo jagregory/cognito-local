@@ -482,6 +482,8 @@ For example:
 
 If a Custom Message lambda is configured, the output of the function invocation will be printed in the console too (verbosely!).
 
+By default, confirmation codes are randomly generated.  If set, the value assigned to the `CODE` environment variable will always be returned instead.
+
 ## Advanced
 
 ### Debugging Cognito Local
