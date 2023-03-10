@@ -88,6 +88,7 @@ export const withCognitoSdk =
       });
       const server = createServer(router, ctx.logger);
       httpServer = await server.start({
+        hostname: "127.0.0.1",
         port: 0,
       });
 
