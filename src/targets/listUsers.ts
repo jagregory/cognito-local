@@ -12,7 +12,7 @@ export const ListUsers =
   ({ cognito }: Pick<Services, "cognito">): ListUsersTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
-    const users = await userPool.listUsers(ctx);
+    const users = await userPool.listUsers(ctx, req.Filter);
 
     // TODO: support AttributesToGet
     // TODO: support Filter

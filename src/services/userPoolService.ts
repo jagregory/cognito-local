@@ -14,6 +14,7 @@ import { Clock } from "./clock";
 import { Context } from "./context";
 import { DataStore } from "./dataStore/dataStore";
 import { DataStoreFactory } from "./dataStore/factory";
+import { FilterConfig } from "./filter";
 
 export interface MFAOption {
   DeliveryMedium: "SMS";
@@ -150,7 +151,10 @@ export interface UserPoolService {
     refreshToken: string
   ): Promise<User | null>;
   listGroups(ctx: Context): Promise<readonly Group[]>;
-  listUsers(ctx: Context): Promise<readonly User[]>;
+  listUsers(
+    ctx: Context,
+    filter?: string | undefined
+  ): Promise<readonly User[]>;
   listUserGroupMembership(ctx: Context, user: User): Promise<readonly string[]>;
   updateOptions(ctx: Context, userPool: UserPool): Promise<void>;
   removeUserFromGroup(ctx: Context, group: Group, user: User): Promise<void>;
@@ -311,15 +315,46 @@ export class UserPoolServiceImpl implements UserPoolService {
     return user ?? null;
   }
 
-  public async listUsers(ctx: Context): Promise<readonly User[]> {
+  public async listUsers(
+    ctx: Context,
+    filter?: string | undefined
+  ): Promise<readonly User[]> {
     ctx.logger.debug("UserPoolServiceImpl.listUsers");
+
+    const filterConfig = new FilterConfig<User>({
+      username: FilterConfig.caseSensitive((x) => x.Username),
+      email: FilterConfig.caseSensitive((x) =>
+        attributeValue("email", x.Attributes)
+      ),
+      phone_number: FilterConfig.caseSensitive((x) =>
+        attributeValue("phone_number", x.Attributes)
+      ),
+      name: FilterConfig.caseSensitive((x) =>
+        attributeValue("name", x.Attributes)
+      ),
+      given_name: FilterConfig.caseSensitive((x) =>
+        attributeValue("given_name", x.Attributes)
+      ),
+      family_name: FilterConfig.caseSensitive((x) =>
+        attributeValue("family_name", x.Attributes)
+      ),
+      preferred_username: FilterConfig.caseSensitive((x) =>
+        attributeValue("preferred_username", x.Attributes)
+      ),
+      "cognito:user_status": FilterConfig.caseInsensitive((x) => x.UserStatus),
+      status: FilterConfig.caseSensitive((x) => x.Enabled),
+      sub: FilterConfig.caseSensitive((x) =>
+        attributeValue("sub", x.Attributes)
+      ),
+    });
+
     const users = await this.dataStore.get<Record<string, User>>(
       ctx,
       "Users",
       {}
     );
 
-    return Object.values(users);
+    return Object.values(users).filter(filterConfig.parse(filter));
   }
 
   public async updateOptions(ctx: Context, userPool: UserPool): Promise<void> {

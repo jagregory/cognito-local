@@ -132,7 +132,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | VerifySoftwareToken              | ❌                   |
 | VerifyUserAttribute              | ✅                   |
 
-> ¹ does not support pagination or query filters, all results and attributes will be returned in the first request.
+> ¹ does not support pagination or attribute filters, all results and attributes will be returned in the first request.
 >
 > ² "requires developer credentials" is not enforced
 
