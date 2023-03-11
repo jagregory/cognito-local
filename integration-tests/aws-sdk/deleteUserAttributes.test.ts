@@ -36,9 +36,11 @@ describe(
         .promise();
 
       await client
-        .adminConfirmSignUp({
+        .adminSetUserPassword({
           UserPoolId: userPoolId,
           Username: "abc",
+          Password: "def",
+          Permanent: true,
         })
         .promise();
 

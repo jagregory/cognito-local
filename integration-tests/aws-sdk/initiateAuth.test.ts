@@ -103,9 +103,11 @@ describe(
       );
 
       await client
-        .adminConfirmSignUp({
+        .adminSetUserPassword({
           UserPoolId: "test",
           Username: "abc",
+          Password: "def",
+          Permanent: true,
         })
         .promise();
 
@@ -190,9 +192,11 @@ describe(
       );
 
       await client
-        .adminConfirmSignUp({
+        .adminSetUserPassword({
           UserPoolId: "test",
           Username: "abc",
+          Password: "def",
+          Permanent: true,
         })
         .promise();
 

@@ -10,8 +10,8 @@ export class CognitoError extends Error {
 }
 
 export class NotAuthorizedError extends CognitoError {
-  public constructor() {
-    super("NotAuthorizedException", "User not authorized");
+  public constructor(message = "User not authorized") {
+    super("NotAuthorizedException", message);
   }
 }
 
@@ -30,6 +30,15 @@ export class UsernameExistsError extends CognitoError {
 export class CodeMismatchError extends CognitoError {
   public constructor() {
     super("CodeMismatchException", "Incorrect confirmation code");
+  }
+}
+
+export class ExpiredCodeError extends CognitoError {
+  public constructor() {
+    super(
+      "ExpiredCodeException",
+      "Invalid code provided, please request a code again."
+    );
   }
 }
 

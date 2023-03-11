@@ -30,6 +30,12 @@ export const AdminConfirmSignUp =
       throw new NotAuthorizedError();
     }
 
+    if (user.UserStatus !== "UNCONFIRMED") {
+      throw new NotAuthorizedError(
+        `User cannot be confirmed. Current status is ${user.UserStatus}`
+      );
+    }
+
     const updatedUser = {
       ...user,
       UserLastModifiedDate: clock.get(),
