@@ -1,3 +1,10 @@
+## [3.23.1](https://github.com/jagregory/cognito-local/compare/v3.23.0...v3.23.1) (2023-03-11)
+
+
+### Bug Fixes
+
+* **api:** confirm user apis return errors for invalid states ([e2975f0](https://github.com/jagregory/cognito-local/commit/e2975f0218ea64f25024923f74bfa9a69e90fb8c))
+
 # [3.23.0](https://github.com/jagregory/cognito-local/compare/v3.22.0...v3.23.0) (2023-03-11)
 
 
