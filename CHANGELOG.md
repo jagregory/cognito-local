@@ -1,3 +1,15 @@
+# [3.23.0](https://github.com/jagregory/cognito-local/compare/v3.22.0...v3.23.0) (2023-03-11)
+
+
+### Bug Fixes
+
+* **lambda:** unhandled errors in lambda return correct error message ([c9821d1](https://github.com/jagregory/cognito-local/commit/c9821d1ae11f7fddc976f89451880439008c2005))
+
+
+### Features
+
+* **api:** listUsers support for Filter ([5ebcf24](https://github.com/jagregory/cognito-local/commit/5ebcf2460f57c1d3dfed8fa42969791aa58087da)), closes [#313](https://github.com/jagregory/cognito-local/issues/313)
+
 # [3.22.0](https://github.com/jagregory/cognito-local/compare/v3.21.2...v3.22.0) (2023-03-10)
 
 
