@@ -68,7 +68,28 @@ export const createServer = (
     req.on("end", function () {
       const target = "GetToken";
       const route = router(target);
-      route({ logger: req.log }, rawBody).then(
+
+      const parsed = new URLSearchParams(rawBody);
+      const params = {
+        grant_type: parsed.get("grant_type"),
+        client_id: parsed.get("client_id"),
+        client_secret: parsed.get("client_secret"),
+        refresh_token: parsed.get("refresh_token"),
+      };
+
+      const auth = req.get("Authorization");
+      if (auth && auth.startsWith("Basic ")) {
+        const sliced = auth.slice("Basic ".length);
+        const buff = new Buffer(sliced, "base64");
+        const decoded = buff.toString("ascii");
+        const creds = decoded.split(":");
+        if (creds.length == 2) {
+          params.client_id = creds[0];
+          params.client_secret = creds[1];
+        }
+      }
+
+      route({ logger: req.log }, params).then(
         (output) => {
           res.status(200).type("json").send(JSON.stringify(output));
         },
