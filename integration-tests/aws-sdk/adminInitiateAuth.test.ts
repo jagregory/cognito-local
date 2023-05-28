@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { UUID } from "../../src/__tests__/patterns";
 import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
+import { UserNotConfirmedException } from "../../src/errors";
 
 describe(
   "CognitoIdentityServiceProvider.adminInitiateAuth",
@@ -31,6 +32,40 @@ describe(
       ).rejects.toMatchObject({
         message: "User not authorized",
       });
+    });
+
+    it("handles users with UNCONFIRMED status", async () => {
+      const client = Cognito();
+
+      const upc = await client
+        .createUserPoolClient({
+          UserPoolId: "test",
+          ClientName: "test",
+        })
+        .promise();
+
+      await client
+        .signUp({
+          ClientId: upc.UserPoolClient?.ClientId!,
+          Password: "def",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "abc",
+        })
+        .promise();
+
+      await expect(
+        client
+          .adminInitiateAuth({
+            UserPoolId: "test",
+            ClientId: upc.UserPoolClient?.ClientId!,
+            AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: "abc",
+              PASSWORD: "def",
+            },
+          })
+          .promise()
+      ).rejects.toEqual(new UserNotConfirmedException());
     });
 
     it("can authenticate users with ADMIN_USER_PASSWORD_AUTH auth flow", async () => {

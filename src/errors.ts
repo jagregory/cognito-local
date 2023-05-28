@@ -54,6 +54,12 @@ export class PasswordResetRequiredError extends CognitoError {
   }
 }
 
+export class UserNotConfirmedException extends CognitoError {
+  public constructor() {
+    super("UserNotConfirmedException", "User is not confirmed.");
+  }
+}
+
 export class ResourceNotFoundError extends CognitoError {
   public constructor(message?: string) {
     super("ResourceNotFoundException", message ?? "Resource not found");

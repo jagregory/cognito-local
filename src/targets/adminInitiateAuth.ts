@@ -7,6 +7,7 @@ import {
   InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
+  UserNotConfirmedException,
 } from "../errors";
 import { Services } from "../services";
 import { Target } from "./Target";
@@ -69,6 +70,10 @@ const adminUserPasswordAuthFlow = async (
 
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
+  }
+
+  if (user.UserStatus === "UNCONFIRMED") {
+    throw new UserNotConfirmedException();
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);

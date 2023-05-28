@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { UUID } from "../../src/__tests__/patterns";
 import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
+import { UserNotConfirmedException } from "../../src/errors";
 
 describe(
   "CognitoIdentityServiceProvider.initiateAuth",
@@ -76,6 +77,39 @@ describe(
         },
         Session: expect.stringMatching(UUID),
       });
+    });
+
+    it("handles users with UNCONFIRMED status", async () => {
+      const client = Cognito();
+
+      const upc = await client
+        .createUserPoolClient({
+          UserPoolId: "test",
+          ClientName: "test",
+        })
+        .promise();
+
+      await client
+        .signUp({
+          ClientId: upc.UserPoolClient?.ClientId!,
+          Password: "def",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "abc",
+        })
+        .promise();
+
+      await expect(
+        client
+          .initiateAuth({
+            ClientId: upc.UserPoolClient?.ClientId!,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: "abc",
+              PASSWORD: "def",
+            },
+          })
+          .promise()
+      ).rejects.toEqual(new UserNotConfirmedException());
     });
 
     it("can authenticate users with USER_PASSWORD_AUTH auth flow", async () => {
