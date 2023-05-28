@@ -1,3 +1,10 @@
+## [3.23.2](https://github.com/jagregory/cognito-local/compare/v3.23.1...v3.23.2) (2023-05-28)
+
+
+### Bug Fixes
+
+* **InitiateAuth:** handle UNCONFIRMED user login attempt ([93a452b](https://github.com/jagregory/cognito-local/commit/93a452b1f8ef72510554df29467402856aaddf08))
+
 ## [3.23.1](https://github.com/jagregory/cognito-local/compare/v3.23.0...v3.23.1) (2023-03-11)
 
 
