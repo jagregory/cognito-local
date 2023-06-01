@@ -126,4 +126,20 @@ describe("HTTP server", () => {
       });
     });
   });
+
+  describe("OpenId Configuration Endpoint", () => {
+    it("responds with open id configuration", async () => {
+      const server = createServer(jest.fn(), MockLogger as any);
+
+      const response = await supertest(server.application).get(
+        "/any-user-pool/.well-known/openid-configuration"
+      );
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual({
+        id_token_signing_alg_values_supported: ["RS256"],
+        jwks_uri: `http://localhost:9229/any-user-pool/.well-known/jwks.json`,
+        issuer: `http://localhost:9229/any-user-pool`,
+      });
+    });
+  });
 });
