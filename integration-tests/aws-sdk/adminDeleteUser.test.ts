@@ -58,7 +58,7 @@ describe(
               UserPoolId: "test",
             })
             .promise()
-        ).rejects.toEqual(new UserNotFoundError("User does not exist"));
+        ).rejects.toEqual(new UserNotFoundError("User does not exist."));
       });
 
       it("deletes a user with an email address as a username", async () => {
@@ -109,7 +109,7 @@ describe(
               UserPoolId: "test",
             })
             .promise()
-        ).rejects.toEqual(new UserNotFoundError("User does not exist"));
+        ).rejects.toEqual(new UserNotFoundError("User does not exist."));
       });
     },
     {

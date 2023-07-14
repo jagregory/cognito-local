@@ -45,8 +45,40 @@ describe("AdminConfirmSignUp target", () => {
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
+  it.each([
+    "CONFIRMED",
+    "ARCHIVED",
+    "COMPROMISED",
+    "UNKNOWN",
+    "RESET_REQUIRED",
+    "FORCE_CHANGE_PASSWORD",
+    "something else",
+  ])("throws if the user has status %s", async (status) => {
+    const user = TDB.user({
+      UserStatus: status,
+    });
+
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+    await expect(
+      adminConfirmSignUp(TestContext, {
+        ClientMetadata: {
+          client: "metadata",
+        },
+        Username: user.Username,
+        UserPoolId: "test",
+      })
+    ).rejects.toEqual(
+      new NotAuthorizedError(
+        `User cannot be confirmed. Current status is ${status}`
+      )
+    );
+  });
+
   it("updates the user's status", async () => {
-    const user = TDB.user();
+    const user = TDB.user({
+      UserStatus: "UNCONFIRMED",
+    });
 
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
@@ -71,7 +103,9 @@ describe("AdminConfirmSignUp target", () => {
         (trigger) => trigger === "PostConfirmation"
       );
 
-      const user = TDB.user();
+      const user = TDB.user({
+        UserStatus: "UNCONFIRMED",
+      });
 
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
@@ -103,7 +137,9 @@ describe("AdminConfirmSignUp target", () => {
     it("invokes the trigger", async () => {
       mockTriggers.enabled.mockReturnValue(false);
 
-      const user = TDB.user();
+      const user = TDB.user({
+        UserStatus: "UNCONFIRMED",
+      });
 
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 

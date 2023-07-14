@@ -19,7 +19,7 @@ export const AdminGetUser =
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
-      throw new UserNotFoundError("User does not exist");
+      throw new UserNotFoundError("User does not exist.");
     }
 
     return {

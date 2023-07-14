@@ -2,6 +2,7 @@ import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovide
 import { Lambda, PreSignUpTriggerResponse } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
 import { Trigger } from "./trigger";
+import { UserLambdaValidationError } from "../../errors";
 
 export type PreSignUpTrigger = Trigger<
   {

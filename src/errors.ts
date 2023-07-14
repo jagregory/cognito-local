@@ -5,18 +5,18 @@ export class CognitoError extends Error {
 
   public constructor(code: string, message: string) {
     super(message);
-    this.code = `CognitoLocal#${code}`;
+    this.code = `${code}`;
   }
 }
 
 export class NotAuthorizedError extends CognitoError {
-  public constructor() {
-    super("NotAuthorizedException", "User not authorized");
+  public constructor(message = "User not authorized") {
+    super("NotAuthorizedException", message);
   }
 }
 
 export class UserNotFoundError extends CognitoError {
-  public constructor(message = "User not found") {
+  public constructor(message = "User not found.") {
     super("UserNotFoundException", message);
   }
 }
@@ -33,6 +33,15 @@ export class CodeMismatchError extends CognitoError {
   }
 }
 
+export class ExpiredCodeError extends CognitoError {
+  public constructor() {
+    super(
+      "ExpiredCodeException",
+      "Invalid code provided, please request a code again."
+    );
+  }
+}
+
 export class InvalidPasswordError extends CognitoError {
   public constructor() {
     super("InvalidPasswordException", "Invalid password");
@@ -42,6 +51,12 @@ export class InvalidPasswordError extends CognitoError {
 export class PasswordResetRequiredError extends CognitoError {
   public constructor() {
     super("PasswordResetRequiredException", "Password reset required");
+  }
+}
+
+export class UserNotConfirmedException extends CognitoError {
+  public constructor() {
+    super("UserNotConfirmedException", "User is not confirmed.");
   }
 }
 

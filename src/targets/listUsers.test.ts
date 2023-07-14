@@ -48,7 +48,24 @@ describe("ListUsers target", () => {
   });
 
   it.todo("supports AttributesToGet to specify which attributes to return");
-  it.todo("supports Filter to filter users before returning");
+
+  it("supports Filter to filter users before returning", async () => {
+    mockUserPoolService.listUsers.mockResolvedValue([]);
+
+    const output = await listUsers(TestContext, {
+      UserPoolId: "userPoolId",
+      Filter: 'username = "abc"',
+    });
+
+    expect(output).toBeDefined();
+    expect(output.Users).toEqual([]);
+
+    expect(mockUserPoolService.listUsers).toHaveBeenCalledWith(
+      TestContext,
+      'username = "abc"'
+    );
+  });
+
   it.todo("supports Limit to specify the number of users to return");
   it.todo("supports PaginationToken to paginate results");
 });

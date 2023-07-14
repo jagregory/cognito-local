@@ -255,14 +255,14 @@ export const createServer = (
 
           req.log.error(`Cognito Local unsupported feature: ${ex.message}`);
           res.status(500).json({
-            code: "CognitoLocal#Unsupported",
+            __type: "CognitoLocal#Unsupported",
             message: `Cognito Local unsupported feature: ${ex.message}`,
           });
           return;
         } else if (ex instanceof CognitoError) {
           req.log.warn(ex, `Error handling target: ${target}`);
           res.status(400).json({
-            code: ex.code,
+            __type: ex.code,
             message: ex.message,
           });
           return;

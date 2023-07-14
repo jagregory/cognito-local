@@ -1,3 +1,45 @@
+## [3.23.2](https://github.com/jagregory/cognito-local/compare/v3.23.1...v3.23.2) (2023-05-28)
+
+
+### Bug Fixes
+
+* **InitiateAuth:** handle UNCONFIRMED user login attempt ([93a452b](https://github.com/jagregory/cognito-local/commit/93a452b1f8ef72510554df29467402856aaddf08))
+
+## [3.23.1](https://github.com/jagregory/cognito-local/compare/v3.23.0...v3.23.1) (2023-03-11)
+
+
+### Bug Fixes
+
+* **api:** confirm user apis return errors for invalid states ([e2975f0](https://github.com/jagregory/cognito-local/commit/e2975f0218ea64f25024923f74bfa9a69e90fb8c))
+
+# [3.23.0](https://github.com/jagregory/cognito-local/compare/v3.22.0...v3.23.0) (2023-03-11)
+
+
+### Bug Fixes
+
+* **lambda:** unhandled errors in lambda return correct error message ([c9821d1](https://github.com/jagregory/cognito-local/commit/c9821d1ae11f7fddc976f89451880439008c2005))
+
+
+### Features
+
+* **api:** listUsers support for Filter ([5ebcf24](https://github.com/jagregory/cognito-local/commit/5ebcf2460f57c1d3dfed8fa42969791aa58087da)), closes [#313](https://github.com/jagregory/cognito-local/issues/313)
+
+# [3.22.0](https://github.com/jagregory/cognito-local/compare/v3.21.2...v3.22.0) (2023-03-10)
+
+
+### Features
+
+* **confirmationCodes:** add CODE environment variable to pre-define the confirmation codes ([2c823f0](https://github.com/jagregory/cognito-local/commit/2c823f0fe08c9d74754857f2433044d401ddb683))
+* **confirmationCodes:** update README file ([9143469](https://github.com/jagregory/cognito-local/commit/9143469744a9eab86ac40e372e0be21992d1c503))
+
+## [3.21.2](https://github.com/jagregory/cognito-local/compare/v3.21.1...v3.21.2) (2023-03-10)
+
+
+### Bug Fixes
+
+* **errorFormat:** make exception format more consistent with real Cognito exceptions ([e67576b](https://github.com/jagregory/cognito-local/commit/e67576b85571a7d905be0e86c76aaec623ba5eb0))
+* **tests:** newer node versions were starting express in ipv6 ([efc08a7](https://github.com/jagregory/cognito-local/commit/efc08a7d56024b4bdb22c4e1617a9f6b7e197acb))
+
 ## [3.21.1](https://github.com/jagregory/cognito-local/compare/v3.21.0...v3.21.1) (2022-08-01)
 
 

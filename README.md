@@ -132,7 +132,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | VerifySoftwareToken              | ❌                   |
 | VerifyUserAttribute              | ✅                   |
 
-> ¹ does not support pagination or query filters, all results and attributes will be returned in the first request.
+> ¹ does not support pagination or attribute filters, all results and attributes will be returned in the first request.
 >
 > ² "requires developer credentials" is not enforced
 
@@ -481,6 +481,8 @@ For example:
 ```
 
 If a Custom Message lambda is configured, the output of the function invocation will be printed in the console too (verbosely!).
+
+By default, confirmation codes are randomly generated.  If set, the value assigned to the `CODE` environment variable will always be returned instead.
 
 ## Advanced
 

@@ -10,6 +10,7 @@ import {
   NotAuthorizedError,
   PasswordResetRequiredError,
   UnsupportedError,
+  UserNotConfirmedException,
 } from "../errors";
 import { Services, UserPoolService } from "../services";
 import { AppClient } from "../services/appClient";
@@ -179,6 +180,9 @@ const userPasswordAuthFlow = async (
   }
   if (user.Password !== req.AuthParameters.PASSWORD) {
     throw new InvalidPasswordError();
+  }
+  if (user.UserStatus === "UNCONFIRMED") {
+    throw new UserNotConfirmedException();
   }
 
   if (

@@ -6,11 +6,19 @@ describe(
     it("confirms a user", async () => {
       const client = Cognito();
 
+      const upc = await client
+        .createUserPoolClient({
+          UserPoolId: "test",
+          ClientName: "test",
+        })
+        .promise();
+
       await client
-        .adminCreateUser({
+        .signUp({
           UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
           Username: "abc",
-          UserPoolId: "test",
+          ClientId: upc.UserPoolClient?.ClientId!,
+          Password: "def",
         })
         .promise();
 
@@ -21,7 +29,7 @@ describe(
         })
         .promise();
 
-      expect(user.UserStatus).toEqual("FORCE_CHANGE_PASSWORD");
+      expect(user.UserStatus).toEqual("UNCONFIRMED");
 
       await client
         .adminConfirmSignUp({

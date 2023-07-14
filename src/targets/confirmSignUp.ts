@@ -2,7 +2,11 @@ import {
   ConfirmSignUpRequest,
   ConfirmSignUpResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { CodeMismatchError, NotAuthorizedError } from "../errors";
+import {
+  CodeMismatchError,
+  ExpiredCodeError,
+  NotAuthorizedError,
+} from "../errors";
 import { Services } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import { Target } from "./Target";
@@ -23,6 +27,10 @@ export const ConfirmSignUp =
     const user = await userPool.getUserByUsername(ctx, req.Username);
     if (!user) {
       throw new NotAuthorizedError();
+    }
+
+    if (!user.ConfirmationCode) {
+      throw new ExpiredCodeError();
     }
 
     if (user.ConfirmationCode !== req.ConfirmationCode) {

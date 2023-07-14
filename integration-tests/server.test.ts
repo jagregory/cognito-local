@@ -89,7 +89,7 @@ describe("HTTP server", () => {
 
         expect(response.status).toEqual(500);
         expect(response.body).toEqual({
-          code: "CognitoLocal#Unsupported",
+          __type: "CognitoLocal#Unsupported",
           message: "Cognito Local unsupported feature: integration test",
         });
       });
@@ -119,7 +119,7 @@ describe("HTTP server", () => {
 
           expect(response.status).toEqual(400);
           expect(response.body).toEqual({
-            code: `CognitoLocal#${code}`,
+            __type: `${code}`,
             message,
           });
         }

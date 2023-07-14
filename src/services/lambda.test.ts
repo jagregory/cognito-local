@@ -143,6 +143,41 @@ describe("Lambda function invoker", () => {
         );
       });
 
+      it("throws if the function returns an Unhandled error with a 200 status code and a errorMessage payload", async () => {
+        // this seems to happen whenever userland code throws an error which isn't handled
+        const response = Promise.resolve({
+          StatusCode: 200,
+          FunctionError: "Unhandled",
+          Payload: '{"errorMessage":"Something bad in Userland"}',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            UserMigration: "MyLambdaName",
+          },
+          mockLambdaClient
+        );
+
+        await expect(
+          lambda.invoke(TestContext, "UserMigration", {
+            clientId: "clientId",
+            clientMetadata: undefined,
+            password: "password",
+            triggerSource: "UserMigration_Authentication",
+            userAttributes: {},
+            username: "username",
+            userPoolId: "userPoolId",
+            validationData: undefined,
+          })
+        ).rejects.toEqual(
+          new UserLambdaValidationError(
+            "MyLambdaName failed with error Something bad in Userland."
+          )
+        );
+      });
+
       it("returns Buffer payload as json", async () => {
         const response = Promise.resolve({
           StatusCode: 200,

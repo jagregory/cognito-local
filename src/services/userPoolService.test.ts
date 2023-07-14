@@ -508,6 +508,13 @@ describe("User Pool Service", () => {
       expect(users).not.toBeNull();
       expect(users).toEqual([user1, user2]);
     });
+
+    it("can filter users", async () => {
+      const users = await userPool.listUsers(TestContext, 'username = "2"');
+
+      expect(users).not.toBeNull();
+      expect(users).toEqual([user2]);
+    });
   });
 
   describe("attributes", () => {
