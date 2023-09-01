@@ -197,13 +197,31 @@ export const createServer = (
       token_use: "access",
     };
 
+    const idToken = {
+      sub: clientId,
+      client_id: clientId,
+      jti: uuid.v4(),
+      auth_time: now,
+      iat: now,
+      token_use: "id",
+      "custom:tenant_id": uuid.v4(),
+    };
+
     res.status(200).json({
       access_token: jwt.sign(accessToken, PrivateKey.pem, {
         algorithm: "RS256",
-        issuer: `https://cognito-idp.{region}.amazonaws.com/${userPoolClient.UserPoolId}`,
+        issuer: `https://cognito-local/${userPoolClient.UserPoolId}`,
         expiresIn: 3600,
         keyid: "CognitoLocal",
       }),
+      expiresIn: 3600,
+      id_token: jwt.sign(idToken, PrivateKey.pem, {
+        algorithm: "RS256",
+        issuer: `https://cognito-local/${userPoolClient.UserPoolId}`,
+        expiresIn: 3600,
+        keyid: "CognitoLocal",
+      }),
+      token_type: "Bearer",
     });
   });
 
