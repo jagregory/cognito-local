@@ -81,6 +81,7 @@ export const createDefaultServer = async (
       triggers,
     }),
     logger,
+    cognitoClient,
     {
       development: !!process.env.COGNITO_LOCAL_DEVMODE,
     }

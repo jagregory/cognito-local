@@ -86,7 +86,7 @@ export const withCognitoSdk =
           DefaultConfig.TokenConfig
         ),
       });
-      const server = createServer(router, ctx.logger);
+      const server = createServer(router, ctx.logger, cognitoClient);
       httpServer = await server.start({
         hostname: "127.0.0.1",
         port: 0,
