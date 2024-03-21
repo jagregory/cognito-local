@@ -1,3 +1,10 @@
+## [3.23.3](https://github.com/jagregory/cognito-local/compare/v3.23.2...v3.23.3) (2024-03-21)
+
+
+### Bug Fixes
+
+* add openid-configuration endpoint ([14a6507](https://github.com/jagregory/cognito-local/commit/14a65070dc6fe281f60452e612057dab4975a905))
+
 ## [3.23.2](https://github.com/jagregory/cognito-local/compare/v3.23.1...v3.23.2) (2023-05-28)
 
 
