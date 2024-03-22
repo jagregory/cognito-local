@@ -204,6 +204,7 @@ const userPasswordAuthFlow = async (
       username: user.Username,
       userPoolId: userPool.options.Id,
     });
+    user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
   }
 
   return verifyPasswordChallenge(
