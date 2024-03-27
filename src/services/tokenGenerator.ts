@@ -160,7 +160,7 @@ export class JwtTokenGenerator implements TokenGenerator {
       auth_time: authTime,
       email: attributeValue("email", user.Attributes),
       email_verified: Boolean(
-        attributeValue("email_verified", user.Attributes) ?? false
+        "true" == attributeValue("email_verified", user.Attributes) ?? false
       ),
       event_id: eventId,
       iat: authTime,
