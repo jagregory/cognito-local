@@ -36,7 +36,7 @@ describe("GetUser target", () => {
           auth_time: new Date(),
           jti: uuid.v4(),
           client_id: "test",
-          username: user.Username,
+          username: attributeValue("sub", user.Attributes),
         },
         PrivateKey.pem,
         {
@@ -51,7 +51,7 @@ describe("GetUser target", () => {
     expect(output).toBeDefined();
     expect(output).toEqual({
       UserAttributes: user.Attributes,
-      Username: user.Username,
+      Username: attributeValue("sub", user.Attributes),
     });
   });
 

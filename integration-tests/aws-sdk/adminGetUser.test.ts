@@ -1,5 +1,6 @@
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { withCognitoSdk } from "./setup";
+import { attributeValue } from "../../src/services/userPoolService";
 
 const currentDate = new Date();
 const roundedDate = new Date(currentDate.getTime());
@@ -36,7 +37,7 @@ describe(
           UserAttributes: createUserResult.User?.Attributes,
           UserCreateDate: createUserResult.User?.UserCreateDate,
           UserLastModifiedDate: createUserResult.User?.UserLastModifiedDate,
-          Username: createUserResult.User?.Username,
+          Username: attributeValue("sub", createUserResult.User?.Attributes),
           UserStatus: createUserResult.User?.UserStatus,
         });
       });
