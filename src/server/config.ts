@@ -19,6 +19,9 @@ export interface Config {
   TokenConfig: TokenConfig;
 }
 
+const hostname = process.env.HOST ?? "localhost";
+const port = process.env.PORT ?? "9229";
+
 export const DefaultConfig: Config = {
   LambdaClient: {
     credentials: {
@@ -32,8 +35,7 @@ export const DefaultConfig: Config = {
     UsernameAttributes: ["email"],
   },
   TokenConfig: {
-    // TODO: this needs to match the actual host/port we started the server on
-    IssuerDomain: "http://localhost:9229",
+    IssuerDomain: `http://${hostname}:${port}`,
   },
   KMSConfig: {
     credentials: {
