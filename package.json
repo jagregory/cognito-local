@@ -1,5 +1,5 @@
 {
-  "name": "cognito-local",
+  "name": "@michaelruocco/cognito-local",
   "version": "0.0.0-development",
   "license": "MIT",
   "bin": "lib/bin/start.js",
