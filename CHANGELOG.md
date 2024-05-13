@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/michaelruocco/cognito-local/compare/v1.2.0...v1.2.1) (2024-05-13)
+
+
+### Bug Fixes
+
+* **server:** fixes issuer host configuration ([479267f](https://github.com/michaelruocco/cognito-local/commit/479267fe82c4815abc643ff658e529fb36568367))
+
 # [1.2.0](https://github.com/michaelruocco/cognito-local/compare/v1.1.0...v1.2.0) (2024-05-13)
 
 
