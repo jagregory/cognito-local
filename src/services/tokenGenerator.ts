@@ -263,6 +263,7 @@ export class JwtTokenGenerator implements TokenGenerator {
       token_use: "access",
     };
 
+    //bump commit comment
     const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
 
     return await Promise.resolve({
