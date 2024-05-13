@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/michaelruocco/cognito-local/compare/v1.1.0...v1.2.0) (2024-05-13)
+
+
+### Features
+
+* **release:** try public package name ([86d71ba](https://github.com/michaelruocco/cognito-local/commit/86d71ba6174c04ee70caa0cef8f9f40a3ef7607e))
+
 # [1.1.0](https://github.com/michaelruocco/cognito-local/compare/v1.0.0...v1.1.0) (2024-05-13)
 
 
