@@ -1,6 +1,6 @@
 # Cognito Local
 
-![CI](https://github.com/jagregory/cognito-local/workflows/CI/badge.svg)
+![CI](https://github.com/michaelruocco/cognito-local/workflows/CI/badge.svg)
 
 A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cognito/).
 
@@ -220,13 +220,13 @@ cognito-local how to connect to your local Lambda server:
 
 ### via Docker
 
-    docker run --publish 9229:9229 jagregory/cognito-local:latest
+    docker run --publish 9229:9229 michaelruocco/cognito-local:latest
 
 Cognito Local will now be listening on `http://localhost:9229`.
 
 To persist your database between runs, mount the `/app/.cognito` volume to your host machine:
 
-    docker run --publish 9229:9229 --volume $(pwd)/.cognito:/app/.cognito jagregory/cognito-local:latest
+    docker run --publish 9229:9229 --volume $(pwd)/.cognito:/app/.cognito michaelruocco/cognito-local:latest
 
 ### via Node
 
@@ -252,12 +252,12 @@ environment variable:
 If you're running in Docker, you can also rebind the [published ports](https://docs.docker.com/config/containers/container-networking/#published-ports)
 when you run:
 
-`docker run -p4000:9229 jagregory/cognito-local`
+`docker run -p4000:9229 michaelruocco/cognito-local`
 
 Or combine the two approaches by [setting an environment variable](https://docs.docker.com/engine/reference/commandline/run/#set-environment-variables--e---env---env-file)
 when you run:
 
-`docker run -p4000:4000 -e PORT=4000 jagregory/cognito-local`
+`docker run -p4000:4000 -e PORT=4000 michaelruocco/cognito-local`
 
 The same can be done in docker-compose with [environment variables](https://docs.docker.com/compose/environment-variables/#set-environment-variables-in-containers)
 and [port binding](https://docs.docker.com/compose/networking/) in compose.
@@ -482,7 +482,7 @@ For example:
 
 If a Custom Message lambda is configured, the output of the function invocation will be printed in the console too (verbosely!).
 
-By default, confirmation codes are randomly generated.  If set, the value assigned to the `CODE` environment variable will always be returned instead.
+By default, confirmation codes are randomly generated. If set, the value assigned to the `CODE` environment variable will always be returned instead.
 
 ## Advanced
 
