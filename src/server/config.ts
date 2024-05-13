@@ -19,7 +19,7 @@ export interface Config {
   TokenConfig: TokenConfig;
 }
 
-const hostname = process.env.HOST ?? "localhost";
+const hostname = process.env.ISSUER_HOST ?? "localhost";
 const port = process.env.PORT ?? "9229";
 
 export const DefaultConfig: Config = {

@@ -55,7 +55,7 @@ export const createServer = (
     });
   });
 
-  const hostname = process.env.HOST ?? "localhost";
+  const hostname = process.env.ISSUER_HOST ?? "localhost";
   const port = process.env.PORT ?? "9229";
 
   app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
