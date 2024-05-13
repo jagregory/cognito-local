@@ -4,7 +4,7 @@ import express from "express";
 import * as http from "http";
 import type { Logger } from "pino";
 import * as uuid from "uuid";
-import { CognitoError, UnsupportedError } from "../errors";
+import { CognitoError, UnsupportedError, NotAuthorizedError } from "../errors";
 import { Router } from "./Router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import Pino from "pino-http";
@@ -68,6 +68,60 @@ export const createServer = (
 
   app.get("/health", (req, res) => {
     res.status(200).json({ ok: true });
+  });
+
+  app.post("/:userPoolId/oauth2/token", (req, res) => {
+    let rawBody = "";
+    req.setEncoding("utf8");
+    req.on("data", function (chunk) {
+      rawBody += chunk;
+    });
+    req.on("end", function () {
+      const target = "GetToken";
+      const route = router(target);
+
+      const parsed = new URLSearchParams(rawBody);
+      const params = {
+        grant_type: parsed.get("grant_type"),
+        client_id: parsed.get("client_id"),
+        client_secret: parsed.get("client_secret"),
+        refresh_token: parsed.get("refresh_token"),
+      };
+
+      const auth = req.get("Authorization");
+      if (auth && auth.startsWith("Basic ")) {
+        const sliced = auth.slice("Basic ".length);
+        const buff = Buffer.from(sliced, "base64");
+        const decoded = buff.toString("ascii");
+        const creds = decoded.split(":");
+        if (creds.length == 2) {
+          params.client_id = creds[0];
+          params.client_secret = creds[1];
+        }
+      }
+
+      route({ logger: req.log }, params).then(
+        (output) => {
+          res.status(200).type("json").send(JSON.stringify(output));
+        },
+        (ex) => {
+          req.log.warn(ex, `Error handling target: ${target}`);
+          if (ex instanceof NotAuthorizedError) {
+            res.status(401).json(ex);
+            return;
+          } else if (ex instanceof CognitoError) {
+            res.status(400).json({
+              code: ex.code,
+              message: ex.message,
+            });
+            return;
+          } else {
+            res.status(500).json(ex);
+            return;
+          }
+        }
+      );
+    });
   });
 
   app.post("/", (req, res) => {
