@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/michaelruocco/cognito-local/compare/v1.0.0...v1.1.0) (2024-05-13)
+
+
+### Features
+
+* **release:** bump commit to try and trigger release ([2a68b9c](https://github.com/michaelruocco/cognito-local/commit/2a68b9c30a7c96e4d88fc0b8f627cf078253e766))
+
 # 1.0.0 (2024-05-13)
 
 
