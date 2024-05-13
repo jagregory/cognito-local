@@ -86,8 +86,8 @@ const applyTokenOverrides = (
 
 export interface Tokens {
   readonly AccessToken: string;
-  readonly IdToken?: string;
-  readonly RefreshToken?: string;
+  readonly IdToken: string;
+  readonly RefreshToken: string;
 }
 
 export interface TokenGenerator {
@@ -276,6 +276,8 @@ export class JwtTokenGenerator implements TokenGenerator {
         ),
         keyid: "CognitoLocal",
       }),
+      IdToken: "",
+      RefreshToken: "",
     });
   }
 }

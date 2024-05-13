@@ -1,10 +1,9 @@
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
-import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { CognitoService, Triggers, UserPoolService } from "../services";
+import { CognitoService, UserPoolService } from "../services";
 import { TokenGenerator } from "../services/tokenGenerator";
 
 import { GetToken, GetTokenTarget } from "./getToken";
@@ -13,7 +12,6 @@ describe("GetToken target", () => {
   let getToken: GetTokenTarget;
   let mockCognitoService: jest.Mocked<CognitoService>;
   let mockTokenGenerator: jest.Mocked<TokenGenerator>;
-  let mockTriggers: jest.Mocked<Triggers>;
   let mockUserPoolService: jest.Mocked<UserPoolService>;
   const userPoolClient = TDB.appClient();
 
@@ -23,7 +21,6 @@ describe("GetToken target", () => {
     });
     mockCognitoService = newMockCognitoService(mockUserPoolService);
     mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
-    mockTriggers = newMockTriggers();
     mockTokenGenerator = newMockTokenGenerator();
     getToken = GetToken({
       cognito: mockCognitoService,
@@ -86,8 +83,8 @@ describe("GetToken target - Client Creds", () => {
   it("issues access tokens via client credentials", async () => {
     mockTokenGenerator.generateWithClientCreds.mockResolvedValue({
       AccessToken: "access",
-      RefreshToken: null,
-      IdToken: null,
+      IdToken: "",
+      RefreshToken: "",
     });
 
     const response = await getToken(TestContext, {
