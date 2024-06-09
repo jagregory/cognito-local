@@ -45,7 +45,6 @@ import { UpdateUserAttributes } from "./updateUserAttributes";
 import { UpdateUserPool } from "./updateUserPool";
 import { UpdateUserPoolClient } from "./updateUserPoolClient";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
-import { GetToken } from "./getToken";
 
 export const Targets = {
   AddCustomAttributes,
@@ -94,8 +93,4 @@ export const Targets = {
   UpdateUserPool,
   UpdateUserPoolClient,
   VerifyUserAttribute,
-  // Not a real Cognito target
-  // but helps support Cognito's oauth flows
-  // https://docs.aws.amazon.com/cognito/latest/developerguide/token-endpoint.html
-  GetToken,
 } as const;

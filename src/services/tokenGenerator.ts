@@ -104,10 +104,6 @@ export interface TokenGenerator {
       | "NewPasswordChallenge"
       | "RefreshTokens"
   ): Promise<Tokens>;
-  generateWithClientCreds(
-    ctx: Context,
-    userPoolClient: AppClient
-  ): Promise<Tokens>;
 }
 
 const formatExpiration = (
@@ -243,42 +239,5 @@ export class JwtTokenGenerator implements TokenGenerator {
         }
       ),
     };
-  }
-
-  public async generateWithClientCreds(
-    ctx: Context,
-    userPoolClient: AppClient
-  ): Promise<Tokens> {
-    const eventId = uuid.v4();
-    const authTime = Math.floor(this.clock.get().getTime() / 1000);
-
-    const accessToken: RawToken = {
-      auth_time: authTime,
-      client_id: userPoolClient.ClientId,
-      event_id: eventId,
-      iat: authTime,
-      jti: uuid.v4(),
-      scope: "aws.cognito.signin.user.admin", // TODO: scopes
-      sub: userPoolClient.ClientId,
-      token_use: "access",
-    };
-
-    //bump commit comment
-    const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
-
-    return await Promise.resolve({
-      AccessToken: jwt.sign(accessToken, PrivateKey.pem, {
-        algorithm: "RS256",
-        issuer,
-        expiresIn: formatExpiration(
-          userPoolClient.AccessTokenValidity,
-          userPoolClient.TokenValidityUnits?.AccessToken ?? "hours",
-          "24h"
-        ),
-        keyid: "CognitoLocal",
-      }),
-      IdToken: "",
-      RefreshToken: "",
-    });
   }
 }
