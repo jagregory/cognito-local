@@ -412,7 +412,7 @@ export class LambdaService implements Lambda {
       case "CustomMessage_UpdateUserAttribute":
       case "CustomMessage_VerifyUserAttribute":
       case "CustomMessage_Authentication": {
-        return {
+        const customEvent: CustomMessageTriggerEvent = {
           version,
           callerContext,
           region,
@@ -424,6 +424,7 @@ export class LambdaService implements Lambda {
             codeParameter: event.codeParameter,
             usernameParameter: event.usernameParameter,
             userAttributes: event.userAttributes,
+            linkParameter: "",
           },
           response: {
             smsMessage: "",
@@ -431,6 +432,7 @@ export class LambdaService implements Lambda {
             emailSubject: "",
           },
         };
+        return customEvent;
       }
 
       case "CustomEmailSender_SignUp":

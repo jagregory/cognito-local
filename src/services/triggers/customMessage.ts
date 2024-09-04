@@ -73,7 +73,7 @@ export const CustomMessage =
         userPoolId,
       });
 
-      return {
+      const result = {
         emailMessage: response.emailMessage
           ?.replace(AWS_CODE_PARAMETER, code)
           .replace(AWS_USERNAME_PARAMETER, username),
@@ -81,7 +81,13 @@ export const CustomMessage =
         smsMessage: response.smsMessage
           ?.replace(AWS_CODE_PARAMETER, code)
           .replace(AWS_USERNAME_PARAMETER, username),
+      } as {
+        emailMessage: string | null;
+        emailSubject: string | null;
+        smsMessage: string | null;
       };
+
+      return result;
     } catch (ex) {
       ctx.logger.error(ex);
       return null;

@@ -94,7 +94,7 @@ export class MessagesService implements Messages {
     clientMetadata: Record<string, string> | undefined
   ): Promise<Message> {
     if (this.triggers.enabled("CustomMessage")) {
-      const message = await this.triggers.customMessage(ctx, {
+      const message = (await this.triggers.customMessage(ctx, {
         clientId: clientId ?? AWS_ADMIN_CLIENT_ID,
         clientMetadata,
         code,
@@ -102,7 +102,11 @@ export class MessagesService implements Messages {
         userAttributes: user.Attributes,
         username: user.Username,
         userPoolId,
-      });
+      })) as {
+        emailMessage: string | undefined;
+        emailSubject: string | undefined;
+        smsMessage: string | undefined;
+      };
 
       return {
         __code: code,
