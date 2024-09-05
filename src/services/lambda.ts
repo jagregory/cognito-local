@@ -21,7 +21,9 @@ import {
 } from "../errors";
 import { Context } from "./context";
 
-type CognitoUserPoolEvent =
+import { request } from "undici";
+
+export type CognitoUserPoolEvent =
   | CreateAuthChallengeTriggerEvent
   | CustomEmailSenderTriggerEvent
   | CustomMessageTriggerEvent
@@ -138,13 +140,13 @@ interface PostConfirmationEvent
 }
 
 export interface FunctionConfig {
-  CustomMessage?: string;
-  PostAuthentication?: string;
-  PostConfirmation?: string;
-  PreSignUp?: string;
-  PreTokenGeneration?: string;
-  UserMigration?: string;
-  CustomEmailSender?: string;
+  CustomMessage?: InvokeFunctionConfig;
+  PostAuthentication?: InvokeFunctionConfig;
+  PostConfirmation?: InvokeFunctionConfig;
+  PreSignUp?: InvokeFunctionConfig;
+  PreTokenGeneration?: HttpFunctionConfig;
+  UserMigration?: InvokeFunctionConfig;
+  CustomEmailSender?: InvokeFunctionConfig;
 }
 
 export type CustomMessageTriggerResponse =
@@ -161,8 +163,23 @@ export type PostConfirmationTriggerResponse =
 export type CustomEmailSenderTriggerResponse =
   CustomEmailSenderTriggerEvent["response"];
 
+export type InvokeFunctionConfig = {
+  adapter: "invoke";
+  name: string;
+};
+export type HttpFunctionConfig = {
+  adapter: "http";
+  url: string;
+};
+
+export type InvokeConfig = InvokeFunctionConfig | HttpFunctionConfig;
+
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
+  getInvokeMetod(
+    invokeConfig: InvokeConfig,
+    event: CognitoUserPoolEvent
+  ): () => Promise<InvocationResponse>;
   invoke(
     ctx: Context,
     lambda: "CustomMessage",
@@ -213,6 +230,32 @@ export class LambdaService implements Lambda {
     return !!this.config[lambda];
   }
 
+  public getInvokeMetod(
+    invokeConfig: InvokeConfig,
+    event: CognitoUserPoolEvent
+  ): () => Promise<InvocationResponse> {
+    if (invokeConfig.adapter === "invoke")
+      return () =>
+        this.lambdaClient
+          .invoke({
+            FunctionName: invokeConfig.name,
+            InvocationType: "RequestResponse",
+            Payload: JSON.stringify(event),
+          })
+          .promise();
+
+    return async () => {
+      const res = await request(invokeConfig.url, {
+        method: "POST",
+        body: JSON.stringify(event),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      return (await res.body.json()) as InvocationResponse;
+    };
+  }
+
   public async invoke(
     ctx: Context,
     trigger: keyof FunctionConfig,
@@ -225,8 +268,8 @@ export class LambdaService implements Lambda {
       | PreTokenGenerationEvent
       | UserMigrationEvent
   ) {
-    const functionName = this.config[trigger];
-    if (!functionName) {
+    const functionConfig = this.config[trigger];
+    if (!functionConfig) {
       throw new Error(`${trigger} trigger not configured`);
     }
 
@@ -234,22 +277,19 @@ export class LambdaService implements Lambda {
 
     ctx.logger.debug(
       {
-        functionName,
+        functionConfig,
         event: JSON.stringify(lambdaEvent, undefined, 2),
       },
-      `Invoking "${functionName}" with event`
+      `Triggering via adapter:"${functionConfig.adapter}"`
     );
+
+    const invokeMethod = this.getInvokeMetod(functionConfig, lambdaEvent);
     let result: InvocationResponse;
+
     try {
-      result = await this.lambdaClient
-        .invoke({
-          FunctionName: functionName,
-          InvocationType: "RequestResponse",
-          Payload: JSON.stringify(lambdaEvent),
-        })
-        .promise();
-    } catch (ex) {
-      ctx.logger.error(ex);
+      result = await invokeMethod();
+    } catch (e) {
+      ctx.logger.error(e);
       throw new UnexpectedLambdaExceptionError();
     }
 
@@ -273,7 +313,9 @@ export class LambdaService implements Lambda {
 
         if (parsedPayload.errorMessage) {
           throw new UserLambdaValidationError(
-            `${functionName} failed with error ${parsedPayload.errorMessage}.`
+            `${this.createLambdaAdapterError(
+              functionConfig
+            )} failed with error ${parsedPayload.errorMessage}.`
           );
         }
       }
@@ -460,5 +502,9 @@ export class LambdaService implements Lambda {
         throw new Error("Unsupported Trigger Source");
       }
     }
+  }
+  private createLambdaAdapterError(config: InvokeConfig): string {
+    if (config.adapter === "invoke") return config.name;
+    return config.url;
   }
 }
