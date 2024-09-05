@@ -501,6 +501,7 @@ describe("Lambda function invoker", () => {
         );
 
         await lambda.invoke(TestContext, trigger, {
+          version: "1",
           clientId: "clientId",
           triggerSource: source,
           username: "username",

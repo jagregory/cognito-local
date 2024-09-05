@@ -31,9 +31,9 @@ describe("JwtTokenGenerator", () => {
   describe("TokenGeneration lambda is configured", () => {
     it("can add and override claims to the id token", async () => {
       mockTriggers.enabled.mockImplementation((name) => {
-        return name === "PreTokenGeneration";
+        return name === "PreTokenGenerationV1";
       });
-      mockTriggers.preTokenGeneration.mockResolvedValue({
+      mockTriggers.preTokenGenerationV1.mockResolvedValue({
         claimsOverrideDetails: {
           claimsToAddOrOverride: {
             newclaim: "value",
@@ -70,9 +70,9 @@ describe("JwtTokenGenerator", () => {
 
     it("can suppress claims in the id token", async () => {
       mockTriggers.enabled.mockImplementation((name) => {
-        return name === "PreTokenGeneration";
+        return name === "PreTokenGenerationV1";
       });
-      mockTriggers.preTokenGeneration.mockResolvedValue({
+      mockTriggers.preTokenGenerationV1.mockResolvedValue({
         claimsOverrideDetails: {
           claimsToSuppress: ["email"],
         },
@@ -100,9 +100,9 @@ describe("JwtTokenGenerator", () => {
 
     it("suppresses claims that are also overridden", async () => {
       mockTriggers.enabled.mockImplementation((name) => {
-        return name === "PreTokenGeneration";
+        return name === "PreTokenGenerationV1";
       });
-      mockTriggers.preTokenGeneration.mockResolvedValue({
+      mockTriggers.preTokenGenerationV1.mockResolvedValue({
         claimsOverrideDetails: {
           claimsToAddOrOverride: {
             email: "something else",
@@ -152,9 +152,9 @@ describe("JwtTokenGenerator", () => {
     ])("reserved claim %s", (claim) => {
       it("cannot override a reserved claim", async () => {
         mockTriggers.enabled.mockImplementation((name) => {
-          return name === "PreTokenGeneration";
+          return name === "PreTokenGenerationV1";
         });
-        mockTriggers.preTokenGeneration.mockResolvedValue({
+        mockTriggers.preTokenGenerationV1.mockResolvedValue({
           claimsOverrideDetails: {
             claimsToAddOrOverride: {
               [claim]: "value",

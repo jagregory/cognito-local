@@ -8,6 +8,7 @@ import {
   PreAuthenticationTriggerEvent,
   PreSignUpTriggerEvent,
   PreTokenGenerationTriggerEvent,
+  PreTokenGenerationV2TriggerEvent,
   UserMigrationTriggerEvent,
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
@@ -33,6 +34,7 @@ export type CognitoUserPoolEvent =
   | PreAuthenticationTriggerEvent
   | PreSignUpTriggerEvent
   | PreTokenGenerationTriggerEvent
+  | PreTokenGenerationV2TriggerEvent
   | UserMigrationTriggerEvent
   | VerifyAuthChallengeResponseTriggerEvent;
 
@@ -88,7 +90,38 @@ interface PreSignUpEvent extends EventCommonParameters {
   validationData: Record<string, string> | undefined;
 }
 
-interface PreTokenGenerationEvent extends EventCommonParameters {
+// clientId: string;
+//   userAttributes: Record<string, string>;
+//   username: string;
+//   userPoolId: string;
+
+// version: string;
+// region: string;
+// userPoolId: string;
+// triggerSource: T;
+// userName: string;
+// callerContext: {
+//     awsSdkVersion: string;
+//     clientId: string;
+// };
+// request: {};
+// response: {};
+// +
+// request: {
+//   userAttributes: StringMap;
+//   groupConfiguration: GroupOverrideDetails;
+//   clientMetadata?: StringMap | undefined;
+// };
+// response: {
+//   claimsOverrideDetails: {
+//       claimsToAddOrOverride?: StringMap | undefined;
+//       claimsToSuppress?: string[] | undefined;
+//       groupOverrideDetails?: GroupOverrideDetails | undefined;
+//   };
+// };
+
+interface PreTokenGenerationV1Event extends EventCommonParameters {
+  version: "1";
   /**
    * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
    * pre token generation trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter
@@ -125,6 +158,48 @@ interface PreTokenGenerationEvent extends EventCommonParameters {
   };
 }
 
+interface PreTokenGenerationV2Event extends EventCommonParameters {
+  version: "2";
+  /**
+   * One or more key-value pairs that you can provide as custom input to the Lambda function that you specify for the
+   * pre token generation trigger. You can pass this data to your Lambda function by using the ClientMetadata parameter
+   * in the AdminRespondToAuthChallenge and RespondToAuthChallenge API actions.
+   */
+  clientMetadata: Record<string, string> | undefined;
+
+  triggerSource:
+    | "TokenGeneration_AuthenticateDevice"
+    | "TokenGeneration_Authentication"
+    | "TokenGeneration_HostedAuth"
+    | "TokenGeneration_NewPasswordChallenge"
+    | "TokenGeneration_RefreshTokens";
+
+  /**
+   * The input object containing the current group configuration. It includes groupsToOverride, iamRolesToOverride, and
+   * preferredRole.
+   */
+  groupConfiguration: {
+    /**
+     * A list of the group names that are associated with the user that the identity token is issued for.
+     */
+    groupsToOverride: readonly string[] | undefined;
+
+    /**
+     * A list of the current IAM roles associated with these groups.
+     */
+    iamRolesToOverride: readonly string[] | undefined;
+
+    /**
+     * A string indicating the preferred IAM role.
+     */
+    preferredRole: string | undefined;
+  };
+}
+
+type PreTokenGenerationEvent =
+  | PreTokenGenerationV1Event
+  | PreTokenGenerationV2Event;
+
 interface PostAuthenticationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
   triggerSource: "PostAuthentication_Authentication";
@@ -139,23 +214,26 @@ interface PostConfirmationEvent
   clientId: string | null;
 }
 
-export interface FunctionConfig {
-  CustomMessage?: InvokeFunctionConfig;
-  PostAuthentication?: InvokeFunctionConfig;
-  PostConfirmation?: InvokeFunctionConfig;
-  PreSignUp?: InvokeFunctionConfig;
-  PreTokenGeneration?: HttpFunctionConfig;
-  UserMigration?: InvokeFunctionConfig;
-  CustomEmailSender?: InvokeFunctionConfig;
-}
+export type FunctionConfig = {
+  CustomMessage?: InvokeConfig;
+  PostAuthentication?: InvokeConfig;
+  PostConfirmation?: InvokeConfig;
+  PreSignUp?: InvokeConfig;
+  PreTokenGenerationV1?: InvokeConfig;
+  PreTokenGenerationV2?: InvokeConfig;
+  UserMigration?: InvokeConfig;
+  CustomEmailSender?: InvokeConfig;
+};
 
 export type CustomMessageTriggerResponse =
   CustomMessageTriggerEvent["response"];
 export type UserMigrationTriggerResponse =
   UserMigrationTriggerEvent["response"];
 export type PreSignUpTriggerResponse = PreSignUpTriggerEvent["response"];
-export type PreTokenGenerationTriggerResponse =
+export type PreTokenGenerationV1TriggerResponse =
   PreTokenGenerationTriggerEvent["response"];
+export type PreTokenGenerationV2TriggerResponse =
+  PreTokenGenerationV2TriggerEvent["response"];
 export type PostAuthenticationTriggerResponse =
   PostAuthenticationTriggerEvent["response"];
 export type PostConfirmationTriggerResponse =
@@ -197,9 +275,14 @@ export interface Lambda {
   ): Promise<PreSignUpTriggerResponse>;
   invoke(
     ctx: Context,
-    lambda: "PreTokenGeneration",
-    event: PreTokenGenerationEvent
-  ): Promise<PreTokenGenerationTriggerResponse>;
+    lambda: "PreTokenGenerationV1",
+    event: PreTokenGenerationV1Event
+  ): Promise<PreTokenGenerationV1TriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "PreTokenGenerationV2",
+    event: PreTokenGenerationV2Event
+  ): Promise<PreTokenGenerationV2TriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostAuthentication",
@@ -331,7 +414,8 @@ export class LambdaService implements Lambda {
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
-      | PreTokenGenerationEvent
+      | PreTokenGenerationV1Event
+      | PreTokenGenerationV2Event
       | UserMigrationEvent
   ): CognitoUserPoolEvent {
     const version = "0"; // TODO: how do we know what this is?
@@ -406,22 +490,47 @@ export class LambdaService implements Lambda {
       case "TokenGeneration_HostedAuth":
       case "TokenGeneration_NewPasswordChallenge":
       case "TokenGeneration_RefreshTokens": {
-        return {
-          version,
-          callerContext,
-          region,
-          userPoolId: event.userPoolId,
-          triggerSource: event.triggerSource,
-          userName: event.username,
-          request: {
-            userAttributes: event.userAttributes,
-            groupConfiguration: {},
-            clientMetadata: event.clientMetadata,
-          },
-          response: {
-            claimsOverrideDetails: {},
-          },
-        };
+        if (event.version === "1") {
+          const v1: PreTokenGenerationTriggerEvent = {
+            version,
+            callerContext,
+            region,
+            userPoolId: event.userPoolId,
+            triggerSource: event.triggerSource,
+            userName: event.username,
+            request: {
+              userAttributes: event.userAttributes,
+              groupConfiguration: {},
+              clientMetadata: event.clientMetadata,
+            },
+            response: {
+              claimsOverrideDetails: {},
+            },
+          };
+          return v1;
+        } else {
+          const v2: PreTokenGenerationV2TriggerEvent = {
+            version,
+            callerContext,
+            region,
+            userPoolId: event.userPoolId,
+            triggerSource: event.triggerSource,
+            userName: event.username,
+            request: {
+              userAttributes: event.userAttributes,
+              groupConfiguration: {},
+              clientMetadata: event.clientMetadata,
+            },
+            response: {
+              claimsAndScopeOverrideDetails: {
+                accessTokenGeneration: {},
+                groupOverrideDetails: {},
+                idTokenGeneration: {},
+              },
+            },
+          };
+          return v2;
+        }
       }
 
       case "UserMigration_Authentication": {
