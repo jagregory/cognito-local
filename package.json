@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts' ! -name '*.test.ts' ! -path '*/__tests__/*') --outdir=lib --platform=node --target=node14 --format=cjs && cp -r src/keys lib/keys",
+    "build": "rm -rf lib && tsc --emitDeclarationOnly --project tsconfig.build.json && esbuild $(find src -name '*.ts' ! -name '*.test.ts' ! -path '*/__tests__/*') --outdir=lib --platform=node --target=node20 --format=cjs && cp -r src/keys lib/keys",
     "format": "prettier --write src/**/*.ts integration-tests/**/*.ts",
     "integration-test": "jest --config integration-tests/jest.config.js",
     "integration-test:watch": "jest --config integration-tests/jest.config.js --watch",
@@ -49,8 +49,8 @@
     "eslint-config-prettier": "^6.15.0",
     "husky": "^7.0.4",
     "jest": "^27.4.3",
-    "jest-extended": "^3.0.1",
     "jest-date-mock": "^1.0.8",
+    "jest-extended": "^3.0.1",
     "lint-staged": "^10.1.3",
     "markdown-toc": "^1.2.0",
     "nodemon": "^2.0.3",
@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@aws-crypto/client-node": "^3.1.1",
+    "@babel/core": "^7.25.2",
     "aws-sdk": "^2.1145.0",
     "body-parser": "^1.19.0",
     "boxen": "^5.1.2",
@@ -91,7 +92,7 @@
   "lint-staged": {
     "*.ts": [
       "eslint --fix --cache",
-      "tsc --target es2019 --moduleResolution node --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
+      "tsc --target es2022 --moduleResolution node --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
       "prettier --write"
     ],
     "README.md": "markdown-toc -i --bullets=- --maxdepth=3"

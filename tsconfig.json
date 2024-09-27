@@ -7,7 +7,7 @@
     "outDir": "./lib",
     "resolveJsonModule": true,
     "strict": true,
-    "target": "ES2019"
+    "target": "ES2022"
   },
   "include": [
     "./setupTests.ts",
