@@ -83,6 +83,8 @@ export const createDefaultServer = async (
     logger,
     {
       development: !!process.env.COGNITO_LOCAL_DEVMODE,
+      hostname: process.env.HOST || "localhost",
+      port: parseInt(process.env.PORT ?? "9229", 10),
     }
   );
 };
