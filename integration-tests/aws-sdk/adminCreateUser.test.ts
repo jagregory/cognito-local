@@ -15,11 +15,18 @@ describe(
       it("creates a user with only the required parameters", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         const createUserResult = await client
           .adminCreateUser({
             UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
             Username: "example@example.com",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -45,12 +52,20 @@ describe(
       it("sends a welcome email", async () => {
         const fakeMessageDelivery = messageDelivery();
         const client = Cognito();
+
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         const createUserResult = await client
           .adminCreateUser({
             DesiredDeliveryMediums: ["EMAIL"],
             UserAttributes: [{ Name: "email", Value: "example@example.com" }],
             Username: "example@example.com",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -88,11 +103,19 @@ describe(
       it("creates a user without sending a welcome email if MessageAction=SUPPRESS is passed", async () => {
         const fakeMessageDelivery = messageDelivery();
         const client = Cognito();
+
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         const createUserResult = await client
           .adminCreateUser({
             MessageAction: "SUPPRESS",
             Username: "example@example.com",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 

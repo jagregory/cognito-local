@@ -6,6 +6,13 @@ describe(
     it("updates a user's attributes", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       await client
         .adminCreateUser({
           UserAttributes: [
@@ -13,21 +20,21 @@ describe(
             { Name: "custom:example", Value: "1" },
           ],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           DesiredDeliveryMediums: ["EMAIL"],
         })
         .promise();
 
       await client
         .adminDisableUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();
 
       let user = await client
         .adminGetUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();
@@ -36,14 +43,14 @@ describe(
 
       await client
         .adminEnableUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();
 
       user = await client
         .adminGetUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();

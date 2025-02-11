@@ -14,10 +14,17 @@ describe(
       it("lists users in a group", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         await client
           .createGroup({
             GroupName: "group-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -27,7 +34,7 @@ describe(
             TemporaryPassword: "def",
             UserAttributes: [{ Name: "email", Value: "example+1@example.com" }],
             Username: "user-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -35,13 +42,13 @@ describe(
           .adminAddUserToGroup({
             Username: "user-1",
             GroupName: "group-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
         const result = await client
           .listUsersInGroup({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             GroupName: "group-1",
           })
           .promise();
@@ -52,16 +59,23 @@ describe(
       it("lists no users in an empty group", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         await client
           .createGroup({
             GroupName: "group-2",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
         const result = await client
           .listUsersInGroup({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             GroupName: "group-2",
           })
           .promise();

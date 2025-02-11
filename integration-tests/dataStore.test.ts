@@ -2,7 +2,6 @@ import fs from "fs";
 import StormDB from "stormdb";
 import { promisify } from "util";
 import { TestContext } from "../src/__tests__/testContext";
-import { InMemoryCache, NoOpCache } from "../src/services/dataStore/cache";
 import { DataStoreFactory } from "../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 
@@ -16,7 +15,7 @@ describe("Data Store", () => {
 
   beforeEach(async () => {
     path = await mkdtemp("/tmp/cognito-local:");
-    factory = new StormDBDataStoreFactory(path, new NoOpCache());
+    factory = new StormDBDataStoreFactory(path);
   });
 
   afterEach(() =>
@@ -303,30 +302,6 @@ describe("Data Store", () => {
       const result = await dataStore.get(TestContext, "SomethingDate");
 
       expect(result).toEqual(date);
-    });
-
-    it("supports caching data stores across creates for the same id", async () => {
-      const factory = new StormDBDataStoreFactory(path, new InMemoryCache());
-
-      const dataStore1 = await factory.create(TestContext, "example", {});
-      const dataStore2 = await factory.create(TestContext, "example", {});
-      const dataStore3 = await factory.create(TestContext, "example2", {});
-
-      await dataStore1.set(TestContext, "One", 1);
-      await dataStore2.set(TestContext, "Two", 2);
-      await dataStore3.set(TestContext, "Three", 3);
-
-      expect(await dataStore1.getRoot(TestContext)).toEqual({
-        One: 1,
-        Two: 2,
-      });
-      expect(await dataStore2.getRoot(TestContext)).toEqual({
-        One: 1,
-        Two: 2,
-      });
-      expect(await dataStore3.getRoot(TestContext)).toEqual({
-        Three: 3,
-      });
     });
   });
 });

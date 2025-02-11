@@ -10,9 +10,16 @@ describe(
     it("throws for missing user", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -36,9 +43,16 @@ describe(
     it("handles users with FORCE_CHANGE_PASSWORD status", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -49,7 +63,7 @@ describe(
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
       const userSub = attributeValue(
@@ -82,9 +96,16 @@ describe(
     it("handles users with UNCONFIRMED status", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -115,9 +136,16 @@ describe(
     it("can authenticate users with USER_PASSWORD_AUTH auth flow", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -128,7 +156,7 @@ describe(
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
       const userSub = attributeValue(
@@ -138,7 +166,7 @@ describe(
 
       await client
         .adminSetUserPassword({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
           Password: "def",
           Permanent: true,
@@ -164,7 +192,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
@@ -183,7 +211,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",
@@ -196,7 +224,7 @@ describe(
         email: "example@example.com",
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
       });
     });
@@ -204,9 +232,16 @@ describe(
     it("can authenticate users with REFRESH_TOKEN_AUTH auth flow", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -217,7 +252,7 @@ describe(
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
       const userSub = attributeValue(
@@ -227,7 +262,7 @@ describe(
 
       await client
         .adminSetUserPassword({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
           Password: "def",
           Permanent: true,
@@ -266,7 +301,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
@@ -287,7 +322,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",

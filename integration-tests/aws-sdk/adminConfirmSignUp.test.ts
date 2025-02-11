@@ -6,9 +6,16 @@ describe(
     it("confirms a user", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -24,7 +31,7 @@ describe(
 
       let user = await client
         .adminGetUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();
@@ -33,14 +40,14 @@ describe(
 
       await client
         .adminConfirmSignUp({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();
 
       user = await client
         .adminGetUser({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Username: "abc",
         })
         .promise();

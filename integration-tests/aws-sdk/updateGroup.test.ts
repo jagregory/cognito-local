@@ -6,10 +6,17 @@ describe(
     it("updates a group", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       await client
         .createGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Description: "original description",
         })
         .promise();
@@ -17,7 +24,7 @@ describe(
       const getGroupResponse = await client
         .getGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
@@ -29,7 +36,7 @@ describe(
       await client
         .updateGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           Description: "new description",
         })
         .promise();
@@ -37,7 +44,7 @@ describe(
       const getGroupResponseAfterUpdate = await client
         .getGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 

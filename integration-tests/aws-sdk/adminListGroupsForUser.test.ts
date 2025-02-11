@@ -14,10 +14,17 @@ describe(
       it("lists groups for a user", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         const createGroupResponse = await client
           .createGroup({
             GroupName: "group-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -27,7 +34,7 @@ describe(
             TemporaryPassword: "def",
             UserAttributes: [{ Name: "email", Value: "example+1@example.com" }],
             Username: "user-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -35,13 +42,13 @@ describe(
           .adminAddUserToGroup({
             Username: "user-1",
             GroupName: "group-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
         const result = await client
           .adminListGroupsForUser({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             Username: "user-1",
           })
           .promise();
@@ -52,10 +59,17 @@ describe(
       it("lists groups for an unassigned user", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         await client
           .createGroup({
             GroupName: "group-2",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
@@ -65,13 +79,13 @@ describe(
             TemporaryPassword: "def",
             UserAttributes: [{ Name: "email", Value: "example+1@example.com" }],
             Username: "user-1",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise();
 
         const result = await client
           .adminListGroupsForUser({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             Username: "user-1",
           })
           .promise();
