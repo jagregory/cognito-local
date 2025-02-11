@@ -1,3 +1,28 @@
+# [4.0.0](https://github.com/jagregory/cognito-local/compare/v3.23.3...v4.0.0) (2025-02-11)
+
+
+* fix!: user pool creation race conditions ([69ee1e1](https://github.com/jagregory/cognito-local/commit/69ee1e17f9daa2872660f33c538ee5bdf5443ef5))
+
+
+### BREAKING CHANGES
+
+* You must create a User Pool before using it (by calling
+createUserPool). Previously, User Pools would be created on-demand.
+
+User Pools (and their associated databases) used to be created lazily
+when first accessed, this was intended to to allow low-touch setup of
+cognito-local by creating user pools with default options if they don't
+exist, but it has been a source of obscure corruption issues for a
+while. It's been possible to create race conditions by making requests
+to cognito-local in parallel before a User Pool was created, and those
+parallel requests would stomp on each other by creating multiple
+databases.
+
+This change removes the laziness: Any existing User Pools will be parsed
+when cognito-local first starts, and new User Pools are created when
+createUserPool is called. Any attempts to access User Pools which don't
+exist will fail with a ResourceNotFound error.
+
 ## [3.23.3](https://github.com/jagregory/cognito-local/compare/v3.23.2...v3.23.3) (2024-03-21)
 
 
