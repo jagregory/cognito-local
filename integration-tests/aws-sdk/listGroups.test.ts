@@ -14,28 +14,41 @@ describe(
       it("lists groups", async () => {
         const client = Cognito();
 
+        const pool1 = await client
+          .createUserPool({
+            PoolName: "test 1",
+          })
+          .promise();
+        const userPool1Id = pool1.UserPool?.Id!!;
+        const pool2 = await client
+          .createUserPool({
+            PoolName: "test 2",
+          })
+          .promise();
+        const userPool2Id = pool2.UserPool?.Id!!;
+
         await client
           .createGroup({
             GroupName: "abc",
-            UserPoolId: "test1",
+            UserPoolId: userPool1Id,
           })
           .promise();
         await client
           .createGroup({
             GroupName: "def",
-            UserPoolId: "test1",
+            UserPoolId: userPool1Id,
           })
           .promise();
         await client
           .createGroup({
             GroupName: "ghi",
-            UserPoolId: "test2",
+            UserPoolId: userPool2Id,
           })
           .promise();
 
         const result1 = await client
           .listGroups({
-            UserPoolId: "test1",
+            UserPoolId: userPool1Id,
           })
           .promise();
 
@@ -45,20 +58,20 @@ describe(
               CreationDate: roundedDate,
               GroupName: "abc",
               LastModifiedDate: roundedDate,
-              UserPoolId: "test1",
+              UserPoolId: userPool1Id,
             },
             {
               CreationDate: roundedDate,
               GroupName: "def",
               LastModifiedDate: roundedDate,
-              UserPoolId: "test1",
+              UserPoolId: userPool1Id,
             },
           ],
         });
 
         const result2 = await client
           .listGroups({
-            UserPoolId: "test2",
+            UserPoolId: userPool2Id,
           })
           .promise();
 
@@ -68,7 +81,7 @@ describe(
               CreationDate: roundedDate,
               GroupName: "ghi",
               LastModifiedDate: roundedDate,
-              UserPoolId: "test2",
+              UserPoolId: userPool2Id,
             },
           ],
         });
@@ -77,9 +90,16 @@ describe(
       it("returns an empty collection when there are no groups", async () => {
         const client = Cognito();
 
+        const pool = await client
+          .createUserPool({
+            PoolName: "test",
+          })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!!;
+
         const result = await client
           .listGroups({
-            UserPoolId: "test1",
+            UserPoolId: userPoolId,
           })
           .promise();
 

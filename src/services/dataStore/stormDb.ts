@@ -2,7 +2,6 @@ import fs from "fs";
 import StormDB from "stormdb";
 import { promisify } from "util";
 import { Context } from "../context";
-import { DataStoreCache } from "./cache";
 import { DataStore } from "./dataStore";
 import { DataStoreFactory } from "./factory";
 
@@ -99,11 +98,9 @@ const createStormDBInstance = (directory: string, id: string): StormDB => {
 
 export class StormDBDataStoreFactory implements DataStoreFactory {
   private readonly directory: string;
-  private readonly cache: DataStoreCache;
 
-  public constructor(directory: string, dataStoreCache: DataStoreCache) {
+  public constructor(directory: string) {
     this.directory = directory;
-    this.cache = dataStoreCache;
   }
 
   public async create(
@@ -114,12 +111,6 @@ export class StormDBDataStoreFactory implements DataStoreFactory {
     ctx.logger.debug({ id }, "createDataStore");
     await mkdir(this.directory, { recursive: true });
 
-    const cachedDb = this.cache.get(id);
-    if (cachedDb) {
-      ctx.logger.debug({ id }, "Using cached data store");
-      return cachedDb;
-    }
-
     ctx.logger.debug({ id }, "Creating new data store");
     const db = createStormDBInstance(this.directory, id);
 
@@ -128,10 +119,6 @@ export class StormDBDataStoreFactory implements DataStoreFactory {
     ctx.logger.debug({ store: db.value() }, "DataStore.save");
     await db.save();
 
-    const dataStore = new StormDBDataStore(db);
-
-    this.cache.set(id, dataStore);
-
-    return dataStore;
+    return new StormDBDataStore(db);
   }
 }

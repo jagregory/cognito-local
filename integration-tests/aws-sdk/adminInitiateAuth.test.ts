@@ -10,9 +10,16 @@ describe(
     it("throws for missing user", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -20,7 +27,7 @@ describe(
       await expect(
         client
           .adminInitiateAuth({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             ClientId: upc.UserPoolClient?.ClientId!,
             AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
             AuthParameters: {
@@ -37,9 +44,16 @@ describe(
     it("handles users with UNCONFIRMED status", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -56,7 +70,7 @@ describe(
       await expect(
         client
           .adminInitiateAuth({
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
             ClientId: upc.UserPoolClient?.ClientId!,
             AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
             AuthParameters: {
@@ -71,9 +85,16 @@ describe(
     it("can authenticate users with ADMIN_USER_PASSWORD_AUTH auth flow", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -87,7 +108,7 @@ describe(
             { Name: "email_verified", Value: "true" },
           ],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
       const userSub = attributeValue(
@@ -97,7 +118,7 @@ describe(
 
       const response = await client
         .adminInitiateAuth({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientId: upc.UserPoolClient?.ClientId!,
           AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
           AuthParameters: {
@@ -115,7 +136,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
@@ -134,7 +155,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",
@@ -147,7 +168,7 @@ describe(
         email: "example@example.com",
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
       });
     });
@@ -155,9 +176,16 @@ describe(
     it("can authenticate users with REFRESH_TOKEN_AUTH auth flow", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -171,7 +199,7 @@ describe(
             { Name: "email_verified", Value: "true" },
           ],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
       const userSub = attributeValue(
@@ -181,7 +209,7 @@ describe(
 
       const initialLoginResponse = await client
         .adminInitiateAuth({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientId: upc.UserPoolClient?.ClientId!,
           AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
           AuthParameters: {
@@ -193,7 +221,7 @@ describe(
 
       const refreshTokenLoginResponse = await client
         .adminInitiateAuth({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientId: upc.UserPoolClient?.ClientId!,
           AuthFlow: "REFRESH_TOKEN_AUTH",
           AuthParameters: {
@@ -213,7 +241,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
@@ -234,7 +262,7 @@ describe(
         event_id: expect.stringMatching(UUID),
         exp: expect.any(Number),
         iat: expect.any(Number),
-        iss: "http://localhost:9229/test",
+        iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",

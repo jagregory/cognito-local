@@ -7,7 +7,6 @@ import {
   TriggersService,
 } from "../services";
 import { CognitoServiceFactoryImpl } from "../services/cognitoService";
-import { InMemoryCache } from "../services/dataStore/cache";
 import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
@@ -31,21 +30,17 @@ export const createDefaultServer = async (
   const config = await loadConfig(
     ctx,
     // the config gets a separate factory because it's stored in a different directory
-    new StormDBDataStoreFactory(configDirectory, new InMemoryCache())
+    new StormDBDataStoreFactory(configDirectory)
   );
 
   logger.debug({ config }, "Loaded config");
 
   const clock = new DateClock();
 
-  const dataStoreFactory = new StormDBDataStoreFactory(
-    dataDirectory,
-    new InMemoryCache()
-  );
+  const dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
 
   const cognitoServiceFactory = new CognitoServiceFactoryImpl(
     dataDirectory,
-    clock,
     dataStoreFactory,
     new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
   );

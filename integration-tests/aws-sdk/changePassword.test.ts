@@ -6,10 +6,17 @@ describe(
     it("deletes the current user", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       // create the user pool client
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -21,7 +28,7 @@ describe(
           TemporaryPassword: "def",
           UserAttributes: [{ Name: "email", Value: "example@example.com" }],
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
@@ -30,7 +37,7 @@ describe(
           Password: "firstPassword",
           Permanent: true,
           Username: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
