@@ -23,7 +23,7 @@ jobs:
           cache: yarn
       - run: yarn install
       - run: yarn build
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: build
           path: lib
@@ -46,7 +46,7 @@ jobs:
           node-version: 22.13.1
           cache: yarn
       - run: yarn install
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: build
           path: lib
