@@ -12,12 +12,12 @@ import Pino from "pino-http";
 import { readFileSync } from "fs";
 
 export type ServerOptions = {
-  port: number;
-  hostname: string;
-  development: boolean;
+  port?: number;
+  hostname?: string;
+  development?: boolean;
 } & (
   | { https: true; key?: string; ca?: string; cert?: string }
-  | { https: false }
+  | { https?: false }
 );
 
 export interface Server {
@@ -143,8 +143,8 @@ export const createServer = (
   return {
     application: app,
     start() {
-      const hostname = options.hostname ?? "localhost";
-      const port = options.port ?? 9229;
+      const hostname = options.hostname;
+      const port = options.port;
 
       return new Promise<http.Server | https.Server>((resolve, reject) => {
         const server = options.https

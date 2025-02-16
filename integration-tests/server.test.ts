@@ -14,7 +14,7 @@ describe("HTTP server", () => {
   describe("/", () => {
     it("errors with missing x-azm-target header", async () => {
       const router = jest.fn();
-      const server = createServer(router, MockLogger as any);
+      const server = createServer(router, MockLogger as any, {});
 
       const response = await supertest(server.application).post("/");
 
@@ -24,7 +24,7 @@ describe("HTTP server", () => {
 
     it("errors with an poorly formatted x-azm-target header", async () => {
       const router = jest.fn();
-      const server = createServer(router, MockLogger as any);
+      const server = createServer(router, MockLogger as any, {});
 
       const response = await supertest(server.application)
         .post("/")
@@ -43,7 +43,7 @@ describe("HTTP server", () => {
         });
         const router = (target: string) =>
           target === "valid" ? route : () => Promise.reject();
-        const server = createServer(router, MockLogger as any);
+        const server = createServer(router, MockLogger as any, {});
 
         const response = await supertest(server.application)
           .post("/")
@@ -61,7 +61,7 @@ describe("HTTP server", () => {
           .mockRejectedValue(new UnsupportedError("integration test"));
         const router = (target: string) =>
           target === "valid" ? route : () => Promise.reject();
-        const server = createServer(router, MockLogger as any);
+        const server = createServer(router, MockLogger as any, {});
 
         const response = await supertest(server.application)
           .post("/")
@@ -87,7 +87,7 @@ describe("HTTP server", () => {
           const route = jest.fn().mockRejectedValue(error);
           const router = (target: string) =>
             target === "valid" ? route : () => Promise.reject();
-          const server = createServer(router, MockLogger as any);
+          const server = createServer(router, MockLogger as any, {});
 
           const response = await supertest(server.application)
             .post("/")
@@ -105,7 +105,7 @@ describe("HTTP server", () => {
 
   describe("jwks endpoint", () => {
     it("responds with our public key", async () => {
-      const server = createServer(jest.fn(), MockLogger as any);
+      const server = createServer(jest.fn(), MockLogger as any, {});
 
       const response = await supertest(server.application).get(
         "/any-user-pool/.well-known/jwks.json"
@@ -129,7 +129,7 @@ describe("HTTP server", () => {
 
   describe("OpenId Configuration Endpoint", () => {
     it("responds with open id configuration", async () => {
-      const server = createServer(jest.fn(), MockLogger as any);
+      const server = createServer(jest.fn(), MockLogger as any, {});
 
       const response = await supertest(server.application).get(
         "/any-user-pool/.well-known/openid-configuration"
