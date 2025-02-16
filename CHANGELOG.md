@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/jagregory/cognito-local/compare/v4.0.0...v4.1.0) (2025-02-16)
+
+
+### Features
+
+* **api:** support https ([c23eefe](https://github.com/jagregory/cognito-local/commit/c23eefec0becf3423ab618414039022526b59c5e))
+
 # [4.0.0](https://github.com/jagregory/cognito-local/compare/v3.23.3...v4.0.0) (2025-02-11)
 
 
