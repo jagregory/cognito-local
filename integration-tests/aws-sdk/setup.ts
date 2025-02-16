@@ -81,11 +81,13 @@ export const withCognitoSdk =
           DefaultConfig.TokenConfig
         ),
       });
-      const server = createServer(router, ctx.logger);
-      httpServer = await server.start({
+      const server = createServer(router, ctx.logger, {
+        development: false,
         hostname: "127.0.0.1",
+        https: false,
         port: 0,
       });
+      httpServer = await server.start();
 
       const address = httpServer.address();
       if (!address) {

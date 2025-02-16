@@ -76,8 +76,6 @@ export const createDefaultServer = async (
       triggers,
     }),
     logger,
-    {
-      development: !!process.env.COGNITO_LOCAL_DEVMODE,
-    }
+    config.ServerConfig
   );
 };

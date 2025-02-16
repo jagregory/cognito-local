@@ -3,6 +3,7 @@
 import { createDefaultServer } from "../server";
 import Pino from "pino";
 import PinoPretty from "pino-pretty";
+import * as https from "https";
 
 const logger = Pino(
   {
@@ -18,13 +19,9 @@ const logger = Pino(
 );
 
 createDefaultServer(logger)
+  .then((server) => server.start())
   .then((server) => {
-    const hostname = process.env.HOST ?? "localhost";
-    const port = parseInt(process.env.PORT ?? "9229", 10);
-    return server.start({ hostname, port });
-  })
-  .then((httpServer) => {
-    const address = httpServer.address();
+    const address = server.address();
     if (!address) {
       throw new Error("Server started without address");
     }
@@ -33,7 +30,9 @@ createDefaultServer(logger)
         ? address
         : `${address.address}:${address.port}`;
 
-    logger.info(`Cognito Local running on http://${url}`);
+    const proto = server instanceof https.Server ? "https" : "http";
+
+    logger.info(`Cognito Local running on ${proto}://${url}`);
   })
   .catch((err) => {
     logger.error(err);

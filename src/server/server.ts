@@ -2,28 +2,33 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import * as http from "http";
+import * as https from "https";
 import type { Logger } from "pino";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import { Router } from "./Router";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import Pino from "pino-http";
+import { readFileSync } from "fs";
 
-export interface ServerOptions {
+export type ServerOptions = {
   port: number;
   hostname: string;
   development: boolean;
-}
+} & (
+  | { https: true; key?: string; ca?: string; cert?: string }
+  | { https: false }
+);
 
 export interface Server {
   application: any; // eslint-disable-line
-  start(options?: Partial<ServerOptions>): Promise<http.Server>;
+  start(): Promise<http.Server | https.Server>;
 }
 
 export const createServer = (
   router: Router,
   logger: Logger,
-  options: Partial<ServerOptions> = {}
+  options: ServerOptions
 ): Server => {
   const pino = Pino({
     logger,
@@ -137,22 +142,28 @@ export const createServer = (
 
   return {
     application: app,
-    start(startOptions) {
-      const actualOptions: ServerOptions = {
-        port: options?.port ?? 9229,
-        hostname: options?.hostname ?? "localhost",
-        development: options?.development ?? false,
-        ...options,
-        ...startOptions,
-      };
+    start() {
+      const hostname = options.hostname ?? "localhost";
+      const port = options.port ?? 9229;
 
-      return new Promise((resolve, reject) => {
-        const httpServer = app.listen(
-          actualOptions.port,
-          actualOptions.hostname,
-          () => resolve(httpServer)
-        );
-        httpServer.on("error", reject);
+      return new Promise<http.Server | https.Server>((resolve, reject) => {
+        const server = options.https
+          ? https.createServer(
+              {
+                ca: options.ca ? readFileSync(options.ca, "utf-8") : undefined,
+                cert: options.cert
+                  ? readFileSync(options.cert, "utf-8")
+                  : undefined,
+                key: options.key
+                  ? readFileSync(options.key, "utf-8")
+                  : undefined,
+              },
+              app
+            )
+          : http.createServer(app);
+
+        server.listen(port, hostname, () => resolve(server));
+        server.on("error", reject);
       });
     },
   };
