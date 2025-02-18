@@ -68,6 +68,36 @@ describe("JwtTokenGenerator", () => {
       });
     });
 
+    it("can pass user's group memberships to the PreTokenGeneration lambda", async () => {
+      mockTriggers.enabled.mockImplementation((name) => {
+        return name === "PreTokenGeneration";
+      });
+
+      mockTriggers.preTokenGeneration.mockResolvedValue({
+        claimsOverrideDetails: {
+          claimsToAddOrOverride: {
+            newclaim: "value",
+            email: "something else",
+          },
+        },
+      });
+
+      await tokenGenerator.generate(
+        TestContext,
+        user,
+        ["group1", "group2"],
+        TDB.appClient(),
+        { client: "metadata" },
+        "RefreshTokens"
+      );
+
+      expect(mockTriggers.preTokenGeneration.mock.calls[0][1]).toMatchObject({
+        groupConfiguration: {
+          groupsToOverride: ["group1", "group2"],
+        },
+      });
+    });
+
     it("can suppress claims in the id token", async () => {
       mockTriggers.enabled.mockImplementation((name) => {
         return name === "PreTokenGeneration";
