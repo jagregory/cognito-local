@@ -91,6 +91,50 @@ describe("CreateUserPool target", () => {
     });
   });
 
+  it("creates a new user pool with a custom developer-only attribute", async () => {
+    const createdUserPool = TDB.userPool();
+    mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
+
+    const result = await createUserPool(TestContext, {
+      PoolName: "test-pool",
+      Schema: [
+        {
+          Name: "my_attribute",
+          AttributeDataType: "String",
+          DeveloperOnlyAttribute: true,
+        },
+      ],
+    });
+
+    expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
+      TestContext,
+      {
+        Arn: expect.stringMatching(
+          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
+        ),
+        CreationDate: originalDate,
+        Id: expect.stringMatching(/^local_[\w\d]{8}$/),
+        LastModifiedDate: originalDate,
+        Name: "test-pool",
+        SchemaAttributes: [
+          ...(USER_POOL_AWS_DEFAULTS.SchemaAttributes ?? []),
+          {
+            Name: "dev:custom:my_attribute",
+            AttributeDataType: "String",
+            DeveloperOnlyAttribute: true,
+            Mutable: true,
+            Required: false,
+            StringAttributeConstraints: {},
+          },
+        ],
+      }
+    );
+
+    expect(result).toEqual({
+      UserPool: createdUserPool,
+    });
+  });
+
   it("creates a new user pool with an overridden attribute", async () => {
     const createdUserPool = TDB.userPool();
     mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);

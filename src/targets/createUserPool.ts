@@ -56,7 +56,7 @@ const createSchemaAttributes = (
       const type = attr.AttributeDataType ?? "String";
 
       return {
-        Name: `custom:${attr.Name}`,
+        Name: `${attr.DeveloperOnlyAttribute ? "dev:" : ""}custom:${attr.Name}`,
         AttributeDataType: type,
         DeveloperOnlyAttribute: attr.DeveloperOnlyAttribute ?? false,
         Mutable: attr.Mutable ?? true,
