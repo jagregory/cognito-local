@@ -1,3 +1,19 @@
+# [5.0.0](https://github.com/jagregory/cognito-local/compare/v4.1.0...v5.0.0) (2025-03-05)
+
+
+### Bug Fixes
+
+* sub as username when using emails ([045f507](https://github.com/jagregory/cognito-local/commit/045f5074dd331e572a0f9aa8faea9d81f44d2659))
+
+
+### BREAKING CHANGES
+
+* It's possible that users may have been stored with
+their email address as their Username in the cognito-local database;
+this was incorrect and shouldn't have happened. You may need to recreate
+any users who were incorrectly saved with their email address as their
+username.
+
 # [4.1.0](https://github.com/jagregory/cognito-local/compare/v4.0.0...v4.1.0) (2025-02-16)
 
 
