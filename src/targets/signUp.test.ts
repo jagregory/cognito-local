@@ -57,7 +57,7 @@ describe("SignUp target", () => {
     ).rejects.toBeInstanceOf(UsernameExistsError);
   });
 
-  it("saves a new user", async () => {
+  it("saves a new user with email", async () => {
     mockUserPoolService.getUserByUsername.mockResolvedValue(null);
 
     await signUp(TestContext, {
@@ -74,6 +74,41 @@ describe("SignUp target", () => {
           Value: expect.stringMatching(UUID),
         },
         { Name: "email", Value: "example@example.com" },
+        { Name: "email_verified", Value: "false" },
+      ],
+      Enabled: true,
+      Password: "pwd",
+      UserCreateDate: now,
+      UserLastModifiedDate: now,
+      UserStatus: "UNCONFIRMED",
+      Username: "user-supplied",
+      RefreshTokens: [],
+    });
+  });
+
+  it("saves a new user with email and phone_number", async () => {
+    mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+
+    await signUp(TestContext, {
+      ClientId: "clientId",
+      Password: "pwd",
+      Username: "user-supplied",
+      UserAttributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+      ],
+    });
+
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+      Attributes: [
+        {
+          Name: "sub",
+          Value: expect.stringMatching(UUID),
+        },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+        { Name: "email_verified", Value: "false" },
+        { Name: "phone_number_verified", Value: "false" },
       ],
       Enabled: true,
       Password: "pwd",
@@ -120,6 +155,7 @@ describe("SignUp target", () => {
         userAttributes: [
           { Name: "sub", Value: expect.stringMatching(UUID) },
           { Name: "email", Value: "example@example.com" },
+          { Name: "email_verified", Value: "false" },
         ],
         userPoolId: "test",
         username: "user-supplied",
@@ -206,6 +242,7 @@ describe("SignUp target", () => {
               userAttributes: [
                 { Name: "sub", Value: expect.stringMatching(UUID) },
                 { Name: "email", Value: "example@example.com" },
+                { Name: "email_verified", Value: "false" },
                 { Name: "cognito:user_status", Value: "CONFIRMED" },
               ],
               userPoolId: "test",
@@ -229,7 +266,10 @@ describe("SignUp target", () => {
               },
               Password: "pwd",
               Username: "user-supplied",
-              UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+              UserAttributes: [
+                { Name: "email", Value: "example@example.com" },
+                { Name: "email_verified", Value: "false" },
+              ],
               ValidationData: [{ Name: "another", Value: "attribute" }],
             })
           ).rejects.toBeInstanceOf(UserLambdaValidationError);
@@ -466,6 +506,7 @@ describe("SignUp target", () => {
           Attributes: [
             { Name: "sub", Value: expect.stringMatching(UUID) },
             { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "false" },
           ],
           Enabled: true,
           Password: "pwd",
@@ -535,6 +576,7 @@ describe("SignUp target", () => {
           Attributes: [
             { Name: "sub", Value: expect.stringMatching(UUID) },
             { Name: "phone_number", Value: "0400000000" },
+            { Name: "phone_number_verified", Value: "false" },
           ],
           Enabled: true,
           Password: "pwd",
@@ -611,6 +653,8 @@ describe("SignUp target", () => {
             { Name: "sub", Value: expect.stringMatching(UUID) },
             { Name: "email", Value: "example@example.com" },
             { Name: "phone_number", Value: "0400000000" },
+            { Name: "email_verified", Value: "false" },
+            { Name: "phone_number_verified", Value: "false" },
           ],
           Enabled: true,
           Password: "pwd",
@@ -657,6 +701,7 @@ describe("SignUp target", () => {
           Attributes: [
             { Name: "sub", Value: expect.stringMatching(UUID) },
             { Name: "email", Value: "example@example.com" },
+            { Name: "email_verified", Value: "false" },
           ],
           Enabled: true,
           Password: "pwd",
@@ -719,6 +764,7 @@ describe("SignUp target", () => {
       Attributes: [
         { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },
+        { Name: "email_verified", Value: "false" },
       ],
       ConfirmationCode: "123456",
       Enabled: true,

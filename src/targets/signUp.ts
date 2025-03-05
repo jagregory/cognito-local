@@ -87,6 +87,10 @@ export const SignUp =
       : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
     let userStatus: UserStatusType = "UNCONFIRMED";
 
+    const isEmailUsername =
+      config.UserPoolDefaults.UsernameAttributes?.includes("email");
+    const hasEmailAttribute = attributesInclude("email", attributes);
+
     if (triggers.enabled("PreSignUp")) {
       const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
         await triggers.preSignUp(ctx, {
@@ -102,18 +106,30 @@ export const SignUp =
       if (autoConfirmUser) {
         userStatus = "CONFIRMED";
       }
-      const isEmailUsername =
-        config.UserPoolDefaults.UsernameAttributes?.includes("email");
-      const hasEmailAttribute = attributesInclude("email", attributes);
 
       if (isEmailUsername && !hasEmailAttribute) {
         attributes.push({ Name: "email", Value: req.Username });
       }
-      if ((isEmailUsername || hasEmailAttribute) && autoVerifyEmail) {
-        attributes.push({ Name: "email_verified", Value: "true" });
+      if (isEmailUsername || hasEmailAttribute) {
+        if (autoVerifyEmail) {
+          attributes.push({ Name: "email_verified", Value: "true" });
+        } else {
+          attributes.push({ Name: "email_verified", Value: "false" });
+        }
       }
-      if (attributesInclude("phone_number", attributes) && autoVerifyPhone) {
-        attributes.push({ Name: "phone_number_verified", Value: "true" });
+      if (attributesInclude("phone_number", attributes)) {
+        if (autoVerifyPhone) {
+          attributes.push({ Name: "phone_number_verified", Value: "true" });
+        } else {
+          attributes.push({ Name: "phone_number_verified", Value: "false" });
+        }
+      }
+    } else {
+      if (isEmailUsername || hasEmailAttribute) {
+        attributes.push({ Name: "email_verified", Value: "false" });
+      }
+      if (attributesInclude("phone_number", attributes)) {
+        attributes.push({ Name: "phone_number_verified", Value: "false" });
       }
     }
 
