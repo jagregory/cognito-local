@@ -30,7 +30,7 @@ describe("AdminCreateUser target", () => {
     });
   });
 
-  it("saves a new user with a provided temporary password", async () => {
+  it("saves a new user with a provided temporary password when the user pool has no username attributes", async () => {
     await adminCreateUser(TestContext, {
       TemporaryPassword: "pwd",
       UserAttributes: [
@@ -56,6 +56,38 @@ describe("AdminCreateUser target", () => {
       UserLastModifiedDate: originalDate,
       UserStatus: "FORCE_CHANGE_PASSWORD",
       Username: "user-supplied",
+      RefreshTokens: [],
+    });
+  });
+
+  it("saves a new user with a provided temporary password when the user pool has no username attributes", async () => {
+    mockUserPoolService.options.UsernameAttributes = ["email"];
+
+    await adminCreateUser(TestContext, {
+      TemporaryPassword: "pwd",
+      UserAttributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+      ],
+      Username: "example@example.com",
+      UserPoolId: "test",
+    });
+
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+      Attributes: [
+        {
+          Name: "sub",
+          Value: expect.stringMatching(UUID),
+        },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
+      ],
+      Enabled: true,
+      Password: "pwd",
+      UserCreateDate: originalDate,
+      UserLastModifiedDate: originalDate,
+      UserStatus: "FORCE_CHANGE_PASSWORD",
+      Username: expect.stringMatching(UUID),
       RefreshTokens: [],
     });
   });

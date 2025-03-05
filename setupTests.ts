@@ -23,9 +23,6 @@ declare global {
   }
 }
 
-// "Payload": {"version":0,"callerContext":{"awsSdkVersion":"2.953.0","clientId":"clientId"},"region":"local","userPoolId":"userPoolId","triggerSource":"UserMigration_Authentication","request":{"userAttributes":{},"validationData":{},"password":"password"},"response":{},"userName":"username"}
-// "Payload": {"version":0,"callerContext":{"awsSdkVersion":"2.953.0","clientId":"clientId"},"region":"local","userPoolId":"userPoolId","triggerSource":"UserMigration_Authentication","request":{"userAttributes":{},"validationData":{},"password":"password"},"response":{},"userName":"username"}
-
 export {};
 
 afterEach(() => {
