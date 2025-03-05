@@ -113,25 +113,35 @@ export const AdminCreateUser =
       throw new UsernameExistsError();
     }
 
+    const sub = uuid.v4();
     const attributes = attributesInclude("sub", req.UserAttributes)
       ? req.UserAttributes ?? []
-      : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
+      : [{ Name: "sub", Value: sub }, ...(req.UserAttributes ?? [])];
 
     const now = clock.get();
 
     const temporaryPassword =
       req.TemporaryPassword ?? process.env.CODE ?? generator.new().slice(0, 6);
 
-    const isEmailUsername =
-      config.UserPoolDefaults.UsernameAttributes?.includes("email");
-    const hasEmailAttribute = attributesInclude("email", attributes);
+    let username = req.Username;
+    if (userPool.options.UsernameAttributes?.includes("email")) {
+      // user pool is configured to use the email attribute as the user's username
+      if (!req.Username.includes("@")) {
+        // naive validation that the username is an email
+        throw new InvalidParameterError("Username should be an email.");
+      }
 
-    if (isEmailUsername && !hasEmailAttribute) {
-      attributes.push({ Name: "email", Value: req.Username });
+      if (!attributesInclude("email", attributes)) {
+        attributes.push({ Name: "email", Value: req.Username });
+      }
+
+      // when the username is an email address, cognito uses the sub as the username in
+      // requests/responses, triggers etc...
+      username = sub;
     }
 
     const user: User = {
-      Username: req.Username,
+      Username: username,
       Password: temporaryPassword,
       Attributes: attributes,
       Enabled: true,

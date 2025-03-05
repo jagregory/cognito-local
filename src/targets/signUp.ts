@@ -12,7 +12,6 @@ import {
   attribute,
   attributesAppend,
   attributesInclude,
-  attributeValue,
   User,
 } from "../services/userPoolService";
 import { Target } from "./Target";
@@ -82,10 +81,29 @@ export const SignUp =
       throw new UsernameExistsError();
     }
 
-    const attributes = attributesInclude("sub", req.UserAttributes)
-      ? req.UserAttributes ?? []
-      : [{ Name: "sub", Value: uuid.v4() }, ...(req.UserAttributes ?? [])];
+    const sub = uuid.v4();
+    const attributes =
+      (attributesInclude("sub", req.UserAttributes)
+        ? req.UserAttributes
+        : [{ Name: "sub", Value: sub }, ...(req.UserAttributes ?? [])]) ?? [];
     let userStatus: UserStatusType = "UNCONFIRMED";
+
+    let username = req.Username;
+    if (userPool.options.UsernameAttributes?.includes("email")) {
+      // user pool is configured to use the email attribute as the user's username
+      if (!req.Username.includes("@")) {
+        // naive validation that the username is an email
+        throw new InvalidParameterError("Username should be an email.");
+      }
+
+      if (!attributesInclude("email", attributes)) {
+        attributes.push({ Name: "email", Value: req.Username });
+      }
+
+      // when the username is an email address, cognito uses the sub as the username in
+      // requests/responses, triggers etc...
+      username = sub;
+    }
 
     if (triggers.enabled("PreSignUp")) {
       const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
@@ -94,7 +112,7 @@ export const SignUp =
           clientMetadata: req.ClientMetadata,
           source: "PreSignUp_SignUp",
           userAttributes: attributes,
-          username: req.Username,
+          username,
           userPoolId: userPool.options.Id,
           validationData: undefined,
         });
@@ -126,7 +144,7 @@ export const SignUp =
       RefreshTokens: [],
       UserCreateDate: now,
       UserLastModifiedDate: now,
-      Username: req.Username,
+      Username: username,
       UserStatus: userStatus,
     };
 
@@ -155,7 +173,7 @@ export const SignUp =
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",
-        username: updatedUser.Username,
+        username,
         userPoolId: userPool.options.Id,
 
         // not sure whether this is a one off for PostConfirmation, or whether we should be adding cognito:user_status
@@ -170,6 +188,6 @@ export const SignUp =
     return {
       CodeDeliveryDetails: deliveryDetails ?? undefined,
       UserConfirmed: updatedUser.UserStatus === "CONFIRMED",
-      UserSub: attributeValue("sub", updatedUser.Attributes) as string,
+      UserSub: sub,
     };
   };
