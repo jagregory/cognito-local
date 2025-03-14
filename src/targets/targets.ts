@@ -1,3 +1,4 @@
+import { AdminRespondToAuthChallenge } from "./adminRespondToAuthChallenge";
 import { AddCustomAttributes } from "./addCustomAttributes";
 import { AdminAddUserToGroup } from "./adminAddUserToGroup";
 import { AdminConfirmSignUp } from "./adminConfirmSignUp";
@@ -59,6 +60,7 @@ export const Targets = {
   AdminInitiateAuth,
   AdminListGroupsForUser,
   AdminRemoveUserFromGroup,
+  AdminRespondToAuthChallenge,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
   ChangePassword,
