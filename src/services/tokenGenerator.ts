@@ -130,7 +130,7 @@ export class JwtTokenGenerator implements TokenGenerator {
   public async generate(
     ctx: Context,
     user: User,
-    userGroups: readonly string[],
+    userGroups: string[],
     userPoolClient: AppClient,
     clientMetadata: Record<string, string> | undefined,
     source:
@@ -183,13 +183,16 @@ export class JwtTokenGenerator implements TokenGenerator {
         userAttributes: user.Attributes,
         username: user.Username,
         groupConfiguration: {
-          // TODO: this should be populated from the user's groups
-          groupsToOverride: undefined,
-          iamRolesToOverride: undefined,
-          preferredRole: undefined,
+          groupsToOverride: userGroups,
+          iamRolesToOverride: [],
+          preferredRole: "",
         },
         userPoolId: userPoolClient.UserPoolId,
       });
+
+      ctx.logger.info(
+        `claimsOverrideDetails: ${JSON.stringify(result.claimsOverrideDetails)}`
+      );
 
       idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
     }

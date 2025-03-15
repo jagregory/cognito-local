@@ -36,12 +36,12 @@ export type PreTokenGenerationTrigger = Trigger<
       /**
        * A list of the group names that are associated with the user that the identity token is issued for.
        */
-      groupsToOverride: readonly string[] | undefined;
+      groupsToOverride: string[] | undefined;
 
       /**
        * A list of the current IAM roles associated with these groups.
        */
-      iamRolesToOverride: readonly string[] | undefined;
+      iamRolesToOverride: string[] | undefined;
 
       /**
        * A string indicating the preferred IAM role.
