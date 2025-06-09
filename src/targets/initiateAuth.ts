@@ -3,6 +3,7 @@ import {
   InitiateAuthRequest,
   InitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { v4 } from "uuid";
 import {
   InvalidParameterError,
@@ -231,6 +232,17 @@ const refreshTokenAuthFlow = async (
 
   if (!req.AuthParameters.REFRESH_TOKEN) {
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
+  }
+
+  // check if the refresh token is expired
+  const decodedRefreshToken = jwt.decode(
+    req.AuthParameters.REFRESH_TOKEN
+  ) as JwtPayload;
+  if (
+    !decodedRefreshToken.exp ||
+    (decodedRefreshToken.exp && decodedRefreshToken.exp < Date.now() / 1000)
+  ) {
+    throw new NotAuthorizedError();
   }
 
   const user = await userPool.getUserByRefreshToken(
