@@ -6,17 +6,24 @@ describe(
     it("deletes a group", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       await client
         .createGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
       const getGroupResponse = await client
         .getGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
@@ -25,7 +32,7 @@ describe(
       await client
         .deleteGroup({
           GroupName: "abc",
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
@@ -33,7 +40,7 @@ describe(
         client
           .getGroup({
             GroupName: "abc",
-            UserPoolId: "test",
+            UserPoolId: userPoolId,
           })
           .promise()
       ).rejects.toMatchObject({

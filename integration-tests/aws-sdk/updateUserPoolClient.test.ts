@@ -6,10 +6,17 @@ describe(
     it("updates a user pool client", async () => {
       const client = Cognito();
 
+      const pool = await client
+        .createUserPool({
+          PoolName: "test",
+        })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!!;
+
       // create the user pool client
       const upc = await client
         .createUserPoolClient({
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "test",
         })
         .promise();
@@ -17,7 +24,7 @@ describe(
       const describeResponse = await client
         .describeUserPoolClient({
           ClientId: upc.UserPoolClient?.ClientId!,
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 
@@ -28,7 +35,7 @@ describe(
       await client
         .updateUserPoolClient({
           ClientId: upc.UserPoolClient?.ClientId!,
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
           ClientName: "new client name",
         })
         .promise();
@@ -36,7 +43,7 @@ describe(
       const describeResponseAfterUpdate = await client
         .describeUserPoolClient({
           ClientId: upc.UserPoolClient?.ClientId!,
-          UserPoolId: "test",
+          UserPoolId: userPoolId,
         })
         .promise();
 

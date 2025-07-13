@@ -14,7 +14,6 @@ import {
   TriggersService,
 } from "../../src/services";
 import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
-import { NoOpCache } from "../../src/services/dataStore/cache";
 import { DataStoreFactory } from "../../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
@@ -51,13 +50,9 @@ export const withCognitoSdk =
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
       const ctx = { logger };
 
-      dataStoreFactory = new StormDBDataStoreFactory(
-        dataDirectory,
-        new NoOpCache()
-      );
+      dataStoreFactory = new StormDBDataStoreFactory(dataDirectory);
       const cognitoServiceFactory = new CognitoServiceFactoryImpl(
         dataDirectory,
-        clock,
         dataStoreFactory,
         new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
       );
@@ -86,11 +81,13 @@ export const withCognitoSdk =
           DefaultConfig.TokenConfig
         ),
       });
-      const server = createServer(router, ctx.logger);
-      httpServer = await server.start({
+      const server = createServer(router, ctx.logger, {
+        development: false,
         hostname: "127.0.0.1",
+        https: false,
         port: 0,
       });
+      httpServer = await server.start();
 
       const address = httpServer.address();
       if (!address) {

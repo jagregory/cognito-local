@@ -5,6 +5,7 @@ import { UserPool } from "../services/userPoolService";
 import { TokenConfig } from "../services/tokenGenerator";
 import mergeWith from "lodash.mergewith";
 import { KMSConfig } from "../services/crypto";
+import type { ServerOptions } from "./server";
 
 export type UserPoolDefaults = Omit<
   UserPool,
@@ -16,11 +17,12 @@ export interface Config {
   TriggerFunctions: FunctionConfig;
   UserPoolDefaults: UserPoolDefaults;
   KMSConfig?: AWS.KMS.ClientConfiguration & KMSConfig;
+  ServerConfig: ServerOptions;
   TokenConfig: TokenConfig;
 }
 
 const hostname = process.env.ISSUER_HOST ?? "localhost";
-const port = process.env.PORT ?? "9229";
+const port = parseInt(process.env.PORT ?? "9229", 10);
 
 export const DefaultConfig: Config = {
   LambdaClient: {
@@ -43,6 +45,12 @@ export const DefaultConfig: Config = {
       secretAccessKey: "local",
     },
     region: "local",
+  },
+  ServerConfig: {
+    port,
+    hostname,
+    development: !!process.env.COGNITO_LOCAL_DEVMODE,
+    https: false,
   },
 };
 

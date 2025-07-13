@@ -309,13 +309,20 @@ Before starting Cognito Local, create a config file if one doesn't already exist
 You can edit that `.cognito/config.json` and add any of the following settings:
 
 | Setting                                    | Type       | Default                 | Description                                                 |
-| ------------------------------------------ | ---------- | ----------------------- | ----------------------------------------------------------- |
+|--------------------------------------------|------------|-------------------------|-------------------------------------------------------------|
 | `LambdaClient`                             | `object`   |                         | Any setting you would pass to the AWS.Lambda Node.js client |
 | `LambdaClient.credentials.accessKeyId`     | `string`   | `local`                 |                                                             |
 | `LambdaClient.credentials.secretAccessKey` | `string`   | `local`                 |                                                             |
 | `LambdaClient.endpoint`                    | `string`   | `local`                 |                                                             |
 | `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
 | `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
+| `ServerConfig`                             | `object`   |                         | Any setting you would pass to the Express server            |
+| `ServerConfig.hostname`                    | `string`   | `localhost`             | Hostname to listen on                                       |
+| `ServerConfig.port`                        | `number`   | `9229`                  | Port to listen on                                           |
+| `ServerConfig.https`                       | `boolean`  | `false`                 | Enable HTTPS                                                |
+| `ServerConfig.ca`                          | `string`   |                         | Path to the TLS CA file (ServerConfig.https must be true)   |
+| `ServerConfig.cert`                        | `string`   |                         | Path to the TLS Cert file (ServerConfig.https must be true) |
+| `ServerConfig.key`                         | `string`   |                         | Path to the TLS Key file (ServerConfig.https must be true)  |
 | `TriggerFunctions`                         | `object`   | `{}`                    | Trigger name to Function name mapping                       |
 | `TriggerFunctions.CustomMessage`           | `string`   |                         | CustomMessage local lambda function name                    |
 | `TriggerFunctions.PostAuthentication`      | `string`   |                         | PostAuthentication local lambda function name               |
