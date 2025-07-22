@@ -61,14 +61,16 @@ export const createServer = (
   });
 
   app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
+    const hostname = options.hostname || "localhost";
+    const port = options.port || 9229;
+    const protocol = options.https ? "https" : "http";
+
     res.status(200).json({
       id_token_signing_alg_values_supported: ["RS256"],
-      jwks_uri: `http://localhost:9229/${req.params.userPoolId}/.well-known/jwks.json`,
-      issuer: `http://localhost:9229/${req.params.userPoolId}`,
-      subject_types_supported: [
-          "public"
-        ],
-      });
+      jwks_uri: `${protocol}://${hostname}:${port}/${req.params.userPoolId}/.well-known/jwks.json`,
+      issuer: `${protocol}://${hostname}:${port}/${req.params.userPoolId}`,
+      subject_types_supported: ["public"],
+    });
   });
 
   app.get("/health", (req, res) => {

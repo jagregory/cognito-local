@@ -139,9 +139,44 @@ describe("HTTP server", () => {
         id_token_signing_alg_values_supported: ["RS256"],
         jwks_uri: `http://localhost:9229/any-user-pool/.well-known/jwks.json`,
         issuer: `http://localhost:9229/any-user-pool`,
-        subject_types_supported: [
-          "public"
-        ],
+        subject_types_supported: ["public"],
+      });
+    });
+
+    it("responds with custom hostname and port from options", async () => {
+      const server = createServer(jest.fn(), MockLogger as any, {
+        hostname: "example.com",
+        port: 8080,
+      });
+
+      const response = await supertest(server.application).get(
+        "/test-pool/.well-known/openid-configuration"
+      );
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual({
+        id_token_signing_alg_values_supported: ["RS256"],
+        jwks_uri: `http://example.com:8080/test-pool/.well-known/jwks.json`,
+        issuer: `http://example.com:8080/test-pool`,
+        subject_types_supported: ["public"],
+      });
+    });
+
+    it("responds with https protocol when https option is enabled", async () => {
+      const server = createServer(jest.fn(), MockLogger as any, {
+        hostname: "secure.example.com",
+        port: 443,
+        https: true,
+      });
+
+      const response = await supertest(server.application).get(
+        "/secure-pool/.well-known/openid-configuration"
+      );
+      expect(response.status).toEqual(200);
+      expect(response.body).toEqual({
+        id_token_signing_alg_values_supported: ["RS256"],
+        jwks_uri: `https://secure.example.com:443/secure-pool/.well-known/jwks.json`,
+        issuer: `https://secure.example.com:443/secure-pool`,
+        subject_types_supported: ["public"],
       });
     });
   });
