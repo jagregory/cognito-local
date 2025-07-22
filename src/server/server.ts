@@ -65,7 +65,10 @@ export const createServer = (
       id_token_signing_alg_values_supported: ["RS256"],
       jwks_uri: `http://localhost:9229/${req.params.userPoolId}/.well-known/jwks.json`,
       issuer: `http://localhost:9229/${req.params.userPoolId}`,
-    });
+      subject_types_supported: [
+          "public"
+        ],
+      });
   });
 
   app.get("/health", (req, res) => {
