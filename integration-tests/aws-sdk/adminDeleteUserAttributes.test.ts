@@ -35,9 +35,9 @@ describe(
         .promise();
 
       expect(user.UserAttributes).toEqual([
-        { Name: "sub", Value: expect.stringMatching(UUID) },
-        { Name: "email", Value: "example@example.com" },
         { Name: "custom:example", Value: "1" },
+        { Name: "email", Value: "example@example.com" },
+        { Name: "sub", Value: expect.stringMatching(UUID) },
       ]);
 
       await client
@@ -56,8 +56,8 @@ describe(
         .promise();
 
       expect(user.UserAttributes).toEqual([
-        { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example@example.com" },
+        { Name: "sub", Value: expect.stringMatching(UUID) },
       ]);
     });
   }),

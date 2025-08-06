@@ -35,11 +35,11 @@ describe(
           expect(createUserResult).toEqual({
             User: {
               Attributes: [
+                { Name: "phone_number", Value: "0400000000" },
                 {
                   Name: "sub",
                   Value: expect.stringMatching(UUID),
                 },
-                { Name: "phone_number", Value: "0400000000" },
               ],
               Enabled: true,
               UserCreateDate: roundedDate,
@@ -73,11 +73,11 @@ describe(
           expect(createUserResult).toEqual({
             User: {
               Attributes: [
+                { Name: "email", Value: "example@example.com" },
                 {
                   Name: "sub",
                   Value: expect.stringMatching(UUID),
                 },
-                { Name: "email", Value: "example@example.com" },
               ],
               Enabled: true,
               UserCreateDate: roundedDate,
@@ -163,12 +163,12 @@ describe(
           expect(createUserResult).toEqual({
             User: {
               Attributes: [
+                { Name: "email", Value: "example@example.com" },
+                { Name: "phone_number", Value: "0400000000" },
                 {
                   Name: "sub",
                   Value: expect.stringMatching(UUID),
                 },
-                { Name: "phone_number", Value: "0400000000" },
-                { Name: "email", Value: "example@example.com" },
               ],
               Enabled: true,
               UserCreateDate: roundedDate,
@@ -203,11 +203,11 @@ describe(
           expect(createUserResult).toEqual({
             User: {
               Attributes: [
+                { Name: "email", Value: "example@example.com" },
                 {
                   Name: "sub",
                   Value: expect.stringMatching(UUID),
                 },
-                { Name: "email", Value: "example@example.com" },
               ],
               Enabled: true,
               UserCreateDate: roundedDate,
@@ -254,11 +254,11 @@ describe(
           expect(createUserResult).toEqual({
             User: {
               Attributes: [
+                { Name: "email", Value: "example@example.com" },
                 {
                   Name: "sub",
                   Value: expect.stringMatching(UUID),
                 },
-                { Name: "email", Value: "example@example.com" },
               ],
               Enabled: true,
               UserCreateDate: roundedDate,

@@ -45,23 +45,32 @@ export const VerifyUserAttribute =
       throw new CodeMismatchError();
     }
 
+    const attributesToUpdate = [
+      ...user.Attributes,
+      ...(user.UnverifiedAttributeChanges ?? []),
+    ];
+
     if (req.AttributeName === "email") {
       await userPool.saveUser(ctx, {
         ...user,
         Attributes: attributesAppend(
-          user.Attributes,
+          attributesToUpdate,
           attribute("email_verified", "true"),
         ),
         UserLastModifiedDate: clock.get(),
+        UnverifiedAttributeChanges: undefined,
+        AttributeVerificationCode: undefined,
       });
     } else if (req.AttributeName === "phone_number") {
       await userPool.saveUser(ctx, {
         ...user,
         Attributes: attributesAppend(
-          user.Attributes,
+          attributesToUpdate,
           attribute("phone_number_verified", "true"),
         ),
         UserLastModifiedDate: clock.get(),
+        UnverifiedAttributeChanges: undefined,
+        AttributeVerificationCode: undefined,
       });
     } else {
       // not sure what to do here

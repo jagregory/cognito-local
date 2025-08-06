@@ -87,7 +87,7 @@ describe(
         ChallengeParameters: {
           USER_ID_FOR_SRP: "abc",
           requiredAttributes: "[]",
-          userAttributes: `{"sub":"${userSub}","email":"example@example.com"}`,
+          userAttributes: `{"email":"example@example.com","sub":"${userSub}"}`,
         },
         Session: expect.stringMatching(UUID),
       });

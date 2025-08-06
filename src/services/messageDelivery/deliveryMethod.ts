@@ -7,7 +7,9 @@ export const selectAppropriateDeliveryMethod = (
   user: User,
 ): DeliveryDetails | null => {
   if (desiredDeliveryMediums.includes("phone_number")) {
-    const phoneNumber = attributeValue("phone_number", user.Attributes);
+    const phoneNumber =
+      attributeValue("phone_number", user.UnverifiedAttributeChanges) ??
+      attributeValue("phone_number", user.Attributes);
     if (phoneNumber) {
       return {
         AttributeName: "phone_number",
@@ -18,7 +20,9 @@ export const selectAppropriateDeliveryMethod = (
   }
 
   if (desiredDeliveryMediums.includes("email")) {
-    const email = attributeValue("email", user.Attributes);
+    const email =
+      attributeValue("email", user.UnverifiedAttributeChanges) ??
+      attributeValue("email", user.Attributes);
     if (email) {
       return {
         AttributeName: "email",

@@ -25,6 +25,7 @@ export const attribute = (
   name: string,
   value: string | undefined,
 ): AttributeType => ({ Name: name, Value: value });
+
 export const attributesIncludeMatch = (
   attributeName: string,
   attributeValue: string,
@@ -33,14 +34,17 @@ export const attributesIncludeMatch = (
   !!(attributes ?? []).find(
     (x) => x.Name === attributeName && x.Value === attributeValue,
   );
+
 export const attributesInclude = (
   attributeName: string,
   attributes: AttributeListType | undefined,
 ) => !!(attributes ?? []).find((x) => x.Name === attributeName);
+
 export const attributeValue = (
   attributeName: string | undefined,
   attributes: AttributeListType | undefined,
 ) => (attributes ?? []).find((x) => x.Name === attributeName)?.Value;
+
 export const attributesToRecord = (
   attributes: AttributeListType | undefined,
 ): Record<string, string> =>
@@ -53,10 +57,14 @@ export const attributesToRecord = (
     },
     {} as Record<string, string>,
   );
+
 export const attributesFromRecord = (
   attributes: Record<string, string>,
 ): AttributeListType =>
-  Object.entries(attributes).map(([Name, Value]) => ({ Name, Value }));
+  Object.entries(attributes)
+    .map(([Name, Value]) => ({ Name, Value }))
+    .sort((a, b) => a.Name.localeCompare(b.Name));
+
 export const attributesAppend = (
   attributes: AttributeListType | undefined,
   ...toAppend: AttributeListType
@@ -102,6 +110,13 @@ export interface User {
   ConfirmationCode?: string;
   MFACode?: string;
   RefreshTokens: string[];
+
+  /**
+   * UnverifiedAttributeChanges is a list of attributes that have been requested to be changed
+   * but have not yet been verified. This is used to track changes that require user verification
+   * before they can be applied to the user.
+   */
+  UnverifiedAttributeChanges?: AttributeListType;
 }
 
 export interface Group {
@@ -589,7 +604,33 @@ export const defaultVerifiedAttributesIfModified = (
 };
 
 export const hasUnverifiedContactAttributes = (
-  userAttributesToSet: AttributeListType,
+  userAttributesToSet: AttributeListType | undefined,
 ): boolean =>
   attributeValue("email_verified", userAttributesToSet) === "false" ||
   attributeValue("phone_number_verified", userAttributesToSet) === "false";
+
+/**
+ * Splits user attributes into two lists:
+ * - Immediate attributes that can be set without verification
+ * - Delayed attributes that require verification before they can be set
+ */
+export const splitImmediateAndDelayedAttributes = (
+  userAttributesToSet: AttributeListType,
+  attributesRequireVerificationBeforeUpdate: readonly string[] | undefined,
+): [AttributeListType, AttributeListType] => {
+  const immediateAttributes: AttributeListType = [];
+  const delayedAttributes: AttributeListType = [];
+
+  for (const attr of userAttributesToSet) {
+    if (attributesRequireVerificationBeforeUpdate?.includes(attr.Name)) {
+      delayedAttributes.push(attr);
+    } else {
+      immediateAttributes.push(attr);
+    }
+  }
+
+  return [
+    defaultVerifiedAttributesIfModified(immediateAttributes),
+    defaultVerifiedAttributesIfModified(delayedAttributes),
+  ];
+};

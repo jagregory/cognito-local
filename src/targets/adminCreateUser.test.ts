@@ -44,12 +44,12 @@ describe("AdminCreateUser target", () => {
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
         {
           Name: "sub",
           Value: expect.stringMatching(UUID),
         },
-        { Name: "email", Value: "example@example.com" },
-        { Name: "phone_number", Value: "0400000000" },
       ],
       Enabled: true,
       Password: "pwd",
@@ -76,12 +76,12 @@ describe("AdminCreateUser target", () => {
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
         {
           Name: "sub",
           Value: expect.stringMatching(UUID),
         },
-        { Name: "email", Value: "example@example.com" },
-        { Name: "phone_number", Value: "0400000000" },
       ],
       Enabled: true,
       Password: "pwd",
@@ -105,12 +105,12 @@ describe("AdminCreateUser target", () => {
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
+        { Name: "email", Value: "example@example.com" },
+        { Name: "phone_number", Value: "0400000000" },
         {
           Name: "sub",
           Value: expect.stringMatching(UUID),
         },
-        { Name: "email", Value: "example@example.com" },
-        { Name: "phone_number", Value: "0400000000" },
       ],
       Enabled: true,
       Password: expect.stringMatching(/^[A-Za-z0-9!]{6}$/),
@@ -381,11 +381,11 @@ describe("AdminCreateUser target", () => {
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
       Attributes: [
+        { Name: "email", Value: "example@example.com" },
         {
           Name: "sub",
           Value: expect.stringMatching(UUID),
         },
-        { Name: "email", Value: "example@example.com" },
       ],
       Enabled: true,
       Password: "pwd",

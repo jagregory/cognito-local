@@ -142,7 +142,7 @@ export const AdminCreateUser =
     const user: User = {
       Username: username,
       Password: temporaryPassword,
-      Attributes: attributes,
+      Attributes: attributes.sort((a, b) => a.Name.localeCompare(b.Name)),
       Enabled: true,
       UserStatus: "FORCE_CHANGE_PASSWORD",
       ConfirmationCode: undefined,
