@@ -1,3 +1,15 @@
+# [5.1.0](https://github.com/jagregory/cognito-local/compare/v5.0.0...v5.1.0) (2025-08-06)
+
+
+### Bug Fixes
+
+* **api:** respond with x-amz-json content type ([8ecaf40](https://github.com/jagregory/cognito-local/commit/8ecaf40208c513c91cf5e37354104103101a7e95)), closes [#404](https://github.com/jagregory/cognito-local/issues/404)
+
+
+### Features
+
+* support AttributesRequireVerificationBeforeUpdate ([a0d30eb](https://github.com/jagregory/cognito-local/commit/a0d30eb48e30f49b281d4878e71ecacf3a11af2f)), closes [#410](https://github.com/jagregory/cognito-local/issues/410) [#411](https://github.com/jagregory/cognito-local/issues/411)
+
 # [5.0.0](https://github.com/jagregory/cognito-local/compare/v4.1.0...v5.0.0) (2025-03-05)
 
 
