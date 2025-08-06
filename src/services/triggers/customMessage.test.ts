@@ -1,10 +1,11 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockLambda } from "../../__tests__/mockLambda";
 import { TestContext } from "../../__tests__/testContext";
-import { Lambda } from "../lambda";
-import { CustomMessage, CustomMessageTrigger } from "./customMessage";
+import type { Lambda } from "../lambda";
+import { CustomMessage, type CustomMessageTrigger } from "./customMessage";
 
 describe("CustomMessage trigger", () => {
-  let mockLambda: jest.Mocked<Lambda>;
+  let mockLambda: MockedObject<Lambda>;
   let customMessage: CustomMessageTrigger;
 
   beforeEach(() => {
@@ -68,16 +69,16 @@ describe("CustomMessage trigger", () => {
           username: "example@example.com",
           usernameParameter: "{username}",
           userPoolId: "userPoolId",
-        }
+        },
       );
 
       expect(message).not.toBeNull();
       expect(message?.emailMessage).toEqual(
-        "hi example@example.com your code is 123456. via email"
+        "hi example@example.com your code is 123456. via email",
       );
       expect(message?.emailSubject).toEqual("email subject");
       expect(message?.smsMessage).toEqual(
-        "hi example@example.com your code is 123456. via sms"
+        "hi example@example.com your code is 123456. via sms",
       );
     });
   });

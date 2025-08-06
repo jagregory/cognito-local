@@ -1,5 +1,5 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
-import { UserNotFoundError } from "../../src/errors";
 import { withCognitoSdk } from "./setup";
 
 const currentDate = new Date();
@@ -20,7 +20,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         // create the user
         const createUserResult = await client
@@ -63,8 +63,11 @@ describe(
               Username: "abc",
               UserPoolId: userPoolId,
             })
-            .promise()
-        ).rejects.toEqual(new UserNotFoundError("User does not exist."));
+            .promise(),
+        ).rejects.toMatchObject({
+          name: "UserNotFoundException",
+          message: "User does not exist.",
+        });
       });
 
       it("deletes a user with an email address as a username", async () => {
@@ -75,7 +78,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         // create the user
         const createUserResult = await client
@@ -121,12 +124,15 @@ describe(
               Username: "example@example.com",
               UserPoolId: userPoolId,
             })
-            .promise()
-        ).rejects.toEqual(new UserNotFoundError("User does not exist."));
+            .promise(),
+        ).rejects.toMatchObject({
+          name: "UserNotFoundException",
+          message: "User does not exist.",
+        });
       });
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

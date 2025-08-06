@@ -1,20 +1,21 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { GroupNotFoundError, UserNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import {
   AdminAddUserToGroup,
-  AdminAddUserToGroupTarget,
+  type AdminAddUserToGroupTarget,
 } from "./adminAddUserToGroup";
 
 const originalDate = new Date();
 
 describe("AdminAddUserToGroup target", () => {
   let adminAddUserToGroup: AdminAddUserToGroupTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
@@ -45,7 +46,7 @@ describe("AdminAddUserToGroup target", () => {
     expect(mockUserPoolService.addUserToGroup).toHaveBeenCalledWith(
       TestContext,
       existingGroup,
-      existingUser
+      existingUser,
     );
   });
 
@@ -60,7 +61,7 @@ describe("AdminAddUserToGroup target", () => {
         GroupName: "group",
         Username: existingUser.Username,
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new GroupNotFoundError());
   });
 
@@ -75,7 +76,7 @@ describe("AdminAddUserToGroup target", () => {
         GroupName: existingGroup.GroupName,
         Username: "user",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 });

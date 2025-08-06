@@ -1,15 +1,15 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import * as uuid from "uuid";
 import { NotAuthorizedError, ResourceNotFoundError } from "../../errors";
-import { Clock } from "../clock";
-import { CognitoService } from "../cognitoService";
-import { UserMigrationTriggerResponse, Lambda } from "../lambda";
+import type { Clock } from "../clock";
+import type { CognitoService } from "../cognitoService";
+import type { Lambda, UserMigrationTriggerResponse } from "../lambda";
 import {
   attributesFromRecord,
   attributesToRecord,
-  User,
+  type User,
 } from "../userPoolService";
-import { Trigger } from "./trigger";
+import type { Trigger } from "./trigger";
 
 export type UserMigrationTrigger = Trigger<
   {
@@ -61,7 +61,7 @@ export const UserMigration =
       username,
       userPoolId,
       validationData,
-    }
+    },
   ) => {
     const userPool = await cognitoClient.getUserPoolForClientId(ctx, clientId);
     if (!userPool) {
@@ -81,7 +81,7 @@ export const UserMigration =
         userPoolId,
         validationData,
       });
-    } catch (ex) {
+    } catch (_ex) {
       throw new NotAuthorizedError();
     }
 

@@ -1,12 +1,13 @@
-import { Triggers } from "../services";
+import { type MockedObject, vi } from "vitest";
+import type { Triggers } from "../services";
 
-export const newMockTriggers = (): jest.Mocked<Triggers> => ({
-  customMessage: jest.fn(),
-  customEmailSender: jest.fn(),
-  enabled: jest.fn(),
-  postAuthentication: jest.fn(),
-  postConfirmation: jest.fn(),
-  preSignUp: jest.fn(),
-  preTokenGeneration: jest.fn(),
-  userMigration: jest.fn(),
+export const newMockTriggers = (): MockedObject<Triggers> => ({
+  customMessage: vi.fn(),
+  customEmailSender: vi.fn(),
+  enabled: vi.fn(),
+  postAuthentication: vi.fn(),
+  postConfirmation: vi.fn(),
+  preSignUp: vi.fn(),
+  preTokenGeneration: vi.fn(),
+  userMigration: vi.fn(),
 });

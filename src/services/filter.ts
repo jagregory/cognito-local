@@ -1,20 +1,20 @@
 import { InvalidParameterError } from "../errors";
 
 const FilterExpression = new RegExp(
-  /^\s*(?<attr>.*)\s+(?<type>\^?=)\s+"(?<value>.*)"\s*$/
+  /^\s*(?<attr>.*)\s+(?<type>\^?=)\s+"(?<value>.*)"\s*$/,
 );
 
 type Matcher<T> = (obj: T, filterType: "=" | "^=", value: string) => boolean;
 type FieldLookup<T> = (obj: T) => string | boolean | undefined;
 
-function compare<T>(
+function compare<_T>(
   fieldValue: string | undefined,
   type: "=" | "^=",
-  value: string
+  value: string,
 ) {
   return type === "="
     ? fieldValue === value
-    : fieldValue?.startsWith(value) ?? false;
+    : (fieldValue?.startsWith(value) ?? false);
 }
 
 export class FilterConfig<T> {
@@ -27,7 +27,7 @@ export class FilterConfig<T> {
       compare(
         field(obj)?.toString()?.toLocaleLowerCase(),
         type,
-        value.toLocaleLowerCase()
+        value.toLocaleLowerCase(),
       );
   }
 

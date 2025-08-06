@@ -1,8 +1,7 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Lambda, PreSignUpTriggerResponse } from "../lambda";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { Lambda, PreSignUpTriggerResponse } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { Trigger } from "./trigger";
-import { UserLambdaValidationError } from "../../errors";
+import type { Trigger } from "./trigger";
 
 export type PreSignUpTrigger = Trigger<
   {
@@ -52,7 +51,7 @@ export const PreSignUp =
       username,
       userPoolId,
       validationData,
-    }
+    },
   ) =>
     lambda.invoke(ctx, "PreSignUp", {
       clientId,

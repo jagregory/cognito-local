@@ -1,4 +1,4 @@
-import { UserNotFoundError } from "../../src/errors";
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -12,7 +12,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       // create the user pool client
       const upc = await client
@@ -68,8 +68,11 @@ describe(
             Username: "abc",
             UserPoolId: userPoolId,
           })
-          .promise()
-      ).rejects.toEqual(new UserNotFoundError("User does not exist."));
+          .promise(),
+      ).rejects.toMatchObject({
+        name: "UserNotFoundException",
+        message: "User does not exist.",
+      });
     });
-  })
+  }),
 );

@@ -1,5 +1,6 @@
-import { TokenGenerator } from "../services/tokenGenerator";
+import { type MockedObject, vi } from "vitest";
+import type { TokenGenerator } from "../services/tokenGenerator";
 
-export const newMockTokenGenerator = (): jest.Mocked<TokenGenerator> => ({
-  generate: jest.fn(),
+export const newMockTokenGenerator = (): MockedObject<TokenGenerator> => ({
+  generate: vi.fn(),
 });

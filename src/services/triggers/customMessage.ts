@@ -1,7 +1,7 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { CustomMessageTriggerResponse, Lambda } from "../lambda";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { CustomMessageTriggerResponse, Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { Trigger } from "./trigger";
+import type { Trigger } from "./trigger";
 
 const AWS_USERNAME_PARAMETER = "{username}";
 const AWS_CODE_PARAMETER = "{####}";
@@ -59,7 +59,7 @@ export const CustomMessage =
       userAttributes,
       username,
       userPoolId,
-    }
+    },
   ) => {
     try {
       const response = await lambda.invoke(ctx, "CustomMessage", {

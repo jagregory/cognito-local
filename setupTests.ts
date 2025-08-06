@@ -1,3 +1,5 @@
+import { expect } from "vitest";
+
 expect.extend({
   jsonMatching(actual: any, expected: any) {
     const pass = this.equals(JSON.parse(actual), expected);
@@ -14,17 +16,11 @@ expect.extend({
   },
 });
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace jest {
-    interface Expect {
-      jsonMatching(expected: any): any;
-    }
-  }
+interface CustomMatchers<R = unknown> {
+  jsonMatching: (expected: any) => R;
 }
 
-export {};
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
+declare module "vitest" {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}

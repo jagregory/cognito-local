@@ -1,6 +1,7 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TestContext } from "../../__tests__/testContext";
-import { ConsoleMessageSender } from "./consoleMessageSender";
 import * as TDB from "../../__tests__/testDataBuilder";
+import { ConsoleMessageSender } from "./consoleMessageSender";
 
 describe("consoleMessageSender", () => {
   const user = TDB.user();
@@ -8,7 +9,7 @@ describe("consoleMessageSender", () => {
   const sender = new ConsoleMessageSender();
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe.each(["sendEmail", "sendSms"] as const)("%s", (fn) => {
@@ -18,13 +19,13 @@ describe("consoleMessageSender", () => {
       });
 
       expect(TestContext.logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(new RegExp(`Username:\\s+${user.Username}`))
+        expect.stringMatching(new RegExp(`Username:\\s+${user.Username}`)),
       );
       expect(TestContext.logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Destination:\s+example@example.com/)
+        expect.stringMatching(/Destination:\s+example@example.com/),
       );
       expect(TestContext.logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Code:\s+123456/)
+        expect.stringMatching(/Code:\s+123456/),
       );
     });
 
@@ -35,7 +36,7 @@ describe("consoleMessageSender", () => {
       });
 
       expect(TestContext.logger.info).not.toHaveBeenCalledWith(
-        expect.stringMatching(/Email Message/)
+        expect.stringMatching(/Email Message/),
       );
     });
 
@@ -46,7 +47,7 @@ describe("consoleMessageSender", () => {
       });
 
       expect(TestContext.logger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Email Message:\s+this is the email message/)
+        expect.stringMatching(/Email Message:\s+this is the email message/),
       );
     });
   });

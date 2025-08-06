@@ -1,13 +1,14 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
-import { UserPoolService } from "../services";
-import { ListUsers, ListUsersTarget } from "./listUsers";
 import * as TDB from "../__tests__/testDataBuilder";
+import type { UserPoolService } from "../services";
+import { ListUsers, type ListUsersTarget } from "./listUsers";
 
 describe("ListUsers target", () => {
   let listUsers: ListUsersTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -62,7 +63,7 @@ describe("ListUsers target", () => {
 
     expect(mockUserPoolService.listUsers).toHaveBeenCalledWith(
       TestContext,
-      'username = "abc"'
+      'username = "abc"',
     );
   });
 

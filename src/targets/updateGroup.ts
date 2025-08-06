@@ -1,11 +1,11 @@
-import {
+import type {
   UpdateGroupRequest,
   UpdateGroupResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
 import { GroupNotFoundError } from "../errors";
+import type { Services } from "../services";
 import { groupToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type UpdateGroupTarget = Target<UpdateGroupRequest, UpdateGroupResponse>;
 

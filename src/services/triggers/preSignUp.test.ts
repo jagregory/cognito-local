@@ -1,10 +1,11 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockLambda } from "../../__tests__/mockLambda";
 import { TestContext } from "../../__tests__/testContext";
-import { Lambda } from "../lambda";
-import { PreSignUp, PreSignUpTrigger } from "./preSignUp";
+import type { Lambda } from "../lambda";
+import { PreSignUp, type PreSignUpTrigger } from "./preSignUp";
 
 describe("PreSignUp trigger", () => {
-  let mockLambda: jest.Mocked<Lambda>;
+  let mockLambda: MockedObject<Lambda>;
   let preSignUp: PreSignUpTrigger;
 
   beforeEach(() => {
@@ -22,7 +23,7 @@ describe("PreSignUp trigger", () => {
     describe("when lambda invoke fails", () => {
       it("throws", async () => {
         mockLambda.invoke.mockRejectedValue(
-          new Error("Something bad happened")
+          new Error("Something bad happened"),
         );
 
         await expect(
@@ -34,7 +35,7 @@ describe("PreSignUp trigger", () => {
             username: "username",
             userPoolId: "userPoolId",
             validationData: undefined,
-          })
+          }),
         ).rejects.toEqual(new Error("Something bad happened"));
       });
     });
@@ -72,7 +73,7 @@ describe("PreSignUp trigger", () => {
             validationData: {
               validation: "data",
             },
-          }
+          },
         );
       });
     });

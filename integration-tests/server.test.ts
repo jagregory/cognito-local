@@ -1,4 +1,6 @@
 import supertest from "supertest";
+import { describe, expect, it, vi } from "vitest";
+import { createServer } from "../src";
 import { MockLogger } from "../src/__tests__/mockLogger";
 import {
   CodeMismatchError,
@@ -8,12 +10,11 @@ import {
   UnsupportedError,
   UsernameExistsError,
 } from "../src/errors";
-import { createServer } from "../src";
 
 describe("HTTP server", () => {
   describe("/", () => {
     it("errors with missing x-azm-target header", async () => {
-      const router = jest.fn();
+      const router = vi.fn();
       const server = createServer(router, MockLogger as any, {});
 
       const response = await supertest(server.application).post("/");
@@ -23,7 +24,7 @@ describe("HTTP server", () => {
     });
 
     it("errors with an poorly formatted x-azm-target header", async () => {
-      const router = jest.fn();
+      const router = vi.fn();
       const server = createServer(router, MockLogger as any, {});
 
       const response = await supertest(server.application)
@@ -38,7 +39,7 @@ describe("HTTP server", () => {
 
     describe("a handled target", () => {
       it("returns the output of a matched target", async () => {
-        const route = jest.fn().mockResolvedValue({
+        const route = vi.fn().mockResolvedValue({
           ok: true,
         });
         const router = (target: string) =>
@@ -56,7 +57,7 @@ describe("HTTP server", () => {
       });
 
       it("converts UnsupportedErrors from within a target route to a 500 error", async () => {
-        const route = jest
+        const route = vi
           .fn()
           .mockRejectedValue(new UnsupportedError("integration test"));
         const router = (target: string) =>
@@ -84,7 +85,7 @@ describe("HTTP server", () => {
       `(
         "it converts $code to the format Cognito SDK expects",
         async ({ error, code, message }) => {
-          const route = jest.fn().mockRejectedValue(error);
+          const route = vi.fn().mockRejectedValue(error);
           const router = (target: string) =>
             target === "valid" ? route : () => Promise.reject();
           const server = createServer(router, MockLogger as any, {});
@@ -98,17 +99,17 @@ describe("HTTP server", () => {
             __type: `${code}`,
             message,
           });
-        }
+        },
       );
     });
   });
 
   describe("jwks endpoint", () => {
     it("responds with our public key", async () => {
-      const server = createServer(jest.fn(), MockLogger as any, {});
+      const server = createServer(vi.fn(), MockLogger as any, {});
 
       const response = await supertest(server.application).get(
-        "/any-user-pool/.well-known/jwks.json"
+        "/any-user-pool/.well-known/jwks.json",
       );
 
       expect(response.status).toEqual(200);
@@ -129,10 +130,10 @@ describe("HTTP server", () => {
 
   describe("OpenId Configuration Endpoint", () => {
     it("responds with open id configuration", async () => {
-      const server = createServer(jest.fn(), MockLogger as any, {});
+      const server = createServer(vi.fn(), MockLogger as any, {});
 
       const response = await supertest(server.application).get(
-        "/any-user-pool/.well-known/openid-configuration"
+        "/any-user-pool/.well-known/openid-configuration",
       );
       expect(response.status).toEqual(200);
       expect(response.body).toEqual({

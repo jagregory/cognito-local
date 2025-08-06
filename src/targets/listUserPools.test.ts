@@ -1,13 +1,14 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { CognitoService } from "../services";
-import { ListUserPools, ListUserPoolsTarget } from "./listUserPools";
+import type { CognitoService } from "../services";
+import { ListUserPools, type ListUserPoolsTarget } from "./listUserPools";
 
 describe("ListUserPools target", () => {
   let listUserPools: ListUserPoolsTarget;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     mockCognitoService = newMockCognitoService(newMockUserPoolService());

@@ -10,11 +10,11 @@ import { InvalidParameterError } from "../../errors";
 export function assertRequiredParameter<T>(
   name: string,
   parameter: T,
-  message?: string
+  message?: string,
 ): asserts parameter is NonNullable<T> {
   if (!parameter) {
     throw new InvalidParameterError(
-      message ?? `Missing required parameter ${name}`
+      message ?? `Missing required parameter ${name}`,
     );
   }
 }
@@ -31,16 +31,16 @@ export function assertParameterLength<T>(
   name: string,
   min: number,
   max: number,
-  parameter: readonly T[]
+  parameter: readonly T[],
 ): asserts parameter {
   if (parameter.length < min) {
     throw new InvalidParameterError(
-      `Invalid length for parameter ${name}, value: ${parameter.length}, valid min length: ${min}`
+      `Invalid length for parameter ${name}, value: ${parameter.length}, valid min length: ${min}`,
     );
   }
   if (parameter.length > max) {
     throw new InvalidParameterError(
-      `Invalid length for parameter ${name}, value: ${parameter.length}, valid max length: ${max}`
+      `Invalid length for parameter ${name}, value: ${parameter.length}, valid max length: ${max}`,
     );
   }
 }

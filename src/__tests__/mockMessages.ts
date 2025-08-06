@@ -1,5 +1,6 @@
-import { Messages } from "../services";
+import { type MockedObject, vi } from "vitest";
+import type { Messages } from "../services";
 
-export const newMockMessages = (): jest.Mocked<Messages> => ({
-  deliver: jest.fn(),
+export const newMockMessages = (): MockedObject<Messages> => ({
+  deliver: vi.fn(),
 });

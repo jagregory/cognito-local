@@ -1,4 +1,4 @@
-import { LogService } from "./LogService";
+import type { LogService } from "./LogService";
 export interface Context {
   readonly logger: LogService;
 }

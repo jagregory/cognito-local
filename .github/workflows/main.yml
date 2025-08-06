@@ -21,9 +21,9 @@ jobs:
       - run: yarn install
       - run: yarn lint
 
-  unit_test:
+  test:
     runs-on: ubuntu-latest
-    name: Unit Test
+    name: Test
     timeout-minutes: 5
 
     steps:
@@ -49,27 +49,12 @@ jobs:
       - run: yarn install
       - run: scripts/smoke-test
 
-  integration_test:
-    runs-on: ubuntu-latest
-    name: Integration Test
-    timeout-minutes: 5
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.13.1
-          cache: yarn
-      - run: yarn install
-      - run: yarn integration-test
-
   build:
     runs-on: ubuntu-latest
     name: Build
     needs:
-      - integration_test
       - lint
-      - unit_test
+      - test
 
     steps:
       - uses: actions/checkout@v2

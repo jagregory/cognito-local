@@ -1,14 +1,15 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { GroupNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
-import { GetGroup, GetGroupTarget } from "./getGroup";
+import type { UserPoolService } from "../services";
+import { GetGroup, type GetGroupTarget } from "./getGroup";
 
 describe("GetGroup target", () => {
   let getGroup: GetGroupTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -30,7 +31,7 @@ describe("GetGroup target", () => {
 
     expect(mockUserPoolService.getGroupByGroupName).toHaveBeenCalledWith(
       TestContext,
-      existingGroup.GroupName
+      existingGroup.GroupName,
     );
 
     expect(result.Group).toEqual({
@@ -50,7 +51,7 @@ describe("GetGroup target", () => {
       getGroup(TestContext, {
         GroupName: "group",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new GroupNotFoundError());
   });
 });

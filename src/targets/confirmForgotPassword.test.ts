@@ -1,23 +1,24 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
-import { Triggers, UserPoolService } from "../services";
+import type { Triggers, UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import {
   ConfirmForgotPassword,
-  ConfirmForgotPasswordTarget,
+  type ConfirmForgotPasswordTarget,
 } from "./confirmForgotPassword";
-import * as TDB from "../__tests__/testDataBuilder";
 
 const currentDate = new Date();
 
 describe("ConfirmForgotPassword target", () => {
   let confirmForgotPassword: ConfirmForgotPasswordTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockTriggers: jest.Mocked<Triggers>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockTriggers: MockedObject<Triggers>;
 
   let clock: ClockFake;
 
@@ -42,7 +43,7 @@ describe("ConfirmForgotPassword target", () => {
         Username: "janice",
         ConfirmationCode: "123456",
         Password: "newPassword",
-      })
+      }),
     ).rejects.toBeInstanceOf(UserNotFoundError);
   });
 
@@ -60,7 +61,7 @@ describe("ConfirmForgotPassword target", () => {
         Username: "janice",
         ConfirmationCode: "123456",
         Password: "newPassword",
-      })
+      }),
     ).rejects.toBeInstanceOf(CodeMismatchError);
   });
 
@@ -123,11 +124,11 @@ describe("ConfirmForgotPassword target", () => {
             source: "PostConfirmation_ConfirmForgotPassword",
             userAttributes: attributesAppend(
               user.Attributes,
-              attribute("cognito:user_status", "CONFIRMED")
+              attribute("cognito:user_status", "CONFIRMED"),
             ),
             userPoolId: "test",
             username: user.Username,
-          }
+          },
         );
       });
     });

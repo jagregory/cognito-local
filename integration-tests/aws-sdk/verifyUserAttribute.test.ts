@@ -1,7 +1,8 @@
+import { describe, expect, it } from "vitest";
 import { UUID } from "../../src/__tests__/patterns";
 import { TestContext } from "../../src/__tests__/testContext";
+import type { User } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
-import { User } from "../../src/services/userPoolService";
 
 describe(
   "CognitoIdentityServiceProvider.verifyUserAttribute",
@@ -89,5 +90,5 @@ describe(
         { Name: "email_verified", Value: "true" },
       ]);
     });
-  })
+  }),
 );

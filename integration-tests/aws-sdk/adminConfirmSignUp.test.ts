@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -11,7 +12,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -54,5 +55,5 @@ describe(
 
       expect(user.UserStatus).toEqual("CONFIRMED");
     });
-  })
+  }),
 );

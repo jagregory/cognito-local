@@ -1,13 +1,13 @@
-import {
+import type {
   DeleteUserAttributesRequest,
   DeleteUserAttributesResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
-import { Services } from "../services";
-import { Token } from "../services/tokenGenerator";
+import type { Services } from "../services";
+import type { Token } from "../services/tokenGenerator";
 import { attributesRemove } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type DeleteUserAttributesTarget = Target<
   DeleteUserAttributesRequest,
@@ -30,7 +30,7 @@ export const DeleteUserAttributes =
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,
-      decodedToken.client_id
+      decodedToken.client_id,
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {

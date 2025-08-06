@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTriggers } from "../__tests__/mockTriggers";
@@ -5,11 +6,11 @@ import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { NotAuthorizedError } from "../errors";
-import { Triggers, UserPoolService } from "../services";
+import type { Triggers, UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import {
   AdminConfirmSignUp,
-  AdminConfirmSignUpTarget,
+  type AdminConfirmSignUpTarget,
 } from "./adminConfirmSignUp";
 
 const currentDate = new Date();
@@ -18,8 +19,8 @@ const clock = new ClockFake(currentDate);
 
 describe("AdminConfirmSignUp target", () => {
   let adminConfirmSignUp: AdminConfirmSignUpTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockTriggers: jest.Mocked<Triggers>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockTriggers: MockedObject<Triggers>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -41,7 +42,7 @@ describe("AdminConfirmSignUp target", () => {
         },
         Username: "invalid user",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
@@ -67,11 +68,11 @@ describe("AdminConfirmSignUp target", () => {
         },
         Username: user.Username,
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(
       new NotAuthorizedError(
-        `User cannot be confirmed. Current status is ${status}`
-      )
+        `User cannot be confirmed. Current status is ${status}`,
+      ),
     );
   });
 
@@ -100,7 +101,7 @@ describe("AdminConfirmSignUp target", () => {
   describe("when PostConfirmation trigger is enabled", () => {
     it("invokes the trigger", async () => {
       mockTriggers.enabled.mockImplementation(
-        (trigger) => trigger === "PostConfirmation"
+        (trigger) => trigger === "PostConfirmation",
       );
 
       const user = TDB.user({
@@ -125,7 +126,7 @@ describe("AdminConfirmSignUp target", () => {
         source: "PostConfirmation_ConfirmSignUp",
         userAttributes: attributesAppend(
           user.Attributes,
-          attribute("cognito:user_status", "CONFIRMED")
+          attribute("cognito:user_status", "CONFIRMED"),
         ),
         userPoolId: "test",
         username: user.Username,

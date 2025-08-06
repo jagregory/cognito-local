@@ -1,17 +1,18 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolService } from "../services";
-import { DeleteUser, DeleteUserTarget } from "./deleteUser";
+import type { UserPoolService } from "../services";
+import { DeleteUser, type DeleteUserTarget } from "./deleteUser";
 
 describe("DeleteUser target", () => {
   let deleteUser: DeleteUserTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -43,13 +44,13 @@ describe("DeleteUser target", () => {
           issuer: `http://localhost:9229/test`,
           expiresIn: "24h",
           keyid: "CognitoLocal",
-        }
+        },
       ),
     });
 
     expect(mockUserPoolService.deleteUser).toHaveBeenCalledWith(
       TestContext,
-      user
+      user,
     );
   });
 
@@ -57,7 +58,7 @@ describe("DeleteUser target", () => {
     await expect(
       deleteUser(TestContext, {
         AccessToken: "blah",
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 
@@ -83,9 +84,9 @@ describe("DeleteUser target", () => {
             issuer: `http://localhost:9229/test`,
             expiresIn: "24h",
             keyid: "CognitoLocal",
-          }
+          },
         ),
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 });

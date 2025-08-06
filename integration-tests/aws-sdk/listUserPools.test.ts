@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -33,8 +34,8 @@ describe(
           expect.objectContaining({ Name: "test-1" }),
           expect.objectContaining({ Name: "test-2" }),
           expect.objectContaining({ Name: "test-3" }),
-        ])
+        ]),
       );
     });
-  })
+  }),
 );

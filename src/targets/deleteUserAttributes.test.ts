@@ -1,18 +1,19 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import { attribute } from "../services/userPoolService";
 import {
   DeleteUserAttributes,
-  DeleteUserAttributesTarget,
+  type DeleteUserAttributesTarget,
 } from "./deleteUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
 
 const clock = new ClockFake(new Date());
 
@@ -33,12 +34,12 @@ const validToken = jwt.sign(
     issuer: `http://localhost:9229/test`,
     expiresIn: "24h",
     keyid: "CognitoLocal",
-  }
+  },
 );
 
 describe("DeleteUserAttributes target", () => {
   let deleteUserAttributes: DeleteUserAttributesTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -55,7 +56,7 @@ describe("DeleteUserAttributes target", () => {
       deleteUserAttributes(TestContext, {
         AccessToken: validToken,
         UserAttributeNames: ["custom:example"],
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
@@ -64,7 +65,7 @@ describe("DeleteUserAttributes target", () => {
       deleteUserAttributes(TestContext, {
         AccessToken: "invalid token",
         UserAttributeNames: ["custom:example"],
-      })
+      }),
     ).rejects.toEqual(new InvalidParameterError());
   });
 

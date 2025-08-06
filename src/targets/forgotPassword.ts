@@ -1,12 +1,12 @@
-import {
+import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UnsupportedError, UserNotFoundError } from "../errors";
-import { Services } from "../services";
-import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
+import type { Services } from "../services";
+import type { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import { attributeValue } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type ForgotPasswordTarget = Target<
   ForgotPasswordRequest,
@@ -54,7 +54,7 @@ export const ForgotPassword =
       user,
       code,
       req.ClientMetadata,
-      deliveryDetails
+      deliveryDetails,
     );
 
     await userPool.saveUser(ctx, {

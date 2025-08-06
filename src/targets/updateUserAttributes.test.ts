@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { Messages, UserPoolService } from "../services";
+import type { Messages, UserPoolService } from "../services";
 import {
   attribute,
   attributesAppend,
@@ -15,9 +17,8 @@ import {
 } from "../services/userPoolService";
 import {
   UpdateUserAttributes,
-  UpdateUserAttributesTarget,
+  type UpdateUserAttributesTarget,
 } from "./updateUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
 
 const clock = new ClockFake(new Date());
 
@@ -38,13 +39,13 @@ const validToken = jwt.sign(
     issuer: `http://localhost:9229/test`,
     expiresIn: "24h",
     keyid: "CognitoLocal",
-  }
+  },
 );
 
 describe("UpdateUserAttributes target", () => {
   let updateUserAttributes: UpdateUserAttributesTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockMessages: jest.Mocked<Messages>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockMessages: MockedObject<Messages>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -65,7 +66,7 @@ describe("UpdateUserAttributes target", () => {
           client: "metadata",
         },
         UserAttributes: [{ Name: "custom:example", Value: "1" }],
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 
@@ -79,7 +80,7 @@ describe("UpdateUserAttributes target", () => {
           client: "metadata",
         },
         UserAttributes: [{ Name: "custom:example", Value: "1" }],
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
@@ -106,7 +107,7 @@ describe("UpdateUserAttributes target", () => {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
-        attribute("custom:example", "1")
+        attribute("custom:example", "1"),
       ),
       UserLastModifiedDate: clock.get(),
     });
@@ -146,7 +147,7 @@ describe("UpdateUserAttributes target", () => {
             client: "metadata",
           },
           UserAttributes: [{ Name: attribute, Value: "1" }],
-        })
+        }),
       ).rejects.toEqual(new InvalidParameterError(expectedError));
     });
   });
@@ -172,12 +173,12 @@ describe("UpdateUserAttributes target", () => {
           Attributes: attributesAppend(
             user.Attributes,
             attribute(attr, "new value"),
-            attribute(`${attr}_verified`, "false")
+            attribute(`${attr}_verified`, "false"),
           ),
           UserLastModifiedDate: clock.get(),
         });
       });
-    }
+    },
   );
 
   describe("user pool has auto verified attributes enabled", () => {
@@ -195,7 +196,7 @@ describe("UpdateUserAttributes target", () => {
         it("does not deliver a OTP code to the user", async () => {
           const user = TDB.user({
             Attributes: attributes.map((attr: string) =>
-              attribute(`${attr}_verified`, "false")
+              attribute(`${attr}_verified`, "false"),
             ),
           });
 
@@ -231,13 +232,13 @@ describe("UpdateUserAttributes target", () => {
                 client: "metadata",
               },
               UserAttributes: attributes.map((attr: string) =>
-                attribute(attr, "new value")
+                attribute(attr, "new value"),
               ),
-            })
+            }),
           ).rejects.toEqual(
             new InvalidParameterError(
-              "User has no attribute matching desired auto verified attributes"
-            )
+              "User has no attribute matching desired auto verified attributes",
+            ),
           );
         });
 
@@ -252,7 +253,7 @@ describe("UpdateUserAttributes target", () => {
               client: "metadata",
             },
             UserAttributes: attributes.map((attr: string) =>
-              attribute(attr, "new value")
+              attribute(attr, "new value"),
             ),
           });
 
@@ -268,14 +269,14 @@ describe("UpdateUserAttributes target", () => {
               AttributeName: "email",
               DeliveryMedium: "EMAIL",
               Destination: attributeValue("email", user.Attributes),
-            }
+            },
           );
 
           expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
             TestContext,
             expect.objectContaining({
               AttributeVerificationCode: "123456",
-            })
+            }),
           );
         });
       });
@@ -297,7 +298,7 @@ describe("UpdateUserAttributes target", () => {
         it("does not deliver a OTP code to the user", async () => {
           const user = TDB.user({
             Attributes: attributes.map((attr: string) =>
-              attribute(`${attr}_verified`, "false")
+              attribute(`${attr}_verified`, "false"),
             ),
           });
 
@@ -330,7 +331,7 @@ describe("UpdateUserAttributes target", () => {
               client: "metadata",
             },
             UserAttributes: attributes.map((attr: string) =>
-              attribute(attr, "new value")
+              attribute(attr, "new value"),
             ),
           });
 
