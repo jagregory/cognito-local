@@ -1,17 +1,21 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
-import { AdminDisableUser, AdminDisableUserTarget } from "./adminDisableUser";
+import type { UserPoolService } from "../services";
+import {
+  AdminDisableUser,
+  type AdminDisableUserTarget,
+} from "./adminDisableUser";
 
 const originalDate = new Date();
 
 describe("AdminDisableUser target", () => {
   let adminDisableUser: AdminDisableUserTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
@@ -49,7 +53,7 @@ describe("AdminDisableUser target", () => {
       adminDisableUser(TestContext, {
         Username: "user",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 });

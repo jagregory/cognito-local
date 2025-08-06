@@ -1,9 +1,9 @@
-import {
+import type {
   GetUserPoolMfaConfigRequest,
   GetUserPoolMfaConfigResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 
 export type GetUserPoolMfaConfigTarget = Target<
   GetUserPoolMfaConfigRequest,

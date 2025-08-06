@@ -1,10 +1,14 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockLambda } from "../../__tests__/mockLambda";
 import { TestContext } from "../../__tests__/testContext";
-import { Lambda } from "../lambda";
-import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
+import type { Lambda } from "../lambda";
+import {
+  PostConfirmation,
+  type PostConfirmationTrigger,
+} from "./postConfirmation";
 
 describe("PostConfirmation trigger", () => {
-  let mockLambda: jest.Mocked<Lambda>;
+  let mockLambda: MockedObject<Lambda>;
   let postConfirmation: PostConfirmationTrigger;
 
   beforeEach(() => {
@@ -21,7 +25,7 @@ describe("PostConfirmation trigger", () => {
     describe("when lambda invoke fails", () => {
       it("quietly completes", async () => {
         mockLambda.invoke.mockRejectedValue(
-          new Error("Something bad happened")
+          new Error("Something bad happened"),
         );
 
         await postConfirmation(TestContext, {
@@ -55,7 +59,7 @@ describe("PostConfirmation trigger", () => {
             userAttributes: { email: "example@example.com" },
             userPoolId: "userPoolId",
             username: "example@example.com",
-          }
+          },
         );
       });
     });

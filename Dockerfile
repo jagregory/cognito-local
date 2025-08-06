@@ -9,7 +9,7 @@ RUN yarn --frozen-lockfile
 ADD src src
 
 # bundle
-RUN yarn esbuild src/bin/start.ts --outdir=lib --platform=node --target=node14 --bundle
+RUN yarn esbuild src/bin/start.ts --outdir=lib --platform=node --target=node22 --bundle
 
 FROM node:22.13.1-alpine
 WORKDIR /app

@@ -1,14 +1,15 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
-import { AdminGetUser, AdminGetUserTarget } from "./adminGetUser";
+import type { UserPoolService } from "../services";
+import { AdminGetUser, type AdminGetUserTarget } from "./adminGetUser";
 
 describe("AdminGetUser target", () => {
   let adminGetUser: AdminGetUserTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -46,7 +47,7 @@ describe("AdminGetUser target", () => {
       adminGetUser(TestContext, {
         Username: existingUser.Username,
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError("User does not exist."));
   });
 });

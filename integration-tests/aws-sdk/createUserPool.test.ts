@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { USER_POOL_AWS_DEFAULTS } from "../../src/services/cognitoService";
 import { withCognitoSdk } from "./setup";
@@ -25,7 +26,7 @@ describe(
           UserPool: {
             ...USER_POOL_AWS_DEFAULTS,
             Arn: expect.stringMatching(
-              /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
+              /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/,
             ),
             CreationDate: roundedDate,
             Id: expect.stringMatching(/^local_[\w\d]{8}$/),
@@ -37,6 +38,6 @@ describe(
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

@@ -1,11 +1,11 @@
-import {
+import type {
   ListUsersInGroupRequest,
   ListUsersInGroupResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { GroupNotFoundError, UserNotFoundError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { userToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type ListUsersInGroupTarget = Target<
   ListUsersInGroupRequest,
@@ -30,7 +30,7 @@ export const ListUsersInGroup =
           }
 
           return userToResponseObject(user);
-        }) ?? []
+        }) ?? [],
       ),
     };
   };

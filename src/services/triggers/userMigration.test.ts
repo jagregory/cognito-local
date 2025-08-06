@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../../__tests__/mockCognitoService";
 import { newMockLambda } from "../../__tests__/mockLambda";
 import { newMockUserPoolService } from "../../__tests__/mockUserPoolService";
@@ -5,13 +6,13 @@ import { UUID } from "../../__tests__/patterns";
 import { TestContext } from "../../__tests__/testContext";
 import { NotAuthorizedError } from "../../errors";
 import { DateClock } from "../clock";
-import { Lambda } from "../lambda";
-import { UserPoolService } from "../userPoolService";
-import { UserMigration, UserMigrationTrigger } from "./userMigration";
+import type { Lambda } from "../lambda";
+import type { UserPoolService } from "../userPoolService";
+import { UserMigration, type UserMigrationTrigger } from "./userMigration";
 
 describe("UserMigration trigger", () => {
-  let mockLambda: jest.Mocked<Lambda>;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockLambda: MockedObject<Lambda>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let userMigration: UserMigrationTrigger;
 
   beforeEach(() => {
@@ -37,7 +38,7 @@ describe("UserMigration trigger", () => {
           username: "username",
           userPoolId: "userPoolId",
           validationData: undefined,
-        })
+        }),
       ).rejects.toBeInstanceOf(NotAuthorizedError);
     });
   });
@@ -80,7 +81,7 @@ describe("UserMigration trigger", () => {
           validationData: {
             validation: "data",
           },
-        }
+        },
       );
 
       expect(user).not.toBeNull();

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { createDefaultServer } from "../server";
+import * as https from "node:https";
 import Pino from "pino";
 import PinoPretty from "pino-pretty";
-import * as https from "https";
+import { createDefaultServer } from "../server";
 
 const logger = Pino(
   {
@@ -14,8 +14,8 @@ const logger = Pino(
     ignore: "pid,name,hostname",
     singleLine: true,
     messageFormat: (log, messageKey) =>
-      `${log["reqId"] ?? "NONE"} ${log["target"] ?? "NONE"} ${log[messageKey]}`,
-  }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      `${log.reqId ?? "NONE"} ${log.target ?? "NONE"} ${log[messageKey]}`,
+  }),
 );
 
 createDefaultServer(logger)

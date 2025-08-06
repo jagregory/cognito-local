@@ -1,29 +1,30 @@
+import fs from "node:fs";
+import type http from "node:http";
+import { promisify } from "node:util";
 import * as AWS from "aws-sdk";
-import fs from "fs";
-import http from "http";
 import type { Logger } from "pino";
-import { promisify } from "util";
+import { afterEach, beforeEach, vi } from "vitest";
 import { createServer } from "../../src";
 import { FakeMessageDeliveryService } from "../../src/__tests__/FakeMessageDeliveryService";
 import { MockLogger } from "../../src/__tests__/mockLogger";
 import { DefaultConfig } from "../../src/server/config";
+import { Router } from "../../src/server/Router";
 import {
-  Clock,
+  type Clock,
   DateClock,
   MessagesService,
   TriggersService,
 } from "../../src/services";
 import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
-import { DataStoreFactory } from "../../src/services/dataStore/factory";
+import { CryptoService } from "../../src/services/crypto";
+import type { DataStoreFactory } from "../../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
 import { otp } from "../../src/services/otp";
 import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
-import { Router } from "../../src/server/Router";
-import { CryptoService } from "../../src/services/crypto";
 
 const mkdtemp = promisify(fs.mkdtemp);
-const rmdir = promisify(fs.rmdir);
+const rm = promisify(fs.rm);
 
 export const withCognitoSdk =
   (
@@ -32,12 +33,12 @@ export const withCognitoSdk =
       services: {
         readonly dataStoreFactory: () => DataStoreFactory;
         readonly messageDelivery: () => FakeMessageDeliveryService;
-      }
+      },
     ) => void,
     {
       logger = MockLogger as any,
       clock = new DateClock(),
-    }: { logger?: Logger; clock?: Clock } = {}
+    }: { logger?: Logger; clock?: Clock } = {},
   ) =>
   () => {
     let dataDirectory: string;
@@ -54,17 +55,17 @@ export const withCognitoSdk =
       const cognitoServiceFactory = new CognitoServiceFactoryImpl(
         dataDirectory,
         dataStoreFactory,
-        new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
+        new UserPoolServiceFactoryImpl(clock, dataStoreFactory),
       );
       const cognitoClient = await cognitoServiceFactory.create(ctx, {});
       const triggers = new TriggersService(
         clock,
         cognitoClient,
         {
-          enabled: jest.fn().mockReturnValue(false),
-          invoke: jest.fn(),
+          enabled: vi.fn().mockReturnValue(false),
+          invoke: vi.fn(),
         },
-        new CryptoService({ KMSKeyId: "", KMSKeyAlias: "" })
+        new CryptoService({ KMSKeyId: "", KMSKeyAlias: "" }),
       );
 
       fakeMessageDeliveryService = new FakeMessageDeliveryService();
@@ -78,7 +79,7 @@ export const withCognitoSdk =
         tokenGenerator: new JwtTokenGenerator(
           clock,
           triggers,
-          DefaultConfig.TokenConfig
+          DefaultConfig.TokenConfig,
         ),
       });
       const server = createServer(router, ctx.logger, {
@@ -113,11 +114,13 @@ export const withCognitoSdk =
       messageDelivery: () => fakeMessageDeliveryService,
     });
 
-    afterEach((done) => {
-      httpServer.close(() => {
-        rmdir(dataDirectory, {
-          recursive: true,
-        }).then(done, done);
+    afterEach(() => {
+      return new Promise<void>((resolve, reject) => {
+        httpServer.close(() => {
+          rm(dataDirectory, {
+            recursive: true,
+          }).then(resolve, reject);
+        });
       });
     });
   };

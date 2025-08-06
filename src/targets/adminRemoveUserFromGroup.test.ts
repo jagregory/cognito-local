@@ -1,17 +1,18 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { GroupNotFoundError, UserNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import {
   AdminRemoveUserFromGroup,
-  AdminRemoveUserFromGroupTarget,
+  type AdminRemoveUserFromGroupTarget,
 } from "./adminRemoveUserFromGroup";
 
 describe("AdminRemoveUserFromGroup target", () => {
   let adminRemoveUserFromGroup: AdminRemoveUserFromGroupTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -39,7 +40,7 @@ describe("AdminRemoveUserFromGroup target", () => {
     expect(mockUserPoolService.removeUserFromGroup).toHaveBeenCalledWith(
       TestContext,
       existingGroup,
-      existingUser
+      existingUser,
     );
   });
 
@@ -54,7 +55,7 @@ describe("AdminRemoveUserFromGroup target", () => {
         GroupName: "group",
         Username: existingUser.Username,
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new GroupNotFoundError());
   });
 
@@ -69,7 +70,7 @@ describe("AdminRemoveUserFromGroup target", () => {
         GroupName: existingGroup.GroupName,
         Username: "user",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 });

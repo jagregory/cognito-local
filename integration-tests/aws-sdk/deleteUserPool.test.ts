@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -37,5 +38,5 @@ describe(
 
       expect(listResponseAfter.UserPools).toHaveLength(0);
     });
-  })
+  }),
 );

@@ -1,15 +1,16 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { CognitoService, UserPoolService } from "../services";
-import { RevokeToken, RevokeTokenTarget } from "./revokeToken";
+import type { CognitoService, UserPoolService } from "../services";
+import { RevokeToken, type RevokeTokenTarget } from "./revokeToken";
 
 describe("AdminInitiateAuth target", () => {
   let revokeToken: RevokeTokenTarget;
 
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -35,7 +36,7 @@ describe("AdminInitiateAuth target", () => {
       TestContext,
       expect.objectContaining({
         RefreshTokens: [],
-      })
+      }),
     );
   });
 });

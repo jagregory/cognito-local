@@ -1,14 +1,14 @@
-import {
+import type {
   GroupType,
   UserPoolClientType,
   UserPoolType,
   UserType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { AppClient } from "../services/appClient";
-import { Group, User, UserPool } from "../services/userPoolService";
+import type { AppClient } from "../services/appClient";
+import type { Group, User, UserPool } from "../services/userPoolService";
 
 export const appClientToResponseObject = (
-  appClient: AppClient
+  appClient: AppClient,
 ): UserPoolClientType => ({
   AccessTokenValidity: appClient.AccessTokenValidity,
   AllowedOAuthFlows: appClient.AllowedOAuthFlows,

@@ -1,7 +1,7 @@
-import { Context } from "../context";
-import { Message } from "../messages";
-import { User } from "../userPoolService";
-import { MessageSender } from "./messageSender";
+import type { Context } from "../context";
+import type { Message } from "../messages";
+import type { User } from "../userPoolService";
+import type { MessageSender } from "./messageSender";
 
 export type DeliveryDetails =
   | {
@@ -20,7 +20,7 @@ export interface MessageDelivery {
     ctx: Context,
     user: User,
     deliveryDetails: DeliveryDetails,
-    message: Message
+    message: Message,
   ): Promise<void>;
 }
 
@@ -35,21 +35,21 @@ export class MessageDeliveryService implements MessageDelivery {
     ctx: Context,
     user: User,
     deliveryDetails: DeliveryDetails,
-    message: Message
+    message: Message,
   ): Promise<void> {
     if (deliveryDetails.DeliveryMedium === "SMS") {
       await this.sender.sendSms(
         ctx,
         user,
         deliveryDetails.Destination,
-        message
+        message,
       );
     } else if (deliveryDetails.DeliveryMedium === "EMAIL") {
       await this.sender.sendEmail(
         ctx,
         user,
         deliveryDetails.Destination,
-        message
+        message,
       );
     }
   }

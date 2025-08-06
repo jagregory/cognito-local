@@ -1,18 +1,19 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import {
   CreateUserPoolClient,
-  CreateUserPoolClientTarget,
+  type CreateUserPoolClientTarget,
 } from "./createUserPoolClient";
 
 const originalDate = new Date();
 
 describe("CreateUserPoolClient target", () => {
   let createUserPoolClient: CreateUserPoolClientTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -41,7 +42,7 @@ describe("CreateUserPoolClient target", () => {
           IdToken: "minutes",
           RefreshToken: "days",
         },
-      }
+      },
     );
 
     expect(result).toEqual({

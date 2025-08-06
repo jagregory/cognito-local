@@ -1,11 +1,11 @@
-import {
+import type {
   DescribeUserPoolRequest,
   DescribeUserPoolResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { ResourceNotFoundError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { userPoolToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type DescribeUserPoolTarget = Target<
   DescribeUserPoolRequest,

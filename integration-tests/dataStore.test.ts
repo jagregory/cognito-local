@@ -1,13 +1,14 @@
-import fs from "fs";
+import fs from "node:fs";
+import { promisify } from "node:util";
 import StormDB from "stormdb";
-import { promisify } from "util";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { TestContext } from "../src/__tests__/testContext";
-import { DataStoreFactory } from "../src/services/dataStore/factory";
+import type { DataStoreFactory } from "../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 
 const mkdtemp = promisify(fs.mkdtemp);
 const readFile = promisify(fs.readFile);
-const rmdir = promisify(fs.rmdir);
+const rm = promisify(fs.rm);
 
 describe("Data Store", () => {
   let path: string;
@@ -19,36 +20,36 @@ describe("Data Store", () => {
   });
 
   afterEach(() =>
-    rmdir(path, {
+    rm(path, {
       recursive: true,
-    })
+    }),
   );
 
   it("creates a named database", async () => {
     await factory.create(TestContext, "example", {});
 
-    expect(fs.existsSync(path + "/example.json")).toBe(true);
+    expect(fs.existsSync(`${path}/example.json`)).toBe(true);
   });
 
   it("creates a named database with the defaults persisted", async () => {
     await factory.create(TestContext, "example", { DefaultValue: true });
 
-    expect(fs.existsSync(path + "/example.json")).toBe(true);
+    expect(fs.existsSync(`${path}/example.json`)).toBe(true);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
     expect(file).toEqual({
       DefaultValue: true,
     });
   });
 
   it("does not overwrite defaults if the file already exists", async () => {
-    fs.writeFileSync(path + "/example.json", '{"Users":{"a":{"key":"value"}}}');
+    fs.writeFileSync(`${path}/example.json`, '{"Users":{"a":{"key":"value"}}}');
 
     await factory.create(TestContext, "example", { Users: {} });
 
-    expect(fs.existsSync(path + "/example.json")).toBe(true);
+    expect(fs.existsSync(`${path}/example.json`)).toBe(true);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
     expect(file).toEqual({
       Users: {
         a: {
@@ -65,7 +66,7 @@ describe("Data Store", () => {
 
     await dataStore.set(TestContext, "key", 1);
 
-    const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+    const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
     expect(file).toEqual({
       DefaultValue: true,
       key: 1,
@@ -80,7 +81,7 @@ describe("Data Store", () => {
       await dataStore.set(TestContext, "key2", 2);
 
       const fileBefore = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        await readFile(`${path}/example.json`, "utf-8"),
       );
 
       expect(fileBefore).toEqual({
@@ -91,7 +92,7 @@ describe("Data Store", () => {
       await dataStore.delete(TestContext, "key1");
 
       const fileAfter = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        await readFile(`${path}/example.json`, "utf-8"),
       );
 
       expect(fileAfter).toEqual({
@@ -107,7 +108,7 @@ describe("Data Store", () => {
       await dataStore.set(TestContext, "key2", 3);
 
       const fileBefore = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        await readFile(`${path}/example.json`, "utf-8"),
       );
 
       expect(fileBefore).toEqual({
@@ -123,7 +124,7 @@ describe("Data Store", () => {
       await dataStore.delete(TestContext, ["key", "a", "b"]);
 
       const fileAfter = JSON.parse(
-        await readFile(path + "/example.json", "utf-8")
+        await readFile(`${path}/example.json`, "utf-8"),
       );
 
       expect(fileAfter).toEqual({
@@ -144,7 +145,7 @@ describe("Data Store", () => {
       await dataStore.set(TestContext, "key1", 1);
       await dataStore.set(TestContext, "key2", 2);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         key1: 1,
@@ -159,7 +160,7 @@ describe("Data Store", () => {
 
       await dataStore.set(TestContext, "SomethingDate", date);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         SomethingDate: date.toISOString(),
@@ -172,11 +173,11 @@ describe("Data Store", () => {
       const date = new Date();
 
       await expect(
-        dataStore.set(TestContext, "SomethingDate", date.getTime())
+        dataStore.set(TestContext, "SomethingDate", date.getTime()),
       ).rejects.toEqual(
         new Error(
-          "Serialize: Expected SomethingDate field to contain a Date, received a number"
-        )
+          "Serialize: Expected SomethingDate field to contain a Date, received a number",
+        ),
       );
     });
 
@@ -185,7 +186,7 @@ describe("Data Store", () => {
 
       await dataStore.set(TestContext, ["key", "a", "b"], 1);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         key: {
@@ -201,7 +202,7 @@ describe("Data Store", () => {
 
       await dataStore.set(TestContext, "key.a.b", 1);
 
-      const file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      const file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         "key.a.b": 1,
@@ -213,7 +214,7 @@ describe("Data Store", () => {
 
       await dataStore.set(TestContext, "key", 1);
 
-      let file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      let file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         key: 1,
@@ -221,7 +222,7 @@ describe("Data Store", () => {
 
       await dataStore.set(TestContext, "key", 2);
 
-      file = JSON.parse(await readFile(path + "/example.json", "utf-8"));
+      file = JSON.parse(await readFile(`${path}/example.json`, "utf-8"));
 
       expect(file).toEqual({
         key: 2,

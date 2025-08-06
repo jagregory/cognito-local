@@ -1,10 +1,10 @@
-import {
+import type {
   ListGroupsRequest,
   ListGroupsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { groupToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type ListGroupsTarget = Target<ListGroupsRequest, ListGroupsResponse>;
 

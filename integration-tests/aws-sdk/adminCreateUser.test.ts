@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { UUID } from "../../src/__tests__/patterns";
 import { withCognitoSdk } from "./setup";
@@ -21,7 +22,7 @@ describe(
               PoolName: "test",
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -58,7 +59,7 @@ describe(
               PoolName: "test",
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -109,7 +110,7 @@ describe(
               PoolName: "test",
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -149,7 +150,7 @@ describe(
               UsernameAttributes: ["email"],
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -188,7 +189,7 @@ describe(
               UsernameAttributes: ["email"],
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -240,7 +241,7 @@ describe(
               UsernameAttributes: ["email"],
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           const createUserResult = await client
             .adminCreateUser({
@@ -273,6 +274,6 @@ describe(
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

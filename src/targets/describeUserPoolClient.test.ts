@@ -1,17 +1,18 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import { ResourceNotFoundError } from "../errors";
-import { CognitoService } from "../services";
-import { AppClient } from "../services/appClient";
+import type { CognitoService } from "../services";
+import type { AppClient } from "../services/appClient";
 import {
   DescribeUserPoolClient,
-  DescribeUserPoolClientTarget,
+  type DescribeUserPoolClientTarget,
 } from "./describeUserPoolClient";
 
 describe("DescribeUserPoolClient target", () => {
   let describeUserPoolClient: DescribeUserPoolClientTarget;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     mockCognitoService = newMockCognitoService(newMockUserPoolService());
@@ -53,7 +54,7 @@ describe("DescribeUserPoolClient target", () => {
       describeUserPoolClient(TestContext, {
         ClientId: "abc",
         UserPoolId: "userPoolId",
-      })
+      }),
     ).rejects.toEqual(new ResourceNotFoundError());
   });
 });

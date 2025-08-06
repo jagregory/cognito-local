@@ -1,17 +1,18 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { GroupNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
-import { UpdateGroup, UpdateGroupTarget } from "./updateGroup";
+import type { UserPoolService } from "../services";
+import { UpdateGroup, type UpdateGroupTarget } from "./updateGroup";
 
 const originalDate = new Date();
 
 describe("UpdateGroup target", () => {
   let updateGroup: UpdateGroupTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
@@ -42,7 +43,7 @@ describe("UpdateGroup target", () => {
 
     expect(mockUserPoolService.getGroupByGroupName).toHaveBeenCalledWith(
       TestContext,
-      existingGroup.GroupName
+      existingGroup.GroupName,
     );
 
     expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
@@ -84,7 +85,7 @@ describe("UpdateGroup target", () => {
 
     expect(mockUserPoolService.getGroupByGroupName).toHaveBeenCalledWith(
       TestContext,
-      existingGroup.GroupName
+      existingGroup.GroupName,
     );
 
     expect(mockUserPoolService.saveGroup).toHaveBeenCalledWith(TestContext, {
@@ -111,7 +112,7 @@ describe("UpdateGroup target", () => {
       updateGroup(TestContext, {
         GroupName: "group",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new GroupNotFoundError());
   });
 });

@@ -1,11 +1,11 @@
-import {
+import type {
   AddCustomAttributesRequest,
   AddCustomAttributesResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { InvalidParameterError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 import { assertParameterLength } from "./utils/assertions";
-import { Target } from "./Target";
 
 export type AddCustomAttributesTarget = Target<
   AddCustomAttributesRequest,
@@ -33,7 +33,7 @@ export const AddCustomAttributes =
 
           if (userPool.options.SchemaAttributes?.find((x) => x.Name === name)) {
             throw new InvalidParameterError(
-              `${name}: Existing attribute already has name ${name}.`
+              `${name}: Existing attribute already has name ${name}.`,
             );
           }
 

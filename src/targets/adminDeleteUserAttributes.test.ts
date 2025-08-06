@@ -1,19 +1,20 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { NotAuthorizedError } from "../errors";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import { attribute } from "../services/userPoolService";
 import {
   AdminDeleteUserAttributes,
-  AdminDeleteUserAttributesTarget,
+  type AdminDeleteUserAttributesTarget,
 } from "./adminDeleteUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
 
 describe("AdminDeleteUserAttributes target", () => {
   let adminDeleteUserAttributes: AdminDeleteUserAttributesTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
 
   beforeEach(() => {
@@ -31,7 +32,7 @@ describe("AdminDeleteUserAttributes target", () => {
         UserPoolId: "test",
         Username: "abc",
         UserAttributeNames: ["custom:example"],
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 

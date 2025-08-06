@@ -1,17 +1,18 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { CognitoService } from "../services";
+import type { CognitoService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
-import { CreateUserPool, CreateUserPoolTarget } from "./createUserPool";
+import { CreateUserPool, type CreateUserPoolTarget } from "./createUserPool";
 
 const originalDate = new Date();
 
 describe("CreateUserPool target", () => {
   let createUserPool: CreateUserPoolTarget;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     mockCognitoService = newMockCognitoService(newMockUserPoolService());
@@ -33,14 +34,14 @@ describe("CreateUserPool target", () => {
       TestContext,
       {
         Arn: expect.stringMatching(
-          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
+          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/,
         ),
         CreationDate: originalDate,
         Id: expect.stringMatching(/^local_[\w\d]{8}$/),
         LastModifiedDate: originalDate,
         Name: "test-pool",
         SchemaAttributes: USER_POOL_AWS_DEFAULTS.SchemaAttributes,
-      }
+      },
     );
 
     expect(result).toEqual({
@@ -66,7 +67,7 @@ describe("CreateUserPool target", () => {
       TestContext,
       {
         Arn: expect.stringMatching(
-          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
+          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/,
         ),
         CreationDate: originalDate,
         Id: expect.stringMatching(/^local_[\w\d]{8}$/),
@@ -83,7 +84,7 @@ describe("CreateUserPool target", () => {
             StringAttributeConstraints: {},
           },
         ],
-      }
+      },
     );
 
     expect(result).toEqual({
@@ -110,7 +111,7 @@ describe("CreateUserPool target", () => {
       TestContext,
       {
         Arn: expect.stringMatching(
-          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/
+          /^arn:aws:cognito-idp:local:local:userpool\/local_[\w\d]{8}$/,
         ),
         CreationDate: originalDate,
         Id: expect.stringMatching(/^local_[\w\d]{8}$/),
@@ -329,7 +330,7 @@ describe("CreateUserPool target", () => {
             },
           },
         ],
-      }
+      },
     );
 
     expect(result).toEqual({

@@ -1,7 +1,7 @@
-import { UUID } from "../../src/__tests__/patterns";
+import { describe, expect, it } from "vitest";
 import { TestContext } from "../../src/__tests__/testContext";
+import type { User } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
-import { User } from "../../src/services/userPoolService";
 
 describe(
   "CognitoIdentityServiceProvider.getUserAttributeVerificationCode",
@@ -69,5 +69,5 @@ describe(
 
       expect(storedUser.AttributeVerificationCode).toMatch(/^\d{6}$/);
     });
-  })
+  }),
 );

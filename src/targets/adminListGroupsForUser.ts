@@ -1,11 +1,11 @@
-import {
+import type {
   AdminListGroupsForUserRequest,
   AdminListGroupsForUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UserNotFoundError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { groupToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type AdminListGroupsForUserTarget = Target<
   AdminListGroupsForUserRequest,
