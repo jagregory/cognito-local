@@ -1,6 +1,8 @@
 import type { StringMap } from "aws-lambda/trigger/cognito-user-pool-trigger/_common";
 import type { GroupOverrideDetails } from "aws-lambda/trigger/cognito-user-pool-trigger/pre-token-generation";
-import jwt from "jsonwebtoken";
+import type { TimeUnitsType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import jwt, { type SignOptions } from "jsonwebtoken";
+import type { StringValue, UnitAnyCase } from "ms";
 import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { AppClient } from "./appClient";
@@ -13,8 +15,6 @@ import {
   customAttributes,
   type User,
 } from "./userPoolService";
-
-type ValidityUnit = "seconds" | "minutes" | "hours" | "days" | string;
 
 export interface TokenConfig {
   IssuerDomain?: string;
@@ -106,11 +106,25 @@ export interface TokenGenerator {
   ): Promise<Tokens>;
 }
 
+function assertUnitAnyCase(unit: string): asserts unit is UnitAnyCase {
+  if (!["seconds", "minutes", "hours", "days"].includes(unit)) {
+    throw new Error(`Invalid unit: ${unit}`);
+  }
+}
+
 const formatExpiration = (
   duration: number | undefined,
-  unit: ValidityUnit,
-  fallback: string,
-): string => (duration ? `${duration}${unit}` : fallback);
+  unit: TimeUnitsType,
+  fallback: StringValue,
+): StringValue => {
+  if (duration === undefined) {
+    return fallback;
+  }
+
+  assertUnitAnyCase(unit);
+
+  return `${duration}${unit}`;
+};
 
 export class JwtTokenGenerator implements TokenGenerator {
   private readonly clock: Clock;
@@ -206,7 +220,7 @@ export class JwtTokenGenerator implements TokenGenerator {
           "24h",
         ),
         keyid: "CognitoLocal",
-      }),
+      } satisfies SignOptions),
       IdToken: jwt.sign(idToken, PrivateKey.pem, {
         algorithm: "RS256",
         issuer,
@@ -217,7 +231,7 @@ export class JwtTokenGenerator implements TokenGenerator {
         ),
         audience: userPoolClient.ClientId,
         keyid: "CognitoLocal",
-      }),
+      } satisfies SignOptions),
       // this content is for debugging purposes only
       // in reality token payload is encrypted and uses different algorithm
       RefreshToken: jwt.sign(
@@ -236,7 +250,7 @@ export class JwtTokenGenerator implements TokenGenerator {
             userPoolClient.TokenValidityUnits?.RefreshToken ?? "days",
             "7d",
           ),
-        },
+        } satisfies SignOptions,
       ),
     };
   }
