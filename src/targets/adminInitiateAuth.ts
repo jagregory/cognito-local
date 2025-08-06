@@ -1,4 +1,4 @@
-import {
+import type {
   AdminInitiateAuthRequest,
   AdminInitiateAuthResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -9,9 +9,9 @@ import {
   UnsupportedError,
   UserNotConfirmedException,
 } from "../errors";
-import { Services } from "../services";
-import { Target } from "./Target";
-import { Context } from "../services/context";
+import type { Services } from "../services";
+import type { Context } from "../services/context";
+import type { Target } from "./Target";
 
 export type AdminInitiateAuthTarget = Target<
   AdminInitiateAuthRequest,
@@ -26,23 +26,23 @@ type AdminInitiateAuthServices = Pick<
 const adminUserPasswordAuthFlow = async (
   ctx: Context,
   services: AdminInitiateAuthServices,
-  req: AdminInitiateAuthRequest
+  req: AdminInitiateAuthRequest,
 ): Promise<AdminInitiateAuthResponse> => {
   if (!req.AuthParameters) {
     throw new InvalidParameterError(
-      "Missing required parameter authParameters"
+      "Missing required parameter authParameters",
     );
   }
 
   if (!req.AuthParameters.USERNAME || !req.AuthParameters.PASSWORD) {
     throw new InvalidParameterError(
-      "AuthParameters USERNAME and PASSWORD are required"
+      "AuthParameters USERNAME and PASSWORD are required",
     );
   }
 
   const userPool = await services.cognito.getUserPoolForClientId(
     ctx,
-    req.ClientId
+    req.ClientId,
   );
   const userPoolClient = await services.cognito.getAppClient(ctx, req.ClientId);
   let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
@@ -84,7 +84,7 @@ const adminUserPasswordAuthFlow = async (
     userGroups,
     userPoolClient,
     req.ClientMetadata,
-    "Authentication"
+    "Authentication",
   );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
@@ -107,11 +107,11 @@ const adminUserPasswordAuthFlow = async (
 const refreshTokenAuthFlow = async (
   ctx: Context,
   services: AdminInitiateAuthServices,
-  req: AdminInitiateAuthRequest
+  req: AdminInitiateAuthRequest,
 ): Promise<AdminInitiateAuthResponse> => {
   if (!req.AuthParameters) {
     throw new InvalidParameterError(
-      "Missing required parameter authParameters"
+      "Missing required parameter authParameters",
     );
   }
 
@@ -121,12 +121,12 @@ const refreshTokenAuthFlow = async (
 
   const userPool = await services.cognito.getUserPoolForClientId(
     ctx,
-    req.ClientId
+    req.ClientId,
   );
   const userPoolClient = await services.cognito.getAppClient(ctx, req.ClientId);
   const user = await userPool.getUserByRefreshToken(
     ctx,
-    req.AuthParameters.REFRESH_TOKEN
+    req.AuthParameters.REFRESH_TOKEN,
   );
   if (!user || !userPoolClient) {
     throw new NotAuthorizedError();
@@ -140,7 +140,7 @@ const refreshTokenAuthFlow = async (
     userGroups,
     userPoolClient,
     req.ClientMetadata,
-    "RefreshTokens"
+    "RefreshTokens",
   );
 
   return {

@@ -1,7 +1,8 @@
+import { describe, expect, it, type MockedObject, vi } from "vitest";
 import { TestContext } from "../../__tests__/testContext";
-import { User } from "../userPoolService";
+import type { User } from "../userPoolService";
 import { MessageDeliveryService } from "./messageDelivery";
-import { MessageSender } from "./messageSender";
+import type { MessageSender } from "./messageSender";
 
 describe("Message Delivery", () => {
   const user: User = {
@@ -17,9 +18,9 @@ describe("Message Delivery", () => {
 
   describe("when delivery method is EMAIL", () => {
     it("sends a code via email", async () => {
-      const sender: jest.Mocked<MessageSender> = {
-        sendEmail: jest.fn(),
-        sendSms: jest.fn(),
+      const sender: MockedObject<MessageSender> = {
+        sendEmail: vi.fn(),
+        sendSms: vi.fn(),
       };
       const message = {
         emailSubject: "Subject",
@@ -35,14 +36,14 @@ describe("Message Delivery", () => {
           DeliveryMedium: "EMAIL",
           AttributeName: "email",
         },
-        message
+        message,
       );
 
       expect(sender.sendEmail).toHaveBeenCalledWith(
         TestContext,
         user,
         "example@example.com",
-        message
+        message,
       );
       expect(sender.sendSms).not.toHaveBeenCalled();
     });
@@ -50,9 +51,9 @@ describe("Message Delivery", () => {
 
   describe("when delivery method is SMS", () => {
     it("sends a code via SMS", async () => {
-      const sender: jest.Mocked<MessageSender> = {
-        sendEmail: jest.fn(),
-        sendSms: jest.fn(),
+      const sender: MockedObject<MessageSender> = {
+        sendEmail: vi.fn(),
+        sendSms: vi.fn(),
       };
       const message = {
         emailSubject: "Subject",
@@ -68,14 +69,14 @@ describe("Message Delivery", () => {
           DeliveryMedium: "SMS",
           AttributeName: "phone_number",
         },
-        message
+        message,
       );
 
       expect(sender.sendSms).toHaveBeenCalledWith(
         TestContext,
         user,
         "0123445670",
-        message
+        message,
       );
       expect(sender.sendEmail).not.toHaveBeenCalled();
     });

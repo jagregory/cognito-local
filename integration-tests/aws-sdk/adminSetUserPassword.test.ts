@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { withCognitoSdk } from "./setup";
 
@@ -19,7 +20,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         // create the user
         const createUserResult = await client
@@ -59,6 +60,6 @@ describe(
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

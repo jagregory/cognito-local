@@ -1,7 +1,7 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Lambda, PreTokenGenerationTriggerResponse } from "../lambda";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { Lambda, PreTokenGenerationTriggerResponse } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { Trigger } from "./trigger";
+import type { Trigger } from "./trigger";
 
 export type Source =
   | "AuthenticateDevice"
@@ -68,7 +68,7 @@ export const PreTokenGeneration =
       userAttributes,
       username,
       userPoolId,
-    }
+    },
   ) =>
     lambda.invoke(ctx, "PreTokenGeneration", {
       clientId,

@@ -1,10 +1,10 @@
-import {
+import type {
   RevokeTokenRequest,
   RevokeTokenResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { NotAuthorizedError } from "../errors";
-import { Services } from "../services";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 
 export type RevokeTokenTarget = Target<RevokeTokenRequest, RevokeTokenResponse>;
 
@@ -19,7 +19,7 @@ export const RevokeToken =
     const user = users.find(
       (user) =>
         Array.isArray(user.RefreshTokens) &&
-        user.RefreshTokens.includes(req.Token)
+        user.RefreshTokens.includes(req.Token),
     );
 
     if (!user) {

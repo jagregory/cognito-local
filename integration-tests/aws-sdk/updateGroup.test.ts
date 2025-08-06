@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -11,7 +12,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       await client
         .createGroup({
@@ -53,5 +54,5 @@ describe(
         Description: "new description",
       });
     });
-  })
+  }),
 );

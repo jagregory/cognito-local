@@ -1,29 +1,30 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import {
   CodeMismatchError,
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import { Triggers, UserPoolService } from "../services";
-import { TokenGenerator } from "../services/tokenGenerator";
+import type { Triggers, UserPoolService } from "../services";
+import type { TokenGenerator } from "../services/tokenGenerator";
 import {
   RespondToAuthChallenge,
-  RespondToAuthChallengeTarget,
+  type RespondToAuthChallengeTarget,
 } from "./respondToAuthChallenge";
-import * as TDB from "../__tests__/testDataBuilder";
 
 const currentDate = new Date();
 
 describe("RespondToAuthChallenge target", () => {
   let respondToAuthChallenge: RespondToAuthChallengeTarget;
-  let mockTokenGenerator: jest.Mocked<TokenGenerator>;
-  let mockTriggers: jest.Mocked<Triggers>;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockTokenGenerator: MockedObject<TokenGenerator>;
+  let mockTriggers: MockedObject<Triggers>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
   const userPoolClient = TDB.appClient();
 
@@ -58,7 +59,7 @@ describe("RespondToAuthChallenge target", () => {
           SMS_MFA_CODE: "123456",
         },
         Session: "Session",
-      })
+      }),
     ).rejects.toBeInstanceOf(NotAuthorizedError);
   });
 
@@ -67,11 +68,11 @@ describe("RespondToAuthChallenge target", () => {
       respondToAuthChallenge(TestContext, {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
-      })
+      }),
     ).rejects.toEqual(
       new InvalidParameterError(
-        "Missing required parameter challenge responses"
-      )
+        "Missing required parameter challenge responses",
+      ),
     );
   });
 
@@ -81,9 +82,9 @@ describe("RespondToAuthChallenge target", () => {
         ClientId: "clientId",
         ChallengeName: "SMS_MFA",
         ChallengeResponses: {},
-      })
+      }),
     ).rejects.toEqual(
-      new InvalidParameterError("Missing required parameter USERNAME")
+      new InvalidParameterError("Missing required parameter USERNAME"),
     );
   });
 
@@ -97,9 +98,9 @@ describe("RespondToAuthChallenge target", () => {
         ChallengeResponses: {
           USERNAME: "abc",
         },
-      })
+      }),
     ).rejects.toEqual(
-      new InvalidParameterError("Missing required parameter Session")
+      new InvalidParameterError("Missing required parameter Session"),
     );
   });
 
@@ -168,14 +169,14 @@ describe("RespondToAuthChallenge target", () => {
           {
             client: "metadata",
           },
-          "Authentication"
+          "Authentication",
         );
       });
 
       describe("when Post Authentication trigger is enabled", () => {
         it("does invokes the trigger", async () => {
           mockTriggers.enabled.mockImplementation(
-            (trigger) => trigger === "PostAuthentication"
+            (trigger) => trigger === "PostAuthentication",
           );
 
           await respondToAuthChallenge(TestContext, {
@@ -202,7 +203,7 @@ describe("RespondToAuthChallenge target", () => {
               userAttributes: user.Attributes,
               username: user.Username,
               userPoolId: userPoolClient.UserPoolId,
-            }
+            },
           );
         });
       });
@@ -221,7 +222,7 @@ describe("RespondToAuthChallenge target", () => {
               SMS_MFA_CODE: "4321",
             },
             Session: "Session",
-          })
+          }),
         ).rejects.toBeInstanceOf(CodeMismatchError);
       });
     });
@@ -243,9 +244,9 @@ describe("RespondToAuthChallenge target", () => {
             USERNAME: user.Username,
           },
           Session: "session",
-        })
+        }),
       ).rejects.toEqual(
-        new InvalidParameterError("Missing required parameter NEW_PASSWORD")
+        new InvalidParameterError("Missing required parameter NEW_PASSWORD"),
       );
     });
 
@@ -303,14 +304,14 @@ describe("RespondToAuthChallenge target", () => {
         [],
         userPoolClient,
         { client: "metadata" },
-        "Authentication"
+        "Authentication",
       );
     });
 
     describe("when Post Authentication trigger is enabled", () => {
       it("does invokes the trigger", async () => {
         mockTriggers.enabled.mockImplementation(
-          (trigger) => trigger === "PostAuthentication"
+          (trigger) => trigger === "PostAuthentication",
         );
 
         await respondToAuthChallenge(TestContext, {
@@ -331,7 +332,7 @@ describe("RespondToAuthChallenge target", () => {
             userAttributes: user.Attributes,
             username: user.Username,
             userPoolId: userPoolClient.UserPoolId,
-          }
+          },
         );
       });
     });

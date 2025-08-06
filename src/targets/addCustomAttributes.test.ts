@@ -1,13 +1,14 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError } from "../errors";
-import { CognitoService } from "../services";
+import type { CognitoService } from "../services";
 import {
   AddCustomAttributes,
-  AddCustomAttributesTarget,
+  type AddCustomAttributesTarget,
 } from "./addCustomAttributes";
 
 const originalDate = new Date();
@@ -15,7 +16,7 @@ const originalDate = new Date();
 describe("AddCustomAttributes target", () => {
   let addCustomAttributes: AddCustomAttributesTarget;
   let clock: ClockFake;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     clock = new ClockFake(originalDate);
@@ -62,7 +63,7 @@ describe("AddCustomAttributes target", () => {
           },
         ],
         LastModifiedDate: newDate,
-      }
+      },
     );
   });
 
@@ -100,7 +101,7 @@ describe("AddCustomAttributes target", () => {
           },
         ],
         LastModifiedDate: newDate,
-      }
+      },
     );
   });
 
@@ -130,11 +131,11 @@ describe("AddCustomAttributes target", () => {
             Name: "test",
           },
         ],
-      })
+      }),
     ).rejects.toEqual(
       new InvalidParameterError(
-        "custom:test: Existing attribute already has name custom:test."
-      )
+        "custom:test: Existing attribute already has name custom:test.",
+      ),
     );
 
     expect(mockUserPoolService.updateOptions).not.toHaveBeenCalled();

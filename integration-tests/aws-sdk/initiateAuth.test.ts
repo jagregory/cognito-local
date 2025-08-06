@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
+import { describe, expect, it } from "vitest";
 import { UUID } from "../../src/__tests__/patterns";
 import { attributeValue } from "../../src/services/userPoolService";
 import { withCognitoSdk } from "./setup";
-import { UserNotConfirmedException } from "../../src/errors";
 
 describe(
   "CognitoIdentityServiceProvider.initiateAuth",
@@ -15,7 +15,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -34,7 +34,7 @@ describe(
               PASSWORD: "def",
             },
           })
-          .promise()
+          .promise(),
       ).rejects.toMatchObject({
         message: "User not authorized",
       });
@@ -48,7 +48,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -68,7 +68,7 @@ describe(
         .promise();
       const userSub = attributeValue(
         "sub",
-        createUserResponse.User?.Attributes
+        createUserResponse.User?.Attributes,
       );
 
       const response = await client
@@ -101,7 +101,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -129,8 +129,11 @@ describe(
               PASSWORD: "def",
             },
           })
-          .promise()
-      ).rejects.toEqual(new UserNotConfirmedException());
+          .promise(),
+      ).rejects.toMatchObject({
+        name: "UserNotConfirmedException",
+        message: "User is not confirmed.",
+      });
     });
 
     it("can authenticate users with USER_PASSWORD_AUTH auth flow", async () => {
@@ -141,7 +144,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -161,7 +164,7 @@ describe(
         .promise();
       const userSub = attributeValue(
         "sub",
-        createUserResponse.User?.Attributes
+        createUserResponse.User?.Attributes,
       );
 
       await client
@@ -185,7 +188,7 @@ describe(
         .promise();
 
       expect(
-        jwt.decode(response.AuthenticationResult?.AccessToken as string)
+        jwt.decode(response.AuthenticationResult?.AccessToken as string),
       ).toEqual({
         auth_time: expect.any(Number),
         client_id: upc.UserPoolClient?.ClientId,
@@ -201,7 +204,7 @@ describe(
       });
 
       expect(
-        jwt.decode(response.AuthenticationResult?.IdToken as string)
+        jwt.decode(response.AuthenticationResult?.IdToken as string),
       ).toEqual({
         "cognito:username": "abc",
         aud: upc.UserPoolClient?.ClientId,
@@ -218,7 +221,7 @@ describe(
       });
 
       expect(
-        jwt.decode(response.AuthenticationResult?.RefreshToken as string)
+        jwt.decode(response.AuthenticationResult?.RefreshToken as string),
       ).toEqual({
         "cognito:username": "abc",
         email: "example@example.com",
@@ -237,7 +240,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       const upc = await client
         .createUserPoolClient({
@@ -257,7 +260,7 @@ describe(
         .promise();
       const userSub = attributeValue(
         "sub",
-        createUserResponse.User?.Attributes
+        createUserResponse.User?.Attributes,
       );
 
       await client
@@ -293,8 +296,8 @@ describe(
 
       expect(
         jwt.decode(
-          refreshTokenLoginResponse.AuthenticationResult?.AccessToken as string
-        )
+          refreshTokenLoginResponse.AuthenticationResult?.AccessToken as string,
+        ),
       ).toEqual({
         auth_time: expect.any(Number),
         client_id: upc.UserPoolClient?.ClientId,
@@ -311,8 +314,8 @@ describe(
 
       expect(
         jwt.decode(
-          refreshTokenLoginResponse.AuthenticationResult?.IdToken as string
-        )
+          refreshTokenLoginResponse.AuthenticationResult?.IdToken as string,
+        ),
       ).toEqual({
         "cognito:username": "abc",
         aud: upc.UserPoolClient?.ClientId,
@@ -329,8 +332,8 @@ describe(
       });
 
       expect(
-        refreshTokenLoginResponse.AuthenticationResult?.RefreshToken
+        refreshTokenLoginResponse.AuthenticationResult?.RefreshToken,
       ).not.toBeDefined();
     });
-  })
+  }),
 );

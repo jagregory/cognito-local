@@ -1,18 +1,19 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { Messages, UserPoolService } from "../services";
+import type { Messages, UserPoolService } from "../services";
 import { attribute, attributeValue } from "../services/userPoolService";
 import {
   GetUserAttributeVerificationCode,
-  GetUserAttributeVerificationCodeTarget,
+  type GetUserAttributeVerificationCodeTarget,
 } from "./getUserAttributeVerificationCode";
-import * as TDB from "../__tests__/testDataBuilder";
 
 const validToken = jwt.sign(
   {
@@ -31,13 +32,13 @@ const validToken = jwt.sign(
     issuer: `http://localhost:9229/test`,
     expiresIn: "24h",
     keyid: "CognitoLocal",
-  }
+  },
 );
 
 describe("GetUserAttributeVerificationCode target", () => {
   let getUserAttributeVerificationCode: GetUserAttributeVerificationCodeTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockMessages: jest.Mocked<Messages>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockMessages: MockedObject<Messages>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService({
@@ -57,7 +58,7 @@ describe("GetUserAttributeVerificationCode target", () => {
       getUserAttributeVerificationCode(TestContext, {
         AccessToken: "blah",
         AttributeName: "email",
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 
@@ -68,7 +69,7 @@ describe("GetUserAttributeVerificationCode target", () => {
       getUserAttributeVerificationCode(TestContext, {
         AccessToken: validToken,
         AttributeName: "email",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 
@@ -86,11 +87,11 @@ describe("GetUserAttributeVerificationCode target", () => {
         },
         AccessToken: validToken,
         AttributeName: "email",
-      })
+      }),
     ).rejects.toEqual(
       new InvalidParameterError(
-        "User has no attribute matching desired auto verified attributes"
-      )
+        "User has no attribute matching desired auto verified attributes",
+      ),
     );
   });
 
@@ -121,14 +122,14 @@ describe("GetUserAttributeVerificationCode target", () => {
         AttributeName: "email",
         DeliveryMedium: "EMAIL",
         Destination: attributeValue("email", user.Attributes),
-      }
+      },
     );
 
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
       TestContext,
       expect.objectContaining({
         AttributeVerificationCode: "123456",
-      })
+      }),
     );
   });
 });

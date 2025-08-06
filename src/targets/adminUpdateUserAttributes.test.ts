@@ -1,10 +1,12 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
-import { Messages, UserPoolService } from "../services";
+import type { Messages, UserPoolService } from "../services";
 import {
   attribute,
   attributesAppend,
@@ -12,15 +14,14 @@ import {
 } from "../services/userPoolService";
 import {
   AdminUpdateUserAttributes,
-  AdminUpdateUserAttributesTarget,
+  type AdminUpdateUserAttributesTarget,
 } from "./adminUpdateUserAttributes";
-import * as TDB from "../__tests__/testDataBuilder";
 
 describe("AdminUpdateUserAttributes target", () => {
   let adminUpdateUserAttributes: AdminUpdateUserAttributesTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
   let clock: ClockFake;
-  let mockMessages: jest.Mocked<Messages>;
+  let mockMessages: MockedObject<Messages>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -43,7 +44,7 @@ describe("AdminUpdateUserAttributes target", () => {
         UserPoolId: "test",
         UserAttributes: [{ Name: "custom:example", Value: "1" }],
         Username: "abc",
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
@@ -71,7 +72,7 @@ describe("AdminUpdateUserAttributes target", () => {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
-        attribute("custom:example", "1")
+        attribute("custom:example", "1"),
       ),
       UserLastModifiedDate: clock.get(),
     });
@@ -112,7 +113,7 @@ describe("AdminUpdateUserAttributes target", () => {
           UserPoolId: "test",
           UserAttributes: [{ Name: attribute, Value: "1" }],
           Username: "abc",
-        })
+        }),
       ).rejects.toEqual(new InvalidParameterError(expectedError));
     });
   });
@@ -139,12 +140,12 @@ describe("AdminUpdateUserAttributes target", () => {
           Attributes: attributesAppend(
             user.Attributes,
             attribute(attr, "new value"),
-            attribute(`${attr}_verified`, "false")
+            attribute(`${attr}_verified`, "false"),
           ),
           UserLastModifiedDate: clock.get(),
         });
       });
-    }
+    },
   );
 
   describe("user pool has auto verified attributes enabled", () => {
@@ -162,7 +163,7 @@ describe("AdminUpdateUserAttributes target", () => {
         it("does not deliver a OTP code to the user", async () => {
           const user = TDB.user({
             Attributes: attributes.map((attr: string) =>
-              attribute(`${attr}_verified`, "false")
+              attribute(`${attr}_verified`, "false"),
             ),
           });
 
@@ -199,14 +200,14 @@ describe("AdminUpdateUserAttributes target", () => {
               },
               UserPoolId: "test",
               UserAttributes: attributes.map((attr: string) =>
-                attribute(attr, "new value")
+                attribute(attr, "new value"),
               ),
               Username: "abc",
-            })
+            }),
           ).rejects.toEqual(
             new InvalidParameterError(
-              "User has no attribute matching desired auto verified attributes"
-            )
+              "User has no attribute matching desired auto verified attributes",
+            ),
           );
         });
 
@@ -221,7 +222,7 @@ describe("AdminUpdateUserAttributes target", () => {
             },
             UserPoolId: "test",
             UserAttributes: attributes.map((attr: string) =>
-              attribute(attr, "new value")
+              attribute(attr, "new value"),
             ),
             Username: "abc",
           });
@@ -238,14 +239,14 @@ describe("AdminUpdateUserAttributes target", () => {
               AttributeName: "email",
               DeliveryMedium: "EMAIL",
               Destination: attributeValue("email", user.Attributes),
-            }
+            },
           );
 
           expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
             TestContext,
             expect.objectContaining({
               AttributeVerificationCode: "123456",
-            })
+            }),
           );
         });
       });
@@ -267,7 +268,7 @@ describe("AdminUpdateUserAttributes target", () => {
         it("does not deliver a OTP code to the user", async () => {
           const user = TDB.user({
             Attributes: attributes.map((attr: string) =>
-              attribute(`${attr}_verified`, "false")
+              attribute(`${attr}_verified`, "false"),
             ),
           });
 
@@ -301,7 +302,7 @@ describe("AdminUpdateUserAttributes target", () => {
             },
             UserPoolId: "test",
             UserAttributes: attributes.map((attr: string) =>
-              attribute(attr, "new value")
+              attribute(attr, "new value"),
             ),
             Username: "abc",
           });

@@ -1,18 +1,19 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
+import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
-import { GetUser, GetUserTarget } from "./getUser";
-import * as TDB from "../__tests__/testDataBuilder";
+import { GetUser, type GetUserTarget } from "./getUser";
 
 describe("GetUser target", () => {
   let getUser: GetUserTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -44,7 +45,7 @@ describe("GetUser target", () => {
           issuer: `http://localhost:9229/test`,
           expiresIn: "24h",
           keyid: "CognitoLocal",
-        }
+        },
       ),
     });
 
@@ -59,7 +60,7 @@ describe("GetUser target", () => {
     await expect(
       getUser(TestContext, {
         AccessToken: "blah",
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 
@@ -85,9 +86,9 @@ describe("GetUser target", () => {
             issuer: `http://localhost:9229/test`,
             expiresIn: "24h",
             keyid: "CognitoLocal",
-          }
+          },
         ),
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 });

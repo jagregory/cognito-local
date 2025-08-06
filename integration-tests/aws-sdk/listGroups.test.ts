@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
 import { withCognitoSdk } from "./setup";
 
@@ -19,13 +20,13 @@ describe(
             PoolName: "test 1",
           })
           .promise();
-        const userPool1Id = pool1.UserPool?.Id!!;
+        const userPool1Id = pool1.UserPool?.Id!;
         const pool2 = await client
           .createUserPool({
             PoolName: "test 2",
           })
           .promise();
-        const userPool2Id = pool2.UserPool?.Id!!;
+        const userPool2Id = pool2.UserPool?.Id!;
 
         await client
           .createGroup({
@@ -95,7 +96,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         const result = await client
           .listGroups({
@@ -113,6 +114,6 @@ describe(
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -11,14 +12,14 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolService } from "../services";
-import { ChangePassword, ChangePasswordTarget } from "./changePassword";
+import type { UserPoolService } from "../services";
+import { ChangePassword, type ChangePasswordTarget } from "./changePassword";
 
 const currentDate = new Date();
 
 describe("ChangePassword target", () => {
   let changePassword: ChangePasswordTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -34,7 +35,7 @@ describe("ChangePassword target", () => {
         AccessToken: "blah",
         PreviousPassword: "abc",
         ProposedPassword: "def",
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
 
     expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
@@ -62,11 +63,11 @@ describe("ChangePassword target", () => {
             issuer: `http://localhost:9229/test`,
             expiresIn: "24h",
             keyid: "CognitoLocal",
-          }
+          },
         ),
         PreviousPassword: "abc",
         ProposedPassword: "def",
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
 
     expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
@@ -98,11 +99,11 @@ describe("ChangePassword target", () => {
             issuer: `http://localhost:9229/test`,
             expiresIn: "24h",
             keyid: "CognitoLocal",
-          }
+          },
         ),
         PreviousPassword: "abc",
         ProposedPassword: "def",
-      })
+      }),
     ).rejects.toEqual(new InvalidPasswordError());
 
     expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
@@ -133,7 +134,7 @@ describe("ChangePassword target", () => {
           issuer: `http://localhost:9229/test`,
           expiresIn: "24h",
           keyid: "CognitoLocal",
-        }
+        },
       ),
       PreviousPassword: "previous-password",
       ProposedPassword: "new-password",

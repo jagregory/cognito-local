@@ -1,21 +1,21 @@
-import {
+import type {
   SignUpRequest,
   SignUpResponse,
   UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import * as uuid from "uuid";
 import { InvalidParameterError, UsernameExistsError } from "../errors";
-import { Messages, Services, UserPoolService } from "../services";
+import type { Messages, Services, UserPoolService } from "../services";
+import type { Context } from "../services/context";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
-import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
+import type { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attribute,
   attributesAppend,
   attributesInclude,
-  User,
+  type User,
 } from "../services/userPoolService";
-import { Target } from "./Target";
-import { Context } from "../services/context";
+import type { Target } from "./Target";
 
 export type SignUpTarget = Target<SignUpRequest, SignUpResponse>;
 
@@ -31,11 +31,11 @@ const deliverWelcomeMessage = async (
   user: User,
   userPool: UserPoolService,
   messages: Messages,
-  clientMetadata: Record<string, string> | undefined
+  clientMetadata: Record<string, string> | undefined,
 ): Promise<DeliveryDetails | null> => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
     userPool.options.AutoVerifiedAttributes ?? [],
-    user
+    user,
   );
   if (!deliveryDetails && !userPool.options.AutoVerifiedAttributes) {
     // From the console: When Cognito's default verification method is not enabled, you must use APIs or Lambda triggers
@@ -44,7 +44,7 @@ const deliverWelcomeMessage = async (
   } else if (!deliveryDetails) {
     // TODO: I don't know what the real error message should be for this
     throw new InvalidParameterError(
-      "User has no attribute matching desired auto verified attributes"
+      "User has no attribute matching desired auto verified attributes",
     );
   }
 
@@ -56,7 +56,7 @@ const deliverWelcomeMessage = async (
     user,
     code,
     clientMetadata,
-    deliveryDetails
+    deliveryDetails,
   );
 
   return deliveryDetails;
@@ -157,7 +157,7 @@ export const SignUp =
       updatedUser,
       userPool,
       messages,
-      req.ClientMetadata
+      req.ClientMetadata,
     );
 
     await userPool.saveUser(ctx, {
@@ -180,7 +180,7 @@ export const SignUp =
         // into every place we send attributes to lambdas
         userAttributes: attributesAppend(
           updatedUser.Attributes,
-          attribute("cognito:user_status", updatedUser.UserStatus)
+          attribute("cognito:user_status", updatedUser.UserStatus),
         ),
       });
     }

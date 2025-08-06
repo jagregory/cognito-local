@@ -1,11 +1,11 @@
-import {
+import type {
   AdminDeleteUserAttributesRequest,
   AdminDeleteUserAttributesResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { NotAuthorizedError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { attributesRemove } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type AdminDeleteUserAttributesTarget = Target<
   AdminDeleteUserAttributesRequest,

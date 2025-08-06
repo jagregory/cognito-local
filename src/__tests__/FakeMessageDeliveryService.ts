@@ -1,10 +1,10 @@
-import { Context } from "../services/context";
-import {
+import type { Context } from "../services/context";
+import type {
   DeliveryDetails,
   MessageDelivery,
 } from "../services/messageDelivery/messageDelivery";
-import { Message } from "../services/messages";
-import { User } from "../services/userPoolService";
+import type { Message } from "../services/messages";
+import type { User } from "../services/userPoolService";
 
 interface CollectedMessage {
   readonly deliveryDetails: DeliveryDetails;
@@ -19,10 +19,10 @@ export class FakeMessageDeliveryService implements MessageDelivery {
   }
 
   deliver(
-    ctx: Context,
-    user: User,
+    _ctx: Context,
+    _user: User,
     deliveryDetails: DeliveryDetails,
-    message: Message
+    message: Message,
   ): Promise<void> {
     this.messages.push({
       deliveryDetails,

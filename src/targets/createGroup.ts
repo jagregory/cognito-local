@@ -1,11 +1,11 @@
-import {
+import type {
   CreateGroupRequest,
   CreateGroupResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
-import { Group } from "../services/userPoolService";
+import type { Services } from "../services";
+import type { Group } from "../services/userPoolService";
 import { groupToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type CreateGroupTarget = Target<CreateGroupRequest, CreateGroupResponse>;
 

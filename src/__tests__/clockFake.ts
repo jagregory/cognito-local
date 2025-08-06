@@ -1,4 +1,4 @@
-import { Clock } from "../services";
+import type { Clock } from "../services";
 
 export class ClockFake implements Clock {
   private currentValue: Date;

@@ -1,7 +1,8 @@
+import { describe, expect, it } from "vitest";
 import { ClockFake } from "../../src/__tests__/clockFake";
-import { withCognitoSdk } from "./setup";
 import { UUID } from "../../src/__tests__/patterns";
 import { attributeValue } from "../../src/services/userPoolService";
+import { withCognitoSdk } from "./setup";
 
 const currentDate = new Date();
 const roundedDate = new Date(currentDate.getTime());
@@ -22,7 +23,7 @@ describe(
               PoolName: "test",
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           // create the user
           const createUserResult = await client
@@ -35,7 +36,7 @@ describe(
 
           expect(createUserResult.User?.Username).toEqual("abc");
           expect(
-            attributeValue("sub", createUserResult.User?.Attributes)
+            attributeValue("sub", createUserResult.User?.Attributes),
           ).toEqual(expect.stringMatching(UUID));
 
           // verify they exist
@@ -67,7 +68,7 @@ describe(
               UsernameAttributes: ["email"],
             })
             .promise();
-          const userPoolId = pool.UserPool?.Id!!;
+          const userPoolId = pool.UserPool?.Id!;
 
           // create the user
           const createUserResult = await client
@@ -79,10 +80,10 @@ describe(
             .promise();
 
           expect(createUserResult.User?.Username).toEqual(
-            expect.stringMatching(UUID)
+            expect.stringMatching(UUID),
           );
           expect(
-            attributeValue("sub", createUserResult.User?.Attributes)
+            attributeValue("sub", createUserResult.User?.Attributes),
           ).toEqual(expect.stringMatching(UUID));
 
           // verify they exist by email
@@ -107,7 +108,7 @@ describe(
             .adminGetUser({
               Username: attributeValue(
                 "sub",
-                createUserResult.User?.Attributes
+                createUserResult.User?.Attributes,
               )!,
               UserPoolId: userPoolId,
             })
@@ -126,6 +127,6 @@ describe(
     },
     {
       clock,
-    }
-  )
+    },
+  ),
 );

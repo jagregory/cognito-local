@@ -1,7 +1,7 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Lambda } from "../lambda";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { Trigger } from "./trigger";
+import type { Trigger } from "./trigger";
 
 export type PostConfirmationTrigger = Trigger<
   {
@@ -33,7 +33,7 @@ export const PostConfirmation =
   ({ lambda }: PostConfirmationServices): PostConfirmationTrigger =>
   async (
     ctx,
-    { clientId, clientMetadata, source, userAttributes, username, userPoolId }
+    { clientId, clientMetadata, source, userAttributes, username, userPoolId },
   ) => {
     try {
       await lambda.invoke(ctx, "PostConfirmation", {

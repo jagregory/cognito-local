@@ -1,5 +1,6 @@
-import { withCognitoSdk } from "./setup";
+import { describe, expect, it } from "vitest";
 import { UUID } from "../../src/__tests__/patterns";
+import { withCognitoSdk } from "./setup";
 
 describe(
   "CognitoIdentityServiceProvider.listUsers",
@@ -13,7 +14,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         const createUserResult = await client
           .adminCreateUser({
@@ -51,7 +52,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         await client
           .adminCreateUser({
@@ -99,7 +100,7 @@ describe(
             PoolName: "test",
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         const result = await client
           .listUsers({
@@ -123,7 +124,7 @@ describe(
             UsernameAttributes: ["email"],
           })
           .promise();
-        const userPoolId = pool.UserPool?.Id!!;
+        const userPoolId = pool.UserPool?.Id!;
 
         const createUserResult = await client
           .adminCreateUser({
@@ -153,5 +154,5 @@ describe(
         });
       });
     });
-  })
+  }),
 );

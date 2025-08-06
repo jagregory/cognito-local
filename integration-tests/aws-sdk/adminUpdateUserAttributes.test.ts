@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { UUID } from "../../src/__tests__/patterns";
 import { withCognitoSdk } from "./setup";
 
@@ -12,7 +13,7 @@ describe(
           PoolName: "test",
         })
         .promise();
-      const userPoolId = pool.UserPool?.Id!!;
+      const userPoolId = pool.UserPool?.Id!;
 
       await client
         .adminCreateUser({
@@ -60,5 +61,5 @@ describe(
         { Name: "email_verified", Value: "false" },
       ]);
     });
-  })
+  }),
 );

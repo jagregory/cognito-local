@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { UUID } from "../../src/__tests__/patterns";
 import { withCognitoSdk } from "./setup";
 
@@ -89,5 +90,5 @@ describe(
         { Name: "email", Value: "example@example.com" },
       ]);
     });
-  })
+  }),
 );

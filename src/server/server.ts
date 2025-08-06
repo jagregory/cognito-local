@@ -1,15 +1,15 @@
+import { readFileSync } from "node:fs";
+import * as http from "node:http";
+import * as https from "node:https";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import * as http from "http";
-import * as https from "https";
 import type { Logger } from "pino";
+import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
-import { Router } from "./Router";
 import PublicKey from "../keys/cognitoLocal.public.json";
-import Pino from "pino-http";
-import { readFileSync } from "fs";
+import type { Router } from "./Router";
 
 export type ServerOptions = {
   port?: number;
@@ -21,14 +21,15 @@ export type ServerOptions = {
 );
 
 export interface Server {
-  application: any; // eslint-disable-line
+  // biome-ignore lint/suspicious/noExplicitAny: don't want to export express types
+  application: any;
   start(): Promise<http.Server | https.Server>;
 }
 
 export const createServer = (
   router: Router,
   logger: Logger,
-  options: ServerOptions
+  options: ServerOptions,
 ): Server => {
   const pino = Pino({
     logger,
@@ -46,15 +47,15 @@ export const createServer = (
   app.use(
     cors({
       origin: "*",
-    })
+    }),
   );
   app.use(
     bodyParser.json({
       type: "application/x-amz-json-1.1",
-    })
+    }),
   );
 
-  app.get("/:userPoolId/.well-known/jwks.json", (req, res) => {
+  app.get("/:userPoolId/.well-known/jwks.json", (_req, res) => {
     res.status(200).json({
       keys: [PublicKey.jwk],
     });
@@ -68,7 +69,7 @@ export const createServer = (
     });
   });
 
-  app.get("/health", (req, res) => {
+  app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true });
   });
 
@@ -78,7 +79,7 @@ export const createServer = (
     if (!xAmzTarget) {
       res.status(400).json({ message: "Missing x-amz-target header" });
       return;
-    } else if (xAmzTarget instanceof Array) {
+    } else if (Array.isArray(xAmzTarget)) {
       res.status(400).json({ message: "Too many x-amz-target headers" });
       return;
     }
@@ -90,10 +91,10 @@ export const createServer = (
     }
 
     const route = router(target);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: generic wrapper
     const replacer: (this: any, key: string, value: any) => any = function (
       key,
-      value
+      value,
     ) {
       if (this[key] instanceof Date) {
         return Math.floor(this[key].getTime() / 1000);
@@ -136,7 +137,7 @@ export const createServer = (
           res.status(500).json(ex);
           return;
         }
-      }
+      },
     );
   });
 
@@ -158,7 +159,7 @@ export const createServer = (
                   ? readFileSync(options.key, "utf-8")
                   : undefined,
               },
-              app
+              app,
             )
           : http.createServer(app);
 

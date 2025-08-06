@@ -1,15 +1,15 @@
-import {
+import type {
   GetUserAttributeVerificationCodeRequest,
   GetUserAttributeVerificationCodeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
-import { Messages, Services, UserPoolService } from "../services";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
+import type { Messages, Services, UserPoolService } from "../services";
+import type { Context } from "../services/context";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
-import { Token } from "../services/tokenGenerator";
-import { User } from "../services/userPoolService";
-import { Target } from "./Target";
-import { Context } from "../services/context";
+import type { Token } from "../services/tokenGenerator";
+import type { User } from "../services/userPoolService";
+import type { Target } from "./Target";
 
 const sendAttributeVerificationCode = async (
   ctx: Context,
@@ -17,16 +17,16 @@ const sendAttributeVerificationCode = async (
   user: User,
   messages: Messages,
   req: GetUserAttributeVerificationCodeRequest,
-  code: string
+  code: string,
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
     userPool.options.AutoVerifiedAttributes ?? [],
-    user
+    user,
   );
   if (!deliveryDetails) {
     // TODO: I don't know what the real error message should be for this
     throw new InvalidParameterError(
-      "User has no attribute matching desired auto verified attributes"
+      "User has no attribute matching desired auto verified attributes",
     );
   }
 
@@ -38,7 +38,7 @@ const sendAttributeVerificationCode = async (
     user,
     code,
     req.ClientMetadata,
-    deliveryDetails
+    deliveryDetails,
   );
 };
 
@@ -67,7 +67,7 @@ export const GetUserAttributeVerificationCode =
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,
-      decodedToken.client_id
+      decodedToken.client_id,
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
@@ -87,7 +87,7 @@ export const GetUserAttributeVerificationCode =
       user,
       messages,
       req,
-      code
+      code,
     );
 
     return {};

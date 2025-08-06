@@ -1,10 +1,10 @@
-import {
+import type {
   ListUsersRequest,
   ListUsersResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { userToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type ListUsersTarget = Target<ListUsersRequest, ListUsersResponse>;
 

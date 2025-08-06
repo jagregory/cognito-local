@@ -1,4 +1,4 @@
-import {
+import type {
   VerifyUserAttributeRequest,
   VerifyUserAttributeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -8,10 +8,10 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import { Services } from "../services";
-import { Token } from "../services/tokenGenerator";
+import type { Services } from "../services";
+import type { Token } from "../services/tokenGenerator";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type VerifyUserAttributeTarget = Target<
   VerifyUserAttributeRequest,
@@ -34,7 +34,7 @@ export const VerifyUserAttribute =
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,
-      decodedToken.client_id
+      decodedToken.client_id,
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
@@ -50,7 +50,7 @@ export const VerifyUserAttribute =
         ...user,
         Attributes: attributesAppend(
           user.Attributes,
-          attribute("email_verified", "true")
+          attribute("email_verified", "true"),
         ),
         UserLastModifiedDate: clock.get(),
       });
@@ -59,7 +59,7 @@ export const VerifyUserAttribute =
         ...user,
         Attributes: attributesAppend(
           user.Attributes,
-          attribute("phone_number_verified", "true")
+          attribute("phone_number_verified", "true"),
         ),
         UserLastModifiedDate: clock.get(),
       });

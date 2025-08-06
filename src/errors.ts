@@ -37,7 +37,7 @@ export class ExpiredCodeError extends CognitoError {
   public constructor() {
     super(
       "ExpiredCodeException",
-      "Invalid code provided, please request a code again."
+      "Invalid code provided, please request a code again.",
     );
   }
 }
@@ -76,7 +76,7 @@ export class UnexpectedLambdaExceptionError extends CognitoError {
   public constructor() {
     super(
       "UnexpectedLambdaExceptionException",
-      "Unexpected error when invoking lambda"
+      "Unexpected error when invoking lambda",
     );
   }
 }
@@ -85,7 +85,7 @@ export class UserLambdaValidationError extends CognitoError {
   public constructor(message?: string) {
     super(
       "UserLambdaValidationException",
-      message ?? "Lambda threw an exception"
+      message ?? "Lambda threw an exception",
     );
   }
 }

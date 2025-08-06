@@ -1,10 +1,10 @@
-import {
+import type {
   UpdateUserPoolRequest,
   UpdateUserPoolResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { Services } from "../services";
-import { UserPool } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { UserPool } from "../services/userPoolService";
+import type { Target } from "./Target";
 
 export type UpdateUserPoolTarget = Target<
   UpdateUserPoolRequest,

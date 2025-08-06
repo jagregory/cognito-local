@@ -1,18 +1,18 @@
+import type { Dirent } from "node:fs";
+import fs from "node:fs/promises";
+import * as path from "node:path";
 import mergeWith from "lodash.mergewith";
-import * as path from "path";
 import { ResourceNotFoundError } from "../errors";
-import { UserPoolDefaults } from "../server/config";
-import { AppClient } from "./appClient";
-import { Context } from "./context";
-import { DataStore } from "./dataStore/dataStore";
-import { DataStoreFactory } from "./dataStore/factory";
-import {
+import type { UserPoolDefaults } from "../server/config";
+import type { AppClient } from "./appClient";
+import type { Context } from "./context";
+import type { DataStore } from "./dataStore/dataStore";
+import type { DataStoreFactory } from "./dataStore/factory";
+import type {
   UserPool,
   UserPoolService,
   UserPoolServiceFactory,
 } from "./userPoolService";
-import fs from "fs/promises";
-import { Dirent } from "fs";
 
 const CLIENTS_DATABASE_NAME = "clients";
 
@@ -267,11 +267,11 @@ export interface CognitoService {
   getUserPool(ctx: Context, userPoolId: string): Promise<UserPoolService>;
   getUserPoolForClientId(
     ctx: Context,
-    clientId: string
+    clientId: string,
   ): Promise<UserPoolService>;
   listAppClients(
     ctx: Context,
-    userPoolId: string
+    userPoolId: string,
   ): Promise<readonly AppClient[]>;
   listUserPools(ctx: Context): Promise<readonly UserPool[]>;
 }
@@ -279,7 +279,7 @@ export interface CognitoService {
 export interface CognitoServiceFactory {
   create(
     ctx: Context,
-    userPoolDefaultConfig: UserPoolDefaults
+    userPoolDefaultConfig: UserPoolDefaults,
   ): Promise<CognitoService>;
 }
 
@@ -300,7 +300,7 @@ export class CognitoServiceImpl implements CognitoService {
     dataDirectory: string,
     clients: DataStore,
     userPoolDefaultConfig: UserPoolDefaults,
-    userPoolServiceFactory: UserPoolServiceFactory
+    userPoolServiceFactory: UserPoolServiceFactory,
   ) {
     this.clients = clients;
     this.dataDirectory = dataDirectory;
@@ -310,7 +310,7 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async createUserPool(
     ctx: Context,
-    userPool: UserPool
+    userPool: UserPool,
   ): Promise<UserPool> {
     ctx.logger.debug("CognitoServiceImpl.createUserPool");
 
@@ -325,8 +325,8 @@ export class CognitoServiceImpl implements CognitoService {
         {},
         USER_POOL_AWS_DEFAULTS,
         this.userPoolDefaultConfig,
-        userPool
-      )
+        userPool,
+      ),
     );
 
     this.userPools.push(service);
@@ -337,7 +337,7 @@ export class CognitoServiceImpl implements CognitoService {
   public async deleteUserPool(ctx: Context, userPool: UserPool): Promise<void> {
     ctx.logger.debug(
       { userPoolId: userPool.Id },
-      "CognitoServiceImpl.deleteUserPool"
+      "CognitoServiceImpl.deleteUserPool",
     );
 
     if (!this.userPools) {
@@ -350,7 +350,7 @@ export class CognitoServiceImpl implements CognitoService {
 
   public getUserPool(
     ctx: Context,
-    userPoolId: string
+    userPoolId: string,
   ): Promise<UserPoolService> {
     ctx.logger.debug({ userPoolId }, "CognitoServiceImpl.getUserPool");
     if (!this.userPools) {
@@ -367,7 +367,7 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async getUserPoolForClientId(
     ctx: Context,
-    clientId: string
+    clientId: string,
   ): Promise<UserPoolService> {
     ctx.logger.debug({ clientId }, "CognitoServiceImpl.getUserPoolForClientId");
     if (!this.userPools) {
@@ -380,11 +380,11 @@ export class CognitoServiceImpl implements CognitoService {
     }
 
     const userPool = this.userPools.find(
-      (x) => x.options.Id === appClient.UserPoolId
+      (x) => x.options.Id === appClient.UserPoolId,
     );
     if (!userPool) {
       throw new ResourceNotFoundError(
-        `User Pool ${appClient.UserPoolId} not found`
+        `User Pool ${appClient.UserPoolId} not found`,
       );
     }
 
@@ -393,7 +393,7 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async getAppClient(
     ctx: Context,
-    clientId: string
+    clientId: string,
   ): Promise<AppClient | null> {
     ctx.logger.debug({ clientId }, "CognitoServiceImpl.getAppClient");
     return this.clients.get(ctx, ["Clients", clientId]);
@@ -401,13 +401,13 @@ export class CognitoServiceImpl implements CognitoService {
 
   public async listAppClients(
     ctx: Context,
-    userPoolId: string
+    userPoolId: string,
   ): Promise<readonly AppClient[]> {
     ctx.logger.debug({ userPoolId }, "CognitoServiceImpl.listAppClients");
     const clients = await this.clients.get<Record<string, AppClient>>(
       ctx,
       "Clients",
-      {}
+      {},
     );
 
     return Object.values(clients).filter((x) => x.UserPoolId === userPoolId);
@@ -438,15 +438,15 @@ export class CognitoServiceImpl implements CognitoService {
           (x) =>
             x.isFile() &&
             path.extname(x.name) === ".json" &&
-            userPoolIdFromDirent(x) !== CLIENTS_DATABASE_NAME
+            userPoolIdFromDirent(x) !== CLIENTS_DATABASE_NAME,
         )
         .map(async (x) =>
           this.userPoolServiceFactory.create(ctx, this.clients, {
             ...USER_POOL_AWS_DEFAULTS,
             ...this.userPoolDefaultConfig,
             Id: userPoolIdFromDirent(x),
-          })
-        )
+          }),
+        ),
     );
   }
 }
@@ -459,7 +459,7 @@ export class CognitoServiceFactoryImpl implements CognitoServiceFactory {
   public constructor(
     dataDirectory: string,
     dataStoreFactory: DataStoreFactory,
-    userPoolServiceFactory: UserPoolServiceFactory
+    userPoolServiceFactory: UserPoolServiceFactory,
   ) {
     this.dataDirectory = dataDirectory;
     this.dataStoreFactory = dataStoreFactory;
@@ -468,19 +468,19 @@ export class CognitoServiceFactoryImpl implements CognitoServiceFactory {
 
   public async create(
     ctx: Context,
-    userPoolDefaultConfig: UserPoolDefaults
+    userPoolDefaultConfig: UserPoolDefaults,
   ): Promise<CognitoService> {
     const clients = await this.dataStoreFactory.create(
       ctx,
       CLIENTS_DATABASE_NAME,
-      { Clients: {} }
+      { Clients: {} },
     );
 
     const cognitoService = new CognitoServiceImpl(
       this.dataDirectory,
       clients,
       userPoolDefaultConfig,
-      this.userPoolServiceFactory
+      this.userPoolServiceFactory,
     );
 
     await cognitoService.init(ctx);

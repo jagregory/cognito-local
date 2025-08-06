@@ -1,23 +1,26 @@
-import { Clock } from "../clock";
-import { CognitoService } from "../cognitoService";
-import { CryptoService } from "../crypto";
-import { Lambda } from "../lambda";
+import type { Clock } from "../clock";
+import type { CognitoService } from "../cognitoService";
+import type { CryptoService } from "../crypto";
+import type { Lambda } from "../lambda";
 import {
   CustomEmailSender,
-  CustomEmailSenderTrigger,
+  type CustomEmailSenderTrigger,
 } from "./customEmailSender";
-import { CustomMessage, CustomMessageTrigger } from "./customMessage";
+import { CustomMessage, type CustomMessageTrigger } from "./customMessage";
 import {
   PostAuthentication,
-  PostAuthenticationTrigger,
+  type PostAuthenticationTrigger,
 } from "./postAuthentication";
-import { PostConfirmation, PostConfirmationTrigger } from "./postConfirmation";
-import { PreSignUp, PreSignUpTrigger } from "./preSignUp";
+import {
+  PostConfirmation,
+  type PostConfirmationTrigger,
+} from "./postConfirmation";
+import { PreSignUp, type PreSignUpTrigger } from "./preSignUp";
 import {
   PreTokenGeneration,
-  PreTokenGenerationTrigger,
+  type PreTokenGenerationTrigger,
 } from "./preTokenGeneration";
-import { UserMigration, UserMigrationTrigger } from "./userMigration";
+import { UserMigration, type UserMigrationTrigger } from "./userMigration";
 
 type SupportedTriggers =
   | "CustomEmailSender"
@@ -54,7 +57,7 @@ export class TriggersService implements Triggers {
     clock: Clock,
     cognitoClient: CognitoService,
     lambda: Lambda,
-    crypto: CryptoService
+    crypto: CryptoService,
   ) {
     this.lambda = lambda;
 

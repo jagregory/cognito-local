@@ -1,10 +1,10 @@
-import {
+import type {
   AdminDisableUserRequest,
   AdminDisableUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { UserNotFoundError } from "../errors";
-import { Services } from "../services";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 
 export type AdminDisableUserTarget = Target<
   AdminDisableUserRequest,

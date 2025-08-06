@@ -1,18 +1,19 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { ResourceNotFoundError } from "../errors";
-import { CognitoService, UserPoolService } from "../services";
+import type { CognitoService, UserPoolService } from "../services";
 import {
   DeleteUserPoolClient,
-  DeleteUserPoolClientTarget,
+  type DeleteUserPoolClientTarget,
 } from "./deleteUserPoolClient";
 
 describe("DeleteUserPoolClient target", () => {
   let deleteUserPoolClient: DeleteUserPoolClientTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
-  let mockCognitoService: jest.Mocked<CognitoService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockCognitoService: MockedObject<CognitoService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -37,7 +38,7 @@ describe("DeleteUserPoolClient target", () => {
 
     expect(mockUserPoolService.deleteAppClient).toHaveBeenCalledWith(
       TestContext,
-      existingAppClient
+      existingAppClient,
     );
   });
 
@@ -48,7 +49,7 @@ describe("DeleteUserPoolClient target", () => {
       deleteUserPoolClient(TestContext, {
         ClientId: "clientId",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new ResourceNotFoundError());
   });
 
@@ -64,7 +65,7 @@ describe("DeleteUserPoolClient target", () => {
       deleteUserPoolClient(TestContext, {
         ClientId: "clientId",
         UserPoolId: "pool-two",
-      })
+      }),
     ).rejects.toEqual(new ResourceNotFoundError());
   });
 });

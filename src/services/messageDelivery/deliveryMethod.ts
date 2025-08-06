@@ -1,10 +1,10 @@
-import { VerifiedAttributesListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { attributeValue, User } from "../userPoolService";
-import { DeliveryDetails } from "./messageDelivery";
+import type { VerifiedAttributesListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { attributeValue, type User } from "../userPoolService";
+import type { DeliveryDetails } from "./messageDelivery";
 
 export const selectAppropriateDeliveryMethod = (
   desiredDeliveryMediums: VerifiedAttributesListType,
-  user: User
+  user: User,
 ): DeliveryDetails | null => {
   if (desiredDeliveryMediums.includes("phone_number")) {
     const phoneNumber = attributeValue("phone_number", user.Attributes);

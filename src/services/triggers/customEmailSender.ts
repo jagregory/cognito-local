@@ -1,8 +1,8 @@
-import { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { CryptoService } from "../crypto";
-import { CustomEmailSenderTriggerResponse, Lambda } from "../lambda";
+import type { AttributeListType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { CryptoService } from "../crypto";
+import type { CustomEmailSenderTriggerResponse, Lambda } from "../lambda";
 import { attributesToRecord } from "../userPoolService";
-import { Trigger } from "./trigger";
+import type { Trigger } from "./trigger";
 
 export type CustomEmailSenderTrigger = Trigger<
   {
@@ -57,7 +57,7 @@ export const CustomEmailSender =
       userAttributes,
       username,
       userPoolId,
-    }
+    },
   ) => {
     try {
       const encrypted = await crypto.encrypt(ctx, code);

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -30,5 +31,5 @@ describe(
         },
       });
     });
-  })
+  }),
 );

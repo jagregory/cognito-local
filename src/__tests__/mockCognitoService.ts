@@ -1,21 +1,22 @@
-import { CognitoService, UserPoolService } from "../services";
-import { CognitoServiceFactory } from "../services/cognitoService";
+import { type MockedObject, vi } from "vitest";
+import type { CognitoService, UserPoolService } from "../services";
+import type { CognitoServiceFactory } from "../services/cognitoService";
 import { newMockUserPoolService } from "./mockUserPoolService";
 
 export const newMockCognitoService = (
-  userPoolClient: UserPoolService = newMockUserPoolService()
-): jest.Mocked<CognitoService> => ({
-  createUserPool: jest.fn(),
-  deleteUserPool: jest.fn(),
-  getAppClient: jest.fn(),
-  getUserPool: jest.fn().mockResolvedValue(userPoolClient),
-  getUserPoolForClientId: jest.fn().mockResolvedValue(userPoolClient),
-  listAppClients: jest.fn(),
-  listUserPools: jest.fn(),
+  userPoolClient: UserPoolService = newMockUserPoolService(),
+): MockedObject<CognitoService> => ({
+  createUserPool: vi.fn(),
+  deleteUserPool: vi.fn(),
+  getAppClient: vi.fn(),
+  getUserPool: vi.fn().mockResolvedValue(userPoolClient),
+  getUserPoolForClientId: vi.fn().mockResolvedValue(userPoolClient),
+  listAppClients: vi.fn(),
+  listUserPools: vi.fn(),
 });
 
 export const newMockCognitoServiceFactory = (
-  cognitoService: jest.Mocked<CognitoService> = newMockCognitoService()
-): jest.Mocked<CognitoServiceFactory> => ({
-  create: jest.fn().mockResolvedValue(cognitoService),
+  cognitoService: MockedObject<CognitoService> = newMockCognitoService(),
+): MockedObject<CognitoServiceFactory> => ({
+  create: vi.fn().mockResolvedValue(cognitoService),
 });

@@ -1,9 +1,9 @@
-import { DeleteGroupRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type { DeleteGroupRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { GroupNotFoundError } from "../errors";
-import { Services } from "../services";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 
-export type DeleteGroupTarget = Target<DeleteGroupRequest, {}>;
+export type DeleteGroupTarget = Target<DeleteGroupRequest, object>;
 
 type DeleteGroupServices = Pick<Services, "cognito">;
 

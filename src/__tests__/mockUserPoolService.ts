@@ -1,32 +1,36 @@
-import { UserPoolService } from "../services";
-import { UserPool, UserPoolServiceFactory } from "../services/userPoolService";
+import { type MockedObject, vi } from "vitest";
+import type { UserPoolService } from "../services";
+import type {
+  UserPool,
+  UserPoolServiceFactory,
+} from "../services/userPoolService";
 
 export const newMockUserPoolService = (
   config: UserPool = {
     Id: "test",
-  }
-): jest.Mocked<UserPoolService> => ({
-  addUserToGroup: jest.fn(),
-  deleteAppClient: jest.fn(),
-  deleteGroup: jest.fn(),
-  deleteUser: jest.fn(),
-  getGroupByGroupName: jest.fn(),
-  getUserByRefreshToken: jest.fn(),
-  getUserByUsername: jest.fn(),
-  listGroups: jest.fn(),
-  listUserGroupMembership: jest.fn(),
-  listUsers: jest.fn(),
+  },
+): MockedObject<UserPoolService> => ({
+  addUserToGroup: vi.fn(),
+  deleteAppClient: vi.fn(),
+  deleteGroup: vi.fn(),
+  deleteUser: vi.fn(),
+  getGroupByGroupName: vi.fn(),
+  getUserByRefreshToken: vi.fn(),
+  getUserByUsername: vi.fn(),
+  listGroups: vi.fn(),
+  listUserGroupMembership: vi.fn(),
+  listUsers: vi.fn(),
   options: config,
-  removeUserFromGroup: jest.fn(),
-  saveAppClient: jest.fn(),
-  saveGroup: jest.fn(),
-  saveUser: jest.fn(),
-  storeRefreshToken: jest.fn(),
-  updateOptions: jest.fn(),
+  removeUserFromGroup: vi.fn(),
+  saveAppClient: vi.fn(),
+  saveGroup: vi.fn(),
+  saveUser: vi.fn(),
+  storeRefreshToken: vi.fn(),
+  updateOptions: vi.fn(),
 });
 
 export const newMockUserPoolServiceFactory = (
-  cognitoService: jest.Mocked<UserPoolService> = newMockUserPoolService()
-): jest.Mocked<UserPoolServiceFactory> => ({
-  create: jest.fn().mockResolvedValue(cognitoService),
+  cognitoService: MockedObject<UserPoolService> = newMockUserPoolService(),
+): MockedObject<UserPoolServiceFactory> => ({
+  create: vi.fn().mockResolvedValue(cognitoService),
 });

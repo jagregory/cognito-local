@@ -1,4 +1,4 @@
-import {
+import type {
   CreateAuthChallengeTriggerEvent,
   CustomEmailSenderTriggerEvent,
   CustomMessageTriggerEvent,
@@ -12,14 +12,14 @@ import {
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
 import type { Lambda as LambdaClient } from "aws-sdk";
-import { InvocationResponse } from "aws-sdk/clients/lambda";
+import type { InvocationResponse } from "aws-sdk/clients/lambda";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
 import {
   InvalidLambdaResponseError,
   UnexpectedLambdaExceptionError,
   UserLambdaValidationError,
 } from "../errors";
-import { Context } from "./context";
+import type { Context } from "./context";
 
 type CognitoUserPoolEvent =
   | CreateAuthChallengeTriggerEvent
@@ -166,37 +166,37 @@ export interface Lambda {
   invoke(
     ctx: Context,
     lambda: "CustomMessage",
-    event: CustomMessageEvent
+    event: CustomMessageEvent,
   ): Promise<CustomMessageTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "UserMigration",
-    event: UserMigrationEvent
+    event: UserMigrationEvent,
   ): Promise<UserMigrationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PreSignUp",
-    event: PreSignUpEvent
+    event: PreSignUpEvent,
   ): Promise<PreSignUpTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PreTokenGeneration",
-    event: PreTokenGenerationEvent
+    event: PreTokenGenerationEvent,
   ): Promise<PreTokenGenerationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostAuthentication",
-    event: PostAuthenticationEvent
+    event: PostAuthenticationEvent,
   ): Promise<PostAuthenticationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostConfirmation",
-    event: PostConfirmationEvent
+    event: PostConfirmationEvent,
   ): Promise<PostConfirmationTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "CustomEmailSender",
-    event: CustomEmailSenderEvent
+    event: CustomEmailSenderEvent,
   ): Promise<CustomEmailSenderTriggerResponse>;
 }
 
@@ -223,7 +223,7 @@ export class LambdaService implements Lambda {
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
-      | UserMigrationEvent
+      | UserMigrationEvent,
   ) {
     const functionName = this.config[trigger];
     if (!functionName) {
@@ -237,7 +237,7 @@ export class LambdaService implements Lambda {
         functionName,
         event: JSON.stringify(lambdaEvent, undefined, 2),
       },
-      `Invoking "${functionName}" with event`
+      `Invoking "${functionName}" with event`,
     );
     let result: InvocationResponse;
     try {
@@ -254,7 +254,7 @@ export class LambdaService implements Lambda {
     }
 
     ctx.logger.debug(
-      `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`
+      `Lambda completed with StatusCode=${result.StatusCode} and FunctionError=${result.FunctionError}`,
     );
     if (!result.FunctionError) {
       try {
@@ -273,7 +273,7 @@ export class LambdaService implements Lambda {
 
         if (parsedPayload.errorMessage) {
           throw new UserLambdaValidationError(
-            `${functionName} failed with error ${parsedPayload.errorMessage}.`
+            `${functionName} failed with error ${parsedPayload.errorMessage}.`,
           );
         }
       }
@@ -290,7 +290,7 @@ export class LambdaService implements Lambda {
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
-      | UserMigrationEvent
+      | UserMigrationEvent,
   ): CognitoUserPoolEvent {
     const version = "0"; // TODO: how do we know what this is?
     const callerContext = {

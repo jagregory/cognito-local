@@ -1,11 +1,11 @@
-import {
+import type {
   ConfirmForgotPasswordRequest,
   ConfirmForgotPasswordResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { CodeMismatchError, UserNotFoundError } from "../errors";
-import { Services } from "../services";
+import type { Services } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 export type ConfirmForgotPasswordTarget = Target<
   ConfirmForgotPasswordRequest,
@@ -56,7 +56,7 @@ export const ConfirmForgotPassword =
         // into every place we send attributes to lambdas
         userAttributes: attributesAppend(
           updatedUser.Attributes,
-          attribute("cognito:user_status", updatedUser.UserStatus)
+          attribute("cognito:user_status", updatedUser.UserStatus),
         ),
       });
     }

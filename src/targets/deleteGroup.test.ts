@@ -1,14 +1,15 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { GroupNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
-import { DeleteGroup, DeleteGroupTarget } from "./deleteGroup";
+import type { UserPoolService } from "../services";
+import { DeleteGroup, type DeleteGroupTarget } from "./deleteGroup";
 
 describe("DeleteGroup target", () => {
   let deleteGroup: DeleteGroupTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -30,7 +31,7 @@ describe("DeleteGroup target", () => {
 
     expect(mockUserPoolService.deleteGroup).toHaveBeenCalledWith(
       TestContext,
-      existingGroup
+      existingGroup,
     );
   });
 
@@ -41,7 +42,7 @@ describe("DeleteGroup target", () => {
       deleteGroup(TestContext, {
         GroupName: "group",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new GroupNotFoundError());
   });
 });

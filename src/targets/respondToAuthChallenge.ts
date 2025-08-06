@@ -1,4 +1,4 @@
-import {
+import type {
   RespondToAuthChallengeRequest,
   RespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -8,8 +8,8 @@ import {
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
-import { Services } from "../services";
-import { Target } from "./Target";
+import type { Services } from "../services";
+import type { Target } from "./Target";
 
 export type RespondToAuthChallengeTarget = Target<
   RespondToAuthChallengeRequest,
@@ -31,7 +31,7 @@ export const RespondToAuthChallenge =
   async (ctx, req) => {
     if (!req.ChallengeResponses) {
       throw new InvalidParameterError(
-        "Missing required parameter challenge responses"
+        "Missing required parameter challenge responses",
       );
     }
     if (!req.ChallengeResponses.USERNAME) {
@@ -46,7 +46,7 @@ export const RespondToAuthChallenge =
 
     const user = await userPool.getUserByUsername(
       ctx,
-      req.ChallengeResponses.USERNAME
+      req.ChallengeResponses.USERNAME,
     );
     if (!user || !userPoolClient) {
       throw new NotAuthorizedError();
@@ -65,7 +65,7 @@ export const RespondToAuthChallenge =
     } else if (req.ChallengeName === "NEW_PASSWORD_REQUIRED") {
       if (!req.ChallengeResponses.NEW_PASSWORD) {
         throw new InvalidParameterError(
-          "Missing required parameter NEW_PASSWORD"
+          "Missing required parameter NEW_PASSWORD",
         );
       }
 
@@ -78,7 +78,7 @@ export const RespondToAuthChallenge =
       });
     } else {
       throw new UnsupportedError(
-        `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`
+        `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`,
       );
     }
 
@@ -103,7 +103,7 @@ export const RespondToAuthChallenge =
         userGroups,
         userPoolClient,
         req.ClientMetadata,
-        "Authentication"
+        "Authentication",
       ),
     };
   };

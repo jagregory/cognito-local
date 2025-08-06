@@ -1,4 +1,4 @@
-import {
+import type {
   AdminCreateUserRequest,
   AdminCreateUserResponse,
   DeliveryMediumListType,
@@ -10,19 +10,19 @@ import {
   UnsupportedError,
   UsernameExistsError,
 } from "../errors";
-import { Messages, Services, UserPoolService } from "../services";
-import { Context } from "../services/context";
-import { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
+import type { Messages, Services, UserPoolService } from "../services";
+import type { Context } from "../services/context";
+import type { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
   attributesInclude,
   attributeValue,
-  User,
+  type User,
 } from "../services/userPoolService";
 import { userToResponseObject } from "./responses";
-import { Target } from "./Target";
+import type { Target } from "./Target";
 
 const generator = shortUUID(
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!"
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!",
 );
 
 export type AdminCreateUserTarget = Target<
@@ -37,7 +37,7 @@ type AdminCreateUserServices = Pick<
 
 const selectAppropriateDeliveryMethod = (
   desiredDeliveryMediums: DeliveryMediumListType,
-  user: User
+  user: User,
 ): DeliveryDetails | null => {
   if (desiredDeliveryMediums.includes("SMS")) {
     const phoneNumber = attributeValue("phone_number", user.Attributes);
@@ -70,16 +70,16 @@ const deliverWelcomeMessage = async (
   temporaryPassword: string,
   user: User,
   messages: Messages,
-  userPool: UserPoolService
+  userPool: UserPoolService,
 ) => {
   const deliveryDetails = selectAppropriateDeliveryMethod(
     req.DesiredDeliveryMediums ?? ["SMS"],
-    user
+    user,
   );
   if (!deliveryDetails) {
     // TODO: I don't know what the real error message should be for this
     throw new InvalidParameterError(
-      "User has no attribute matching desired delivery mediums"
+      "User has no attribute matching desired delivery mediums",
     );
   }
 
@@ -91,7 +91,7 @@ const deliverWelcomeMessage = async (
     user,
     temporaryPassword,
     req.ClientMetadata,
-    deliveryDetails
+    deliveryDetails,
   );
 };
 
@@ -100,7 +100,6 @@ export const AdminCreateUser =
     clock,
     cognito,
     messages,
-    config,
   }: AdminCreateUserServices): AdminCreateUserTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
@@ -115,7 +114,7 @@ export const AdminCreateUser =
 
     const sub = uuid.v4();
     const attributes = attributesInclude("sub", req.UserAttributes)
-      ? req.UserAttributes ?? []
+      ? (req.UserAttributes ?? [])
       : [{ Name: "sub", Value: sub }, ...(req.UserAttributes ?? [])];
 
     const now = clock.get();
@@ -166,7 +165,7 @@ export const AdminCreateUser =
         temporaryPassword,
         user,
         messages,
-        userPool
+        userPool,
       );
     }
 

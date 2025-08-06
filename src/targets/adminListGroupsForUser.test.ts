@@ -1,17 +1,18 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import { UserNotFoundError } from "../errors";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import {
   AdminListGroupsForUser,
-  AdminListGroupsForUserTarget,
+  type AdminListGroupsForUserTarget,
 } from "./adminListGroupsForUser";
 
 describe("AdminListGroupsForUser target", () => {
   let adminListGroupsForUser: AdminListGroupsForUserTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -82,7 +83,7 @@ describe("AdminListGroupsForUser target", () => {
       adminListGroupsForUser(TestContext, {
         Username: "user",
         UserPoolId: "test",
-      })
+      }),
     ).rejects.toEqual(new UserNotFoundError());
   });
 });

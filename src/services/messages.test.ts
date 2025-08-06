@@ -1,14 +1,15 @@
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockMessageDelivery } from "../__tests__/mockMessageDelivery";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { TestContext } from "../__tests__/testContext";
-import { MessageDelivery } from "./messageDelivery/messageDelivery";
-import { MessagesService } from "./messages";
 import * as TDB from "../__tests__/testDataBuilder";
-import { Triggers } from "./triggers";
+import type { MessageDelivery } from "./messageDelivery/messageDelivery";
+import { MessagesService } from "./messages";
+import type { Triggers } from "./triggers";
 
 describe("messages service", () => {
-  let mockTriggers: jest.Mocked<Triggers>;
-  let mockMessageDelivery: jest.Mocked<MessageDelivery>;
+  let mockTriggers: MockedObject<Triggers>;
+  let mockMessageDelivery: MockedObject<MessageDelivery>;
 
   const user = TDB.user();
   const deliveryDetails = {
@@ -45,7 +46,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(
             mockTriggers,
-            mockMessageDelivery
+            mockMessageDelivery,
           );
           await messages.deliver(
             TestContext,
@@ -57,7 +58,7 @@ describe("messages service", () => {
             {
               client: "metadata",
             },
-            deliveryDetails
+            deliveryDetails,
           );
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
@@ -81,7 +82,7 @@ describe("messages service", () => {
               emailMessage: "email",
               emailSubject: "email subject",
               smsMessage: "sms",
-            }
+            },
           );
         });
       });
@@ -95,7 +96,7 @@ describe("messages service", () => {
 
           const messages = new MessagesService(
             mockTriggers,
-            mockMessageDelivery
+            mockMessageDelivery,
           );
           await messages.deliver(
             TestContext,
@@ -107,7 +108,7 @@ describe("messages service", () => {
             {
               client: "metadata",
             },
-            deliveryDetails
+            deliveryDetails,
           );
 
           expect(mockTriggers.customMessage).toHaveBeenCalledWith(TestContext, {
@@ -128,7 +129,7 @@ describe("messages service", () => {
             deliveryDetails,
             {
               __code: "123456",
-            }
+            },
           );
         });
       });
@@ -149,7 +150,7 @@ describe("messages service", () => {
           {
             client: "metadata",
           },
-          deliveryDetails
+          deliveryDetails,
         );
 
         expect(mockTriggers.customMessage).not.toHaveBeenCalled();
@@ -159,7 +160,7 @@ describe("messages service", () => {
           deliveryDetails,
           {
             __code: "123456",
-          }
+          },
         );
       });
     });

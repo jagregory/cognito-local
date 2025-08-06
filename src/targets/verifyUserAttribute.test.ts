@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as uuid from "uuid";
+import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -11,11 +12,11 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
-import { UserPoolService } from "../services";
+import type { UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import {
   VerifyUserAttribute,
-  VerifyUserAttributeTarget,
+  type VerifyUserAttributeTarget,
 } from "./verifyUserAttribute";
 
 const clock = new ClockFake(new Date());
@@ -37,12 +38,12 @@ const validToken = jwt.sign(
     issuer: `http://localhost:9229/test`,
     expiresIn: "24h",
     keyid: "CognitoLocal",
-  }
+  },
 );
 
 describe("VerifyUserAttribute target", () => {
   let verifyUserAttribute: VerifyUserAttributeTarget;
-  let mockUserPoolService: jest.Mocked<UserPoolService>;
+  let mockUserPoolService: MockedObject<UserPoolService>;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
@@ -69,7 +70,7 @@ describe("VerifyUserAttribute target", () => {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
-        attribute("email_verified", "true")
+        attribute("email_verified", "true"),
       ),
       UserLastModifiedDate: clock.get(),
     });
@@ -92,7 +93,7 @@ describe("VerifyUserAttribute target", () => {
       ...user,
       Attributes: attributesAppend(
         user.Attributes,
-        attribute("phone_number_verified", "true")
+        attribute("phone_number_verified", "true"),
       ),
       UserLastModifiedDate: clock.get(),
     });
@@ -120,7 +121,7 @@ describe("VerifyUserAttribute target", () => {
         AccessToken: "blah",
         AttributeName: "email",
         Code: "123456",
-      })
+      }),
     ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 
@@ -132,7 +133,7 @@ describe("VerifyUserAttribute target", () => {
         AccessToken: validToken,
         AttributeName: "email",
         Code: "123456",
-      })
+      }),
     ).rejects.toEqual(new NotAuthorizedError());
   });
 
@@ -147,7 +148,7 @@ describe("VerifyUserAttribute target", () => {
         AccessToken: validToken,
         AttributeName: "email",
         Code: "123456",
-      })
+      }),
     ).rejects.toEqual(new CodeMismatchError());
   });
 });

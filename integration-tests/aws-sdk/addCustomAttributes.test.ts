@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { USER_POOL_AWS_DEFAULTS } from "../../src/services/cognitoService";
 import { withCognitoSdk } from "./setup";
 
@@ -56,5 +57,5 @@ describe(
         ],
       });
     });
-  })
+  }),
 );

@@ -1,17 +1,18 @@
+import fs from "node:fs";
+import { promisify } from "node:util";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { TestContext } from "../src/__tests__/testContext";
 import { DateClock } from "../src/services";
 import {
-  CognitoServiceFactory,
+  type CognitoServiceFactory,
   CognitoServiceFactoryImpl,
   USER_POOL_AWS_DEFAULTS,
 } from "../src/services/cognitoService";
-import fs from "fs";
-import { promisify } from "util";
 import { StormDBDataStoreFactory } from "../src/services/dataStore/stormDb";
 import { UserPoolServiceFactoryImpl } from "../src/services/userPoolService";
 
 const mkdtemp = promisify(fs.mkdtemp);
-const rmdir = promisify(fs.rmdir);
+const rm = promisify(fs.rm);
 
 describe("Cognito Service", () => {
   let dataDirectory: string;
@@ -26,14 +27,14 @@ describe("Cognito Service", () => {
     factory = new CognitoServiceFactoryImpl(
       dataDirectory,
       dataStoreFactory,
-      new UserPoolServiceFactoryImpl(clock, dataStoreFactory)
+      new UserPoolServiceFactoryImpl(clock, dataStoreFactory),
     );
   });
 
   afterEach(() =>
-    rmdir(dataDirectory, {
+    rm(dataDirectory, {
       recursive: true,
-    })
+    }),
   );
 
   describe("CognitoServiceFactory", () => {
