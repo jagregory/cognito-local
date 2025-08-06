@@ -85,9 +85,9 @@ describe(
         .promise();
 
       expect(user.UserAttributes).toEqual([
-        { Name: "sub", Value: expect.stringMatching(UUID) },
         { Name: "email", Value: "example2@example.com" },
         { Name: "email_verified", Value: "true" },
+        { Name: "sub", Value: expect.stringMatching(UUID) },
       ]);
     });
   }),

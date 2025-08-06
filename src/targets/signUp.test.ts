@@ -292,9 +292,9 @@ describe("SignUp target", () => {
               },
               source: "PostConfirmation_ConfirmSignUp",
               userAttributes: [
-                { Name: "sub", Value: expect.stringMatching(UUID) },
-                { Name: "email", Value: "example@example.com" },
                 { Name: "cognito:user_status", Value: "CONFIRMED" },
+                { Name: "email", Value: "example@example.com" },
+                { Name: "sub", Value: expect.stringMatching(UUID) },
               ],
               userPoolId: "test",
               username: "user-supplied",
@@ -326,9 +326,9 @@ describe("SignUp target", () => {
               },
               source: "PostConfirmation_ConfirmSignUp",
               userAttributes: [
-                { Name: "sub", Value: expect.stringMatching(UUID) },
-                { Name: "email", Value: "example@example.com" },
                 { Name: "cognito:user_status", Value: "CONFIRMED" },
+                { Name: "email", Value: "example@example.com" },
+                { Name: "sub", Value: expect.stringMatching(UUID) },
               ],
               userPoolId: "test",
               username: expect.stringMatching(UUID),

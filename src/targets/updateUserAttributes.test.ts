@@ -113,6 +113,81 @@ describe("UpdateUserAttributes target", () => {
     });
   });
 
+  describe.each(["email", "phone_number"] as const)(
+    "when %s is not in AttributesRequireVerificationBeforeUpdate",
+    (attr) => {
+      it("saves the updated attribute value immediately", async () => {
+        const user = TDB.user();
+
+        mockUserPoolService.options.UserAttributeUpdateSettings = {
+          AttributesRequireVerificationBeforeUpdate: [],
+        };
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+        await updateUserAttributes(TestContext, {
+          AccessToken: validToken,
+          ClientMetadata: {
+            client: "metadata",
+          },
+          UserAttributes: [attribute(attr, "new value")],
+        });
+
+        const updatedUser = {
+          ...user,
+          // value is in Attributes immediately
+          Attributes: attributesAppend(
+            user.Attributes,
+            attribute(attr, "new value"),
+            attribute(`${attr}_verified`, "false"),
+          ),
+          UserLastModifiedDate: clock.get(),
+        };
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          TestContext,
+          updatedUser,
+        );
+      });
+    },
+  );
+
+  describe.each(["email", "phone_number"] as const)(
+    "when %s is in AttributesRequireVerificationBeforeUpdate",
+    (attr) => {
+      it("saves the updated attribute value pending verification", async () => {
+        const user = TDB.user();
+
+        mockUserPoolService.options.UserAttributeUpdateSettings = {
+          AttributesRequireVerificationBeforeUpdate: [attr],
+        };
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+        await updateUserAttributes(TestContext, {
+          AccessToken: validToken,
+          ClientMetadata: {
+            client: "metadata",
+          },
+          UserAttributes: [attribute(attr, "new value")],
+        });
+
+        const updatedUser = {
+          ...user,
+          // value is in UnverifiedAttributeChanges pending verification
+          UnverifiedAttributeChanges: [
+            attribute(attr, "new value"),
+            attribute(`${attr}_verified`, "false"),
+          ],
+          UserLastModifiedDate: clock.get(),
+        };
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          TestContext,
+          updatedUser,
+        );
+      });
+    },
+  );
+
   describe.each`
     desc                                                         | attribute                  | expectedError
     ${"an attribute not in the schema"}                          | ${"custom:missing"}        | ${"user.custom:missing: Attribute does not exist in the schema."}
@@ -218,31 +293,7 @@ describe("UpdateUserAttributes target", () => {
       });
 
       describe("the verification status changed because of the update", () => {
-        it("throws if the user doesn't have a valid way to contact them", async () => {
-          const user = TDB.user({
-            Attributes: [],
-          });
-
-          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
-
-          await expect(
-            updateUserAttributes(TestContext, {
-              AccessToken: validToken,
-              ClientMetadata: {
-                client: "metadata",
-              },
-              UserAttributes: attributes.map((attr: string) =>
-                attribute(attr, "new value"),
-              ),
-            }),
-          ).rejects.toEqual(
-            new InvalidParameterError(
-              "User has no attribute matching desired auto verified attributes",
-            ),
-          );
-        });
-
-        it("delivers a OTP code to the user", async () => {
+        it("delivers a OTP code to the user's updated attribute value", async () => {
           const user = TDB.user();
 
           mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -257,18 +308,30 @@ describe("UpdateUserAttributes target", () => {
             ),
           });
 
+          const updatedUser = {
+            ...user,
+            Attributes: attributesAppend(
+              user.Attributes,
+              ...attributes.flatMap((attr: string) => [
+                attribute(attr, "new value"),
+                attribute(`${attr}_verified`, "false"),
+              ]),
+            ),
+            UserLastModifiedDate: clock.get(),
+          };
+
           expect(mockMessages.deliver).toHaveBeenCalledWith(
             TestContext,
             "UpdateUserAttribute",
             null,
             "test",
-            user,
+            updatedUser,
             "123456",
             { client: "metadata" },
             {
               AttributeName: "email",
               DeliveryMedium: "EMAIL",
-              Destination: attributeValue("email", user.Attributes),
+              Destination: attributeValue("email", updatedUser.Attributes),
             },
           );
 

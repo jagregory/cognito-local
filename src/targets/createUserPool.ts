@@ -104,10 +104,11 @@ export const CreateUserPool =
       SmsAuthenticationMessage: req.SmsAuthenticationMessage,
       SmsConfiguration: req.SmsConfiguration,
       SmsVerificationMessage: req.SmsVerificationMessage,
-      UsernameAttributes: req.UsernameAttributes,
-      UsernameConfiguration: req.UsernameConfiguration,
+      UserAttributeUpdateSettings: req.UserAttributeUpdateSettings,
       UserPoolAddOns: req.UserPoolAddOns,
       UserPoolTags: req.UserPoolTags,
+      UsernameAttributes: req.UsernameAttributes,
+      UsernameConfiguration: req.UsernameConfiguration,
       VerificationMessageTemplate: req.VerificationMessageTemplate,
     });
 

@@ -520,8 +520,8 @@ describe("User Pool Service", () => {
 
   describe("attributes", () => {
     const attributes: AttributeListType = [
-      { Name: "sub", Value: "uuid" },
       { Name: "email", Value: "example@example.com" },
+      { Name: "sub", Value: "uuid" },
     ];
 
     describe("attributesIncludeMatch", () => {
