@@ -15,6 +15,7 @@
     "start:debug": "COGNITO_LOCAL_DEVMODE=1 DEBUG=1 tsx --inspect-brk src/bin/start.ts",
     "start:watch": "nodemon",
     "test": "vitest",
+    "type-check": "tsc --target es2019 --esModuleInterop --resolveJsonModule --noEmit",
     "semantic-release": "semantic-release",
     "prepare": "husky install"
   },
