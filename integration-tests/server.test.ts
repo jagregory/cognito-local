@@ -51,9 +51,7 @@ describe("HTTP server", () => {
           .set("x-amz-target", "prefix.valid");
 
         expect(response.status).toEqual(200);
-        expect(response.body).toEqual({
-          ok: true,
-        });
+        expect(response.text).toEqual('{"ok":true}');
       });
 
       it("converts UnsupportedErrors from within a target route to a 500 error", async () => {

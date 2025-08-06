@@ -104,7 +104,10 @@ export const createServer = (
 
     route({ logger: req.log }, req.body).then(
       (output) =>
-        res.status(200).type("json").send(JSON.stringify(output, replacer)),
+        res
+          .status(200)
+          .type("application/x-amz-json-1.1")
+          .send(JSON.stringify(output, replacer)),
       (ex) => {
         if (ex instanceof UnsupportedError) {
           if (options.development) {
