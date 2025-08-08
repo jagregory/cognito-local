@@ -27,7 +27,7 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/npm": "^9.0.0",
-    "@types/aws-lambda": "^8.10.85",
+    "@types/aws-lambda": "^8.10.152",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
