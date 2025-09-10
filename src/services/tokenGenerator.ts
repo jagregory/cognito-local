@@ -6,6 +6,7 @@ import type { StringValue, UnitAnyCase } from "ms";
 import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { AppClient } from "./appClient";
+import { formatExpiration } from "../utils/tokenExpiration";
 import type { Clock } from "./clock";
 import type { Context } from "./context";
 import type { Triggers } from "./triggers";
@@ -111,20 +112,6 @@ function assertUnitAnyCase(unit: string): asserts unit is UnitAnyCase {
     throw new Error(`Invalid unit: ${unit}`);
   }
 }
-
-const formatExpiration = (
-  duration: number | undefined,
-  unit: TimeUnitsType,
-  fallback: StringValue,
-): StringValue => {
-  if (duration === undefined) {
-    return fallback;
-  }
-
-  assertUnitAnyCase(unit);
-
-  return `${duration}${unit}`;
-};
 
 export class JwtTokenGenerator implements TokenGenerator {
   private readonly clock: Clock;
