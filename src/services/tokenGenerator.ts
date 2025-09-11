@@ -5,6 +5,7 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import type { StringValue, UnitAnyCase } from "ms";
 import * as uuid from "uuid";
 import PrivateKey from "../keys/cognitoLocal.private.json";
+import { formatExpiration } from "../utils/tokenExpiration";
 import type { AppClient } from "./appClient";
 import type { Clock } from "./clock";
 import type { Context } from "./context";
@@ -105,26 +106,6 @@ export interface TokenGenerator {
       | "RefreshTokens",
   ): Promise<Tokens>;
 }
-
-function assertUnitAnyCase(unit: string): asserts unit is UnitAnyCase {
-  if (!["seconds", "minutes", "hours", "days"].includes(unit)) {
-    throw new Error(`Invalid unit: ${unit}`);
-  }
-}
-
-const formatExpiration = (
-  duration: number | undefined,
-  unit: TimeUnitsType,
-  fallback: StringValue,
-): StringValue => {
-  if (duration === undefined) {
-    return fallback;
-  }
-
-  assertUnitAnyCase(unit);
-
-  return `${duration}${unit}`;
-};
 
 export class JwtTokenGenerator implements TokenGenerator {
   private readonly clock: Clock;
