@@ -11,8 +11,8 @@ import {
 } from "../errors";
 import type { Services } from "../services";
 import type { Context } from "../services/context";
-import type { Target } from "./Target";
 import { expirationInSeconds } from "../utils/tokenExpiration";
+import type { Target } from "./Target";
 
 export type AdminInitiateAuthTarget = Target<
   AdminInitiateAuthRequest,
@@ -101,10 +101,10 @@ const adminUserPasswordAuthFlow = async (
       NewDeviceMetadata: undefined,
       TokenType: undefined,
       ExpiresIn: expirationInSeconds(
-  userPoolClient.RefreshTokenValidity,
-  userPoolClient.TokenValidityUnits?.RefreshToken ?? "days",
-  "7d"
-),
+        userPoolClient.RefreshTokenValidity,
+        userPoolClient.TokenValidityUnits?.RefreshToken ?? "hours",
+        "24h",
+      ),
     },
   };
 };
@@ -159,10 +159,10 @@ const refreshTokenAuthFlow = async (
       NewDeviceMetadata: undefined,
       TokenType: undefined,
       ExpiresIn: expirationInSeconds(
-  userPoolClient.RefreshTokenValidity,
-  userPoolClient.TokenValidityUnits?.RefreshToken ?? "days",
-  "7d"
-),
+        userPoolClient.RefreshTokenValidity,
+        userPoolClient.TokenValidityUnits?.RefreshToken ?? "hours",
+        "24h",
+      ),
     },
   };
 };
