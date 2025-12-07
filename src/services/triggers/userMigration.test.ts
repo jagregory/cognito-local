@@ -91,6 +91,10 @@ describe("UserMigration trigger", () => {
         Name: "email",
         Value: "example@example.com",
       });
+      expect(user.Attributes).toContainEqual({
+        Name: "sub",
+        Value: expect.stringMatching(UUID),
+      });
       expect(user.UserStatus).toEqual("CONFIRMED");
     });
 
@@ -119,6 +123,10 @@ describe("UserMigration trigger", () => {
       expect(mockLambda.invoke).toBeCalled();
       expect(user).not.toBeNull();
       expect(user.Username).toEqual("thisuser");
+      expect(user.Attributes).toContainEqual({
+        Name: "sub",
+        Value: "thisuser",
+      });
     });
 
     it("sets user to RESET_REQUIRED if finalUserStatus is RESET_REQUIRED in response", async () => {
@@ -138,6 +146,10 @@ describe("UserMigration trigger", () => {
 
       expect(user).not.toBeNull();
       expect(user.UserStatus).toEqual("RESET_REQUIRED");
+      expect(user.Attributes).toContainEqual({
+        Name: "sub",
+        Value: expect.stringMatching(UUID),
+      });
     });
   });
 });
