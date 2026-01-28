@@ -172,14 +172,14 @@ const userPasswordAuthFlow = async (
   if (!user) {
     throw new NotAuthorizedError();
   }
+  if (user.Password !== req.AuthParameters.PASSWORD) {
+    throw new InvalidPasswordError();
+  }
   if (user.UserStatus === "RESET_REQUIRED") {
     throw new PasswordResetRequiredError();
   }
   if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
     return newPasswordChallenge(user);
-  }
-  if (user.Password !== req.AuthParameters.PASSWORD) {
-    throw new InvalidPasswordError();
   }
   if (user.UserStatus === "UNCONFIRMED") {
     throw new UserNotConfirmedException();
