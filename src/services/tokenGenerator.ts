@@ -90,6 +90,12 @@ export interface Tokens {
   readonly RefreshToken: string;
 }
 
+export interface ClientCredentialsTokens {
+  readonly AccessToken: string;
+  readonly ExpiresIn: number;
+  readonly TokenType: "Bearer";
+}
+
 export interface TokenGenerator {
   generate(
     ctx: Context,
@@ -104,6 +110,12 @@ export interface TokenGenerator {
       | "NewPasswordChallenge"
       | "RefreshTokens",
   ): Promise<Tokens>;
+
+  generateClientCredentials(
+    ctx: Context,
+    userPoolClient: AppClient,
+    scopes: string[],
+  ): Promise<ClientCredentialsTokens>;
 }
 
 function assertUnitAnyCase(unit: string): asserts unit is UnitAnyCase {
@@ -111,6 +123,27 @@ function assertUnitAnyCase(unit: string): asserts unit is UnitAnyCase {
     throw new Error(`Invalid unit: ${unit}`);
   }
 }
+
+const toExpiresInSeconds = (
+  duration: number | undefined,
+  unit: TimeUnitsType | undefined,
+): number => {
+  if (duration === undefined) {
+    return 3600; // default 1 hour
+  }
+  switch (unit ?? "hours") {
+    case "seconds":
+      return duration;
+    case "minutes":
+      return duration * 60;
+    case "hours":
+      return duration * 3600;
+    case "days":
+      return duration * 86400;
+    default:
+      return 3600;
+  }
+};
 
 const formatExpiration = (
   duration: number | undefined,
@@ -253,5 +286,36 @@ export class JwtTokenGenerator implements TokenGenerator {
         } satisfies SignOptions,
       ),
     };
+  }
+
+  public async generateClientCredentials(
+    _ctx: Context,
+    userPoolClient: AppClient,
+    scopes: string[],
+  ): Promise<ClientCredentialsTokens> {
+    const now = Math.floor(this.clock.get().getTime() / 1000);
+    const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
+    const expiresIn = toExpiresInSeconds(
+      userPoolClient.AccessTokenValidity,
+      userPoolClient.TokenValidityUnits?.AccessToken,
+    );
+
+    const payload: RawToken = {
+      client_id: userPoolClient.ClientId,
+      exp: now + expiresIn,
+      iat: now,
+      jti: uuid.v4(),
+      scope: scopes.join(" "),
+      sub: userPoolClient.ClientId,
+      token_use: "access",
+    };
+
+    const AccessToken = jwt.sign(payload, PrivateKey.pem, {
+      algorithm: "RS256",
+      issuer,
+      keyid: "CognitoLocal",
+    } satisfies SignOptions);
+
+    return { AccessToken, ExpiresIn: expiresIn, TokenType: "Bearer" };
   }
 }

@@ -372,6 +372,91 @@ describe("JwtTokenGenerator", () => {
     });
   });
 
+  describe("generateClientCredentials", () => {
+    beforeEach(() => {
+      mockTriggers.enabled.mockReturnValue(false);
+    });
+
+    it("generates an access token with machine-token claims and no user fields", async () => {
+      const userPoolClient = TDB.appClient({
+        ClientSecret: "supersecret",
+        AllowedOAuthFlows: ["client_credentials"],
+        AllowedOAuthScopes: ["api/read"],
+      });
+
+      const result = await tokenGenerator.generateClientCredentials(
+        TestContext,
+        userPoolClient,
+        ["api/read"],
+      );
+
+      expect(result.TokenType).toBe("Bearer");
+      expect(result.ExpiresIn).toBe(3600);
+
+      const decoded = jwt.decode(result.AccessToken) as Record<string, unknown>;
+      expect(decoded).toMatchObject({
+        sub: userPoolClient.ClientId,
+        client_id: userPoolClient.ClientId,
+        token_use: "access",
+        scope: "api/read",
+        iss: `http://example.com/${userPoolClient.UserPoolId}`,
+        iat: Math.floor(originalDate.getTime() / 1000),
+        exp: Math.floor(originalDate.getTime() / 1000) + 3600,
+        jti: expect.stringMatching(UUID),
+      });
+
+      expect(decoded).not.toHaveProperty("username");
+      expect(decoded).not.toHaveProperty("auth_time");
+      expect(decoded).not.toHaveProperty("event_id");
+      expect(decoded).not.toHaveProperty("cognito:groups");
+    });
+
+    it("joins multiple scopes space-separated in the token", async () => {
+      const userPoolClient = TDB.appClient();
+      const result = await tokenGenerator.generateClientCredentials(
+        TestContext,
+        userPoolClient,
+        ["api/read", "api/write"],
+      );
+      expect(
+        (jwt.decode(result.AccessToken) as Record<string, unknown>).scope,
+      ).toBe("api/read api/write");
+    });
+
+    it("uses AccessTokenValidity and units when configured", async () => {
+      const userPoolClient = TDB.appClient({
+        AccessTokenValidity: 30,
+        TokenValidityUnits: { AccessToken: "minutes" },
+      });
+
+      const result = await tokenGenerator.generateClientCredentials(
+        TestContext,
+        userPoolClient,
+        [],
+      );
+
+      expect(result.ExpiresIn).toBe(30 * ONE_MINUTE);
+      expect(
+        (jwt.decode(result.AccessToken) as Record<string, unknown>).exp,
+      ).toBe(Math.floor(originalDate.getTime() / 1000) + 30 * ONE_MINUTE);
+    });
+
+    it("defaults to 3600 seconds when no AccessTokenValidity is set", async () => {
+      const userPoolClient = TDB.appClient({
+        AccessTokenValidity: undefined,
+        TokenValidityUnits: undefined,
+      });
+
+      const result = await tokenGenerator.generateClientCredentials(
+        TestContext,
+        userPoolClient,
+        [],
+      );
+
+      expect(result.ExpiresIn).toBe(3600);
+    });
+  });
+
   describe("groups", () => {
     it("does not include a cognito:groups claim if the user has no groups", async () => {
       mockTriggers.enabled.mockReturnValue(false);
