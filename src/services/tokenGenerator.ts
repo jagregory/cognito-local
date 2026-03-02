@@ -1,4 +1,3 @@
-import type { StringMap } from "aws-lambda/trigger/cognito-user-pool-trigger/_common";
 import type { GroupOverrideDetails } from "aws-lambda/trigger/cognito-user-pool-trigger/pre-token-generation";
 import type { TimeUnitsType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt, { type SignOptions } from "jsonwebtoken";
@@ -33,7 +32,7 @@ export interface Token {
 }
 
 interface TokenOverrides {
-  claimsToAddOrOverride?: StringMap | undefined;
+  claimsToAddOrOverride?: RawToken | undefined;
   claimsToSuppress?: string[] | undefined;
   groupOverrideDetails?: GroupOverrideDetails | undefined;
 }
@@ -63,6 +62,11 @@ type RawToken = Record<
   string | number | boolean | undefined | readonly string[]
 >;
 
+interface AccessTokenOverrides extends TokenOverrides {
+  scopesToAdd?: string[] | undefined;
+  scopesToSuppress?: string[] | undefined;
+}
+
 const applyTokenOverrides = (
   token: RawToken,
   overrides: TokenOverrides,
@@ -84,6 +88,23 @@ const applyTokenOverrides = (
   );
 };
 
+const applyScopeOverrides = (
+  scopes: readonly string[],
+  overrides: AccessTokenOverrides | undefined,
+): readonly string[] => {
+  const scopeSet = new Set(scopes);
+
+  for (const scope of overrides?.scopesToAdd ?? []) {
+    scopeSet.add(scope);
+  }
+
+  for (const scope of overrides?.scopesToSuppress ?? []) {
+    scopeSet.delete(scope);
+  }
+
+  return Array.from(scopeSet);
+};
+
 export interface Tokens {
   readonly AccessToken: string;
   readonly IdToken: string;
@@ -103,6 +124,7 @@ export interface TokenGenerator {
       | "HostedAuth"
       | "NewPasswordChallenge"
       | "RefreshTokens",
+    preTokenGenerationLambdaVersion?: "V1_0" | "V2_0",
   ): Promise<Tokens>;
 }
 
@@ -153,18 +175,23 @@ export class JwtTokenGenerator implements TokenGenerator {
       | "HostedAuth"
       | "NewPasswordChallenge"
       | "RefreshTokens",
+    preTokenGenerationLambdaVersion: "V1_0" | "V2_0" = "V1_0",
   ): Promise<Tokens> {
     const eventId = uuid.v4();
     const authTime = Math.floor(this.clock.get().getTime() / 1000);
     const sub = attributeValue("sub", user.Attributes);
 
-    const accessToken: RawToken = {
+    let accessTokenScopes: readonly string[] = [
+      "aws.cognito.signin.user.admin",
+    ];
+
+    let accessToken: RawToken = {
       auth_time: authTime,
       client_id: userPoolClient.ClientId,
       event_id: eventId,
       iat: authTime,
       jti: uuid.v4(),
-      scope: "aws.cognito.signin.user.admin", // TODO: scopes
+      scope: accessTokenScopes.join(" "),
       sub,
       token_use: "access",
       username: user.Username,
@@ -193,6 +220,8 @@ export class JwtTokenGenerator implements TokenGenerator {
       const result = await this.triggers.preTokenGeneration(ctx, {
         clientId: userPoolClient.ClientId,
         clientMetadata,
+        lambdaVersion: preTokenGenerationLambdaVersion,
+        scopes: accessTokenScopes,
         source,
         userAttributes: user.Attributes,
         username: user.Username,
@@ -205,7 +234,36 @@ export class JwtTokenGenerator implements TokenGenerator {
         userPoolId: userPoolClient.UserPoolId,
       });
 
-      idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
+      if (preTokenGenerationLambdaVersion === "V2_0") {
+        const claimsAndScopeOverrideDetails =
+          "claimsAndScopeOverrideDetails" in result
+            ? result.claimsAndScopeOverrideDetails
+            : undefined;
+
+        const idTokenGeneration =
+          claimsAndScopeOverrideDetails?.idTokenGeneration;
+        const accessTokenGeneration =
+          claimsAndScopeOverrideDetails?.accessTokenGeneration;
+
+        idToken = applyTokenOverrides(idToken, idTokenGeneration ?? {});
+        accessToken = applyTokenOverrides(
+          accessToken,
+          accessTokenGeneration ?? {},
+        );
+        accessTokenScopes = applyScopeOverrides(
+          accessTokenScopes,
+          accessTokenGeneration,
+        );
+      } else {
+        const claimsOverrideDetails =
+          "claimsOverrideDetails" in result
+            ? result.claimsOverrideDetails
+            : undefined;
+
+        idToken = applyTokenOverrides(idToken, claimsOverrideDetails ?? {});
+      }
+
+      accessToken.scope = accessTokenScopes.join(" ");
     }
 
     const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
