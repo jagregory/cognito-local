@@ -453,12 +453,12 @@ describe("Lambda function invoker", () => {
     });
 
     describe.each`
-      trigger              | source
-      ${"TokenGeneration"} | ${"TokenGeneration_AuthenticateDevice"}
-      ${"TokenGeneration"} | ${"TokenGeneration_Authentication"}
-      ${"TokenGeneration"} | ${"TokenGeneration_HostedAuth"}
-      ${"TokenGeneration"} | ${"TokenGeneration_NewPasswordChallenge"}
-      ${"TokenGeneration"} | ${"TokenGeneration_RefreshTokens"}
+      trigger                 | source
+      ${"PreTokenGeneration"} | ${"TokenGeneration_AuthenticateDevice"}
+      ${"PreTokenGeneration"} | ${"TokenGeneration_Authentication"}
+      ${"PreTokenGeneration"} | ${"TokenGeneration_HostedAuth"}
+      ${"PreTokenGeneration"} | ${"TokenGeneration_NewPasswordChallenge"}
+      ${"PreTokenGeneration"} | ${"TokenGeneration_RefreshTokens"}
     `("$source", ({ trigger, source }) => {
       it("invokes the lambda", async () => {
         const response = Promise.resolve({
@@ -486,6 +486,12 @@ describe("Lambda function invoker", () => {
           clientMetadata: {
             client: "metadata",
           },
+          groupConfiguration: {
+            groupsToOverride: undefined,
+            iamRolesToOverride: undefined,
+            preferredRole: undefined,
+          },
+          scopes: ["aws.cognito.signin.user.admin"],
         });
 
         expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
@@ -507,6 +513,69 @@ describe("Lambda function invoker", () => {
               groupConfiguration: {},
             },
             response: { claimsOverrideDetails: {} },
+            userName: "username",
+          }),
+        });
+      });
+
+      it("invokes the lambda with V2 payload structure", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "some": "json" }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            [trigger]: "MyLambdaName",
+          },
+          mockLambdaClient,
+        );
+
+        await lambda.invoke(TestContext, trigger, {
+          clientId: "clientId",
+          triggerSource: source,
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {
+            user: "attributes",
+          },
+          clientMetadata: {
+            client: "metadata",
+          },
+          lambdaVersion: "V2_0",
+          groupConfiguration: {
+            groupsToOverride: ["group1"],
+            iamRolesToOverride: [],
+            preferredRole: undefined,
+          },
+          scopes: ["aws.cognito.signin.user.admin", "openid"],
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyLambdaName",
+          InvocationType: "RequestResponse",
+          Payload: expect.jsonMatching({
+            version: "2",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: source,
+            request: {
+              userAttributes: {
+                user: "attributes",
+              },
+              clientMetadata: {
+                client: "metadata",
+              },
+              groupConfiguration: {
+                groupsToOverride: ["group1"],
+                iamRolesToOverride: [],
+              },
+              scopes: ["aws.cognito.signin.user.admin", "openid"],
+            },
+            response: { claimsAndScopeOverrideDetails: {} },
             userName: "username",
           }),
         });

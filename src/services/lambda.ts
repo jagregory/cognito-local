@@ -11,6 +11,7 @@ import type {
   UserMigrationTriggerEvent,
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
+import type { GroupOverrideDetails } from "aws-lambda/trigger/cognito-user-pool-trigger/pre-token-generation";
 import type { Lambda as LambdaClient } from "aws-sdk";
 import type { InvocationResponse } from "aws-sdk/clients/lambda";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
@@ -30,7 +31,7 @@ type CognitoUserPoolEvent =
   | PostConfirmationTriggerEvent
   | PreAuthenticationTriggerEvent
   | PreSignUpTriggerEvent
-  | PreTokenGenerationTriggerEvent
+  | PreTokenGenerationLambdaEvent
   | UserMigrationTriggerEvent
   | VerifyAuthChallengeResponseTriggerEvent;
 
@@ -94,6 +95,10 @@ interface PreTokenGenerationEvent extends EventCommonParameters {
    */
   clientMetadata: Record<string, string> | undefined;
 
+  lambdaVersion?: "V1_0" | "V2_0";
+
+  scopes: readonly string[];
+
   triggerSource:
     | "TokenGeneration_AuthenticateDevice"
     | "TokenGeneration_Authentication"
@@ -109,12 +114,12 @@ interface PreTokenGenerationEvent extends EventCommonParameters {
     /**
      * A list of the group names that are associated with the user that the identity token is issued for.
      */
-    groupsToOverride: readonly string[] | undefined;
+    groupsToOverride: string[] | undefined;
 
     /**
      * A list of the current IAM roles associated with these groups.
      */
-    iamRolesToOverride: readonly string[] | undefined;
+    iamRolesToOverride: string[] | undefined;
 
     /**
      * A string indicating the preferred IAM role.
@@ -122,6 +127,41 @@ interface PreTokenGenerationEvent extends EventCommonParameters {
     preferredRole: string | undefined;
   };
 }
+
+type ClaimValue = string | number | boolean | readonly string[] | undefined;
+
+type ClaimsToAddOrOverride = Record<string, ClaimValue>;
+
+interface TokenGenerationOverrides {
+  claimsToAddOrOverride?: ClaimsToAddOrOverride;
+  claimsToSuppress?: string[];
+}
+
+interface AccessTokenGenerationOverrides extends TokenGenerationOverrides {
+  scopesToAdd?: string[];
+  scopesToSuppress?: string[];
+}
+
+interface ClaimsAndScopeOverrideDetails {
+  accessTokenGeneration?: AccessTokenGenerationOverrides;
+  groupOverrideDetails?: GroupOverrideDetails;
+  idTokenGeneration?: TokenGenerationOverrides;
+}
+
+type PreTokenGenerationLambdaEvent = Omit<
+  PreTokenGenerationTriggerEvent,
+  "request" | "response" | "version"
+> & {
+  version: string;
+  request: PreTokenGenerationTriggerEvent["request"] & {
+    scopes?: readonly string[];
+  };
+  response:
+    | PreTokenGenerationTriggerEvent["response"]
+    | {
+        claimsAndScopeOverrideDetails?: ClaimsAndScopeOverrideDetails;
+      };
+};
 
 interface PostAuthenticationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
@@ -152,8 +192,13 @@ export type CustomMessageTriggerResponse =
 export type UserMigrationTriggerResponse =
   UserMigrationTriggerEvent["response"];
 export type PreSignUpTriggerResponse = PreSignUpTriggerEvent["response"];
+type PreTokenGenerationTriggerResponseV2 = {
+  claimsAndScopeOverrideDetails?: ClaimsAndScopeOverrideDetails;
+};
+
 export type PreTokenGenerationTriggerResponse =
-  PreTokenGenerationTriggerEvent["response"];
+  | PreTokenGenerationTriggerEvent["response"]
+  | PreTokenGenerationTriggerResponseV2;
 export type PostAuthenticationTriggerResponse =
   PostAuthenticationTriggerEvent["response"];
 export type PostConfirmationTriggerResponse =
@@ -364,8 +409,10 @@ export class LambdaService implements Lambda {
       case "TokenGeneration_HostedAuth":
       case "TokenGeneration_NewPasswordChallenge":
       case "TokenGeneration_RefreshTokens": {
+        const lambdaVersion = event.lambdaVersion ?? "V1_0";
+
         return {
-          version,
+          version: lambdaVersion === "V2_0" ? "2" : version,
           callerContext,
           region,
           userPoolId: event.userPoolId,
@@ -373,12 +420,18 @@ export class LambdaService implements Lambda {
           userName: event.username,
           request: {
             userAttributes: event.userAttributes,
-            groupConfiguration: {},
+            groupConfiguration: event.groupConfiguration ?? {},
             clientMetadata: event.clientMetadata,
+            ...(lambdaVersion === "V2_0" ? { scopes: event.scopes } : {}),
           },
-          response: {
-            claimsOverrideDetails: {},
-          },
+          response:
+            lambdaVersion === "V2_0"
+              ? {
+                  claimsAndScopeOverrideDetails: {},
+                }
+              : {
+                  claimsOverrideDetails: {},
+                },
         };
       }
 

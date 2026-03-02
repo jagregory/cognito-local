@@ -99,6 +99,15 @@ const verifyPasswordChallenge = async (
   services: InitiateAuthServices,
 ): Promise<InitiateAuthResponse> => {
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
+  const preTokenGenerationLambdaVersion = (
+    userPool.options.LambdaConfig as
+      | {
+          PreTokenGenerationConfig?: {
+            LambdaVersion?: "V1_0" | "V2_0";
+          };
+        }
+      | undefined
+  )?.PreTokenGenerationConfig?.LambdaVersion;
 
   const tokens = await services.tokenGenerator.generate(
     ctx,
@@ -111,6 +120,7 @@ const verifyPasswordChallenge = async (
     // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
     undefined,
     "Authentication",
+    preTokenGenerationLambdaVersion,
   );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
@@ -242,6 +252,15 @@ const refreshTokenAuthFlow = async (
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
+  const preTokenGenerationLambdaVersion = (
+    userPool.options.LambdaConfig as
+      | {
+          PreTokenGenerationConfig?: {
+            LambdaVersion?: "V1_0" | "V2_0";
+          };
+        }
+      | undefined
+  )?.PreTokenGenerationConfig?.LambdaVersion;
 
   const tokens = await services.tokenGenerator.generate(
     ctx,
@@ -254,6 +273,7 @@ const refreshTokenAuthFlow = async (
     // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
     undefined,
     "RefreshTokens",
+    preTokenGenerationLambdaVersion,
   );
 
   return {

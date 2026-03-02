@@ -177,6 +177,70 @@ describe("JwtTokenGenerator", () => {
         });
       });
     });
+
+    it("can add and override claims to the access token with V2", async () => {
+      mockTriggers.enabled.mockImplementation((name) => {
+        return name === "PreTokenGeneration";
+      });
+      mockTriggers.preTokenGeneration.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            claimsToAddOrOverride: {
+              newclaim: "access-value",
+            },
+            scopesToAdd: ["openid"],
+            scopesToSuppress: ["aws.cognito.signin.user.admin"],
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "RefreshTokens",
+        "V2_0",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).toMatchObject({
+        newclaim: "access-value",
+        scope: "openid",
+      });
+
+      expect(jwt.decode(tokens.IdToken)).not.toMatchObject({
+        newclaim: "access-value",
+      });
+    });
+
+    it("ignores claimsAndScopeOverrideDetails when running in V1", async () => {
+      mockTriggers.enabled.mockImplementation((name) => {
+        return name === "PreTokenGeneration";
+      });
+      mockTriggers.preTokenGeneration.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            claimsToAddOrOverride: {
+              newclaim: "access-value",
+            },
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "RefreshTokens",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).not.toMatchObject({
+        newclaim: "access-value",
+      });
+    });
   });
 
   describe("TokenGeneration lambda is not configured", () => {

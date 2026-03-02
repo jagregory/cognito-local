@@ -77,6 +77,15 @@ const adminUserPasswordAuthFlow = async (
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
+  const preTokenGenerationLambdaVersion = (
+    userPool.options.LambdaConfig as
+      | {
+          PreTokenGenerationConfig?: {
+            LambdaVersion?: "V1_0" | "V2_0";
+          };
+        }
+      | undefined
+  )?.PreTokenGenerationConfig?.LambdaVersion;
 
   const tokens = await services.tokenGenerator.generate(
     ctx,
@@ -85,6 +94,7 @@ const adminUserPasswordAuthFlow = async (
     userPoolClient,
     req.ClientMetadata,
     "Authentication",
+    preTokenGenerationLambdaVersion,
   );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
@@ -133,6 +143,15 @@ const refreshTokenAuthFlow = async (
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
+  const preTokenGenerationLambdaVersion = (
+    userPool.options.LambdaConfig as
+      | {
+          PreTokenGenerationConfig?: {
+            LambdaVersion?: "V1_0" | "V2_0";
+          };
+        }
+      | undefined
+  )?.PreTokenGenerationConfig?.LambdaVersion;
 
   const tokens = await services.tokenGenerator.generate(
     ctx,
@@ -141,6 +160,7 @@ const refreshTokenAuthFlow = async (
     userPoolClient,
     req.ClientMetadata,
     "RefreshTokens",
+    preTokenGenerationLambdaVersion,
   );
 
   return {

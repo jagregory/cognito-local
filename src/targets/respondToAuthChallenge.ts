@@ -94,6 +94,15 @@ export const RespondToAuthChallenge =
     }
 
     const userGroups = await userPool.listUserGroupMembership(ctx, user);
+    const preTokenGenerationLambdaVersion = (
+      userPool.options.LambdaConfig as
+        | {
+            PreTokenGenerationConfig?: {
+              LambdaVersion?: "V1_0" | "V2_0";
+            };
+          }
+        | undefined
+    )?.PreTokenGenerationConfig?.LambdaVersion;
 
     return {
       ChallengeParameters: {},
@@ -104,6 +113,7 @@ export const RespondToAuthChallenge =
         userPoolClient,
         req.ClientMetadata,
         "Authentication",
+        preTokenGenerationLambdaVersion,
       ),
     };
   };
