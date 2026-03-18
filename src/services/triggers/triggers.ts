@@ -1,3 +1,4 @@
+import type { LambdaConfigType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { Clock } from "../clock";
 import type { CognitoService } from "../cognitoService";
 import type { CryptoService } from "../crypto";
@@ -33,6 +34,7 @@ type SupportedTriggers =
 
 export interface Triggers {
   enabled(trigger: SupportedTriggers): boolean;
+  forPool(poolConfig: LambdaConfigType | undefined): Triggers;
   customMessage: CustomMessageTrigger;
   customEmailSender: CustomEmailSenderTrigger;
   postAuthentication: PostAuthenticationTrigger;
@@ -43,7 +45,10 @@ export interface Triggers {
 }
 
 export class TriggersService implements Triggers {
+  private readonly clock: Clock;
+  private readonly cognitoClient: CognitoService;
   private readonly lambda: Lambda;
+  private readonly crypto: CryptoService;
 
   public readonly customMessage: CustomMessageTrigger;
   public readonly customEmailSender: CustomEmailSenderTrigger;
@@ -59,7 +64,10 @@ export class TriggersService implements Triggers {
     lambda: Lambda,
     crypto: CryptoService,
   ) {
+    this.clock = clock;
+    this.cognitoClient = cognitoClient;
     this.lambda = lambda;
+    this.crypto = crypto;
 
     this.customEmailSender = CustomEmailSender({ lambda, crypto });
     this.customMessage = CustomMessage({ lambda });
@@ -72,5 +80,14 @@ export class TriggersService implements Triggers {
 
   public enabled(trigger: SupportedTriggers): boolean {
     return this.lambda.enabled(trigger);
+  }
+
+  public forPool(poolConfig: LambdaConfigType | undefined): Triggers {
+    return new TriggersService(
+      this.clock,
+      this.cognitoClient,
+      this.lambda.forPool(poolConfig),
+      this.crypto,
+    );
   }
 }

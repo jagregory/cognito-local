@@ -60,20 +60,22 @@ const verifyMfaChallenge = async (
   }
 
   const code = services.otp();
-  await services.messages.deliver(
-    ctx,
-    "Authentication",
-    req.ClientId,
-    userPool.options.Id,
-    user,
-    code,
-    req.ClientMetadata,
-    {
-      DeliveryMedium: smsMfaOption.DeliveryMedium,
-      AttributeName: smsMfaOption.AttributeName,
-      Destination: deliveryDestination,
-    },
-  );
+  await services.messages
+    .forPool(userPool.options.LambdaConfig)
+    .deliver(
+      ctx,
+      "Authentication",
+      req.ClientId,
+      userPool.options.Id,
+      user,
+      code,
+      req.ClientMetadata,
+      {
+        DeliveryMedium: smsMfaOption.DeliveryMedium,
+        AttributeName: smsMfaOption.AttributeName,
+        Destination: deliveryDestination,
+      },
+    );
 
   await userPool.saveUser(ctx, {
     ...user,
@@ -100,18 +102,20 @@ const verifyPasswordChallenge = async (
 ): Promise<InitiateAuthResponse> => {
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
-  const tokens = await services.tokenGenerator.generate(
-    ctx,
-    user,
-    userGroups,
-    userPoolClient,
-    // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
-    // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
-    //
-    // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
-    undefined,
-    "Authentication",
-  );
+  const tokens = await services.tokenGenerator
+    .forPool(userPool.options.LambdaConfig)
+    .generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
+      // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
+      //
+      // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+      undefined,
+      "Authentication",
+    );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
@@ -147,13 +151,15 @@ const userPasswordAuthFlow = async (
 
   let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
 
-  if (!user && services.triggers.enabled("UserMigration")) {
+  const poolTriggers = services.triggers.forPool(userPool.options.LambdaConfig);
+
+  if (!user && poolTriggers.enabled("UserMigration")) {
     // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
     //
     // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time
     // of sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully,
     // Amazon Cognito creates the user in the user pool.
-    user = await services.triggers.userMigration(ctx, {
+    user = await poolTriggers.userMigration(ctx, {
       clientId: req.ClientId,
       password: req.AuthParameters.PASSWORD,
       userAttributes: [],
@@ -193,8 +199,8 @@ const userPasswordAuthFlow = async (
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
 
-  if (services.triggers.enabled("PostAuthentication")) {
-    await services.triggers.postAuthentication(ctx, {
+  if (poolTriggers.enabled("PostAuthentication")) {
+    await poolTriggers.postAuthentication(ctx, {
       clientId: req.ClientId,
       // As per the InitiateAuth docs, ClientMetadata is not passed to PostAuthentication when called from InitiateAuth
       // Source: https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_RequestSyntax
@@ -243,18 +249,20 @@ const refreshTokenAuthFlow = async (
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
-  const tokens = await services.tokenGenerator.generate(
-    ctx,
-    user,
-    userGroups,
-    userPoolClient,
-    // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
-    // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
-    //
-    // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
-    undefined,
-    "RefreshTokens",
-  );
+  const tokens = await services.tokenGenerator
+    .forPool(userPool.options.LambdaConfig)
+    .generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      // The docs for the pre-token generation trigger only say that the ClientMetadata is passed as part of the
+      // AdminRespondToAuthChallenge and RespondToAuthChallenge triggers.
+      //
+      // source: https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+      undefined,
+      "RefreshTokens",
+    );
 
   return {
     ChallengeName: undefined,

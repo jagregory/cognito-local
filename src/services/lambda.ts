@@ -12,6 +12,7 @@ import type {
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
 import type { Lambda as LambdaClient } from "aws-sdk";
+import type { LambdaConfigType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { InvocationResponse } from "aws-sdk/clients/lambda";
 import { version as awsSdkVersion } from "aws-sdk/package.json";
 import {
@@ -163,6 +164,7 @@ export type CustomEmailSenderTriggerResponse =
 
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
+  forPool(poolConfig: LambdaConfigType | undefined): Lambda;
   invoke(
     ctx: Context,
     lambda: "CustomMessage",
@@ -211,6 +213,26 @@ export class LambdaService implements Lambda {
 
   public enabled(lambda: keyof FunctionConfig): boolean {
     return !!this.config[lambda];
+  }
+
+  public forPool(poolConfig: LambdaConfigType | undefined): Lambda {
+    return new LambdaService(
+      {
+        CustomMessage: poolConfig?.CustomMessage || this.config.CustomMessage,
+        PostAuthentication:
+          poolConfig?.PostAuthentication || this.config.PostAuthentication,
+        PostConfirmation:
+          poolConfig?.PostConfirmation || this.config.PostConfirmation,
+        PreSignUp: poolConfig?.PreSignUp || this.config.PreSignUp,
+        PreTokenGeneration:
+          poolConfig?.PreTokenGeneration || this.config.PreTokenGeneration,
+        UserMigration: poolConfig?.UserMigration || this.config.UserMigration,
+        CustomEmailSender:
+          poolConfig?.CustomEmailSender?.LambdaArn ||
+          this.config.CustomEmailSender,
+      },
+      this.lambdaClient,
+    );
   }
 
   public async invoke(
