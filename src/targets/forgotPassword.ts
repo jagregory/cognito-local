@@ -46,16 +46,18 @@ export const ForgotPassword =
     };
 
     const code = otp();
-    await messages.deliver(
-      ctx,
-      "ForgotPassword",
-      req.ClientId,
-      userPool.options.Id,
-      user,
-      code,
-      req.ClientMetadata,
-      deliveryDetails,
-    );
+    await messages
+      .forPool(userPool.options.LambdaConfig)
+      .deliver(
+        ctx,
+        "ForgotPassword",
+        req.ClientId,
+        userPool.options.Id,
+        user,
+        code,
+        req.ClientMetadata,
+        deliveryDetails,
+      );
 
     await userPool.saveUser(ctx, {
       ...user,

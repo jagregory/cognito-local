@@ -63,6 +63,7 @@ export const withCognitoSdk =
         cognitoClient,
         {
           enabled: vi.fn().mockReturnValue(false),
+          forPool: vi.fn().mockReturnThis(),
           invoke: vi.fn(),
         },
         new CryptoService({ KMSKeyId: "", KMSKeyAlias: "" }),
