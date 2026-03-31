@@ -1,3 +1,10 @@
+# [1.0.0-dev.3](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-03-31)
+
+
+### Features
+
+* add USER_SRP_AUTH support with simplified SRP protocol ([220a58f](https://github.com/Geekoosh/cognito-local/commit/220a58f38ff9ad6fd4396be08cca1e945c2b5f2b))
+
 # [1.0.0-dev.2](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-03-31)
 
 
