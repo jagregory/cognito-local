@@ -18,6 +18,7 @@ import {
 
 export interface TokenConfig {
   IssuerDomain?: string;
+  Region?: string;
 }
 
 export interface Token {
@@ -208,7 +209,9 @@ export class JwtTokenGenerator implements TokenGenerator {
       idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
     }
 
-    const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
+    const issuer = this.tokenConfig.Region
+      ? `https://cognito-idp.${this.tokenConfig.Region}.amazonaws.com/${userPoolClient.UserPoolId}`
+      : `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
 
     return {
       AccessToken: jwt.sign(accessToken, PrivateKey.pem, {
