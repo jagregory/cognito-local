@@ -3,20 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Authenticator } from "@aws-amplify/ui-react";
-import { signIn, getCurrentUser, type SignInInput } from "aws-amplify/auth";
+import { getCurrentUser } from "aws-amplify/auth";
 import "@aws-amplify/ui-react/styles.css";
-
-const services = {
-  async handleSignIn(input: SignInInput) {
-    return signIn({
-      username: input.username,
-      password: input.password,
-      options: {
-        authFlowType: "USER_PASSWORD_AUTH",
-      },
-    });
-  },
-};
 
 const formFields = {
   signUp: {
@@ -80,7 +68,6 @@ export default function LoginPage() {
     <div style={{ maxWidth: 480, margin: "60px auto", padding: 24 }}>
       <h1 style={{ textAlign: "center", marginBottom: 24 }}>Sign In</h1>
       <Authenticator
-        services={services}
         formFields={formFields}
         signUpAttributes={["given_name", "family_name", "email"]}
       >

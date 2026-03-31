@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import type {
   DeliveryMediumType,
   InitiateAuthRequest,
@@ -271,6 +272,56 @@ const refreshTokenAuthFlow = async (
   };
 };
 
+const userSrpAuthFlow = async (
+  ctx: Context,
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  _userPoolClient: AppClient,
+  _services: InitiateAuthServices,
+): Promise<InitiateAuthResponse> => {
+  if (!req.AuthParameters) {
+    throw new InvalidParameterError(
+      "Missing required parameter authParameters",
+    );
+  }
+  if (!req.AuthParameters.SRP_A) {
+    throw new InvalidParameterError("Missing required parameter SRP_A");
+  }
+
+  const user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+  if (user.UserStatus === "RESET_REQUIRED") {
+    throw new PasswordResetRequiredError();
+  }
+  if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+    return newPasswordChallenge(user);
+  }
+
+  // Simplified SRP: return fake SRP parameters with the password encoded in
+  // SECRET_BLOCK so RespondToAuthChallenge can verify it via plaintext comparison.
+  // This is a local dev tool — real SRP crypto adds no security value.
+  const secretBlock = Buffer.from(
+    JSON.stringify({
+      username: user.Username,
+      password: user.Password,
+      userPoolId: userPool.options.Id,
+    }),
+  ).toString("base64");
+
+  return {
+    ChallengeName: "PASSWORD_VERIFIER",
+    ChallengeParameters: {
+      SALT: crypto.randomBytes(16).toString("hex"),
+      SECRET_BLOCK: secretBlock,
+      SRP_B: crypto.randomBytes(256).toString("hex"),
+      USER_ID_FOR_SRP: user.Username,
+      USERNAME: user.Username,
+    },
+  };
+};
+
 export const InitiateAuth =
   (services: InitiateAuthServices): InitiateAuthTarget =>
   async (ctx, req) => {
@@ -288,6 +339,8 @@ export const InitiateAuth =
 
     if (req.AuthFlow === "USER_PASSWORD_AUTH") {
       return userPasswordAuthFlow(ctx, req, userPool, userPoolClient, services);
+    } else if (req.AuthFlow === "USER_SRP_AUTH") {
+      return userSrpAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN" ||
       req.AuthFlow === "REFRESH_TOKEN_AUTH"

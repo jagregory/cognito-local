@@ -18,6 +18,10 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
   - [Custom Email Sender Trigger](#custom-email-sender-trigger)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
   - [User Pools and Clients](#user-pools-and-clients)
+- [Authentication Flows](#authentication-flows)
+  - [USER_SRP_AUTH (Amplify default)](#user_srp_auth-amplify-default)
+  - [USER_PASSWORD_AUTH](#user_password_auth)
+  - [Using with AWS Amplify](#using-with-aws-amplify)
 - [Known Limitations](#known-limitations)
 - [Multi-factor authentication](#multi-factor-authentication)
 - [Confirmation codes](#confirmation-codes)
@@ -138,7 +142,10 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 
 Additional supported features:
 
-- JWKs verification
+- JWKs verification via `/.well-known/jwks.json` endpoint
+- `USER_SRP_AUTH` flow (simplified — see [Authentication Flows](#authentication-flows))
+- `USER_PASSWORD_AUTH` flow
+- `REFRESH_TOKEN_AUTH` flow
 
 ### Lambda triggers
 
@@ -456,11 +463,48 @@ will need to restart Cognito Local.
 User Pool Clients are stored in `.cognito/db/clients.json`. You can create new User Pool Clients using the
 `CreateUserPoolClient` API.
 
+## Authentication Flows
+
+### USER_SRP_AUTH (Amplify default)
+
+The `USER_SRP_AUTH` flow is the default used by AWS Amplify and the `amazon-cognito-identity-js` SDK. Cognito Local implements a simplified version of the SRP (Secure Remote Password) protocol that is wire-compatible with these clients.
+
+The two-step flow works as follows:
+
+1. **InitiateAuth** with `AuthFlow: USER_SRP_AUTH` — returns a `PASSWORD_VERIFIER` challenge with `SALT`, `SRP_B`, and `SECRET_BLOCK`
+2. **RespondToAuthChallenge** with `ChallengeName: PASSWORD_VERIFIER` — verifies the password and returns tokens
+
+> **Note:** This is a simplified SRP implementation. The server returns fake SRP parameters and verifies the password by plaintext comparison rather than cryptographic proof. This is appropriate for a local development tool — passwords are stored in plaintext and the goal is SDK compatibility, not cryptographic security.
+
+### USER_PASSWORD_AUTH
+
+The `USER_PASSWORD_AUTH` flow sends the password directly. This flow is also fully supported.
+
+### Using with AWS Amplify
+
+To use cognito-local with AWS Amplify's default SRP auth flow, configure `TokenConfig.Region` in your `.cognito/config.json`:
+
+```json
+{
+  "TokenConfig": {
+    "IssuerDomain": "http://localhost:9229",
+    "Region": "us-east-1"
+  }
+}
+```
+
+**Why `Region` is important:** When `Region` is set, two things change:
+
+1. **Token issuer format** — JWTs are issued with `iss: https://cognito-idp.{Region}.amazonaws.com/{poolId}` instead of `http://localhost:9229/{poolId}`. This matches the format that `aws-jwt-verify` and Amplify's `fetchAuthSession` expect when verifying tokens.
+
+2. **User Pool ID prefix** — New user pools are created with a region-prefixed ID (e.g., `us-east-1_aBcDeFgH`) instead of `local_aBcDeFgH`. This is required because `CognitoJwtVerifier` from `aws-jwt-verify` validates the pool ID format and rejects the `local_` prefix.
+
+Without `Region`, consumers need workarounds to override the auth flow, bypass JWT issuer validation, and redirect JWKS fetches. With `Region` set, standard Amplify patterns work out of the box — including `fetchAuthSession` in Next.js middleware and `CognitoJwtVerifier` for API route protection.
+
 ## Known Limitations
 
 - Many features are missing
 - Users can't be disabled
-- Only `USER_PASSWORD_AUTH` flow is supported
 - Not all Lambda triggers are supported
 
 ## Multi-factor authentication
