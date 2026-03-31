@@ -1,3 +1,10 @@
+# [1.0.0-dev.4](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-03-31)
+
+
+### Features
+
+* add configurable token verification and refresh token expiration ([87909f8](https://github.com/Geekoosh/cognito-local/commit/87909f867b4047f4841c81eec72c77201913e09b))
+
 # [1.0.0-dev.3](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-03-31)
 
 
