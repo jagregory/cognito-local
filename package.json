@@ -76,10 +76,8 @@
     "exec": "yarn start"
   },
   "lint-staged": {
-    "*.ts": [
-      "biome check --write",
-      "tsc --target es2019 --moduleResolution bundler --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts"
-    ],
+    "*.ts": "biome check --write",
+    "!(apps/**)/*.ts": "tsc --target es2019 --moduleResolution bundler --esModuleInterop --resolveJsonModule --noEmit ./setupTests.ts",
     "README.md": "markdown-toc -i --bullets=- --maxdepth=3"
   },
   "engines": {

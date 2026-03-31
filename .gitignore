@@ -1,6 +1,8 @@
-.cognito
+/.cognito
 .eslintcache
 .idea
-lib
+/lib
 node_modules
 .log
+.playwright-mcp/
+/package-lock.json

@@ -1,0 +1,9 @@
+services:
+  cognito-local:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    ports:
+      - "9229:9229"
+    volumes:
+      - ./.cognito:/app/.cognito

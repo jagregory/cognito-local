@@ -1,0 +1,18 @@
+{
+  "LambdaClient": {
+    "credentials": {
+      "accessKeyId": "local",
+      "secretAccessKey": "local"
+    },
+    "region": "local"
+  },
+  "TokenConfig": {
+    "IssuerDomain": "http://localhost:9229"
+  },
+  "TriggerFunctions": {},
+  "UserPoolDefaults": {
+    "UsernameAttributes": [
+      "email"
+    ]
+  }
+}
