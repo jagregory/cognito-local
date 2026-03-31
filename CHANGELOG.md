@@ -1,3 +1,10 @@
+# [1.0.0-dev.2](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-03-31)
+
+
+### Bug Fixes
+
+* **ci:** make Docker image name configurable via DOCKER_IMAGE env var ([098c8b0](https://github.com/Geekoosh/cognito-local/commit/098c8b0ba03275a0964ce9f7e6fb3d33dffc3f86))
+
 # 1.0.0-dev.1 (2026-03-31)
 
 
