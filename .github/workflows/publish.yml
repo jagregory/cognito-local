@@ -64,3 +64,4 @@ jobs:
           GITHUB_REF_NAME: ${{ github.event.workflow_run.head_branch || github.ref_name }}
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/cognito-local
