@@ -7,7 +7,8 @@
     "region": "local"
   },
   "TokenConfig": {
-    "IssuerDomain": "http://localhost:9229"
+    "IssuerDomain": "http://localhost:9229",
+    "Region": "us-east-1"
   },
   "TriggerFunctions": {},
   "UserPoolDefaults": {
