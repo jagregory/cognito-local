@@ -316,6 +316,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `LambdaClient.endpoint`                    | `string`   | `local`                 |                                                             |
 | `LambdaClient.region`                      | `string`   | `local`                 |                                                             |
 | `TokenConfig.IssuerDomain`                 | `string`   | `http://localhost:9229` | Issuer domain override                                      |
+| `TokenConfig.Region`                       | `string`   |                         | When set, tokens use Cognito-compatible issuer: `https://cognito-idp.{Region}.amazonaws.com/{poolId}`. Enables standard Amplify/aws-jwt-verify flows without custom issuer workarounds. |
 | `ServerConfig`                             | `object`   |                         | Any setting you would pass to the Express server            |
 | `ServerConfig.hostname`                    | `string`   | `localhost`             | Hostname to listen on                                       |
 | `ServerConfig.port`                        | `number`   | `9229`                  | Port to listen on                                           |
@@ -353,7 +354,8 @@ The default config is:
     "region": "local"
   },
   "TokenConfig": {
-    "IssuerDomain": "http://localhost:9229"
+    "IssuerDomain": "http://localhost:9229",
+    "Region": "us-east-1"
   },
   "TriggerFunctions": {},
   "UserPoolDefaults": {

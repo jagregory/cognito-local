@@ -6,6 +6,7 @@ import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import type { CognitoService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
+import { DefaultConfig } from "../server/config";
 import { CreateUserPool, type CreateUserPoolTarget } from "./createUserPool";
 
 const originalDate = new Date();
@@ -19,6 +20,7 @@ describe("CreateUserPool target", () => {
     createUserPool = CreateUserPool({
       cognito: mockCognitoService,
       clock: new ClockFake(originalDate),
+      config: DefaultConfig,
     });
   });
 
@@ -47,6 +49,33 @@ describe("CreateUserPool target", () => {
     expect(result).toEqual({
       UserPool: createdUserPool,
     });
+  });
+
+  it("uses configured Region as pool ID prefix", async () => {
+    mockCognitoService = newMockCognitoService(newMockUserPoolService());
+    const regionCreateUserPool = CreateUserPool({
+      cognito: mockCognitoService,
+      clock: new ClockFake(originalDate),
+      config: {
+        ...DefaultConfig,
+        TokenConfig: { Region: "us-east-1" },
+      },
+    });
+
+    const createdUserPool = TDB.userPool();
+    mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
+
+    await regionCreateUserPool(TestContext, { PoolName: "test-pool" });
+
+    expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
+      TestContext,
+      expect.objectContaining({
+        Id: expect.stringMatching(/^us-east-1_[\w\d]{8}$/),
+        Arn: expect.stringMatching(
+          /^arn:aws:cognito-idp:us-east-1:local:userpool\/us-east-1_[\w\d]{8}$/,
+        ),
+      }),
+    );
   });
 
   it("creates a new user pool with a custom attribute", async () => {

@@ -9,6 +9,7 @@ import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import type { TokenConfig } from "../services/tokenGenerator";
 import type { Router } from "./Router";
 
 export type ServerOptions = {
@@ -30,6 +31,7 @@ export const createServer = (
   router: Router,
   logger: Logger,
   options: ServerOptions,
+  tokenConfig?: TokenConfig,
 ): Server => {
   const pino = Pino({
     logger,
@@ -62,10 +64,14 @@ export const createServer = (
   });
 
   app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
+    const poolId = req.params.userPoolId;
+    const issuerBase = tokenConfig?.Region
+      ? `https://cognito-idp.${tokenConfig.Region}.amazonaws.com`
+      : (tokenConfig?.IssuerDomain ?? "http://localhost:9229");
     res.status(200).json({
       id_token_signing_alg_values_supported: ["RS256"],
-      jwks_uri: `http://localhost:9229/${req.params.userPoolId}/.well-known/jwks.json`,
-      issuer: `http://localhost:9229/${req.params.userPoolId}`,
+      jwks_uri: `${issuerBase}/${poolId}/.well-known/jwks.json`,
+      issuer: `${issuerBase}/${poolId}`,
     });
   });
 

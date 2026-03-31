@@ -77,5 +77,6 @@ export const createDefaultServer = async (
     }),
     logger,
     config.ServerConfig,
+    config.TokenConfig,
   );
 };
