@@ -1,4 +1,4 @@
-FROM node:22.13.1-alpine AS builder
+FROM node:22.22.2-alpine AS builder
 WORKDIR /app
 
 # dependencies
@@ -11,7 +11,7 @@ ADD src src
 # bundle
 RUN yarn esbuild src/bin/start.ts --outdir=lib --platform=node --target=node22 --bundle
 
-FROM node:22.13.1-alpine
+FROM node:22.22.2-alpine
 WORKDIR /app
 COPY --from=builder /app/lib .
 

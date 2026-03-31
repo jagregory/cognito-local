@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.1
+          node-version: 22.22.2
           cache: yarn
       - run: yarn install
       - run: yarn lint
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.1
+          node-version: 22.22.2
           cache: yarn
       - run: yarn install
       - run: yarn test
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.1
+          node-version: 22.22.2
           cache: yarn
       - run: yarn install
       - run: scripts/smoke-test
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.1
+          node-version: 22.22.2
           cache: yarn
       - run: yarn install
       - run: yarn build
