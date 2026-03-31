@@ -7,6 +7,7 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
   UnsupportedError,
+  UserNotConfirmedException,
 } from "../errors";
 import type { Services } from "../services";
 import type { Target } from "./Target";
@@ -37,12 +38,80 @@ export const RespondToAuthChallenge =
     if (!req.ChallengeResponses.USERNAME) {
       throw new InvalidParameterError("Missing required parameter USERNAME");
     }
-    if (!req.Session) {
-      throw new InvalidParameterError("Missing required parameter Session");
-    }
 
     const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
     const userPoolClient = await cognito.getAppClient(ctx, req.ClientId);
+
+    if (req.ChallengeName === "PASSWORD_VERIFIER") {
+      if (!req.ChallengeResponses.PASSWORD_CLAIM_SECRET_BLOCK) {
+        throw new InvalidParameterError(
+          "Missing required parameter PASSWORD_CLAIM_SECRET_BLOCK",
+        );
+      }
+      if (!req.ChallengeResponses.TIMESTAMP) {
+        throw new InvalidParameterError(
+          "Missing required parameter TIMESTAMP",
+        );
+      }
+
+      // Decode the SECRET_BLOCK that was generated in InitiateAuth's USER_SRP_AUTH flow.
+      // It contains the username and password for plaintext verification.
+      let secretPayload: { username: string; password: string };
+      try {
+        secretPayload = JSON.parse(
+          Buffer.from(
+            req.ChallengeResponses.PASSWORD_CLAIM_SECRET_BLOCK,
+            "base64",
+          ).toString(),
+        );
+      } catch {
+        throw new NotAuthorizedError();
+      }
+
+      const user = await userPool.getUserByUsername(
+        ctx,
+        req.ChallengeResponses.USERNAME,
+      );
+      if (!user || !userPoolClient) {
+        throw new NotAuthorizedError();
+      }
+      if (user.Password !== secretPayload.password) {
+        throw new NotAuthorizedError();
+      }
+      if (user.UserStatus === "UNCONFIRMED") {
+        throw new UserNotConfirmedException();
+      }
+
+      if (triggers.enabled("PostAuthentication")) {
+        await triggers.postAuthentication(ctx, {
+          clientId: req.ClientId,
+          clientMetadata: req.ClientMetadata,
+          source: "PostAuthentication_Authentication",
+          userAttributes: user.Attributes,
+          username: user.Username,
+          userPoolId: userPool.options.Id,
+        });
+      }
+
+      const userGroups = await userPool.listUserGroupMembership(ctx, user);
+
+      return {
+        ChallengeParameters: {},
+        AuthenticationResult: await tokenGenerator.generate(
+          ctx,
+          user,
+          userGroups,
+          userPoolClient,
+          req.ClientMetadata,
+          "Authentication",
+        ),
+      };
+    }
+
+    // SMS_MFA and NEW_PASSWORD_REQUIRED require Session
+    if (!req.Session) {
+      throw new InvalidParameterError("Missing required parameter Session");
+    }
 
     const user = await userPool.getUserByUsername(
       ctx,
