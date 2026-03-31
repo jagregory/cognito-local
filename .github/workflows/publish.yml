@@ -1,6 +1,7 @@
 ### This workflow has access to secrets and a read-write token
 name: Publish
 on:
+  workflow_dispatch:
   workflow_run:
     branches: [master, saason]
     types: [completed]
