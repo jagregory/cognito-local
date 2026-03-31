@@ -9,7 +9,6 @@ import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import { userPoolToResponseObject } from "./responses";
 import type { Target } from "./Target";
 
-const REGION = "local";
 const ACCOUNT_ID = "local";
 
 const generator = shortUUID(
@@ -21,7 +20,7 @@ export type CreateUserPoolTarget = Target<
   CreateUserPoolResponse
 >;
 
-type CreateUserPoolServices = Pick<Services, "clock" | "cognito">;
+type CreateUserPoolServices = Pick<Services, "clock" | "cognito" | "config">;
 
 /**
  * createSchemaAttributes combines the default list of User Pool Schema Attributes with the Schema provided by the
@@ -76,15 +75,16 @@ const createSchemaAttributes = (
 };
 
 export const CreateUserPool =
-  ({ cognito, clock }: CreateUserPoolServices): CreateUserPoolTarget =>
+  ({ cognito, clock, config }: CreateUserPoolServices): CreateUserPoolTarget =>
   async (ctx, req) => {
     const now = clock.get();
-    const userPoolId = `${REGION}_${generator.new().slice(0, 8)}`;
+    const region = config.TokenConfig.Region ?? "local";
+    const userPoolId = `${region}_${generator.new().slice(0, 8)}`;
     const userPool = await cognito.createUserPool(ctx, {
       AccountRecoverySetting: req.AccountRecoverySetting,
       AdminCreateUserConfig: req.AdminCreateUserConfig,
       AliasAttributes: req.AliasAttributes,
-      Arn: `arn:aws:cognito-idp:${REGION}:${ACCOUNT_ID}:userpool/${userPoolId}`,
+      Arn: `arn:aws:cognito-idp:${region}:${ACCOUNT_ID}:userpool/${userPoolId}`,
       AutoVerifiedAttributes: req.AutoVerifiedAttributes,
       CreationDate: now,
       DeviceConfiguration: req.DeviceConfiguration,

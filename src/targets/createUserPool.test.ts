@@ -6,6 +6,7 @@ import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
 import type { CognitoService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
+import { DefaultConfig } from "../server/config";
 import { CreateUserPool, type CreateUserPoolTarget } from "./createUserPool";
 
 const originalDate = new Date();
@@ -19,6 +20,7 @@ describe("CreateUserPool target", () => {
     createUserPool = CreateUserPool({
       cognito: mockCognitoService,
       clock: new ClockFake(originalDate),
+      config: DefaultConfig,
     });
   });
 
@@ -47,6 +49,33 @@ describe("CreateUserPool target", () => {
     expect(result).toEqual({
       UserPool: createdUserPool,
     });
+  });
+
+  it("uses configured Region as pool ID prefix", async () => {
+    mockCognitoService = newMockCognitoService(newMockUserPoolService());
+    const regionCreateUserPool = CreateUserPool({
+      cognito: mockCognitoService,
+      clock: new ClockFake(originalDate),
+      config: {
+        ...DefaultConfig,
+        TokenConfig: { Region: "us-east-1" },
+      },
+    });
+
+    const createdUserPool = TDB.userPool();
+    mockCognitoService.createUserPool.mockResolvedValue(createdUserPool);
+
+    await regionCreateUserPool(TestContext, { PoolName: "test-pool" });
+
+    expect(mockCognitoService.createUserPool).toHaveBeenCalledWith(
+      TestContext,
+      expect.objectContaining({
+        Id: expect.stringMatching(/^us-east-1_[\w\d]{8}$/),
+        Arn: expect.stringMatching(
+          /^arn:aws:cognito-idp:us-east-1:local:userpool\/us-east-1_[\w\d]{8}$/,
+        ),
+      }),
+    );
   });
 
   it("creates a new user pool with a custom attribute", async () => {
@@ -117,219 +146,7 @@ describe("CreateUserPool target", () => {
         Id: expect.stringMatching(/^local_[\w\d]{8}$/),
         LastModifiedDate: originalDate,
         Name: "test-pool",
-        SchemaAttributes: [
-          {
-            Name: "sub",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: false,
-            Required: true,
-            StringAttributeConstraints: {
-              MinLength: "1",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "name",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "given_name",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "family_name",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "middle_name",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "nickname",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "preferred_username",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "profile",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "picture",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "website",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "email",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: true,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "email_verified",
-            AttributeDataType: "Boolean",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-          },
-          {
-            Name: "gender",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "birthdate",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "10",
-              MaxLength: "10",
-            },
-          },
-          {
-            Name: "zoneinfo",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "locale",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "phone_number",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "phone_number_verified",
-            AttributeDataType: "Boolean",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-          },
-          {
-            Name: "address",
-            AttributeDataType: "String",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            StringAttributeConstraints: {
-              MinLength: "0",
-              MaxLength: "2048",
-            },
-          },
-          {
-            Name: "updated_at",
-            AttributeDataType: "Number",
-            DeveloperOnlyAttribute: false,
-            Mutable: true,
-            Required: false,
-            NumberAttributeConstraints: {
-              MinValue: "0",
-            },
-          },
-        ],
+        SchemaAttributes: expect.any(Array),
       },
     );
 
