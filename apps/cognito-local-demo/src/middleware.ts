@@ -1,25 +1,32 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createServerRunner } from "@aws-amplify/adapter-nextjs";
+import { fetchAuthSession } from "aws-amplify/auth/server";
+import { amplifyConfig } from "@/lib/amplify-config";
+
+const { runWithAmplifyServerContext } = createServerRunner({
+  config: amplifyConfig,
+});
 
 export async function middleware(request: NextRequest) {
-  const clientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
-  const lastAuthCookie = request.cookies.get(
-    `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`,
-  );
+  const response = NextResponse.next();
 
-  if (!lastAuthCookie?.value) {
+  const authenticated = await runWithAmplifyServerContext({
+    nextServerContext: { request, response },
+    operation: async (contextSpec) => {
+      try {
+        const session = await fetchAuthSession(contextSpec);
+        return session.tokens !== undefined;
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!authenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const username = lastAuthCookie.value;
-  const accessTokenCookie = request.cookies.get(
-    `CognitoIdentityServiceProvider.${clientId}.${encodeURIComponent(username)}.accessToken`,
-  );
-
-  if (!accessTokenCookie?.value) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
