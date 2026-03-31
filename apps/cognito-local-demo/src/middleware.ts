@@ -10,7 +10,6 @@ const { runWithAmplifyServerContext } = createServerRunner({
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // Try Amplify's fetchAuthSession first (works with real Cognito)
   const authenticated = await runWithAmplifyServerContext({
     nextServerContext: { request, response },
     operation: async (contextSpec) => {
@@ -23,30 +22,11 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  if (authenticated) {
-    return response;
+  if (!authenticated) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Fallback: check Amplify auth cookies directly.
-  // fetchAuthSession may fail to parse cookies when the username contains
-  // special characters (e.g. email with @) due to URL-encoding in cookie names.
-  const clientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
-  if (clientId) {
-    const lastAuthCookie = request.cookies.get(
-      `CognitoIdentityServiceProvider.${clientId}.LastAuthUser`
-    );
-    if (lastAuthCookie?.value) {
-      const username = lastAuthCookie.value;
-      const accessTokenCookie = request.cookies.get(
-        `CognitoIdentityServiceProvider.${clientId}.${encodeURIComponent(username)}.accessToken`
-      );
-      if (accessTokenCookie?.value) {
-        return response;
-      }
-    }
-  }
-
-  return NextResponse.redirect(new URL("/login", request.url));
+  return response;
 }
 
 export const config = {
