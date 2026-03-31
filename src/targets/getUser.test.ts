@@ -9,6 +9,7 @@ import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
 import { attributeValue } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import { GetUser, type GetUserTarget } from "./getUser";
 
 describe("GetUser target", () => {
@@ -18,6 +19,7 @@ describe("GetUser target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     getUser = GetUser({
+      config: DefaultConfig,
       cognito: newMockCognitoService(mockUserPoolService),
     });
   });

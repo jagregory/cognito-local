@@ -2,14 +2,13 @@ import type {
   VerifyUserAttributeRequest,
   VerifyUserAttributeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import jwt from "jsonwebtoken";
 import {
   CodeMismatchError,
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
 import type { Services } from "../services";
-import type { Token } from "../services/tokenGenerator";
+import { verifyToken } from "../services/tokenVerifier";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import type { Target } from "./Target";
 
@@ -18,19 +17,29 @@ export type VerifyUserAttributeTarget = Target<
   VerifyUserAttributeResponse
 >;
 
-type VerifyUserAttributeServices = Pick<Services, "clock" | "cognito">;
+type VerifyUserAttributeServices = Pick<
+  Services,
+  "clock" | "cognito" | "config"
+>;
 
 export const VerifyUserAttribute =
   ({
     clock,
     cognito,
+    config,
   }: VerifyUserAttributeServices): VerifyUserAttributeTarget =>
   async (ctx, req) => {
-    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-    if (!decodedToken) {
-      ctx.logger.info("Unable to decode token");
-      throw new InvalidParameterError();
-    }
+    const decodedToken = (() => {
+      try {
+        return verifyToken(
+          req.AccessToken,
+          config.TokenConfig.VerifyTokens ?? false,
+        );
+      } catch {
+        ctx.logger.info("Unable to verify token");
+        throw new InvalidParameterError();
+      }
+    })();
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,

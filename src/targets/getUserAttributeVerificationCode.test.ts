@@ -10,6 +10,7 @@ import { InvalidParameterError, UserNotFoundError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { Messages, UserPoolService } from "../services";
 import { attribute, attributeValue } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import {
   GetUserAttributeVerificationCode,
   type GetUserAttributeVerificationCodeTarget,
@@ -47,6 +48,7 @@ describe("GetUserAttributeVerificationCode target", () => {
     });
     mockMessages = newMockMessages();
     getUserAttributeVerificationCode = GetUserAttributeVerificationCode({
+      config: DefaultConfig,
       cognito: newMockCognitoService(mockUserPoolService),
       messages: mockMessages,
       otp: () => "123456",

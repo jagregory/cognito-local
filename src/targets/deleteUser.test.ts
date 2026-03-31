@@ -8,6 +8,7 @@ import * as TDB from "../__tests__/testDataBuilder";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
+import { DefaultConfig } from "../server/config";
 import { DeleteUser, type DeleteUserTarget } from "./deleteUser";
 
 describe("DeleteUser target", () => {
@@ -17,6 +18,7 @@ describe("DeleteUser target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     deleteUser = DeleteUser({
+      config: DefaultConfig,
       cognito: newMockCognitoService(mockUserPoolService),
     });
   });

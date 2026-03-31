@@ -11,6 +11,7 @@ import {
 } from "../errors";
 import type { Services } from "../services";
 import type { Context } from "../services/context";
+import { verifyRefreshToken } from "../services/tokenVerifier";
 import type { Target } from "./Target";
 
 export type AdminInitiateAuthTarget = Target<
@@ -20,7 +21,7 @@ export type AdminInitiateAuthTarget = Target<
 
 type AdminInitiateAuthServices = Pick<
   Services,
-  "cognito" | "triggers" | "tokenGenerator"
+  "cognito" | "config" | "triggers" | "tokenGenerator"
 >;
 
 const adminUserPasswordAuthFlow = async (
@@ -117,6 +118,13 @@ const refreshTokenAuthFlow = async (
 
   if (!req.AuthParameters.REFRESH_TOKEN) {
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
+  }
+
+  if (
+    services.config.TokenConfig.VerifyTokens &&
+    !verifyRefreshToken(req.AuthParameters.REFRESH_TOKEN)
+  ) {
+    throw new NotAuthorizedError();
   }
 
   const userPool = await services.cognito.getUserPoolForClientId(

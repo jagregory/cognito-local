@@ -2,22 +2,27 @@ import type {
   GetUserRequest,
   GetUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import jwt from "jsonwebtoken";
 import { InvalidParameterError, UserNotFoundError } from "../errors";
 import type { Services } from "../services";
-import type { Token } from "../services/tokenGenerator";
+import { verifyToken } from "../services/tokenVerifier";
 import type { Target } from "./Target";
 
 export type GetUserTarget = Target<GetUserRequest, GetUserResponse>;
 
 export const GetUser =
-  ({ cognito }: Pick<Services, "cognito">): GetUserTarget =>
+  ({ cognito, config }: Pick<Services, "cognito" | "config">): GetUserTarget =>
   async (ctx, req) => {
-    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-    if (!decodedToken) {
-      ctx.logger.info("Unable to decode token");
-      throw new InvalidParameterError();
-    }
+    const decodedToken = (() => {
+      try {
+        return verifyToken(
+          req.AccessToken,
+          config.TokenConfig.VerifyTokens ?? false,
+        );
+      } catch {
+        ctx.logger.info("Unable to verify token");
+        throw new InvalidParameterError();
+      }
+    })();
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,

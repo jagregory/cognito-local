@@ -15,6 +15,7 @@ import {
 import type { Services, UserPoolService } from "../services";
 import type { AppClient } from "../services/appClient";
 import type { Context } from "../services/context";
+import { verifyRefreshToken } from "../services/tokenVerifier";
 import {
   attributesToRecord,
   attributeValue,
@@ -30,7 +31,7 @@ export type InitiateAuthTarget = Target<
 
 type InitiateAuthServices = Pick<
   Services,
-  "cognito" | "messages" | "otp" | "tokenGenerator" | "triggers"
+  "cognito" | "config" | "messages" | "otp" | "tokenGenerator" | "triggers"
 >;
 
 const verifyMfaChallenge = async (
@@ -231,6 +232,15 @@ const refreshTokenAuthFlow = async (
 
   if (!req.AuthParameters.REFRESH_TOKEN) {
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
+  }
+
+  // When VerifyTokens is enabled, validate the refresh token JWT signature
+  // and expiration before looking up the user.
+  if (
+    services.config.TokenConfig.VerifyTokens &&
+    !verifyRefreshToken(req.AuthParameters.REFRESH_TOKEN)
+  ) {
+    throw new NotAuthorizedError();
   }
 
   const user = await userPool.getUserByRefreshToken(

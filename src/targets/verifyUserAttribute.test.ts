@@ -14,6 +14,7 @@ import {
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
 import { attribute, attributesAppend } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import {
   VerifyUserAttribute,
   type VerifyUserAttributeTarget,
@@ -48,6 +49,7 @@ describe("VerifyUserAttribute target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     verifyUserAttribute = VerifyUserAttribute({
+      config: DefaultConfig,
       clock,
       cognito: newMockCognitoService(mockUserPoolService),
     });

@@ -10,6 +10,7 @@ import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
 import { attribute } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import {
   DeleteUserAttributes,
   type DeleteUserAttributesTarget,
@@ -44,6 +45,7 @@ describe("DeleteUserAttributes target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     deleteUserAttributes = DeleteUserAttributes({
+      config: DefaultConfig,
       clock,
       cognito: newMockCognitoService(mockUserPoolService),
     });

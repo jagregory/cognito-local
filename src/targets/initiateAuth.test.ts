@@ -24,6 +24,7 @@ import {
 import type { Messages, Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
 import { attributesToRecord, type User } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import { InitiateAuth, type InitiateAuthTarget } from "./initiateAuth";
 
 describe("InitiateAuth target", () => {
@@ -48,6 +49,7 @@ describe("InitiateAuth target", () => {
     mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
 
     initiateAuth = InitiateAuth({
+      config: DefaultConfig,
       cognito: mockCognitoService,
       messages: mockMessages,
       otp: mockOtp,
