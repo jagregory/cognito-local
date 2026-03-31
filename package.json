@@ -86,36 +86,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/jagregory/cognito-local.git"
-  },
-  "release": {
-    "branches": [
-      "master"
-    ],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      [
-        "@semantic-release/exec",
-        {
-          "publishCmd": "./scripts/dockerBuildPush.sh ${nextRelease.version}"
-        }
-      ],
-      [
-        "@semantic-release/github",
-        {
-          "addReleases": "top"
-        }
-      ],
-      [
-        "@semantic-release/git",
-        {
-          "assets": [
-            "CHANGELOG.md"
-          ]
-        }
-      ]
-    ]
   }
 }
