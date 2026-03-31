@@ -372,6 +372,53 @@ describe("JwtTokenGenerator", () => {
     });
   });
 
+  describe("Region config", () => {
+    it("uses Cognito-compatible issuer when Region is set", async () => {
+      mockTriggers.enabled.mockReturnValue(false);
+      const regionTokenGenerator = new JwtTokenGenerator(clock, mockTriggers, {
+        IssuerDomain: "http://example.com",
+        Region: "us-east-1",
+      });
+
+      const userPoolClient = TDB.appClient();
+      const tokens = await regionTokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        userPoolClient,
+        undefined,
+        "Authentication",
+      );
+
+      const expectedIssuer = `https://cognito-idp.us-east-1.amazonaws.com/${userPoolClient.UserPoolId}`;
+      expect((jwt.decode(tokens.AccessToken) as any).iss).toBe(expectedIssuer);
+      expect((jwt.decode(tokens.IdToken) as any).iss).toBe(expectedIssuer);
+      expect((jwt.decode(tokens.RefreshToken) as any).iss).toBe(expectedIssuer);
+    });
+
+    it("uses IssuerDomain when Region is not set", async () => {
+      mockTriggers.enabled.mockReturnValue(false);
+      const domainTokenGenerator = new JwtTokenGenerator(clock, mockTriggers, {
+        IssuerDomain: "http://custom-domain.local",
+      });
+
+      const userPoolClient = TDB.appClient();
+      const tokens = await domainTokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        userPoolClient,
+        undefined,
+        "Authentication",
+      );
+
+      const expectedIssuer = `http://custom-domain.local/${userPoolClient.UserPoolId}`;
+      expect((jwt.decode(tokens.AccessToken) as any).iss).toBe(expectedIssuer);
+      expect((jwt.decode(tokens.IdToken) as any).iss).toBe(expectedIssuer);
+      expect((jwt.decode(tokens.RefreshToken) as any).iss).toBe(expectedIssuer);
+    });
+  });
+
   describe("groups", () => {
     it("does not include a cognito:groups claim if the user has no groups", async () => {
       mockTriggers.enabled.mockReturnValue(false);
