@@ -19,6 +19,7 @@ import {
 export interface TokenConfig {
   IssuerDomain?: string;
   Region?: string;
+  VerifyTokens?: boolean;
 }
 
 export interface Token {

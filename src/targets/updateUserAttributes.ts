@@ -2,13 +2,12 @@ import type {
   UpdateUserAttributesRequest,
   UpdateUserAttributesResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import jwt from "jsonwebtoken";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import type { Messages, Services, UserPoolService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import type { Context } from "../services/context";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
-import type { Token } from "../services/tokenGenerator";
+import { verifyToken } from "../services/tokenVerifier";
 import {
   attributesAppend,
   hasUnverifiedContactAttributes,
@@ -58,22 +57,29 @@ export type UpdateUserAttributesTarget = Target<
 
 type UpdateUserAttributesServices = Pick<
   Services,
-  "clock" | "cognito" | "otp" | "messages"
+  "clock" | "cognito" | "config" | "otp" | "messages"
 >;
 
 export const UpdateUserAttributes =
   ({
     clock,
     cognito,
+    config,
     otp,
     messages,
   }: UpdateUserAttributesServices): UpdateUserAttributesTarget =>
   async (ctx, req) => {
-    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-    if (!decodedToken) {
-      ctx.logger.info("Unable to decode token");
-      throw new InvalidParameterError();
-    }
+    const decodedToken = (() => {
+      try {
+        return verifyToken(
+          req.AccessToken,
+          config.TokenConfig.VerifyTokens ?? false,
+        );
+      } catch {
+        ctx.logger.info("Unable to verify token");
+        throw new InvalidParameterError();
+      }
+    })();
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,
@@ -86,10 +92,6 @@ export const UpdateUserAttributes =
 
     const permittedAttributeChanges = validatePermittedAttributeChanges(
       req.UserAttributes,
-      // if the user pool doesn't have any SchemaAttributes it was probably created manually
-      // or before we started explicitly saving the defaults. Fallback on the AWS defaults in
-      // this case, otherwise checks against the schema for default attributes like email will
-      // fail.
       userPool.options.SchemaAttributes ??
         USER_POOL_AWS_DEFAULTS.SchemaAttributes ??
         [],
@@ -112,8 +114,6 @@ export const UpdateUserAttributes =
 
     await userPool.saveUser(ctx, updatedUser);
 
-    // deliberately only check the affected user attributes, not the combined attributes
-    // e.g. a user with email_verified=false that you don't touch the email attributes won't get notified
     if (
       userPool.options.AutoVerifiedAttributes?.length &&
       (hasUnverifiedContactAttributes(immediateAttributes) ||

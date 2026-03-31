@@ -15,6 +15,7 @@ import {
   attributesAppend,
   attributeValue,
 } from "../services/userPoolService";
+import { DefaultConfig } from "../server/config";
 import {
   UpdateUserAttributes,
   type UpdateUserAttributesTarget,
@@ -51,6 +52,7 @@ describe("UpdateUserAttributes target", () => {
     mockUserPoolService = newMockUserPoolService();
     mockMessages = newMockMessages();
     updateUserAttributes = UpdateUserAttributes({
+      config: DefaultConfig,
       clock,
       cognito: newMockCognitoService(mockUserPoolService),
       messages: mockMessages,

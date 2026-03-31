@@ -13,6 +13,7 @@ import {
 } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
+import { DefaultConfig } from "../server/config";
 import { ChangePassword, type ChangePasswordTarget } from "./changePassword";
 
 const currentDate = new Date();
@@ -24,6 +25,7 @@ describe("ChangePassword target", () => {
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     changePassword = ChangePassword({
+      config: DefaultConfig,
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(currentDate),
     });
