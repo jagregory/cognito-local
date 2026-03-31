@@ -74,13 +74,15 @@ export const CustomMessage =
       });
 
       return {
-        emailMessage: response.emailMessage
-          ?.replace(AWS_CODE_PARAMETER, code)
-          .replace(AWS_USERNAME_PARAMETER, username),
+        emailMessage:
+          response.emailMessage
+            ?.replace(AWS_CODE_PARAMETER, code)
+            .replace(AWS_USERNAME_PARAMETER, username) ?? null,
         emailSubject: response.emailSubject,
-        smsMessage: response.smsMessage
-          ?.replace(AWS_CODE_PARAMETER, code)
-          .replace(AWS_USERNAME_PARAMETER, username),
+        smsMessage:
+          response.smsMessage
+            ?.replace(AWS_CODE_PARAMETER, code)
+            .replace(AWS_USERNAME_PARAMETER, username) ?? null,
       };
     } catch (ex) {
       ctx.logger.error(ex);

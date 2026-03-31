@@ -422,6 +422,7 @@ export class LambdaService implements Lambda {
           request: {
             clientMetadata: event.clientMetadata,
             codeParameter: event.codeParameter,
+            linkParameter: "",
             usernameParameter: event.usernameParameter,
             userAttributes: event.userAttributes,
           },

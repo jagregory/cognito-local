@@ -106,7 +106,9 @@ export class MessagesService implements Messages {
 
       return {
         __code: code,
-        ...message,
+        emailMessage: message?.emailMessage ?? undefined,
+        emailSubject: message?.emailSubject ?? undefined,
+        smsMessage: message?.smsMessage ?? undefined,
       };
     }
 
