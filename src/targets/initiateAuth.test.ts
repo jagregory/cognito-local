@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import {
   beforeEach,
   describe,
@@ -21,10 +22,11 @@ import {
   NotAuthorizedError,
   PasswordResetRequiredError,
 } from "../errors";
+import PrivateKey from "../keys/cognitoLocal.private.json";
+import { DefaultConfig } from "../server/config";
 import type { Messages, Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
 import { attributesToRecord, type User } from "../services/userPoolService";
-import { DefaultConfig } from "../server/config";
 import { InitiateAuth, type InitiateAuthTarget } from "./initiateAuth";
 
 describe("InitiateAuth target", () => {
@@ -585,6 +587,43 @@ describe("InitiateAuth target", () => {
         undefined,
         "RefreshTokens",
       );
+    });
+
+    it("throws NotAuthorizedError for expired refresh token when VerifyTokens is enabled", async () => {
+      const cognitoService = newMockCognitoService(mockUserPoolService);
+      cognitoService.getAppClient.mockResolvedValue(userPoolClient);
+
+      const verifyInitiateAuth = InitiateAuth({
+        config: {
+          ...DefaultConfig,
+          TokenConfig: { ...DefaultConfig.TokenConfig, VerifyTokens: true },
+        },
+        cognito: cognitoService,
+        messages: mockMessages,
+        otp: mockOtp,
+        tokenGenerator: mockTokenGenerator,
+        triggers: mockTriggers,
+      });
+
+      const expiredRefreshToken = jwt.sign(
+        {
+          "cognito:username": "user1",
+          email: "user@example.com",
+          exp: Math.floor(Date.now() / 1000) - 10,
+        },
+        PrivateKey.pem,
+        { algorithm: "RS256" },
+      );
+
+      await expect(
+        verifyInitiateAuth(TestContext, {
+          AuthFlow: "REFRESH_TOKEN_AUTH",
+          ClientId: userPoolClient.ClientId,
+          AuthParameters: {
+            REFRESH_TOKEN: expiredRefreshToken,
+          },
+        }),
+      ).rejects.toBeInstanceOf(NotAuthorizedError);
     });
   });
 });

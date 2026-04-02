@@ -1,44 +1,20 @@
-import { CognitoJwtVerifier } from "aws-jwt-verify";
-import { SimpleJwksCache } from "aws-jwt-verify/jwk";
+import * as jose from "jose";
 
-const cognitoPattern =
-  /https:\/\/cognito-idp\.[^/]+\.amazonaws\.com(\/.*)?$/;
+const region = process.env.NEXT_PUBLIC_COGNITO_REGION ?? "us-east-1";
+const poolId = process.env.COGNITO_POOL_ID!;
+const clientId = process.env.COGNITO_CLIENT_ID!;
+const issuer = `https://cognito-idp.${region}.amazonaws.com/${poolId}`;
 
-function createJwksCache() {
-  const endpoint = process.env.NEXT_PUBLIC_COGNITO_LOCAL_ENDPOINT;
-  if (!endpoint) {
-    return new SimpleJwksCache();
+let jwks: ReturnType<typeof jose.createRemoteJWKSet> | null = null;
+
+function getJwks() {
+  if (!jwks) {
+    // The JWKS URL uses the standard Cognito issuer format.
+    // When running against cognito-local, the instrumentation.ts fetch
+    // interceptor redirects this request to the local endpoint.
+    jwks = jose.createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks.json`));
   }
-
-  // Custom fetcher that redirects Cognito JWKS URLs to the local endpoint.
-  // aws-jwt-verify uses Node's https module internally, which can't reach
-  // localhost. This fetcher uses globalThis.fetch instead.
-  return new SimpleJwksCache({
-    fetcher: {
-      async fetch(uri: string): Promise<ArrayBuffer> {
-        const match = uri.match(cognitoPattern);
-        const url = match ? `${endpoint}${match[1] || "/"}` : uri;
-        const res = await globalThis.fetch(url);
-        return res.arrayBuffer();
-      },
-    },
-  });
-}
-
-let verifier: ReturnType<typeof CognitoJwtVerifier.create> | null = null;
-
-function getVerifier() {
-  if (!verifier) {
-    verifier = CognitoJwtVerifier.create(
-      {
-        userPoolId: process.env.COGNITO_POOL_ID!,
-        tokenUse: "access",
-        clientId: process.env.COGNITO_CLIENT_ID!,
-      },
-      { jwksCache: createJwksCache() },
-    );
-  }
-  return verifier;
+  return jwks;
 }
 
 export async function verifyAccessToken(request: Request) {
@@ -47,7 +23,14 @@ export async function verifyAccessToken(request: Request) {
     return null;
   }
   try {
-    return await getVerifier().verify(authHeader.split(" ")[1]);
+    const { payload } = await jose.jwtVerify(
+      authHeader.split(" ")[1],
+      getJwks(),
+      { issuer },
+    );
+    if (payload.token_use !== "access") return null;
+    if (payload.client_id !== clientId) return null;
+    return payload;
   } catch {
     return null;
   }

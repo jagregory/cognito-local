@@ -35,3 +35,17 @@ export function verifyRefreshToken(refreshToken: string): boolean {
     return false;
   }
 }
+
+/**
+ * Check if an access token's origin_jti has been revoked.
+ * Returns true if the token has been revoked.
+ */
+export function isTokenRevoked(
+  token: Token,
+  revokedJtis: readonly string[],
+): boolean {
+  if (!token.origin_jti || revokedJtis.length === 0) {
+    return false;
+  }
+  return revokedJtis.includes(token.origin_jti);
+}

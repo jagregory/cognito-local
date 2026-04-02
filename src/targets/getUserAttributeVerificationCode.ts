@@ -2,11 +2,15 @@ import type {
   GetUserAttributeVerificationCodeRequest,
   GetUserAttributeVerificationCodeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { InvalidParameterError, UserNotFoundError } from "../errors";
+import {
+  InvalidParameterError,
+  NotAuthorizedError,
+  UserNotFoundError,
+} from "../errors";
 import type { Messages, Services, UserPoolService } from "../services";
 import type { Context } from "../services/context";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
-import { verifyToken } from "../services/tokenVerifier";
+import { isTokenRevoked, verifyToken } from "../services/tokenVerifier";
 import type { User } from "../services/userPoolService";
 import type { Target } from "./Target";
 
@@ -78,6 +82,10 @@ export const GetUserAttributeVerificationCode =
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
       throw new UserNotFoundError();
+    }
+
+    if (isTokenRevoked(decodedToken, user.RevokedRefreshTokenJtis ?? [])) {
+      throw new NotAuthorizedError();
     }
 
     const code = otp();

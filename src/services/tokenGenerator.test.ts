@@ -202,6 +202,7 @@ describe("JwtTokenGenerator", () => {
         iat: Math.floor(originalDate.getTime() / 1000),
         iss: `http://example.com/${userPoolClient.UserPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: attributeValue("sub", user.Attributes),
         token_use: "access",
@@ -219,6 +220,7 @@ describe("JwtTokenGenerator", () => {
         iat: Math.floor(originalDate.getTime() / 1000),
         iss: `http://example.com/${userPoolClient.UserPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         sub: attributeValue("sub", user.Attributes),
         token_use: "id",
       });

@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
@@ -5,9 +6,11 @@ import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
+import { NotAuthorizedError } from "../errors";
+import PrivateKey from "../keys/cognitoLocal.private.json";
+import { DefaultConfig } from "../server/config";
 import type { CognitoService, Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
-import { DefaultConfig } from "../server/config";
 import {
   AdminInitiateAuth,
   type AdminInitiateAuthTarget,
@@ -133,5 +136,38 @@ describe("AdminInitiateAuth target", () => {
       },
       "RefreshTokens",
     );
+  });
+
+  it("throws NotAuthorizedError for expired refresh token when VerifyTokens is enabled", async () => {
+    const verifyAdminInitiateAuth = AdminInitiateAuth({
+      config: {
+        ...DefaultConfig,
+        TokenConfig: { ...DefaultConfig.TokenConfig, VerifyTokens: true },
+      },
+      triggers: mockTriggers,
+      cognito: mockCognitoService,
+      tokenGenerator: mockTokenGenerator,
+    });
+
+    const expiredRefreshToken = jwt.sign(
+      {
+        "cognito:username": "user1",
+        email: "user@example.com",
+        exp: Math.floor(Date.now() / 1000) - 10,
+      },
+      PrivateKey.pem,
+      { algorithm: "RS256" },
+    );
+
+    await expect(
+      verifyAdminInitiateAuth(TestContext, {
+        AuthFlow: "REFRESH_TOKEN_AUTH",
+        ClientId: userPoolClient.ClientId,
+        UserPoolId: userPoolClient.UserPoolId,
+        AuthParameters: {
+          REFRESH_TOKEN: expiredRefreshToken,
+        },
+      }),
+    ).rejects.toBeInstanceOf(NotAuthorizedError);
   });
 });
