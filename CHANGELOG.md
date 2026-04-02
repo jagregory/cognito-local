@@ -1,3 +1,10 @@
+# [1.0.0-dev.5](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-04-02)
+
+
+### Features
+
+* fully implement RevokeToken with ClientSecret validation ([1edf564](https://github.com/Geekoosh/cognito-local/commit/1edf5641bc620589f47e8d03dd5dab31376a02f7))
+
 # [1.0.0-dev.4](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-03-31)
 
 
