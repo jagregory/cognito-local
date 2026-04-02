@@ -1,3 +1,15 @@
+# [1.0.0-dev.6](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-04-02)
+
+
+### Bug Fixes
+
+* **test:** use same Date instance in updateGroup test to prevent flaky 1ms drift ([e6d8762](https://github.com/Geekoosh/cognito-local/commit/e6d87629fb5ea8194a1ec893ca221a2e99757e20))
+
+
+### Features
+
+* implement token revocation via origin_jti and fix demo app ([80c320a](https://github.com/Geekoosh/cognito-local/commit/80c320a1782b7f4646db413ab5c389d019769097))
+
 # [1.0.0-dev.5](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-04-02)
 
 
