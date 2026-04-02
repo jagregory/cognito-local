@@ -141,6 +141,7 @@ describe(
         iat: expect.any(Number),
         iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
         token_use: "access",
@@ -160,6 +161,7 @@ describe(
         iat: expect.any(Number),
         iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",
       });
@@ -246,6 +248,7 @@ describe(
         iat: expect.any(Number),
         iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         scope: "aws.cognito.signin.user.admin",
         sub: userSub,
         token_use: "access",
@@ -267,6 +270,7 @@ describe(
         iat: expect.any(Number),
         iss: `http://localhost:9229/${userPoolId}`,
         jti: expect.stringMatching(UUID),
+        origin_jti: expect.stringMatching(UUID),
         sub: userSub,
         token_use: "id",
       });

@@ -2,9 +2,13 @@ import type {
   GetUserRequest,
   GetUserResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import { InvalidParameterError, UserNotFoundError } from "../errors";
+import {
+  InvalidParameterError,
+  NotAuthorizedError,
+  UserNotFoundError,
+} from "../errors";
 import type { Services } from "../services";
-import { verifyToken } from "../services/tokenVerifier";
+import { isTokenRevoked, verifyToken } from "../services/tokenVerifier";
 import type { Target } from "./Target";
 
 export type GetUserTarget = Target<GetUserRequest, GetUserResponse>;
@@ -31,6 +35,10 @@ export const GetUser =
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
       throw new UserNotFoundError();
+    }
+
+    if (isTokenRevoked(decodedToken, user.RevokedRefreshTokenJtis ?? [])) {
+      throw new NotAuthorizedError();
     }
 
     return {

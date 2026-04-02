@@ -32,6 +32,7 @@ export interface Token {
   scope: string;
   auth_time: Date;
   jti: string;
+  origin_jti?: string;
 }
 
 interface TokenOverrides {
@@ -159,6 +160,7 @@ export class JwtTokenGenerator implements TokenGenerator {
     const eventId = uuid.v4();
     const authTime = Math.floor(this.clock.get().getTime() / 1000);
     const sub = attributeValue("sub", user.Attributes);
+    const originJti = uuid.v4();
 
     const accessToken: RawToken = {
       auth_time: authTime,
@@ -166,6 +168,7 @@ export class JwtTokenGenerator implements TokenGenerator {
       event_id: eventId,
       iat: authTime,
       jti: uuid.v4(),
+      origin_jti: originJti,
       scope: "aws.cognito.signin.user.admin", // TODO: scopes
       sub,
       token_use: "access",
@@ -181,6 +184,7 @@ export class JwtTokenGenerator implements TokenGenerator {
       event_id: eventId,
       iat: authTime,
       jti: uuid.v4(),
+      origin_jti: originJti,
       sub,
       token_use: "id",
       ...attributesToRecord(customAttributes(user.Attributes)),
@@ -243,7 +247,7 @@ export class JwtTokenGenerator implements TokenGenerator {
           "cognito:username": user.Username,
           email: attributeValue("email", user.Attributes),
           iat: authTime,
-          jti: uuid.v4(),
+          jti: originJti,
         },
         PrivateKey.pem,
         {

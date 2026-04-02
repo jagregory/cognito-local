@@ -31,7 +31,7 @@ describe("UpdateGroup target", () => {
     mockUserPoolService.getGroupByGroupName.mockResolvedValue(existingGroup);
 
     const newDate = new Date();
-    clock.advanceTo(new Date());
+    clock.advanceTo(newDate);
 
     const result = await updateGroup(TestContext, {
       GroupName: existingGroup.GroupName,
@@ -75,7 +75,7 @@ describe("UpdateGroup target", () => {
     mockUserPoolService.getGroupByGroupName.mockResolvedValue(existingGroup);
 
     const newDate = new Date();
-    clock.advanceTo(new Date());
+    clock.advanceTo(newDate);
 
     const result = await updateGroup(TestContext, {
       GroupName: existingGroup.GroupName,

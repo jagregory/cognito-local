@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ["aws-jwt-verify"],
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

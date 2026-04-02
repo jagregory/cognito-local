@@ -1,7 +1,7 @@
 import type { DeleteUserRequest } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import type { Services } from "../services";
-import { verifyToken } from "../services/tokenVerifier";
+import { isTokenRevoked, verifyToken } from "../services/tokenVerifier";
 import type { Target } from "./Target";
 
 export type DeleteUserTarget = Target<DeleteUserRequest, object>;
@@ -29,6 +29,10 @@ export const DeleteUser =
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
+      throw new NotAuthorizedError();
+    }
+
+    if (isTokenRevoked(decodedToken, user.RevokedRefreshTokenJtis ?? [])) {
       throw new NotAuthorizedError();
     }
 

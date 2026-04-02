@@ -7,7 +7,7 @@ import type { Messages, Services, UserPoolService } from "../services";
 import { USER_POOL_AWS_DEFAULTS } from "../services/cognitoService";
 import type { Context } from "../services/context";
 import { selectAppropriateDeliveryMethod } from "../services/messageDelivery/deliveryMethod";
-import { verifyToken } from "../services/tokenVerifier";
+import { isTokenRevoked, verifyToken } from "../services/tokenVerifier";
 import {
   attributesAppend,
   hasUnverifiedContactAttributes,
@@ -87,6 +87,10 @@ export const UpdateUserAttributes =
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
+      throw new NotAuthorizedError();
+    }
+
+    if (isTokenRevoked(decodedToken, user.RevokedRefreshTokenJtis ?? [])) {
       throw new NotAuthorizedError();
     }
 

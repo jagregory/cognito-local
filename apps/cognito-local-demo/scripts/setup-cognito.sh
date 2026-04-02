@@ -64,16 +64,36 @@ aws --endpoint "$ENDPOINT" cognito-idp admin-set-user-password \
   --password "TestPass123!" \
   --permanent > /dev/null
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env.local"
+
+cat > "$ENV_FILE" <<EOF
+# cognito-local settings
+USE_COGNITO_LOCAL=true
+NEXT_PUBLIC_USE_COGNITO_LOCAL=true
+COGNITO_LOCAL_ENDPOINT=http://localhost:9229
+NEXT_PUBLIC_COGNITO_LOCAL_ENDPOINT=http://localhost:9229
+
+# Auto-populated by setup script
+NEXT_PUBLIC_USER_POOL_ID=$POOL_ID
+NEXT_PUBLIC_USER_POOL_CLIENT_ID=$CLIENT_ID
+NEXT_PUBLIC_COGNITO_REGION=us-east-1
+
+# For server-side JWT verification
+COGNITO_POOL_ID=$POOL_ID
+COGNITO_CLIENT_ID=$CLIENT_ID
+
+# Node.js header size fix for cookie-heavy Amplify auth
+NODE_OPTIONS=--max-http-header-size=32768
+EOF
+
 echo ""
 echo "========================================="
 echo "Setup complete!"
 echo ""
-echo "Update your .env.local with:"
-echo ""
-echo "NEXT_PUBLIC_USER_POOL_ID=$POOL_ID"
-echo "NEXT_PUBLIC_USER_POOL_CLIENT_ID=$CLIENT_ID"
-echo "COGNITO_POOL_ID=$POOL_ID"
-echo "COGNITO_CLIENT_ID=$CLIENT_ID"
+echo "Written to .env.local:"
+echo "  NEXT_PUBLIC_USER_POOL_ID=$POOL_ID"
+echo "  NEXT_PUBLIC_USER_POOL_CLIENT_ID=$CLIENT_ID"
 echo ""
 echo "Test user: testuser@example.com / TestPass123!"
 echo "========================================="

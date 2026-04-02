@@ -2,6 +2,7 @@ import type {
   RevokeTokenRequest,
   RevokeTokenResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import jwt from "jsonwebtoken";
 import { NotAuthorizedError } from "../errors";
 import type { Services } from "../services";
 import type { Target } from "./Target";
@@ -45,9 +46,18 @@ export const RevokeToken =
       tokens.splice(tokenIndex, 1);
     }
 
+    // Extract the jti from the refresh token so we can invalidate
+    // access/id tokens that were issued with this origin_jti
+    const revokedJtis = user.RevokedRefreshTokenJtis ?? [];
+    const decoded = jwt.decode(req.Token) as { jti?: string } | null;
+    if (decoded?.jti) {
+      revokedJtis.push(decoded.jti);
+    }
+
     await userPool.saveUser(ctx, {
       ...user,
       RefreshTokens: [...tokens],
+      RevokedRefreshTokenJtis: revokedJtis,
     });
 
     return {};

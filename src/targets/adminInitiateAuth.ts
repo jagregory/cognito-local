@@ -120,6 +120,8 @@ const refreshTokenAuthFlow = async (
     throw new InvalidParameterError("AuthParameters REFRESH_TOKEN is required");
   }
 
+  // When VerifyTokens is enabled, validate the refresh token JWT signature
+  // and expiration before looking up the user.
   if (
     services.config.TokenConfig.VerifyTokens &&
     !verifyRefreshToken(req.AuthParameters.REFRESH_TOKEN)

@@ -8,7 +8,7 @@ import {
   NotAuthorizedError,
 } from "../errors";
 import type { Services } from "../services";
-import { verifyToken } from "../services/tokenVerifier";
+import { isTokenRevoked, verifyToken } from "../services/tokenVerifier";
 import { attribute, attributesAppend } from "../services/userPoolService";
 import type { Target } from "./Target";
 
@@ -47,6 +47,10 @@ export const VerifyUserAttribute =
     );
     const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
     if (!user) {
+      throw new NotAuthorizedError();
+    }
+
+    if (isTokenRevoked(decodedToken, user.RevokedRefreshTokenJtis ?? [])) {
       throw new NotAuthorizedError();
     }
 
