@@ -1,3 +1,10 @@
+# [1.0.0-dev.7](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-04-03)
+
+
+### Features
+
+* implement GetTokensFromRefreshToken and store refresh tokens in SRP flow ([309ee0c](https://github.com/Geekoosh/cognito-local/commit/309ee0c76a3208f259cdab202284bd9fc9d8e107))
+
 # [1.0.0-dev.6](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-04-02)
 
 
