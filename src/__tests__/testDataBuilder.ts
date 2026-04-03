@@ -54,6 +54,7 @@ export const user = (partial?: Partial<User>): User => ({
   MFAOptions: partial?.MFAOptions ?? undefined,
   Password: partial?.Password ?? "Password123!",
   RefreshTokens: partial?.RefreshTokens ?? [],
+  RevokedRefreshTokenJtis: partial?.RevokedRefreshTokenJtis,
   UnverifiedAttributeChanges: partial?.UnverifiedAttributeChanges,
   UserCreateDate: partial?.UserCreateDate ?? new Date(),
   UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date(),

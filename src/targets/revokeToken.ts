@@ -28,6 +28,7 @@ export const RevokeToken =
 
     const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
     const users = await userPool.listUsers(ctx);
+
     const user = users.find(
       (user) =>
         Array.isArray(user.RefreshTokens) &&

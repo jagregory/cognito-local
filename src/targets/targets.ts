@@ -28,6 +28,7 @@ import { DescribeUserPool } from "./describeUserPool";
 import { DescribeUserPoolClient } from "./describeUserPoolClient";
 import { ForgotPassword } from "./forgotPassword";
 import { GetGroup } from "./getGroup";
+import { GetTokensFromRefreshToken } from "./getTokensFromRefreshToken";
 import { GetUser } from "./getUser";
 import { GetUserAttributeVerificationCode } from "./getUserAttributeVerificationCode";
 import { GetUserPoolMfaConfig } from "./getUserPoolMfaConfig";
@@ -76,6 +77,7 @@ export const Targets = {
   DescribeUserPoolClient,
   ForgotPassword,
   GetGroup,
+  GetTokensFromRefreshToken,
   GetUser,
   GetUserAttributeVerificationCode,
   GetUserPoolMfaConfig,
