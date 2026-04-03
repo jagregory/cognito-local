@@ -49,9 +49,7 @@ export const RespondToAuthChallenge =
         );
       }
       if (!req.ChallengeResponses.TIMESTAMP) {
-        throw new InvalidParameterError(
-          "Missing required parameter TIMESTAMP",
-        );
+        throw new InvalidParameterError("Missing required parameter TIMESTAMP");
       }
 
       // Decode the SECRET_BLOCK that was generated in InitiateAuth's USER_SRP_AUTH flow.
@@ -95,16 +93,20 @@ export const RespondToAuthChallenge =
 
       const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
+      const tokens = await tokenGenerator.generate(
+        ctx,
+        user,
+        userGroups,
+        userPoolClient,
+        req.ClientMetadata,
+        "Authentication",
+      );
+
+      await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
+
       return {
         ChallengeParameters: {},
-        AuthenticationResult: await tokenGenerator.generate(
-          ctx,
-          user,
-          userGroups,
-          userPoolClient,
-          req.ClientMetadata,
-          "Authentication",
-        ),
+        AuthenticationResult: tokens,
       };
     }
 
@@ -164,15 +166,19 @@ export const RespondToAuthChallenge =
 
     const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
+    const tokens = await tokenGenerator.generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "Authentication",
+    );
+
+    await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
+
     return {
       ChallengeParameters: {},
-      AuthenticationResult: await tokenGenerator.generate(
-        ctx,
-        user,
-        userGroups,
-        userPoolClient,
-        req.ClientMetadata,
-        "Authentication",
-      ),
+      AuthenticationResult: tokens,
     };
   };

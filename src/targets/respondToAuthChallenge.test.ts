@@ -31,6 +31,11 @@ describe("RespondToAuthChallenge target", () => {
   beforeEach(() => {
     clock = new ClockFake(currentDate);
     mockTokenGenerator = newMockTokenGenerator();
+    mockTokenGenerator.generate.mockResolvedValue({
+      AccessToken: "access",
+      IdToken: "id",
+      RefreshToken: "refresh",
+    });
     mockTriggers = newMockTriggers();
     mockUserPoolService = newMockUserPoolService({
       Id: userPoolClient.UserPoolId,
