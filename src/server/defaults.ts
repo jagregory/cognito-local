@@ -12,6 +12,8 @@ import { CryptoService } from "../services/crypto";
 import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
 import { ConsoleMessageSender } from "../services/messageDelivery/consoleMessageSender";
 import { MessageDeliveryService } from "../services/messageDelivery/messageDelivery";
+import type { MessageSender } from "../services/messageDelivery/messageSender";
+import { SmtpMessageSender } from "../services/messageDelivery/smtpMessageSender";
 import { otp } from "../services/otp";
 import { JwtTokenGenerator } from "../services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../services/userPoolService";
@@ -59,6 +61,17 @@ export const createDefaultServer = async (
     new CryptoService(config.KMSConfig),
   );
 
+  // Use SMTP sender (e.g. MailHog) when SMTP_HOST is set, otherwise log to console
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = Number(process.env.SMTP_PORT ?? "1025");
+  const messageSender: MessageSender = smtpHost
+    ? new SmtpMessageSender(smtpHost, smtpPort)
+    : new ConsoleMessageSender();
+
+  if (smtpHost) {
+    logger.info(`Email delivery via SMTP: ${smtpHost}:${smtpPort}`);
+  }
+
   const services = {
     authorizationCodeStore: new InMemoryAuthorizationCodeStore(),
     clock,
@@ -66,7 +79,7 @@ export const createDefaultServer = async (
     config,
     messages: new MessagesService(
       triggers,
-      new MessageDeliveryService(new ConsoleMessageSender()),
+      new MessageDeliveryService(messageSender),
     ),
     otp,
     tokenGenerator: new JwtTokenGenerator(
