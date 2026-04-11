@@ -2,9 +2,11 @@ import type {
   AdminRespondToAuthChallengeRequest,
   AdminRespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import * as uuid from "uuid";
 import {
   CodeMismatchError,
   InvalidParameterError,
+  InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
@@ -89,6 +91,52 @@ export const AdminRespondToAuthChallenge =
         Password: req.ChallengeResponses.NEW_PASSWORD,
         UserLastModifiedDate: clock.get(),
         UserStatus: "CONFIRMED",
+      });
+    } else if (req.ChallengeName === "PASSWORD_VERIFIER") {
+      if (user.Password === undefined) {
+        throw new InvalidPasswordError();
+      }
+      if (
+        (userPool.options.MfaConfiguration === "OPTIONAL" &&
+          (user.MFAOptions ?? []).length > 0) ||
+        userPool.options.MfaConfiguration === "ON"
+      ) {
+        return {
+          ChallengeName:
+            user.PreferredMfaSetting === "SOFTWARE_TOKEN_MFA"
+              ? "SOFTWARE_TOKEN_MFA"
+              : "SMS_MFA",
+          ChallengeParameters: {
+            USER_ID_FOR_SRP: user.Username,
+          } as AdminRespondToAuthChallengeResponse["ChallengeParameters"],
+          Session: uuid.v4(),
+        };
+      }
+      if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+        return {
+          ChallengeName: "NEW_PASSWORD_REQUIRED",
+          ChallengeParameters: {
+            USER_ID_FOR_SRP: user.Username,
+            requiredAttributes: JSON.stringify([]),
+          } as AdminRespondToAuthChallengeResponse["ChallengeParameters"],
+          Session: uuid.v4(),
+        };
+      }
+    } else if (req.ChallengeName === "MFA_SETUP") {
+      if (!req.ChallengeResponses.SOFTWARE_TOKEN_MFA_CODE) {
+        throw new InvalidParameterError(
+          "Missing required parameter SOFTWARE_TOKEN_MFA_CODE",
+        );
+      }
+      const mfaSettingList = user.UserMFASettingList ?? [];
+      if (!mfaSettingList.includes("SOFTWARE_TOKEN_MFA")) {
+        mfaSettingList.push("SOFTWARE_TOKEN_MFA");
+      }
+      await userPool.saveUser(ctx, {
+        ...user,
+        UserMFASettingList: mfaSettingList,
+        PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+        UserLastModifiedDate: clock.get(),
       });
     } else if (req.ChallengeName === "CUSTOM_CHALLENGE") {
       if (!triggers.enabled("VerifyAuthChallengeResponse")) {
