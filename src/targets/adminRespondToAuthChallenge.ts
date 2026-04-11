@@ -1,6 +1,6 @@
 import type {
-  RespondToAuthChallengeRequest,
-  RespondToAuthChallengeResponse,
+  AdminRespondToAuthChallengeRequest,
+  AdminRespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
   CodeMismatchError,
@@ -11,23 +11,23 @@ import {
 import type { Services } from "../services";
 import type { Target } from "./Target";
 
-export type RespondToAuthChallengeTarget = Target<
-  RespondToAuthChallengeRequest,
-  RespondToAuthChallengeResponse
+export type AdminRespondToAuthChallengeTarget = Target<
+  AdminRespondToAuthChallengeRequest,
+  AdminRespondToAuthChallengeResponse
 >;
 
-type RespondToAuthChallengeService = Pick<
+type AdminRespondToAuthChallengeServices = Pick<
   Services,
   "clock" | "cognito" | "triggers" | "tokenGenerator"
 >;
 
-export const RespondToAuthChallenge =
+export const AdminRespondToAuthChallenge =
   ({
     clock,
     cognito,
     triggers,
     tokenGenerator,
-  }: RespondToAuthChallengeService): RespondToAuthChallengeTarget =>
+  }: AdminRespondToAuthChallengeServices): AdminRespondToAuthChallengeTarget =>
   async (ctx, req) => {
     if (!req.ChallengeResponses) {
       throw new InvalidParameterError(
@@ -41,7 +41,7 @@ export const RespondToAuthChallenge =
       throw new InvalidParameterError("Missing required parameter Session");
     }
 
-    const userPool = await cognito.getUserPoolForClientId(ctx, req.ClientId);
+    const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const userPoolClient = await cognito.getAppClient(ctx, req.ClientId);
 
     const user = await userPool.getUserByUsername(
@@ -84,7 +84,6 @@ export const RespondToAuthChallenge =
         );
       }
 
-      // TODO: validate the password?
       await userPool.saveUser(ctx, {
         ...user,
         Password: req.ChallengeResponses.NEW_PASSWORD,
@@ -102,7 +101,7 @@ export const RespondToAuthChallenge =
         clientId: req.ClientId,
         userAttributes: user.Attributes,
         username: user.Username,
-        userPoolId: userPool.options.Id,
+        userPoolId: req.UserPoolId,
         challengeAnswer: req.ChallengeResponses.ANSWER ?? "",
         clientMetadata: req.ClientMetadata,
       });
@@ -112,7 +111,7 @@ export const RespondToAuthChallenge =
       }
     } else {
       throw new UnsupportedError(
-        `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`,
+        `adminRespondToAuthChallenge with ChallengeName=${req.ChallengeName}`,
       );
     }
 
@@ -123,7 +122,7 @@ export const RespondToAuthChallenge =
         source: "PostAuthentication_Authentication",
         userAttributes: user.Attributes,
         username: user.Username,
-        userPoolId: userPool.options.Id,
+        userPoolId: req.UserPoolId,
       });
     }
 

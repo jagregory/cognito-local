@@ -110,6 +110,7 @@ export interface User {
   ConfirmationCode?: string;
   MFACode?: string;
   RefreshTokens: string[];
+  TOTPSecret?: string;
 
   /**
    * UnverifiedAttributeChanges is a list of attributes that have been requested to be changed

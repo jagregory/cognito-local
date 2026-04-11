@@ -271,6 +271,86 @@ const refreshTokenAuthFlow = async (
   };
 };
 
+const customAuthFlow = async (
+  ctx: Context,
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  userPoolClient: AppClient,
+  services: InitiateAuthServices,
+): Promise<InitiateAuthResponse> => {
+  if (!services.triggers.enabled("DefineAuthChallenge")) {
+    throw new UnsupportedError(
+      "CUSTOM_AUTH requires DefineAuthChallenge trigger",
+    );
+  }
+
+  if (!req.AuthParameters?.USERNAME) {
+    throw new InvalidParameterError("Missing required parameter USERNAME");
+  }
+
+  const user = await userPool.getUserByUsername(
+    ctx,
+    req.AuthParameters.USERNAME,
+  );
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  const defineResult = await services.triggers.defineAuthChallenge(ctx, {
+    clientId: req.ClientId,
+    userAttributes: user.Attributes,
+    username: user.Username,
+    userPoolId: userPool.options.Id,
+    session: [],
+    clientMetadata: req.ClientMetadata,
+  });
+
+  if (defineResult.failAuthentication) {
+    throw new NotAuthorizedError();
+  }
+
+  if (defineResult.issueTokens) {
+    const userGroups = await userPool.listUserGroupMembership(ctx, user);
+    const tokens = await services.tokenGenerator.generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "Authentication",
+    );
+    await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
+    return {
+      AuthenticationResult: tokens,
+    };
+  }
+
+  if (!services.triggers.enabled("CreateAuthChallenge")) {
+    throw new UnsupportedError(
+      "CUSTOM_AUTH requires CreateAuthChallenge trigger",
+    );
+  }
+
+  const challengeResult = await services.triggers.createAuthChallenge(ctx, {
+    clientId: req.ClientId,
+    userAttributes: user.Attributes,
+    username: user.Username,
+    userPoolId: userPool.options.Id,
+    challengeName: defineResult.challengeName ?? "CUSTOM_CHALLENGE",
+    session: [],
+    clientMetadata: req.ClientMetadata,
+  });
+
+  return {
+    ChallengeName: "CUSTOM_CHALLENGE",
+    ChallengeParameters: {
+      ...challengeResult.publicChallengeParameters,
+      USER_ID_FOR_SRP: user.Username,
+    },
+    Session: v4(),
+  };
+};
+
 export const InitiateAuth =
   (services: InitiateAuthServices): InitiateAuthTarget =>
   async (ctx, req) => {
@@ -293,6 +373,8 @@ export const InitiateAuth =
       req.AuthFlow === "REFRESH_TOKEN_AUTH"
     ) {
       return refreshTokenAuthFlow(ctx, req, userPool, userPoolClient, services);
+    } else if (req.AuthFlow === "CUSTOM_AUTH") {
+      return customAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else {
       throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
     }

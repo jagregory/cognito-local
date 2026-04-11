@@ -105,6 +105,71 @@ export const SignUp =
       username = sub;
     }
 
+    // Validate custom attributes against pool schema
+    if (req.UserAttributes) {
+      const schemaAttributes = userPool.options.SchemaAttributes ?? [];
+      for (const attr of req.UserAttributes) {
+        if (attr.Name.startsWith("custom:")) {
+          const schemaDef = schemaAttributes.find(
+            (s) => s.Name === attr.Name,
+          );
+          if (!schemaDef) {
+            throw new InvalidParameterError(
+              `user.${attr.Name}: Attribute does not exist in the schema.`,
+            );
+          }
+          if (
+            schemaDef.StringAttributeConstraints &&
+            attr.Value !== undefined
+          ) {
+            const { MinLength, MaxLength } =
+              schemaDef.StringAttributeConstraints;
+            if (MinLength && attr.Value.length < Number(MinLength)) {
+              throw new InvalidParameterError(
+                `user.${attr.Name}: String value is shorter than the minimum length.`,
+              );
+            }
+            if (MaxLength && attr.Value.length > Number(MaxLength)) {
+              throw new InvalidParameterError(
+                `user.${attr.Name}: String value is longer than the maximum length.`,
+              );
+            }
+          }
+          if (
+            schemaDef.NumberAttributeConstraints &&
+            attr.Value !== undefined
+          ) {
+            const num = Number(attr.Value);
+            const { MinValue, MaxValue } =
+              schemaDef.NumberAttributeConstraints;
+            if (MinValue && num < Number(MinValue)) {
+              throw new InvalidParameterError(
+                `user.${attr.Name}: Number value is less than the minimum value.`,
+              );
+            }
+            if (MaxValue && num > Number(MaxValue)) {
+              throw new InvalidParameterError(
+                `user.${attr.Name}: Number value is greater than the maximum value.`,
+              );
+            }
+          }
+        }
+      }
+      // Validate required attributes
+      for (const schemaDef of schemaAttributes) {
+        if (
+          schemaDef.Required &&
+          schemaDef.Name &&
+          !schemaDef.Name.startsWith("sub") &&
+          !attributesInclude(schemaDef.Name, req.UserAttributes)
+        ) {
+          throw new InvalidParameterError(
+            `Attributes did not conform to the schema: ${schemaDef.Name}: The attribute is required`,
+          );
+        }
+      }
+    }
+
     if (triggers.enabled("PreSignUp")) {
       const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
         await triggers.preSignUp(ctx, {

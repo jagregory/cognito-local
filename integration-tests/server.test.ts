@@ -134,10 +134,21 @@ describe("HTTP server", () => {
         "/any-user-pool/.well-known/openid-configuration",
       );
       expect(response.status).toEqual(200);
-      expect(response.body).toEqual({
+      expect(response.body).toMatchObject({
         id_token_signing_alg_values_supported: ["RS256"],
-        jwks_uri: `http://localhost:9229/any-user-pool/.well-known/jwks.json`,
-        issuer: `http://localhost:9229/any-user-pool`,
+        issuer: expect.stringContaining("/any-user-pool"),
+        jwks_uri: expect.stringContaining(
+          "/any-user-pool/.well-known/jwks.json",
+        ),
+        authorization_endpoint: expect.stringContaining("/oauth2/authorize"),
+        token_endpoint: expect.stringContaining("/oauth2/token"),
+        userinfo_endpoint: expect.stringContaining("/oauth2/userInfo"),
+        revocation_endpoint: expect.stringContaining("/oauth2/revoke"),
+        end_session_endpoint: expect.stringContaining("/logout"),
+        response_types_supported: ["code"],
+        subject_types_supported: ["public"],
+        scopes_supported: ["openid", "email", "phone", "profile"],
+        code_challenge_methods_supported: ["S256"],
       });
     });
   });

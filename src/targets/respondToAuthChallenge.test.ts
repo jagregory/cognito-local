@@ -228,6 +228,94 @@ describe("RespondToAuthChallenge target", () => {
     });
   });
 
+  describe("ChallengeName=SOFTWARE_TOKEN_MFA", () => {
+    const user = TDB.user({
+      MFACode: "123456",
+    });
+
+    beforeEach(() => {
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+    });
+
+    it("throws if SOFTWARE_TOKEN_MFA_CODE missing", async () => {
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "SOFTWARE_TOKEN_MFA",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+          },
+          Session: "Session",
+        }),
+      ).rejects.toEqual(
+        new InvalidParameterError(
+          "Missing required parameter SOFTWARE_TOKEN_MFA_CODE",
+        ),
+      );
+    });
+
+    describe("when code matches", () => {
+      it("updates the user and removes the MFACode", async () => {
+        const newDate = clock.advanceBy(1200);
+
+        await respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "SOFTWARE_TOKEN_MFA",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+            SOFTWARE_TOKEN_MFA_CODE: "123456",
+          },
+          Session: "Session",
+        });
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+          ...user,
+          MFACode: undefined,
+          UserLastModifiedDate: newDate,
+        });
+      });
+
+      it("generates tokens", async () => {
+        mockTokenGenerator.generate.mockResolvedValue({
+          AccessToken: "access",
+          IdToken: "id",
+          RefreshToken: "refresh",
+        });
+        mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
+
+        const output = await respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "SOFTWARE_TOKEN_MFA",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+            SOFTWARE_TOKEN_MFA_CODE: "123456",
+          },
+          Session: "Session",
+        });
+
+        expect(output.AuthenticationResult?.AccessToken).toEqual("access");
+        expect(output.AuthenticationResult?.IdToken).toEqual("id");
+        expect(output.AuthenticationResult?.RefreshToken).toEqual("refresh");
+      });
+    });
+
+    describe("when code is incorrect", () => {
+      it("throws an error", async () => {
+        await expect(
+          respondToAuthChallenge(TestContext, {
+            ClientId: userPoolClient.ClientId,
+            ChallengeName: "SOFTWARE_TOKEN_MFA",
+            ChallengeResponses: {
+              USERNAME: user.Username,
+              SOFTWARE_TOKEN_MFA_CODE: "wrong",
+            },
+            Session: "Session",
+          }),
+        ).rejects.toBeInstanceOf(CodeMismatchError);
+      });
+    });
+  });
+
   describe("ChallengeName=NEW_PASSWORD_REQUIRED", () => {
     const user = TDB.user();
 

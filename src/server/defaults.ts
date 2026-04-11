@@ -6,6 +6,7 @@ import {
   MessagesService,
   TriggersService,
 } from "../services";
+import { InMemoryAuthorizationCodeStore } from "../services/authorizationCodeStore";
 import { CognitoServiceFactoryImpl } from "../services/cognitoService";
 import { CryptoService } from "../services/crypto";
 import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
@@ -58,24 +59,28 @@ export const createDefaultServer = async (
     new CryptoService(config.KMSConfig),
   );
 
-  return createServer(
-    Router({
-      clock,
-      cognito: cognitoClient,
-      config,
-      messages: new MessagesService(
-        triggers,
-        new MessageDeliveryService(new ConsoleMessageSender()),
-      ),
-      otp,
-      tokenGenerator: new JwtTokenGenerator(
-        clock,
-        triggers,
-        config.TokenConfig,
-      ),
+  const services = {
+    authorizationCodeStore: new InMemoryAuthorizationCodeStore(),
+    clock,
+    cognito: cognitoClient,
+    config,
+    messages: new MessagesService(
       triggers,
-    }),
+      new MessageDeliveryService(new ConsoleMessageSender()),
+    ),
+    otp,
+    tokenGenerator: new JwtTokenGenerator(
+      clock,
+      triggers,
+      config.TokenConfig,
+    ),
+    triggers,
+  };
+
+  return createServer(
+    Router(services),
     logger,
     config.ServerConfig,
+    services,
   );
 };

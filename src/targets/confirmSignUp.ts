@@ -3,12 +3,17 @@ import type {
   ConfirmSignUpResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {
+  AliasExistsError,
   CodeMismatchError,
   ExpiredCodeError,
   NotAuthorizedError,
 } from "../errors";
 import type { Services } from "../services";
-import { attribute, attributesAppend } from "../services/userPoolService";
+import {
+  attribute,
+  attributesAppend,
+  attributeValue,
+} from "../services/userPoolService";
 import type { Target } from "./Target";
 
 export type ConfirmSignUpTarget = Target<
@@ -43,6 +48,34 @@ export const ConfirmSignUp =
       ConfirmationCode: undefined,
       UserLastModifiedDate: clock.get(),
     };
+
+    // Handle alias attributes (email, phone_number, preferred_username)
+    if (userPool.options.AliasAttributes?.length) {
+      const allUsers = await userPool.listUsers(ctx);
+      for (const aliasAttr of userPool.options.AliasAttributes) {
+        const aliasValue = attributeValue(aliasAttr, updatedUser.Attributes);
+        if (!aliasValue) continue;
+
+        const conflictingUser = allUsers.find(
+          (u) =>
+            u.Username !== updatedUser.Username &&
+            attributeValue(aliasAttr, u.Attributes) === aliasValue,
+        );
+        if (conflictingUser) {
+          if (!req.ForceAliasCreation) {
+            throw new AliasExistsError();
+          }
+          // Remove the conflicting attribute from the other user
+          await userPool.saveUser(ctx, {
+            ...conflictingUser,
+            Attributes: conflictingUser.Attributes.filter(
+              (a) => a.Name !== aliasAttr,
+            ),
+            UserLastModifiedDate: clock.get(),
+          });
+        }
+      }
+    }
 
     await userPool.saveUser(ctx, updatedUser);
 
