@@ -59,6 +59,9 @@ export const user = (partial?: Partial<User>): User => ({
   UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date(),
   UserStatus: partial?.UserStatus ?? "CONFIRMED",
   Username: partial?.Username ?? id("User"),
+  PreferredMfaSetting: partial?.PreferredMfaSetting ?? undefined,
+  UserMFASettingList: partial?.UserMFASettingList ?? undefined,
+  TOTPSecret: partial?.TOTPSecret ?? undefined,
 });
 
 export const userPool = (partial?: Partial<UserPool>): UserPool => {
