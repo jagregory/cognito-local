@@ -1,23 +1,20 @@
-FROM node:22.13.1-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# dependencies
-ADD package.json yarn.lock ./
-RUN yarn --frozen-lockfile
+ADD package.json package-lock.json ./
+RUN npm ci
 
-# library code
 ADD src src
+ADD tsconfig.json tsconfig.build.json ./
 
-# bundle
-RUN yarn esbuild src/bin/start.ts --outdir=lib --platform=node --target=node22 --bundle
+RUN npx esbuild src/bin/start.ts --outdir=lib --platform=node --target=node22 --bundle
 
-FROM node:22.13.1-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY --from=builder /app/lib .
 
-# bindings
 EXPOSE 9229
-ENV HOST 0.0.0.0
-ENV PORT 9229
+ENV HOST=0.0.0.0
+ENV PORT=9229
 VOLUME /app/.cognito
 ENTRYPOINT ["node", "/app/start.js"]
