@@ -6,6 +6,47 @@ import type { Services } from "../services";
 import type { AppClient } from "../services/appClient";
 import { attributeValue } from "../services/userPoolService";
 
+// Escape untrusted values before interpolating them into HTML attribute
+// contexts. Prevents reflected XSS via query params echoed into the login form.
+function escapeHtml(value: string | undefined): string {
+  if (!value) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Extracts the presented client secret from either HTTP Basic auth or the
+// request body (client_secret parameter), per RFC 6749 §2.3.1.
+function extractClientSecret(req: any): string | undefined {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Basic ")) {
+    const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
+    const idx = decoded.indexOf(":");
+    return idx === -1 ? undefined : decoded.slice(idx + 1);
+  }
+  return req.body.client_secret;
+}
+
+// For confidential clients (those with a ClientSecret), require the request
+// to present the matching secret. Returns true if the check passes or the
+// client is public; writes the error response and returns false otherwise.
+function authenticateConfidentialClient(
+  req: any,
+  res: any,
+  userPoolClient: AppClient,
+): boolean {
+  if (!userPoolClient.ClientSecret) return true;
+  const presented = extractClientSecret(req);
+  if (presented !== userPoolClient.ClientSecret) {
+    res.status(401).json({ error: "invalid_client" });
+    return false;
+  }
+  return true;
+}
+
 export const createOAuth2Router = (services: Services): ExpressRouter => {
   const router = ExpressRouter();
 
@@ -23,21 +64,17 @@ export const createOAuth2Router = (services: Services): ExpressRouter => {
     } = req.query as Record<string, string>;
 
     if (!client_id) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_request",
-          error_description: "client_id is required",
-        });
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "client_id is required",
+      });
       return;
     }
     if (response_type !== "code") {
-      res
-        .status(400)
-        .json({
-          error: "unsupported_response_type",
-          error_description: "Only code response type is supported",
-        });
+      res.status(400).json({
+        error: "unsupported_response_type",
+        error_description: "Only code response type is supported",
+      });
       return;
     }
 
@@ -60,17 +97,16 @@ export const createOAuth2Router = (services: Services): ExpressRouter => {
 
     if (redirect_uri && userPoolClient.CallbackURLs?.length) {
       if (!userPoolClient.CallbackURLs.includes(redirect_uri)) {
-        res
-          .status(400)
-          .json({
-            error: "invalid_request",
-            error_description: "redirect_uri mismatch",
-          });
+        res.status(400).json({
+          error: "invalid_request",
+          error_description: "redirect_uri mismatch",
+        });
         return;
       }
     }
 
-    // Render minimal login form
+    // Render minimal login form. All query-param values are echoed as hidden
+    // inputs, so every one must go through escapeHtml to prevent reflected XSS.
     res.type("html").send(`<!DOCTYPE html>
 <html><head><title>Sign In</title>
 <style>body{font-family:system-ui;max-width:400px;margin:80px auto;padding:20px}
@@ -79,14 +115,14 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
 </head><body>
 <h2>Sign In</h2>
 <form method="POST" action="/oauth2/authorize">
-<input type="hidden" name="client_id" value="${client_id ?? ""}"/>
-<input type="hidden" name="redirect_uri" value="${redirect_uri ?? ""}"/>
-<input type="hidden" name="response_type" value="${response_type ?? ""}"/>
-<input type="hidden" name="scope" value="${scope ?? ""}"/>
-<input type="hidden" name="state" value="${state ?? ""}"/>
-<input type="hidden" name="code_challenge" value="${code_challenge ?? ""}"/>
-<input type="hidden" name="code_challenge_method" value="${code_challenge_method ?? ""}"/>
-<input type="hidden" name="nonce" value="${nonce ?? ""}"/>
+<input type="hidden" name="client_id" value="${escapeHtml(client_id)}"/>
+<input type="hidden" name="redirect_uri" value="${escapeHtml(redirect_uri)}"/>
+<input type="hidden" name="response_type" value="${escapeHtml(response_type)}"/>
+<input type="hidden" name="scope" value="${escapeHtml(scope)}"/>
+<input type="hidden" name="state" value="${escapeHtml(state)}"/>
+<input type="hidden" name="code_challenge" value="${escapeHtml(code_challenge)}"/>
+<input type="hidden" name="code_challenge_method" value="${escapeHtml(code_challenge_method)}"/>
+<input type="hidden" name="nonce" value="${escapeHtml(nonce)}"/>
 <label>Username<input type="text" name="username" required/></label>
 <label>Password<input type="password" name="password" required/></label>
 <button type="submit">Sign In</button>
@@ -107,7 +143,7 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       password,
     } = req.body;
 
-    if (!client_id || !username || !password) {
+    if (!client_id || !username || !password || !redirect_uri) {
       res.status(400).json({ error: "invalid_request" });
       return;
     }
@@ -127,6 +163,31 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       return;
     }
 
+    // Re-check redirect_uri against the registered CallbackURLs. The GET
+    // handler does this, but a direct POST could otherwise bypass the
+    // allow-list and have a code sent to an attacker-controlled URL.
+    if (
+      userPoolClient.CallbackURLs?.length &&
+      !userPoolClient.CallbackURLs.includes(redirect_uri)
+    ) {
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "redirect_uri mismatch",
+      });
+      return;
+    }
+
+    let redirectUrl: URL;
+    try {
+      redirectUrl = new URL(redirect_uri);
+    } catch {
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "redirect_uri is not a valid URL",
+      });
+      return;
+    }
+
     const userPool = await services.cognito.getUserPoolForClientId(
       { logger: req.log },
       client_id,
@@ -137,7 +198,7 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       username,
     );
     if (!user || user.Password !== password) {
-      // Re-render form with error
+      // Re-render form with error. Every echoed value is HTML-escaped.
       res
         .status(401)
         .type("html")
@@ -151,14 +212,14 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
 <h2>Sign In</h2>
 <p class="error">Incorrect username or password.</p>
 <form method="POST" action="/oauth2/authorize">
-<input type="hidden" name="client_id" value="${client_id}"/>
-<input type="hidden" name="redirect_uri" value="${redirect_uri ?? ""}"/>
+<input type="hidden" name="client_id" value="${escapeHtml(client_id)}"/>
+<input type="hidden" name="redirect_uri" value="${escapeHtml(redirect_uri)}"/>
 <input type="hidden" name="response_type" value="code"/>
-<input type="hidden" name="scope" value="${scope ?? ""}"/>
-<input type="hidden" name="state" value="${state ?? ""}"/>
-<input type="hidden" name="code_challenge" value="${code_challenge ?? ""}"/>
-<input type="hidden" name="code_challenge_method" value="${code_challenge_method ?? ""}"/>
-<input type="hidden" name="nonce" value="${nonce ?? ""}"/>
+<input type="hidden" name="scope" value="${escapeHtml(scope)}"/>
+<input type="hidden" name="state" value="${escapeHtml(state)}"/>
+<input type="hidden" name="code_challenge" value="${escapeHtml(code_challenge)}"/>
+<input type="hidden" name="code_challenge_method" value="${escapeHtml(code_challenge_method)}"/>
+<input type="hidden" name="nonce" value="${escapeHtml(nonce)}"/>
 <label>Username<input type="text" name="username" required/></label>
 <label>Password<input type="password" name="password" required/></label>
 <button type="submit">Sign In</button>
@@ -180,7 +241,6 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       nonce,
     });
 
-    const redirectUrl = new URL(redirect_uri);
     redirectUrl.searchParams.set("code", code);
     if (state) {
       redirectUrl.searchParams.set("state", state);
@@ -214,10 +274,21 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
 
     let decoded: jwt.JwtPayload;
     try {
-      decoded = jwt.verify(token, PublicKey.pem, {
+      const verified = jwt.verify(token, PublicKey.pem, {
         algorithms: ["RS256"],
-      }) as jwt.JwtPayload;
+      });
+      if (typeof verified !== "object" || verified === null) {
+        res.status(401).json({ error: "invalid_token" });
+        return;
+      }
+      decoded = verified as jwt.JwtPayload;
     } catch {
+      res.status(401).json({ error: "invalid_token" });
+      return;
+    }
+
+    // Cognito's userInfo endpoint only accepts access tokens, not ID tokens.
+    if (decoded.token_use !== "access") {
       res.status(401).json({ error: "invalid_token" });
       return;
     }
@@ -326,6 +397,8 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       return;
     }
 
+    if (!authenticateConfidentialClient(req, res, userPoolClient)) return;
+
     const userPool = await services.cognito.getUserPoolForClientId(
       { logger: req.log },
       client_id,
@@ -353,12 +426,10 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
     const { client_id, logout_uri } = req.query as Record<string, string>;
 
     if (!client_id || !logout_uri) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_request",
-          error_description: "client_id and logout_uri are required",
-        });
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "client_id and logout_uri are required",
+      });
       return;
     }
 
@@ -381,12 +452,10 @@ button{width:100%;padding:10px;margin-top:12px;background:#FF6B35;color:#fff;bor
       userPoolClient.LogoutURLs?.length &&
       !userPoolClient.LogoutURLs.includes(logout_uri)
     ) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_request",
-          error_description: "logout_uri not registered",
-        });
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "logout_uri not registered",
+      });
       return;
     }
 
@@ -404,50 +473,54 @@ async function handleAuthorizationCodeGrant(
   const { code, redirect_uri, client_id, code_verifier } = req.body;
 
   if (!code) {
-    res
-      .status(400)
-      .json({
-        error: "invalid_request",
-        error_description: "code is required",
-      });
+    res.status(400).json({
+      error: "invalid_request",
+      error_description: "code is required",
+    });
     return;
   }
 
-  const codeData = services.authorizationCodeStore.consume(code);
+  // Non-destructive lookup: validate everything before consuming the code, so
+  // a request with a bad PKCE verifier or wrong client secret cannot burn a
+  // legitimate code that a real client is about to redeem.
+  const codeData = services.authorizationCodeStore.lookup(code);
   if (!codeData) {
-    res
-      .status(400)
-      .json({
-        error: "invalid_grant",
-        error_description: "Invalid or expired authorization code",
-      });
+    res.status(400).json({
+      error: "invalid_grant",
+      error_description: "Invalid or expired authorization code",
+    });
     return;
   }
 
-  // Validate redirect_uri matches
+  // Bind the code to the client it was issued to. If the request presents a
+  // client_id, it must match; otherwise the code's clientId is used. This
+  // prevents a code minted for client A from being redeemed as client B.
+  if (client_id && client_id !== codeData.clientId) {
+    res.status(400).json({
+      error: "invalid_grant",
+      error_description: "client_id mismatch",
+    });
+    return;
+  }
+
   if (
     redirect_uri &&
     codeData.redirectUri &&
     redirect_uri !== codeData.redirectUri
   ) {
-    res
-      .status(400)
-      .json({
-        error: "invalid_grant",
-        error_description: "redirect_uri mismatch",
-      });
+    res.status(400).json({
+      error: "invalid_grant",
+      error_description: "redirect_uri mismatch",
+    });
     return;
   }
 
-  // PKCE validation
   if (codeData.codeChallenge) {
     if (!code_verifier) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_grant",
-          error_description: "code_verifier is required",
-        });
+      res.status(400).json({
+        error: "invalid_grant",
+        error_description: "code_verifier is required",
+      });
       return;
     }
 
@@ -457,23 +530,19 @@ async function handleAuthorizationCodeGrant(
       .digest("base64url");
 
     if (expectedChallenge !== codeData.codeChallenge) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_grant",
-          error_description: "PKCE code_verifier validation failed",
-        });
+      res.status(400).json({
+        error: "invalid_grant",
+        error_description: "PKCE code_verifier validation failed",
+      });
       return;
     }
   }
 
-  // Authenticate client if secret exists
-  const resolvedClientId = client_id ?? codeData.clientId;
   let userPoolClient: AppClient | null;
   try {
     userPoolClient = await services.cognito.getAppClient(
       { logger: req.log },
-      resolvedClientId,
+      codeData.clientId,
     );
   } catch {
     userPoolClient = null;
@@ -485,22 +554,16 @@ async function handleAuthorizationCodeGrant(
   }
 
   if (userPoolClient.ClientSecret) {
-    const authHeader = req.headers.authorization;
-    let clientSecret: string | undefined;
-
-    if (authHeader?.startsWith("Basic ")) {
-      const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
-      const parts = decoded.split(":");
-      clientSecret = parts[1];
-    } else {
-      clientSecret = req.body.client_secret;
-    }
-
-    if (clientSecret !== userPoolClient.ClientSecret) {
+    const presented = extractClientSecret(req);
+    if (presented !== userPoolClient.ClientSecret) {
       res.status(401).json({ error: "invalid_client" });
       return;
     }
   }
+
+  // All validations passed — now consume (delete) the code. A successful
+  // lookup above guarantees consume() returns the same data here.
+  services.authorizationCodeStore.consume(code);
 
   const userPool = await services.cognito.getUserPool(
     { logger: req.log },
@@ -570,6 +633,14 @@ async function handleRefreshTokenGrant(
   if (!userPoolClient) {
     res.status(400).json({ error: "invalid_client" });
     return;
+  }
+
+  if (userPoolClient.ClientSecret) {
+    const presented = extractClientSecret(req);
+    if (presented !== userPoolClient.ClientSecret) {
+      res.status(401).json({ error: "invalid_client" });
+      return;
+    }
   }
 
   const userPool = await services.cognito.getUserPoolForClientId(

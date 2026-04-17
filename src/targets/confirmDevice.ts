@@ -35,11 +35,7 @@ export const ConfirmDevice =
     const now = clock.get();
     const device = {
       DeviceKey: req.DeviceKey,
-      DeviceAttributes: req.DeviceSecretVerifierConfig
-        ? [
-            { Name: "device_name", Value: req.DeviceName },
-          ]
-        : [{ Name: "device_name", Value: req.DeviceName }],
+      DeviceAttributes: [{ Name: "device_name", Value: req.DeviceName }],
       DeviceCreateDate: now,
       DeviceLastModifiedDate: now,
       DeviceLastAuthenticatedDate: now,

@@ -13,6 +13,10 @@ export interface AuthorizationCodeData {
 
 export interface AuthorizationCodeStore {
   save(code: string, data: AuthorizationCodeData): void;
+  // Non-destructive lookup — returns code data without deleting it. Use this
+  // to validate redirect_uri / PKCE / client authentication before consuming,
+  // so a bad verifier cannot be used to invalidate a legitimate code.
+  lookup(code: string): AuthorizationCodeData | null;
   consume(code: string): AuthorizationCodeData | null;
 }
 
@@ -29,6 +33,16 @@ export class InMemoryAuthorizationCodeStore implements AuthorizationCodeStore {
       data,
       expiresAt: Date.now() + CODE_TTL_MS,
     });
+  }
+
+  lookup(code: string): AuthorizationCodeData | null {
+    const entry = this.codes.get(code);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      this.codes.delete(code);
+      return null;
+    }
+    return entry.data;
   }
 
   consume(code: string): AuthorizationCodeData | null {

@@ -106,13 +106,11 @@ export const SignUp =
     }
 
     // Validate custom attributes against pool schema
+    const schemaAttributes = userPool.options.SchemaAttributes ?? [];
     if (req.UserAttributes) {
-      const schemaAttributes = userPool.options.SchemaAttributes ?? [];
       for (const attr of req.UserAttributes) {
         if (attr.Name.startsWith("custom:")) {
-          const schemaDef = schemaAttributes.find(
-            (s) => s.Name === attr.Name,
-          );
+          const schemaDef = schemaAttributes.find((s) => s.Name === attr.Name);
           if (!schemaDef) {
             throw new InvalidParameterError(
               `user.${attr.Name}: Attribute does not exist in the schema.`,
@@ -140,8 +138,12 @@ export const SignUp =
             attr.Value !== undefined
           ) {
             const num = Number(attr.Value);
-            const { MinValue, MaxValue } =
-              schemaDef.NumberAttributeConstraints;
+            if (Number.isNaN(num)) {
+              throw new InvalidParameterError(
+                `user.${attr.Name}: Value is not a valid number.`,
+              );
+            }
+            const { MinValue, MaxValue } = schemaDef.NumberAttributeConstraints;
             if (MinValue && num < Number(MinValue)) {
               throw new InvalidParameterError(
                 `user.${attr.Name}: Number value is less than the minimum value.`,
@@ -155,18 +157,19 @@ export const SignUp =
           }
         }
       }
-      // Validate required attributes
-      for (const schemaDef of schemaAttributes) {
-        if (
-          schemaDef.Required &&
-          schemaDef.Name &&
-          !schemaDef.Name.startsWith("sub") &&
-          !attributesInclude(schemaDef.Name, req.UserAttributes)
-        ) {
-          throw new InvalidParameterError(
-            `Attributes did not conform to the schema: ${schemaDef.Name}: The attribute is required`,
-          );
-        }
+    }
+    // Validate required attributes against the final attribute set (includes
+    // auto-added ones like email when UsernameAttributes=[email]).
+    for (const schemaDef of schemaAttributes) {
+      if (
+        schemaDef.Required &&
+        schemaDef.Name &&
+        !schemaDef.Name.startsWith("sub") &&
+        !attributesInclude(schemaDef.Name, attributes)
+      ) {
+        throw new InvalidParameterError(
+          `Attributes did not conform to the schema: ${schemaDef.Name}: The attribute is required`,
+        );
       }
     }
 
