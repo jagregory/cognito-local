@@ -408,6 +408,115 @@ describe("InitiateAuth target", () => {
         });
       });
 
+      describe("when user is TOTP-enrolled but pool MfaConfiguration is unset", () => {
+        it("still issues SOFTWARE_TOKEN_MFA challenge", async () => {
+          // An enrolled user's UserMFASettingList is authoritative: MFA
+          // must fire even when the pool has no MfaConfiguration and no
+          // pool-level SoftwareTokenMfaConfiguration flag.
+          const user = TDB.user({
+            UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+            PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+            SoftwareTokenMfaConfiguration: { Secret: "s", Verified: true },
+          });
+          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+          const output = await initiateAuth(TestContext, {
+            ClientId: userPoolClient.ClientId,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: user.Username,
+              PASSWORD: user.Password,
+            },
+          });
+
+          expect(output.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+          expect(output.AuthenticationResult).toBeUndefined();
+        });
+      });
+
+      describe("when user has only SOFTWARE_TOKEN_MFA", () => {
+        let user: User;
+
+        beforeEach(() => {
+          mockUserPoolService.options.MfaConfiguration = "OPTIONAL";
+          mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+            Enabled: true,
+          };
+          user = TDB.user({
+            UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+            SoftwareTokenMfaConfiguration: {
+              Secret: "SECRET",
+              Verified: true,
+              FriendlyDeviceName: "Phone",
+            },
+          });
+          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+        });
+
+        it("returns SOFTWARE_TOKEN_MFA challenge", async () => {
+          const output = await initiateAuth(TestContext, {
+            ClientId: userPoolClient.ClientId,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: user.Username,
+              PASSWORD: user.Password,
+            },
+          });
+
+          expect(output.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+          expect(output.ChallengeParameters).toEqual({
+            USER_ID_FOR_SRP: user.Username,
+            FRIENDLY_DEVICE_NAME: "Phone",
+          });
+          expect(output.Session).toMatch(UUID);
+          expect(mockMessages.deliver).not.toHaveBeenCalled();
+        });
+      });
+
+      describe("when user has both SMS_MFA and SOFTWARE_TOKEN_MFA", () => {
+        let user: User;
+
+        beforeEach(() => {
+          mockUserPoolService.options.MfaConfiguration = "OPTIONAL";
+          mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+            Enabled: true,
+          };
+          user = TDB.user({
+            Attributes: [{ Name: "phone_number", Value: "0411000111" }],
+            MFAOptions: [
+              { DeliveryMedium: "SMS", AttributeName: "phone_number" },
+            ],
+            UserMFASettingList: ["SMS_MFA", "SOFTWARE_TOKEN_MFA"],
+            SoftwareTokenMfaConfiguration: {
+              Secret: "SECRET",
+              Verified: true,
+            },
+          });
+          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+        });
+
+        it("returns SELECT_MFA_TYPE challenge", async () => {
+          const output = await initiateAuth(TestContext, {
+            ClientId: userPoolClient.ClientId,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: user.Username,
+              PASSWORD: user.Password,
+            },
+          });
+
+          expect(output.ChallengeName).toEqual("SELECT_MFA_TYPE");
+          expect(output.ChallengeParameters?.USER_ID_FOR_SRP).toEqual(
+            user.Username,
+          );
+          expect(
+            JSON.parse(output.ChallengeParameters?.MFAS_CAN_CHOOSE ?? "[]"),
+          ).toEqual(["SMS_MFA", "SOFTWARE_TOKEN_MFA"]);
+          expect(output.Session).toMatch(UUID);
+          expect(mockMessages.deliver).not.toHaveBeenCalled();
+        });
+      });
+
       describe("when MFA is OFF", () => {
         const user = TDB.user();
 

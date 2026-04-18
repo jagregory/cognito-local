@@ -1,6 +1,15 @@
-import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  type MockedObject,
+  vi,
+} from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
+import { newMockMessages } from "../__tests__/mockMessages";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -11,8 +20,9 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import type { Triggers, UserPoolService } from "../services";
+import type { Messages, Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
+import { generateSecret, generate as genTotp } from "../services/totp";
 import {
   RespondToAuthChallenge,
   type RespondToAuthChallengeTarget,
@@ -25,6 +35,8 @@ describe("RespondToAuthChallenge target", () => {
   let mockTokenGenerator: MockedObject<TokenGenerator>;
   let mockTriggers: MockedObject<Triggers>;
   let mockUserPoolService: MockedObject<UserPoolService>;
+  let mockMessages: MockedObject<Messages>;
+  let mockOtp: Mock<() => string>;
   let clock: ClockFake;
   const userPoolClient = TDB.appClient();
 
@@ -35,6 +47,8 @@ describe("RespondToAuthChallenge target", () => {
     mockUserPoolService = newMockUserPoolService({
       Id: userPoolClient.UserPoolId,
     });
+    mockMessages = newMockMessages();
+    mockOtp = vi.fn().mockReturnValue("123456");
 
     const mockCognitoService = newMockCognitoService(mockUserPoolService);
     mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
@@ -42,6 +56,8 @@ describe("RespondToAuthChallenge target", () => {
     respondToAuthChallenge = RespondToAuthChallenge({
       clock,
       cognito: mockCognitoService,
+      messages: mockMessages,
+      otp: mockOtp,
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
     });
@@ -335,6 +351,127 @@ describe("RespondToAuthChallenge target", () => {
           },
         );
       });
+    });
+  });
+
+  describe("SOFTWARE_TOKEN_MFA challenge", () => {
+    const secret = generateSecret();
+
+    it("issues tokens when code matches verified secret", async () => {
+      const user = TDB.user({
+        UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+        SoftwareTokenMfaConfiguration: { Secret: secret, Verified: true },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
+      mockTokenGenerator.generate.mockResolvedValue({
+        AccessToken: "a",
+        IdToken: "i",
+        RefreshToken: "r",
+      });
+      const result = await respondToAuthChallenge(TestContext, {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "SOFTWARE_TOKEN_MFA",
+        Session: "sess",
+        ChallengeResponses: {
+          USERNAME: user.Username,
+          SOFTWARE_TOKEN_MFA_CODE: genTotp(secret),
+        },
+      });
+
+      expect(result.AuthenticationResult?.AccessToken).toEqual("a");
+    });
+
+    it("rejects an incorrect code", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: { Secret: secret, Verified: true },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "SOFTWARE_TOKEN_MFA",
+          Session: "sess",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+            SOFTWARE_TOKEN_MFA_CODE: "000000",
+          },
+        }),
+      ).rejects.toBeInstanceOf(CodeMismatchError);
+    });
+  });
+
+  describe("SELECT_MFA_TYPE challenge", () => {
+    it("routes ANSWER=SOFTWARE_TOKEN_MFA to a TOTP challenge", async () => {
+      const user = TDB.user({
+        UserMFASettingList: ["SMS_MFA", "SOFTWARE_TOKEN_MFA"],
+        SoftwareTokenMfaConfiguration: {
+          Secret: "S",
+          Verified: true,
+          FriendlyDeviceName: "Phone",
+        },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+      const result = await respondToAuthChallenge(TestContext, {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "SELECT_MFA_TYPE",
+        Session: "sess",
+        ChallengeResponses: {
+          USERNAME: user.Username,
+          ANSWER: "SOFTWARE_TOKEN_MFA",
+        },
+      });
+
+      expect(result.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+      expect(result.ChallengeParameters).toMatchObject({
+        USER_ID_FOR_SRP: user.Username,
+        FRIENDLY_DEVICE_NAME: "Phone",
+      });
+    });
+
+    it("routes ANSWER=SMS_MFA to SMS challenge and sends code", async () => {
+      const user = TDB.user({
+        Attributes: [{ Name: "phone_number", Value: "0411000111" }],
+        MFAOptions: [{ DeliveryMedium: "SMS", AttributeName: "phone_number" }],
+        UserMFASettingList: ["SMS_MFA", "SOFTWARE_TOKEN_MFA"],
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+      const result = await respondToAuthChallenge(TestContext, {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "SELECT_MFA_TYPE",
+        Session: "sess",
+        ChallengeResponses: {
+          USERNAME: user.Username,
+          ANSWER: "SMS_MFA",
+        },
+      });
+
+      expect(result.ChallengeName).toEqual("SMS_MFA");
+      expect(mockMessages.deliver).toHaveBeenCalled();
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+        TestContext,
+        expect.objectContaining({ MFACode: "123456" }),
+      );
+    });
+
+    it("rejects an unknown ANSWER", async () => {
+      const user = TDB.user();
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "SELECT_MFA_TYPE",
+          Session: "sess",
+          ChallengeResponses: {
+            USERNAME: user.Username,
+            ANSWER: "BOGUS",
+          },
+        }),
+      ).rejects.toBeInstanceOf(InvalidParameterError);
     });
   });
 });

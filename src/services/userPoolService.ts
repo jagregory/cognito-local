@@ -117,6 +117,16 @@ export interface User {
    * before they can be applied to the user.
    */
   UnverifiedAttributeChanges?: AttributeListType;
+
+  /**
+   * SoftwareTokenMfaConfiguration stores the user's TOTP secret and verification
+   * state. Internal only — never returned by GetUser / AdminGetUser responses.
+   */
+  SoftwareTokenMfaConfiguration?: {
+    Secret: string;
+    Verified: boolean;
+    FriendlyDeviceName?: string;
+  };
 }
 
 export interface Group {
@@ -154,6 +164,9 @@ export interface Group {
 // just use the types from the sdk, but make Id required
 export type UserPool = UserPoolType & {
   Id: string;
+  SoftwareTokenMfaConfiguration?: {
+    Enabled: boolean;
+  };
 };
 
 export interface UserPoolService {
