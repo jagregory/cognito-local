@@ -52,5 +52,14 @@ describe(
 
       expect(response.SecretCode).toMatch(/^[A-Z2-7]+=*$/);
     });
+
+    it("returns InvalidParameterException when called with neither AccessToken nor Session", async () => {
+      const client = Cognito();
+      await expect(
+        client.associateSoftwareToken({}).promise(),
+      ).rejects.toMatchObject({
+        code: "InvalidParameterException",
+      });
+    });
   }),
 );

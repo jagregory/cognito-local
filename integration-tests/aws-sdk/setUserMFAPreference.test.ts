@@ -108,7 +108,10 @@ describe(
             SoftwareTokenMfaSettings: { Enabled: true },
           })
           .promise(),
-      ).rejects.toThrow(/not verified/);
+      ).rejects.toMatchObject({
+        code: "InvalidParameterException",
+        message: "User has not verified software token MFA",
+      });
     });
   }),
 );

@@ -150,6 +150,74 @@ describe(
         .promise();
 
       expect(response.AuthenticationResult?.AccessToken).toBeDefined();
+
+      // wrong TOTP code surfaces as CodeMismatchException through the SDK
+      const nextChallenge = await client
+        .initiateAuth({
+          ClientId: clientId,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: { USERNAME: "abc", PASSWORD: "Password1!" },
+        })
+        .promise();
+
+      await expect(
+        client
+          .respondToAuthChallenge({
+            ClientId: clientId,
+            ChallengeName: "SOFTWARE_TOKEN_MFA",
+            Session: nextChallenge.Session!,
+            ChallengeResponses: {
+              USERNAME: "abc",
+              SOFTWARE_TOKEN_MFA_CODE: "000000",
+            },
+          })
+          .promise(),
+      ).rejects.toMatchObject({
+        code: "CodeMismatchException",
+        message: "Incorrect confirmation code",
+      });
+    });
+
+    it("rejects SELECT_MFA_TYPE with an unknown ANSWER", async () => {
+      const client = Cognito();
+      const pool = await client.createUserPool({ PoolName: "test" }).promise();
+      const userPoolId = pool.UserPool?.Id!;
+      const upc = await client
+        .createUserPoolClient({ UserPoolId: userPoolId, ClientName: "test" })
+        .promise();
+      await client
+        .adminCreateUser({
+          DesiredDeliveryMediums: ["EMAIL"],
+          TemporaryPassword: "def",
+          UserAttributes: [{ Name: "email", Value: "a@example.com" }],
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+      await client
+        .adminSetUserPassword({
+          Password: "Password1!",
+          Permanent: true,
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+
+      await expect(
+        client
+          .respondToAuthChallenge({
+            ClientId: upc.UserPoolClient?.ClientId!,
+            ChallengeName: "SELECT_MFA_TYPE",
+            Session: "any-session",
+            ChallengeResponses: {
+              USERNAME: "abc",
+              ANSWER: "BOGUS",
+            },
+          })
+          .promise(),
+      ).rejects.toMatchObject({
+        code: "InvalidParameterException",
+      });
     });
   }),
 );

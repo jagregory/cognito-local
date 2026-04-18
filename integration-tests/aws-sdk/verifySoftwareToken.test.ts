@@ -62,7 +62,54 @@ describe(
             UserCode: "000000",
           })
           .promise(),
-      ).rejects.toThrow(/Incorrect confirmation code/);
+      ).rejects.toMatchObject({
+        code: "CodeMismatchException",
+        message: "Incorrect confirmation code",
+      });
+    });
+
+    it("returns InvalidParameterException when user has no associated secret", async () => {
+      const client = Cognito();
+      const pool = await client.createUserPool({ PoolName: "test" }).promise();
+      const userPoolId = pool.UserPool?.Id!;
+      const upc = await client
+        .createUserPoolClient({ UserPoolId: userPoolId, ClientName: "test" })
+        .promise();
+
+      await client
+        .adminCreateUser({
+          DesiredDeliveryMediums: ["EMAIL"],
+          TemporaryPassword: "def",
+          UserAttributes: [{ Name: "email", Value: "a@example.com" }],
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+      await client
+        .adminSetUserPassword({
+          Password: "Password1!",
+          Permanent: true,
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+
+      const auth = await client
+        .initiateAuth({
+          ClientId: upc.UserPoolClient?.ClientId!,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: { USERNAME: "abc", PASSWORD: "Password1!" },
+        })
+        .promise();
+
+      await expect(
+        client
+          .verifySoftwareToken({
+            AccessToken: auth.AuthenticationResult?.AccessToken!,
+            UserCode: "123456",
+          })
+          .promise(),
+      ).rejects.toMatchObject({ code: "InvalidParameterException" });
     });
   }),
 );
