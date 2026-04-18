@@ -40,6 +40,7 @@ import { ListUsersInGroup } from "./listUsersInGroup";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { RevokeToken } from "./revokeToken";
 import { SetUserMFAPreference } from "./setUserMFAPreference";
+import { SetUserPoolMfaConfig } from "./setUserPoolMfaConfig";
 import { SignUp } from "./signUp";
 import { UpdateGroup } from "./updateGroup";
 import { UpdateUserAttributes } from "./updateUserAttributes";
@@ -91,6 +92,7 @@ export const Targets = {
   RespondToAuthChallenge,
   RevokeToken,
   SetUserMFAPreference,
+  SetUserPoolMfaConfig,
   SignUp,
   UpdateGroup,
   UpdateUserAttributes,

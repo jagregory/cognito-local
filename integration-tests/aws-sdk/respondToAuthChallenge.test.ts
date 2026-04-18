@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { generate } from "../../src/services/totp";
 import { withCognitoSdk } from "./setup";
 
 describe(
@@ -62,6 +63,93 @@ describe(
         },
         ChallengeParameters: {},
       });
+    });
+
+    it("handles SOFTWARE_TOKEN_MFA challenge", async () => {
+      const client = Cognito();
+      const pool = await client
+        .createUserPool({ PoolName: "test", MfaConfiguration: "OPTIONAL" })
+        .promise();
+      const userPoolId = pool.UserPool?.Id!;
+      await client
+        .setUserPoolMfaConfig({
+          UserPoolId: userPoolId,
+          SoftwareTokenMfaConfiguration: { Enabled: true },
+        })
+        .promise();
+      const upc = await client
+        .createUserPoolClient({ UserPoolId: userPoolId, ClientName: "test" })
+        .promise();
+      const clientId = upc.UserPoolClient?.ClientId!;
+
+      await client
+        .adminCreateUser({
+          DesiredDeliveryMediums: ["EMAIL"],
+          TemporaryPassword: "def",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+      await client
+        .adminSetUserPassword({
+          Password: "Password1!",
+          Permanent: true,
+          Username: "abc",
+          UserPoolId: userPoolId,
+        })
+        .promise();
+
+      // enrol
+      const firstLogin = await client
+        .initiateAuth({
+          ClientId: clientId,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: { USERNAME: "abc", PASSWORD: "Password1!" },
+        })
+        .promise();
+      const accessToken = firstLogin.AuthenticationResult?.AccessToken!;
+      const assoc = await client
+        .associateSoftwareToken({ AccessToken: accessToken })
+        .promise();
+      const secret = assoc.SecretCode!;
+      await client
+        .verifySoftwareToken({
+          AccessToken: accessToken,
+          UserCode: generate(secret),
+        })
+        .promise();
+      await client
+        .setUserMFAPreference({
+          AccessToken: accessToken,
+          SoftwareTokenMfaSettings: { Enabled: true, PreferredMfa: true },
+        })
+        .promise();
+
+      // MFA login
+      const challenge = await client
+        .initiateAuth({
+          ClientId: clientId,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: { USERNAME: "abc", PASSWORD: "Password1!" },
+        })
+        .promise();
+
+      expect(challenge.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+
+      const response = await client
+        .respondToAuthChallenge({
+          ClientId: clientId,
+          ChallengeName: "SOFTWARE_TOKEN_MFA",
+          Session: challenge.Session!,
+          ChallengeResponses: {
+            USERNAME: "abc",
+            SOFTWARE_TOKEN_MFA_CODE: generate(secret),
+          },
+        })
+        .promise();
+
+      expect(response.AuthenticationResult?.AccessToken).toBeDefined();
     });
   }),
 );
