@@ -39,6 +39,7 @@ import { ListUsers } from "./listUsers";
 import { ListUsersInGroup } from "./listUsersInGroup";
 import { RespondToAuthChallenge } from "./respondToAuthChallenge";
 import { RevokeToken } from "./revokeToken";
+import { SetUserMFAPreference } from "./setUserMFAPreference";
 import { SignUp } from "./signUp";
 import { UpdateGroup } from "./updateGroup";
 import { UpdateUserAttributes } from "./updateUserAttributes";
@@ -89,6 +90,7 @@ export const Targets = {
   ListUsersInGroup,
   RespondToAuthChallenge,
   RevokeToken,
+  SetUserMFAPreference,
   SignUp,
   UpdateGroup,
   UpdateUserAttributes,
