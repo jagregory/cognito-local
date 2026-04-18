@@ -104,7 +104,6 @@ const softwareTokenMfaChallenge = (user: User): InitiateAuthResponse => ({
 
 const enabledMfaMethods = (
   user: User,
-  userPool: UserPoolService,
 ): readonly ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] => {
   const explicit = user.UserMFASettingList ?? [];
   const legacy =
@@ -116,12 +115,7 @@ const enabledMfaMethods = (
 
   const result: ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] = [];
   if (methods.has("SMS_MFA")) result.push("SMS_MFA");
-  if (
-    methods.has("SOFTWARE_TOKEN_MFA") &&
-    userPool.options.SoftwareTokenMfaConfiguration?.Enabled
-  ) {
-    result.push("SOFTWARE_TOKEN_MFA");
-  }
+  if (methods.has("SOFTWARE_TOKEN_MFA")) result.push("SOFTWARE_TOKEN_MFA");
   return result;
 };
 
@@ -132,7 +126,7 @@ const verifyMfaChallenge = async (
   userPool: UserPoolService,
   services: InitiateAuthServices,
 ): Promise<InitiateAuthResponse> => {
-  const methods = enabledMfaMethods(user, userPool);
+  const methods = enabledMfaMethods(user);
   if (methods.length === 0) {
     throw new NotAuthorizedError();
   }
