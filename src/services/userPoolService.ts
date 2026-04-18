@@ -164,6 +164,9 @@ export interface Group {
 // just use the types from the sdk, but make Id required
 export type UserPool = UserPoolType & {
   Id: string;
+  SoftwareTokenMfaConfiguration?: {
+    Enabled: boolean;
+  };
 };
 
 export interface UserPoolService {
