@@ -22,13 +22,21 @@ export const generate = (secret: string): string =>
   });
 
 export const verify = (secret: string, token: string): boolean => {
-  const result = verifySync({
-    secret,
-    token,
-    algorithm: OPTIONS.algorithm,
-    digits: OPTIONS.digits,
-    period: OPTIONS.period,
-    epochTolerance: OPTIONS.epochTolerance,
-  });
-  return result.valid;
+  // otplib throws TokenLengthError / TokenFormatError on malformed input
+  // (wrong length, non-numeric). Treat those as a mismatch rather than
+  // letting them surface as HTTP 500s — clients need a Cognito-shaped
+  // CodeMismatchException response either way.
+  try {
+    const result = verifySync({
+      secret,
+      token,
+      algorithm: OPTIONS.algorithm,
+      digits: OPTIONS.digits,
+      period: OPTIONS.period,
+      epochTolerance: OPTIONS.epochTolerance,
+    });
+    return result.valid;
+  } catch {
+    return false;
+  }
 };

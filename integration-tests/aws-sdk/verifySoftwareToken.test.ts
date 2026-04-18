@@ -111,5 +111,59 @@ describe(
           .promise(),
       ).rejects.toMatchObject({ code: "InvalidParameterException" });
     });
+
+    it.each(["1234", "abcdef"])(
+      "returns CodeMismatchException for malformed code %j",
+      async (code) => {
+        const client = Cognito();
+        const pool = await client
+          .createUserPool({ PoolName: "test" })
+          .promise();
+        const userPoolId = pool.UserPool?.Id!;
+        const upc = await client
+          .createUserPoolClient({ UserPoolId: userPoolId, ClientName: "test" })
+          .promise();
+
+        await client
+          .adminCreateUser({
+            DesiredDeliveryMediums: ["EMAIL"],
+            TemporaryPassword: "def",
+            UserAttributes: [{ Name: "email", Value: "a@example.com" }],
+            Username: "abc",
+            UserPoolId: userPoolId,
+          })
+          .promise();
+        await client
+          .adminSetUserPassword({
+            Password: "Password1!",
+            Permanent: true,
+            Username: "abc",
+            UserPoolId: userPoolId,
+          })
+          .promise();
+
+        const auth = await client
+          .initiateAuth({
+            ClientId: upc.UserPoolClient?.ClientId!,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: { USERNAME: "abc", PASSWORD: "Password1!" },
+          })
+          .promise();
+        const accessToken = auth.AuthenticationResult?.AccessToken!;
+
+        await client
+          .associateSoftwareToken({ AccessToken: accessToken })
+          .promise();
+
+        await expect(
+          client
+            .verifySoftwareToken({ AccessToken: accessToken, UserCode: code })
+            .promise(),
+        ).rejects.toMatchObject({
+          code: "CodeMismatchException",
+          statusCode: 400,
+        });
+      },
+    );
   }),
 );

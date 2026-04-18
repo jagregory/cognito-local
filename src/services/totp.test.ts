@@ -18,4 +18,11 @@ describe("totp", () => {
     const secret = generateSecret();
     expect(verify(secret, "000000")).toBe(false);
   });
+
+  it("returns false (not throws) for malformed input", () => {
+    const secret = generateSecret();
+    expect(verify(secret, "1234")).toBe(false);
+    expect(verify(secret, "abcdef")).toBe(false);
+    expect(verify(secret, "")).toBe(false);
+  });
 });
