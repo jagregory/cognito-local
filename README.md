@@ -57,7 +57,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminUpdateDeviceStatus          | ❌                   |
 | AdminUpdateUserAttributes        | ✅                   |
 | AdminUserGlobalSignOut           | ❌                   |
-| AssociateSoftwareToken           | ❌                   |
+| AssociateSoftwareToken           | 🕒 (partial support) |
 | ChangePassword                   | ✅                   |
 | ConfirmDevice                    | ❌                   |
 | ConfirmForgotPassword            | 🕒 (partial support) |
@@ -112,8 +112,8 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | RevokeToken                      | 🕒 (partial support) |
 | SetRiskConfiguration             | ❌                   |
 | SetUICustomization               | ❌                   |
-| SetUserMFAPreference             | ❌                   |
-| SetUserPoolMfaConfig             | ❌                   |
+| SetUserMFAPreference             | ✅                   |
+| SetUserPoolMfaConfig             | ✅                   |
 | SetUserSettings                  | ❌                   |
 | SignUp                           | 🕒 (partial support) |
 | StartUserImportJob               | ❌                   |
@@ -129,7 +129,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | UpdateUserPool                   | ✅                   |
 | UpdateUserPoolClient             | ✅²                  |
 | UpdateUserPoolDomain             | ❌                   |
-| VerifySoftwareToken              | ❌                   |
+| VerifySoftwareToken              | 🕒 (partial support) |
 | VerifyUserAttribute              | ✅                   |
 
 > ¹ does not support pagination or attribute filters, all results and attributes will be returned in the first request.
