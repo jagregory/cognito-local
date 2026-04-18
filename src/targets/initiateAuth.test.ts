@@ -408,6 +408,35 @@ describe("InitiateAuth target", () => {
         });
       });
 
+      describe("when user is TOTP-enrolled but pool MfaConfiguration is unset", () => {
+        it("still issues SOFTWARE_TOKEN_MFA challenge", async () => {
+          // regression: previously only OPTIONAL/ON triggered MFA, which
+          // silently skipped MFA for users enrolled against a pool that
+          // hadn't explicitly set MfaConfiguration (see cognito-local-bugs.md).
+          mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+            Enabled: true,
+          };
+          const user = TDB.user({
+            UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+            PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+            SoftwareTokenMfaConfiguration: { Secret: "s", Verified: true },
+          });
+          mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+          const output = await initiateAuth(TestContext, {
+            ClientId: userPoolClient.ClientId,
+            AuthFlow: "USER_PASSWORD_AUTH",
+            AuthParameters: {
+              USERNAME: user.Username,
+              PASSWORD: user.Password,
+            },
+          });
+
+          expect(output.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+          expect(output.AuthenticationResult).toBeUndefined();
+        });
+      });
+
       describe("when user has only SOFTWARE_TOKEN_MFA", () => {
         let user: User;
 

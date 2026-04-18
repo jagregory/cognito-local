@@ -180,7 +180,7 @@ const verifyPasswordChallenge = async (
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
   return {
-    ChallengeName: "PASSWORD_VERIFIER",
+    ChallengeName: undefined,
     ChallengeParameters: {},
     AuthenticationResult: tokens,
   };
@@ -253,8 +253,8 @@ const userPasswordAuthFlow = async (
     (user.MFAOptions ?? []).length > 0 ||
     (user.UserMFASettingList ?? []).length > 0;
   if (
-    (userPool.options.MfaConfiguration === "OPTIONAL" && userHasMfa) ||
-    userPool.options.MfaConfiguration === "ON"
+    userPool.options.MfaConfiguration === "ON" ||
+    (userPool.options.MfaConfiguration !== "OFF" && userHasMfa)
   ) {
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
