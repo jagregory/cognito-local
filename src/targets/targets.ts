@@ -3,7 +3,6 @@ import { AdminAddUserToGroup } from "./adminAddUserToGroup";
 import { AdminConfirmSignUp } from "./adminConfirmSignUp";
 import { AdminCreateUser } from "./adminCreateUser";
 import { AdminDeleteUser } from "./adminDeleteUser";
-
 import { AdminDeleteUserAttributes } from "./adminDeleteUserAttributes";
 import { AdminDisableUser } from "./adminDisableUser";
 import { AdminEnableUser } from "./adminEnableUser";
@@ -13,6 +12,7 @@ import { AdminListGroupsForUser } from "./adminListGroupsForUser";
 import { AdminRemoveUserFromGroup } from "./adminRemoveUserFromGroup";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
+import { AssociateSoftwareToken } from "./associateSoftwareToken";
 import { ChangePassword } from "./changePassword";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
 import { ConfirmSignUp } from "./confirmSignUp";
@@ -48,6 +48,7 @@ import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
   AddCustomAttributes,
+  AssociateSoftwareToken,
   AdminAddUserToGroup,
   AdminConfirmSignUp,
   AdminCreateUser,
