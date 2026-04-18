@@ -44,6 +44,7 @@ import { UpdateGroup } from "./updateGroup";
 import { UpdateUserAttributes } from "./updateUserAttributes";
 import { UpdateUserPool } from "./updateUserPool";
 import { UpdateUserPoolClient } from "./updateUserPoolClient";
+import { VerifySoftwareToken } from "./verifySoftwareToken";
 import { VerifyUserAttribute } from "./verifyUserAttribute";
 
 export const Targets = {
@@ -93,5 +94,6 @@ export const Targets = {
   UpdateUserAttributes,
   UpdateUserPool,
   UpdateUserPoolClient,
+  VerifySoftwareToken,
   VerifyUserAttribute,
 } as const;
