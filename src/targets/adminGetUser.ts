@@ -25,11 +25,11 @@ export const AdminGetUser =
     return {
       Enabled: user.Enabled,
       MFAOptions: user.MFAOptions,
-      PreferredMfaSetting: undefined,
+      PreferredMfaSetting: user.PreferredMfaSetting,
       UserAttributes: user.Attributes,
       UserCreateDate: user.UserCreateDate,
       UserLastModifiedDate: user.UserLastModifiedDate,
-      UserMFASettingList: undefined,
+      UserMFASettingList: user.UserMFASettingList,
       Username: user.Username,
       UserStatus: user.UserStatus,
     };
