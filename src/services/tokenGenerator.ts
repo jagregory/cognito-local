@@ -195,7 +195,53 @@ export class JwtTokenGenerator implements TokenGenerator {
       idToken["cognito:groups"] = userGroups;
     }
 
-    if (this.triggers.enabled("PreTokenGeneration")) {
+    let accessTokenMutable: RawToken = accessToken;
+    if (this.triggers.enabled("PreTokenGenerationV2")) {
+      // AWS passes the actual OAuth scopes being requested. cognito-local does not yet model
+      // per-request scopes, so we forward the client's declared `AllowedOAuthScopes` as the
+      // closest available approximation; documented as a TODO in the README.
+      const result = await this.triggers.preTokenGenerationV2(ctx, {
+        clientId: userPoolClient.ClientId,
+        clientMetadata,
+        scopes: userPoolClient.AllowedOAuthScopes,
+        source,
+        userAttributes: user.Attributes,
+        username: user.Username,
+        groupConfiguration: {
+          // TODO: this should be populated from the user's groups
+          groupsToOverride: undefined,
+          iamRolesToOverride: undefined,
+          preferredRole: undefined,
+        },
+        userPoolId: userPoolClient.UserPoolId,
+      });
+
+      const overrides = result?.claimsAndScopeOverrideDetails;
+      if (overrides?.accessTokenGeneration) {
+        const accessOverride = overrides.accessTokenGeneration;
+        if (accessOverride.scopesToAdd || accessOverride.scopesToSuppress) {
+          ctx.logger.warn(
+            "PreTokenGeneration V2: scopesToAdd / scopesToSuppress are not yet implemented in cognito-local; ignoring",
+          );
+        }
+        accessTokenMutable = applyTokenOverrides(accessTokenMutable, {
+          claimsToAddOrOverride: accessOverride.claimsToAddOrOverride,
+          claimsToSuppress: accessOverride.claimsToSuppress,
+        });
+      }
+      if (overrides?.idTokenGeneration) {
+        idToken = applyTokenOverrides(idToken, {
+          claimsToAddOrOverride:
+            overrides.idTokenGeneration.claimsToAddOrOverride,
+          claimsToSuppress: overrides.idTokenGeneration.claimsToSuppress,
+        });
+      }
+      if (overrides?.groupOverrideDetails) {
+        ctx.logger.warn(
+          "PreTokenGeneration V2: groupOverrideDetails is not yet implemented in cognito-local; ignoring",
+        );
+      }
+    } else if (this.triggers.enabled("PreTokenGeneration")) {
       const result = await this.triggers.preTokenGeneration(ctx, {
         clientId: userPoolClient.ClientId,
         clientMetadata,
@@ -219,7 +265,7 @@ export class JwtTokenGenerator implements TokenGenerator {
       : `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
 
     return {
-      AccessToken: jwt.sign(accessToken, PrivateKey.pem, {
+      AccessToken: jwt.sign(accessTokenMutable, PrivateKey.pem, {
         algorithm: "RS256",
         issuer,
         expiresIn: formatExpiration(

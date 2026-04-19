@@ -214,14 +214,85 @@ cognito-local how to connect to your local Lambda server:
 | PreTokenGeneration          | TokenGeneration_HostedAuth                    | ❌      |
 | PreTokenGeneration          | TokenGeneration_NewPasswordChallenge          | ❌      |
 | PreTokenGeneration          | TokenGeneration_RefreshTokens                 | ✅      |
+| PreTokenGenerationV2        | TokenGeneration_Authentication                | ✅      |
+| PreTokenGenerationV2        | TokenGeneration_RefreshTokens                 | ✅      |
 | UserMigration               | Authentication                                | ✅      |
 | UserMigration               | ForgotPassword                                | ❌      |
 | VerifyAuthChallengeResponse | \*                                            | ❌      |
+
+#### Pre Token Generation V2
+
+cognito-local supports both V1 and V2 of the Pre Token Generation trigger, matching the real AWS
+[CreateUserPool / UpdateUserPool](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)
+configuration shape.
+
+The legacy `PreTokenGeneration` string continues to work and is treated as V1 (ID-token-only
+claim overrides):
+
+```json
+{
+  "TriggerFunctions": {
+    "PreTokenGeneration": "my-handler"
+  }
+}
+```
+
+To opt into V2 (independent claim overrides on both the access token and the ID token), use the
+`PreTokenGenerationConfig` object instead. Passing `LambdaVersion: "V1_0"` via this object is
+accepted and is equivalent to the legacy string form:
+
+```json
+{
+  "TriggerFunctions": {
+    "PreTokenGenerationConfig": {
+      "LambdaArn": "my-handler",
+      "LambdaVersion": "V2_0"
+    }
+  }
+}
+```
+
+If both `PreTokenGeneration` and `PreTokenGenerationConfig` are set, `PreTokenGenerationConfig`
+wins.
+
+The V2 Lambda receives `version: "2"` and `request.scopes` (the client's `AllowedOAuthScopes`,
+since cognito-local does not yet model per-request scopes). Your handler should return
+`event.response.claimsAndScopeOverrideDetails` with optional
+`accessTokenGeneration` and `idTokenGeneration` sub-objects:
+
+```ts
+event.response.claimsAndScopeOverrideDetails = {
+  accessTokenGeneration: {
+    claimsToAddOrOverride: {
+      "custom:tenantId": "acme",
+      "custom:permissions": "read,write",
+    },
+    claimsToSuppress: [],
+  },
+  idTokenGeneration: {
+    claimsToAddOrOverride: {
+      "custom:tenantId": "acme",
+      "custom:userId": "user-42",
+    },
+  },
+};
+```
+
+Reserved Cognito claims (`aud`, `iss`, `sub`, `exp`, etc.) are filtered out of both tokens, matching
+real Cognito behaviour. See the
+[AWS docs](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html)
+for the full response schema.
+
+**Not yet implemented** (cognito-local will log a warning and ignore them):
+
+- `accessTokenGeneration.scopesToAdd` / `scopesToSuppress`
+- `claimsAndScopeOverrideDetails.groupOverrideDetails`
 
 #### Known limitations
 
 1. Incomplete support for triggers
 2. Triggers can only be configured globally and not per-pool
+3. Pre Token Generation V2 scope and group overrides are not yet applied (see above)
 
 ## Usage
 
@@ -336,7 +407,10 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `TriggerFunctions.PostAuthentication`      | `string`   |                         | PostAuthentication local lambda function name               |
 | `TriggerFunctions.PostConfirmation`        | `string`   |                         | PostConfirmation local lambda function name                 |
 | `TriggerFunctions.PreSignUp`               | `string`   |                         | PostConfirmation local lambda function name                 |
-| `TriggerFunctions.PreTokenGeneration`      | `string`   |                         | PreTokenGeneration local lambda function name               |
+| `TriggerFunctions.PreTokenGeneration`      | `string`   |                         | PreTokenGeneration V1 local lambda function name (legacy)   |
+| `TriggerFunctions.PreTokenGenerationConfig`| `object`   |                         | PreTokenGeneration configuration object (V1 or V2)          |
+| `TriggerFunctions.PreTokenGenerationConfig.LambdaArn`    | `string`   |                         | Function name / ARN for the V1 or V2 handler |
+| `TriggerFunctions.PreTokenGenerationConfig.LambdaVersion`| `string`   |                         | `"V1_0"` or `"V2_0"`                         |
 | `TriggerFunctions.UserMigration`           | `string`   |                         | PreSignUp local lambda function name                        |
 | `UserPoolDefaults`                         | `object`   |                         | Default behaviour to use for the User Pool                  |
 | `UserPoolDefaults.MfaConfiguration`        | `string`   |                         | MFA type                                                    |

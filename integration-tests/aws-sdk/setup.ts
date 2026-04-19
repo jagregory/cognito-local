@@ -19,6 +19,7 @@ import { CognitoServiceFactoryImpl } from "../../src/services/cognitoService";
 import { CryptoService } from "../../src/services/crypto";
 import type { DataStoreFactory } from "../../src/services/dataStore/factory";
 import { StormDBDataStoreFactory } from "../../src/services/dataStore/stormDb";
+import type { Lambda } from "../../src/services/lambda";
 import { otp } from "../../src/services/otp";
 import { JwtTokenGenerator } from "../../src/services/tokenGenerator";
 import { UserPoolServiceFactoryImpl } from "../../src/services/userPoolService";
@@ -38,7 +39,8 @@ export const withCognitoSdk =
     {
       logger = MockLogger as any,
       clock = new DateClock(),
-    }: { logger?: Logger; clock?: Clock } = {},
+      lambda,
+    }: { logger?: Logger; clock?: Clock; lambda?: Lambda } = {},
   ) =>
   () => {
     let dataDirectory: string;
@@ -61,7 +63,7 @@ export const withCognitoSdk =
       const triggers = new TriggersService(
         clock,
         cognitoClient,
-        {
+        lambda ?? {
           enabled: vi.fn().mockReturnValue(false),
           invoke: vi.fn(),
         },

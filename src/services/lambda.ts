@@ -8,6 +8,7 @@ import type {
   PreAuthenticationTriggerEvent,
   PreSignUpTriggerEvent,
   PreTokenGenerationTriggerEvent,
+  PreTokenGenerationV2TriggerEvent,
   UserMigrationTriggerEvent,
   VerifyAuthChallengeResponseTriggerEvent,
 } from "aws-lambda";
@@ -31,6 +32,7 @@ type CognitoUserPoolEvent =
   | PreAuthenticationTriggerEvent
   | PreSignUpTriggerEvent
   | PreTokenGenerationTriggerEvent
+  | PreTokenGenerationV2TriggerEvent
   | UserMigrationTriggerEvent
   | VerifyAuthChallengeResponseTriggerEvent;
 
@@ -123,6 +125,15 @@ interface PreTokenGenerationEvent extends EventCommonParameters {
   };
 }
 
+interface PreTokenGenerationV2Event extends PreTokenGenerationEvent {
+  /**
+   * OAuth scopes that are requested for the access token this trigger is about to mint. Only set for V2 payloads.
+   *
+   * @see https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+   */
+  scopes: readonly string[] | undefined;
+}
+
 interface PostAuthenticationEvent extends EventCommonParameters {
   clientMetadata: Record<string, string> | undefined;
   triggerSource: "PostAuthentication_Authentication";
@@ -137,12 +148,33 @@ interface PostConfirmationEvent
   clientId: string | null;
 }
 
+/**
+ * AWS's real CreateUserPool/UpdateUserPool API accepts a `PreTokenGenerationConfig` object specifying
+ * which version of the pre token generation trigger to invoke. When present, it takes precedence over
+ * the legacy string-valued `PreTokenGeneration` entry. See
+ * https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-token-generation.html
+ * for the full semantics.
+ */
+export interface PreTokenGenerationConfig {
+  LambdaArn: string;
+  LambdaVersion: "V1_0" | "V2_0";
+}
+
 export interface FunctionConfig {
   CustomMessage?: string;
   PostAuthentication?: string;
   PostConfirmation?: string;
   PreSignUp?: string;
+  /**
+   * Legacy V1 pre token generation trigger. Overridden by `PreTokenGenerationConfig` when that field is set.
+   */
   PreTokenGeneration?: string;
+  /**
+   * Configuration-object form of the pre token generation trigger. Set `LambdaVersion: "V2_0"` to opt into
+   * the V2 payload shape which can customise both the access token and the ID token independently.
+   * `LambdaVersion: "V1_0"` is accepted and is equivalent to the legacy `PreTokenGeneration` entry.
+   */
+  PreTokenGenerationConfig?: PreTokenGenerationConfig;
   UserMigration?: string;
   CustomEmailSender?: string;
 }
@@ -154,6 +186,8 @@ export type UserMigrationTriggerResponse =
 export type PreSignUpTriggerResponse = PreSignUpTriggerEvent["response"];
 export type PreTokenGenerationTriggerResponse =
   PreTokenGenerationTriggerEvent["response"];
+export type PreTokenGenerationV2TriggerResponse =
+  PreTokenGenerationV2TriggerEvent["response"];
 export type PostAuthenticationTriggerResponse =
   PostAuthenticationTriggerEvent["response"];
 export type PostConfirmationTriggerResponse =
@@ -161,8 +195,16 @@ export type PostConfirmationTriggerResponse =
 export type CustomEmailSenderTriggerResponse =
   CustomEmailSenderTriggerEvent["response"];
 
+/**
+ * Triggers that can be asked about / invoked on a `Lambda` instance. `PreTokenGenerationConfig` is
+ * a config-only key (resolved into `PreTokenGeneration` or `PreTokenGenerationV2`), so it is excluded.
+ */
+export type LambdaTrigger =
+  | Exclude<keyof FunctionConfig, "PreTokenGenerationConfig">
+  | "PreTokenGenerationV2";
+
 export interface Lambda {
-  enabled(lambda: keyof FunctionConfig): boolean;
+  enabled(lambda: LambdaTrigger): boolean;
   invoke(
     ctx: Context,
     lambda: "CustomMessage",
@@ -183,6 +225,11 @@ export interface Lambda {
     lambda: "PreTokenGeneration",
     event: PreTokenGenerationEvent,
   ): Promise<PreTokenGenerationTriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "PreTokenGenerationV2",
+    event: PreTokenGenerationV2Event,
+  ): Promise<PreTokenGenerationV2TriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "PostAuthentication",
@@ -209,13 +256,56 @@ export class LambdaService implements Lambda {
     this.lambdaClient = lambdaClient;
   }
 
-  public enabled(lambda: keyof FunctionConfig): boolean {
+  public enabled(lambda: LambdaTrigger): boolean {
+    const resolved = this.resolvePreTokenGeneration();
+    if (lambda === "PreTokenGenerationV2") {
+      return resolved.version === "V2_0";
+    }
+    if (lambda === "PreTokenGeneration") {
+      return resolved.version === "V1_0";
+    }
     return !!this.config[lambda];
+  }
+
+  /**
+   * Resolves the user-supplied pre token generation configuration into a single function name + version.
+   * `PreTokenGenerationConfig` wins over the legacy `PreTokenGeneration` string when both are present.
+   */
+  private resolvePreTokenGeneration():
+    | { version: "V1_0" | "V2_0"; functionName: string }
+    | { version: "none" } {
+    if (this.config.PreTokenGenerationConfig?.LambdaArn) {
+      return {
+        version: this.config.PreTokenGenerationConfig.LambdaVersion,
+        functionName: this.config.PreTokenGenerationConfig.LambdaArn,
+      };
+    }
+    if (this.config.PreTokenGeneration) {
+      return {
+        version: "V1_0",
+        functionName: this.config.PreTokenGeneration,
+      };
+    }
+    return { version: "none" };
+  }
+
+  private resolveFunctionName(trigger: LambdaTrigger): string | undefined {
+    if (trigger === "PreTokenGeneration") {
+      const resolved = this.resolvePreTokenGeneration();
+      return resolved.version === "V1_0" ? resolved.functionName : undefined;
+    }
+    if (trigger === "PreTokenGenerationV2") {
+      const resolved = this.resolvePreTokenGeneration();
+      return resolved.version === "V2_0" ? resolved.functionName : undefined;
+    }
+    // Every remaining trigger key maps to a plain function-name string in FunctionConfig.
+    const value: string | undefined = this.config[trigger];
+    return value;
   }
 
   public async invoke(
     ctx: Context,
-    trigger: keyof FunctionConfig,
+    trigger: LambdaTrigger,
     event:
       | CustomMessageEvent
       | CustomEmailSenderEvent
@@ -223,9 +313,10 @@ export class LambdaService implements Lambda {
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
+      | PreTokenGenerationV2Event
       | UserMigrationEvent,
   ) {
-    const functionName = this.config[trigger];
+    const functionName = this.resolveFunctionName(trigger);
     if (!functionName) {
       throw new Error(`${trigger} trigger not configured`);
     }
@@ -290,6 +381,7 @@ export class LambdaService implements Lambda {
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
+      | PreTokenGenerationV2Event
       | UserMigrationEvent,
   ): CognitoUserPoolEvent {
     const version = "0"; // TODO: how do we know what this is?
@@ -364,12 +456,33 @@ export class LambdaService implements Lambda {
       case "TokenGeneration_HostedAuth":
       case "TokenGeneration_NewPasswordChallenge":
       case "TokenGeneration_RefreshTokens": {
-        return {
+        const triggerSource = event.triggerSource;
+        if ("scopes" in event) {
+          const v2Event: PreTokenGenerationV2TriggerEvent = {
+            version: "2",
+            callerContext,
+            region,
+            userPoolId: event.userPoolId,
+            triggerSource,
+            userName: event.username,
+            request: {
+              userAttributes: event.userAttributes,
+              groupConfiguration: {},
+              clientMetadata: event.clientMetadata,
+              scopes: event.scopes ? [...event.scopes] : [],
+            },
+            response: {
+              claimsAndScopeOverrideDetails: {},
+            },
+          } as PreTokenGenerationV2TriggerEvent;
+          return v2Event;
+        }
+        const v1Event: PreTokenGenerationTriggerEvent = {
           version,
           callerContext,
           region,
           userPoolId: event.userPoolId,
-          triggerSource: event.triggerSource,
+          triggerSource,
           userName: event.username,
           request: {
             userAttributes: event.userAttributes,
@@ -379,7 +492,8 @@ export class LambdaService implements Lambda {
           response: {
             claimsOverrideDetails: {},
           },
-        };
+        } as PreTokenGenerationTriggerEvent;
+        return v1Event;
       }
 
       case "UserMigration_Authentication": {
