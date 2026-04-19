@@ -41,6 +41,66 @@ describe("Lambda function invoker", () => {
 
       expect(lambda.enabled("UserMigration")).toBe(false);
     });
+
+    describe("PreTokenGeneration V1/V2 resolution", () => {
+      it("treats the legacy string field as V1", () => {
+        const lambda = new LambdaService(
+          { PreTokenGeneration: "legacy-fn" },
+          mockLambdaClient,
+        );
+        expect(lambda.enabled("PreTokenGeneration")).toBe(true);
+        expect(lambda.enabled("PreTokenGenerationV2")).toBe(false);
+      });
+
+      it("routes PreTokenGenerationConfig V1_0 through the V1 code path", () => {
+        const lambda = new LambdaService(
+          {
+            PreTokenGenerationConfig: {
+              LambdaArn: "config-fn",
+              LambdaVersion: "V1_0",
+            },
+          },
+          mockLambdaClient,
+        );
+        expect(lambda.enabled("PreTokenGeneration")).toBe(true);
+        expect(lambda.enabled("PreTokenGenerationV2")).toBe(false);
+      });
+
+      it("routes PreTokenGenerationConfig V2_0 through the V2 code path", () => {
+        const lambda = new LambdaService(
+          {
+            PreTokenGenerationConfig: {
+              LambdaArn: "v2-fn",
+              LambdaVersion: "V2_0",
+            },
+          },
+          mockLambdaClient,
+        );
+        expect(lambda.enabled("PreTokenGeneration")).toBe(false);
+        expect(lambda.enabled("PreTokenGenerationV2")).toBe(true);
+      });
+
+      it("PreTokenGenerationConfig takes precedence over the legacy string", () => {
+        const lambda = new LambdaService(
+          {
+            PreTokenGeneration: "legacy-fn",
+            PreTokenGenerationConfig: {
+              LambdaArn: "v2-fn",
+              LambdaVersion: "V2_0",
+            },
+          },
+          mockLambdaClient,
+        );
+        expect(lambda.enabled("PreTokenGeneration")).toBe(false);
+        expect(lambda.enabled("PreTokenGenerationV2")).toBe(true);
+      });
+
+      it("returns false for both when no pre token generation trigger is configured", () => {
+        const lambda = new LambdaService({}, mockLambdaClient);
+        expect(lambda.enabled("PreTokenGeneration")).toBe(false);
+        expect(lambda.enabled("PreTokenGenerationV2")).toBe(false);
+      });
+    });
   });
 
   describe("invoke", () => {
@@ -510,6 +570,100 @@ describe("Lambda function invoker", () => {
             userName: "username",
           }),
         });
+      });
+    });
+
+    describe("PreTokenGenerationV2", () => {
+      it("invokes the V2 lambda and sends a version=2 event with scopes", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload:
+            '{ "response": { "claimsAndScopeOverrideDetails": { "accessTokenGeneration": { "claimsToAddOrOverride": { "custom:tenantId": "acme" } } } } }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          {
+            PreTokenGenerationConfig: {
+              LambdaArn: "MyV2LambdaName",
+              LambdaVersion: "V2_0",
+            },
+          },
+          mockLambdaClient,
+        );
+
+        const result = await lambda.invoke(
+          TestContext,
+          "PreTokenGenerationV2",
+          {
+            clientId: "clientId",
+            triggerSource: "TokenGeneration_Authentication",
+            username: "username",
+            userPoolId: "userPoolId",
+            userAttributes: { user: "attributes" },
+            clientMetadata: { client: "metadata" },
+            scopes: ["openid", "profile"],
+            groupConfiguration: {
+              groupsToOverride: undefined,
+              iamRolesToOverride: undefined,
+              preferredRole: undefined,
+            },
+          },
+        );
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith({
+          FunctionName: "MyV2LambdaName",
+          InvocationType: "RequestResponse",
+          Payload: expect.jsonMatching({
+            version: "2",
+            callerContext: { awsSdkVersion: version, clientId: "clientId" },
+            region: "local",
+            userPoolId: "userPoolId",
+            triggerSource: "TokenGeneration_Authentication",
+            userName: "username",
+            request: {
+              userAttributes: { user: "attributes" },
+              clientMetadata: { client: "metadata" },
+              groupConfiguration: {},
+              scopes: ["openid", "profile"],
+            },
+            response: { claimsAndScopeOverrideDetails: {} },
+          }),
+        });
+        expect(result).toEqual({
+          claimsAndScopeOverrideDetails: {
+            accessTokenGeneration: {
+              claimsToAddOrOverride: { "custom:tenantId": "acme" },
+            },
+          },
+        });
+      });
+
+      it("throws when PreTokenGenerationV2 is invoked but only V1 is configured", async () => {
+        const lambda = new LambdaService(
+          { PreTokenGeneration: "v1-only" },
+          mockLambdaClient,
+        );
+
+        await expect(
+          lambda.invoke(TestContext, "PreTokenGenerationV2", {
+            clientId: "clientId",
+            triggerSource: "TokenGeneration_Authentication",
+            username: "username",
+            userPoolId: "userPoolId",
+            userAttributes: {},
+            clientMetadata: undefined,
+            scopes: undefined,
+            groupConfiguration: {
+              groupsToOverride: undefined,
+              iamRolesToOverride: undefined,
+              preferredRole: undefined,
+            },
+          }),
+        ).rejects.toEqual(
+          new Error("PreTokenGenerationV2 trigger not configured"),
+        );
       });
     });
 

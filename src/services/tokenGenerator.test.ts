@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken";
-import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockedObject,
+  vi,
+} from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { UUID } from "../__tests__/patterns";
@@ -176,6 +183,368 @@ describe("JwtTokenGenerator", () => {
           [claim]: "value",
         });
       });
+    });
+  });
+
+  describe("TokenGeneration V2 lambda is configured", () => {
+    const enableV2 = () => {
+      mockTriggers.enabled.mockImplementation(
+        (name) => name === "PreTokenGenerationV2",
+      );
+    };
+
+    it("can override claims on the access token independently from the id token", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            claimsToAddOrOverride: {
+              "custom:tenantId": "acme",
+              "custom:permissions": "read,write",
+            },
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).toMatchObject({
+        "custom:tenantId": "acme",
+        "custom:permissions": "read,write",
+      });
+      expect(jwt.decode(tokens.IdToken)).not.toMatchObject({
+        "custom:tenantId": "acme",
+      });
+    });
+
+    it("can override claims on the id token independently from the access token", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          idTokenGeneration: {
+            claimsToAddOrOverride: {
+              "custom:userId": "user-42",
+            },
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.IdToken)).toMatchObject({
+        "custom:userId": "user-42",
+      });
+      expect(jwt.decode(tokens.AccessToken)).not.toMatchObject({
+        "custom:userId": "user-42",
+      });
+    });
+
+    it("can override claims on both tokens at once", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            claimsToAddOrOverride: { "custom:scope": "access-only" },
+          },
+          idTokenGeneration: {
+            claimsToAddOrOverride: { "custom:scope": "id-only" },
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).toMatchObject({
+        "custom:scope": "access-only",
+      });
+      expect(jwt.decode(tokens.IdToken)).toMatchObject({
+        "custom:scope": "id-only",
+      });
+    });
+
+    it("suppresses claims on the access token", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            claimsToSuppress: ["scope"],
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).not.toHaveProperty("scope");
+    });
+
+    it("suppresses claims on the id token", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          idTokenGeneration: {
+            claimsToSuppress: ["email"],
+          },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.IdToken)).not.toHaveProperty("email");
+      expect(jwt.decode(tokens.AccessToken)).not.toHaveProperty("email");
+    });
+
+    it("does not modify tokens when override details are empty", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {},
+      });
+
+      const userPoolClient = TDB.appClient();
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        userPoolClient,
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.AccessToken)).toMatchObject({
+        token_use: "access",
+        username: user.Username,
+      });
+      expect(jwt.decode(tokens.IdToken)).toMatchObject({
+        token_use: "id",
+        "cognito:username": user.Username,
+      });
+    });
+
+    describe.each([
+      "acr",
+      "amr",
+      "aud",
+      "at_hash",
+      "auth_time",
+      "azp",
+      "cognito:username",
+      "exp",
+      "iat",
+      "identities",
+      "iss",
+      "jti",
+      "nbf",
+      "nonce",
+      "origin_jti",
+      "sub",
+      "token_use",
+    ])("reserved claim %s", (claim) => {
+      it("cannot be overridden on the access token", async () => {
+        enableV2();
+        mockTriggers.preTokenGenerationV2.mockResolvedValue({
+          claimsAndScopeOverrideDetails: {
+            accessTokenGeneration: {
+              claimsToAddOrOverride: { [claim]: "value" },
+            },
+          },
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          [],
+          TDB.appClient(),
+          { client: "metadata" },
+          "Authentication",
+        );
+
+        expect(jwt.decode(tokens.AccessToken)).not.toMatchObject({
+          [claim]: "value",
+        });
+      });
+
+      it("cannot be overridden on the id token", async () => {
+        enableV2();
+        mockTriggers.preTokenGenerationV2.mockResolvedValue({
+          claimsAndScopeOverrideDetails: {
+            idTokenGeneration: {
+              claimsToAddOrOverride: { [claim]: "value" },
+            },
+          },
+        });
+
+        const tokens = await tokenGenerator.generate(
+          TestContext,
+          user,
+          [],
+          TDB.appClient(),
+          { client: "metadata" },
+          "Authentication",
+        );
+
+        expect(jwt.decode(tokens.IdToken)).not.toMatchObject({
+          [claim]: "value",
+        });
+      });
+    });
+
+    it("passes the client's AllowedOAuthScopes to the trigger as request.scopes", async () => {
+      enableV2();
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {},
+      });
+
+      const userPoolClient = TDB.appClient({
+        AllowedOAuthScopes: ["openid", "profile"],
+      });
+
+      await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        userPoolClient,
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(mockTriggers.preTokenGenerationV2).toHaveBeenCalledWith(
+        TestContext,
+        expect.objectContaining({ scopes: ["openid", "profile"] }),
+      );
+    });
+
+    it("prefers V2 over V1 when both are enabled", async () => {
+      mockTriggers.enabled.mockReturnValue(true);
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          idTokenGeneration: {
+            claimsToAddOrOverride: { "custom:from": "v2" },
+          },
+        },
+      });
+      mockTriggers.preTokenGeneration.mockResolvedValue({
+        claimsOverrideDetails: {
+          claimsToAddOrOverride: { "custom:from": "v1" },
+        },
+      });
+
+      const tokens = await tokenGenerator.generate(
+        TestContext,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(jwt.decode(tokens.IdToken)).toMatchObject({
+        "custom:from": "v2",
+      });
+      expect(mockTriggers.preTokenGeneration).not.toHaveBeenCalled();
+    });
+
+    it("warns when V2 response includes unsupported scope overrides", async () => {
+      enableV2();
+      const warn = vi.fn();
+      const ctx = {
+        logger: {
+          info: vi.fn(),
+          error: vi.fn(),
+          debug: vi.fn(),
+          warn,
+          child() {
+            return this;
+          },
+        } as any,
+      };
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          accessTokenGeneration: {
+            scopesToAdd: ["extra.scope"],
+          },
+        },
+      });
+
+      await tokenGenerator.generate(
+        ctx,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("scopesToAdd"));
+    });
+
+    it("warns when V2 response includes unsupported groupOverrideDetails", async () => {
+      enableV2();
+      const warn = vi.fn();
+      const ctx = {
+        logger: {
+          info: vi.fn(),
+          error: vi.fn(),
+          debug: vi.fn(),
+          warn,
+          child() {
+            return this;
+          },
+        } as any,
+      };
+      mockTriggers.preTokenGenerationV2.mockResolvedValue({
+        claimsAndScopeOverrideDetails: {
+          groupOverrideDetails: {
+            groupsToOverride: ["override"],
+          },
+        },
+      });
+
+      await tokenGenerator.generate(
+        ctx,
+        user,
+        [],
+        TDB.appClient(),
+        { client: "metadata" },
+        "Authentication",
+      );
+
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("groupOverrideDetails"),
+      );
     });
   });
 
