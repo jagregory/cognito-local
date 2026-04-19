@@ -34,6 +34,13 @@ jobs:
     name: Publish
     needs: build
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # semantic-release needs to push tags + CHANGELOG back to the branch (contents: write),
+    # create GitHub releases (contents: write), and open failure issues (issues: write).
+    # The repo's default GITHUB_TOKEN permission is `read`, so we must opt in explicitly here.
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v2
