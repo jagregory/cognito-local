@@ -1,3 +1,16 @@
+# [1.0.0-dev.8](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-04-19)
+
+
+### Bug Fixes
+
+* **ci:** grant publish workflow contents/issues/pull-requests write permissions ([657473b](https://github.com/Geekoosh/cognito-local/commit/657473bed5f79c09427ce0552da8029ed5ccf828))
+
+
+### Features
+
+* add Pre Token Generation V2 support (both V1 and V2 trigger configurations) ([9cf3050](https://github.com/Geekoosh/cognito-local/commit/9cf30505e8aefd8de3d2cbd0666a171084ac5a4a))
+* TOTP / software token MFA support ([#469](https://github.com/Geekoosh/cognito-local/issues/469)) ([86a63ac](https://github.com/Geekoosh/cognito-local/commit/86a63ac4e6c3bf7cdf0358b71960738714b2787e))
+
 # [1.0.0-dev.7](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-04-03)
 
 
