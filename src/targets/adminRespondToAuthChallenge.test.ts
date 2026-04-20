@@ -13,6 +13,7 @@ import {
 } from "../errors";
 import type { Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
+import { generateSecret, generate as genTotp } from "../services/totp";
 import {
   AdminRespondToAuthChallenge,
   type AdminRespondToAuthChallengeTarget,
@@ -147,7 +148,10 @@ describe("AdminRespondToAuthChallenge target", () => {
   });
 
   describe("ChallengeName=SOFTWARE_TOKEN_MFA", () => {
-    const user = TDB.user({ MFACode: "654321" });
+    const secret = generateSecret();
+    const user = TDB.user({
+      SoftwareTokenMfaConfiguration: { Secret: secret, Verified: true },
+    });
 
     beforeEach(() => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(user);
@@ -167,7 +171,7 @@ describe("AdminRespondToAuthChallenge target", () => {
         ChallengeName: "SOFTWARE_TOKEN_MFA",
         ChallengeResponses: {
           USERNAME: user.Username,
-          SOFTWARE_TOKEN_MFA_CODE: "654321",
+          SOFTWARE_TOKEN_MFA_CODE: genTotp(secret),
         },
         Session: "Session",
       });
@@ -183,7 +187,7 @@ describe("AdminRespondToAuthChallenge target", () => {
           ChallengeName: "SOFTWARE_TOKEN_MFA",
           ChallengeResponses: {
             USERNAME: user.Username,
-            SOFTWARE_TOKEN_MFA_CODE: "wrong",
+            SOFTWARE_TOKEN_MFA_CODE: "000000",
           },
           Session: "Session",
         }),

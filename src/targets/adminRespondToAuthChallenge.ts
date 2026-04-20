@@ -2,7 +2,7 @@ import type {
   AdminRespondToAuthChallengeRequest,
   AdminRespondToAuthChallengeResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
-import * as uuid from "uuid";
+import { v4 } from "uuid";
 import {
   CodeMismatchError,
   InvalidParameterError,
@@ -11,6 +11,7 @@ import {
   UnsupportedError,
 } from "../errors";
 import type { Services } from "../services";
+import { verify as verifyTotp } from "../services/totp";
 import type { Target } from "./Target";
 
 export type AdminRespondToAuthChallengeTarget = Target<
@@ -65,18 +66,18 @@ export const AdminRespondToAuthChallenge =
         UserLastModifiedDate: clock.get(),
       });
     } else if (req.ChallengeName === "SOFTWARE_TOKEN_MFA") {
-      if (!req.ChallengeResponses.SOFTWARE_TOKEN_MFA_CODE) {
-        throw new InvalidParameterError(
-          "Missing required parameter SOFTWARE_TOKEN_MFA_CODE",
-        );
-      }
-      if (user.MFACode !== req.ChallengeResponses.SOFTWARE_TOKEN_MFA_CODE) {
+      const code = req.ChallengeResponses.SOFTWARE_TOKEN_MFA_CODE;
+      const secret = user.SoftwareTokenMfaConfiguration?.Secret;
+      if (
+        !code ||
+        !secret ||
+        !user.SoftwareTokenMfaConfiguration?.Verified ||
+        !verifyTotp(secret, code)
+      ) {
         throw new CodeMismatchError();
       }
-
       await userPool.saveUser(ctx, {
         ...user,
-        MFACode: undefined,
         UserLastModifiedDate: clock.get(),
       });
     } else if (req.ChallengeName === "NEW_PASSWORD_REQUIRED") {
@@ -109,7 +110,7 @@ export const AdminRespondToAuthChallenge =
           ChallengeParameters: {
             USER_ID_FOR_SRP: user.Username,
           } as AdminRespondToAuthChallengeResponse["ChallengeParameters"],
-          Session: uuid.v4(),
+          Session: v4(),
         };
       }
       if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
@@ -119,7 +120,7 @@ export const AdminRespondToAuthChallenge =
             USER_ID_FOR_SRP: user.Username,
             requiredAttributes: JSON.stringify([]),
           } as AdminRespondToAuthChallengeResponse["ChallengeParameters"],
-          Session: uuid.v4(),
+          Session: v4(),
         };
       }
     } else if (req.ChallengeName === "MFA_SETUP") {

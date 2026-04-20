@@ -116,7 +116,14 @@ const enabledMfaMethods = (
 
   const result: ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] = [];
   if (methods.has("SMS_MFA")) result.push("SMS_MFA");
-  if (methods.has("SOFTWARE_TOKEN_MFA")) result.push("SOFTWARE_TOKEN_MFA");
+  // Only advertise SOFTWARE_TOKEN_MFA if the user has completed TOTP
+  // registration; otherwise the challenge would always fail on response.
+  if (
+    methods.has("SOFTWARE_TOKEN_MFA") &&
+    user.SoftwareTokenMfaConfiguration?.Verified
+  ) {
+    result.push("SOFTWARE_TOKEN_MFA");
+  }
   return result;
 };
 
