@@ -3,6 +3,7 @@ import type {
   ListGroupsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { Services } from "../services";
+import { paginate } from "../services/pagination";
 import { groupToResponseObject } from "./responses";
 import type { Target } from "./Target";
 
@@ -13,13 +14,13 @@ type ListGroupServices = Pick<Services, "cognito">;
 export const ListGroups =
   ({ cognito }: ListGroupServices): ListGroupsTarget =>
   async (ctx, req) => {
-    // TODO: Limit support
-    // TODO: PaginationToken support
-
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const groups = await userPool.listGroups(ctx);
 
+    const { items, nextToken } = paginate(groups, req.Limit, req.NextToken);
+
     return {
-      Groups: groups.map(groupToResponseObject(req.UserPoolId)),
+      Groups: items.map(groupToResponseObject(req.UserPoolId)),
+      NextToken: nextToken,
     };
   };

@@ -96,6 +96,15 @@ export class InvalidLambdaResponseError extends CognitoError {
   }
 }
 
+export class AliasExistsError extends CognitoError {
+  public constructor() {
+    super(
+      "AliasExistsException",
+      "An account with the given email already exists.",
+    );
+  }
+}
+
 export class InvalidParameterError extends CognitoError {
   public constructor(message = "Invalid parameter") {
     super("InvalidParameterException", message);
