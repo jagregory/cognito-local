@@ -9,6 +9,7 @@ import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import type { Services } from "../services";
 import type { Router } from "./Router";
 
 export type ServerOptions = {
@@ -30,6 +31,7 @@ export const createServer = (
   router: Router,
   logger: Logger,
   options: ServerOptions,
+  services?: Pick<Services, "cognito" | "tokenGenerator">,
 ): Server => {
   const pino = Pino({
     logger,
@@ -71,6 +73,131 @@ export const createServer = (
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true });
+  });
+
+  app.use(
+    "/:userPoolId/oauth2/token",
+    bodyParser.urlencoded({ extended: false }),
+  );
+
+  app.post("/:userPoolId/oauth2/token", async (req, res) => {
+    if (!services) {
+      res.status(501).json({
+        error: "server_error",
+        error_description: "OAuth not configured",
+      });
+      return;
+    }
+
+    const {
+      grant_type,
+      client_id: bodyClientId,
+      client_secret: bodyClientSecret,
+      scope: scopeParam,
+    } = req.body;
+
+    if (grant_type !== "client_credentials") {
+      res.status(400).json({ error: "unsupported_grant_type" });
+      return;
+    }
+
+    let clientId: string | undefined;
+    let clientSecret: string | undefined;
+
+    const authHeader = req.headers.authorization;
+    if (typeof authHeader === "string" && authHeader.startsWith("Basic ")) {
+      const decoded = Buffer.from(authHeader.slice(6), "base64").toString(
+        "utf-8",
+      );
+      const colonIdx = decoded.indexOf(":");
+      if (colonIdx !== -1) {
+        clientId = decoded.slice(0, colonIdx);
+        clientSecret = decoded.slice(colonIdx + 1);
+      }
+    } else {
+      clientId = bodyClientId;
+      clientSecret = bodyClientSecret;
+    }
+
+    if (!clientId || !clientSecret) {
+      res.status(401).json({
+        error: "invalid_client",
+        error_description: "Missing credentials",
+      });
+      return;
+    }
+
+    const ctx = { logger: req.log };
+    const appClient = await services.cognito.getAppClient(ctx, clientId);
+
+    if (!appClient) {
+      res.status(401).json({
+        error: "invalid_client",
+        error_description: "Client not found",
+      });
+      return;
+    }
+
+    if (appClient.UserPoolId !== req.params.userPoolId) {
+      res.status(401).json({
+        error: "invalid_client",
+        error_description: "Client not found",
+      });
+      return;
+    }
+
+    if (!appClient.ClientSecret || appClient.ClientSecret !== clientSecret) {
+      res.status(401).json({
+        error: "invalid_client",
+        error_description: "Invalid client credentials",
+      });
+      return;
+    }
+
+    if (!appClient.AllowedOAuthFlows?.includes("client_credentials")) {
+      res.status(400).json({ error: "unauthorized_client" });
+      return;
+    }
+
+    const allowedScopes = appClient.AllowedOAuthScopes ?? [];
+    const requestedScopes =
+      typeof scopeParam === "string" && scopeParam.length > 0
+        ? scopeParam.split(" ").filter(Boolean)
+        : allowedScopes;
+
+    for (const scope of requestedScopes) {
+      if (!allowedScopes.includes(scope)) {
+        res.status(400).json({
+          error: "invalid_scope",
+          error_description: `Unknown scope: ${scope}`,
+        });
+        return;
+      }
+    }
+
+    let result: Awaited<
+      ReturnType<typeof services.tokenGenerator.generateClientCredentials>
+    >;
+    try {
+      result = await services.tokenGenerator.generateClientCredentials(
+        ctx,
+        appClient,
+        requestedScopes,
+      );
+    } catch (ex) {
+      req.log.error(ex, "Failed to generate client credentials token");
+      res.status(500).json({
+        error: "server_error",
+        error_description: "Failed to generate token",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      access_token: result.AccessToken,
+      expires_in: result.ExpiresIn,
+      token_type: result.TokenType,
+    });
   });
 
   app.post("/", (req, res) => {
