@@ -77,7 +77,8 @@ interface UserMigrationEvent extends EventCommonParameters {
   validationData: Record<string, string> | undefined;
 }
 
-interface PreSignUpEvent extends EventCommonParameters {
+interface PreSignUpEvent extends Omit<EventCommonParameters, "clientId"> {
+  clientId: string | null;
   clientMetadata: Record<string, string> | undefined;
   triggerSource:
     | "PreSignUp_AdminCreateUser"

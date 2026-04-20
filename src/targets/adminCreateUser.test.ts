@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
+import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { UUID } from "../__tests__/patterns";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import { InvalidParameterError, UsernameExistsError } from "../errors";
+import { InvalidParameterError, UserLambdaValidationError, UsernameExistsError } from "../errors";
 import { type Config, DefaultConfig } from "../server/config";
-import type { Messages, UserPoolService } from "../services";
+import type { Messages, Triggers, UserPoolService } from "../services";
 import { AdminCreateUser, type AdminCreateUserTarget } from "./adminCreateUser";
 
 const originalDate = new Date();
@@ -17,17 +18,20 @@ describe("AdminCreateUser target", () => {
   let adminCreateUser: AdminCreateUserTarget;
   let mockUserPoolService: MockedObject<UserPoolService>;
   let mockMessages: MockedObject<Messages>;
+  let mockTriggers: MockedObject<Triggers>;
   let config: Config;
 
   beforeEach(() => {
     mockUserPoolService = newMockUserPoolService();
     mockMessages = newMockMessages();
+    mockTriggers = newMockTriggers();
     config = DefaultConfig;
     adminCreateUser = AdminCreateUser({
       cognito: newMockCognitoService(mockUserPoolService),
       clock: new ClockFake(originalDate),
       config,
       messages: mockMessages,
+      triggers: mockTriggers,
     });
   });
 
@@ -411,5 +415,338 @@ describe("AdminCreateUser target", () => {
     ).rejects.toEqual(new UsernameExistsError());
   });
 
-  it.todo("invokes the PreSignUp lambda");
+  describe("PreSignUp lambda trigger", () => {
+    describe("when PreSignUp trigger is enabled", () => {
+      beforeEach(() => {
+        mockTriggers.enabled.mockImplementation(
+          (trigger) => trigger === "PreSignUp"
+        );
+      });
+
+      it("calls the PreSignUp trigger with the user's username when the user pool has no username attributes", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.preSignUp.mockResolvedValue({
+          autoConfirmUser: false,
+          autoVerifyPhone: false,
+          autoVerifyEmail: false,
+        });
+
+        await adminCreateUser(TestContext, {
+          TemporaryPassword: "pwd",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+          ClientMetadata: {
+            client: "metadata",
+          },
+        });
+
+        expect(mockTriggers.preSignUp).toHaveBeenCalledWith(TestContext, {
+          clientId: null,
+          clientMetadata: {
+            client: "metadata",
+          },
+          source: "PreSignUp_AdminCreateUser",
+          userAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "sub", Value: expect.stringMatching(UUID) },
+          ],
+          userPoolId: "test",
+          username: "user-supplied",
+          validationData: undefined,
+        });
+      });
+
+      it("calls the PreSignUp trigger with the user's sub when the user pool has email as a username attribute", async () => {
+        mockUserPoolService.options.UsernameAttributes = ["email"];
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.preSignUp.mockResolvedValue({
+          autoConfirmUser: false,
+          autoVerifyPhone: false,
+          autoVerifyEmail: false,
+        });
+
+        await adminCreateUser(TestContext, {
+          TemporaryPassword: "pwd",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "example@example.com",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+          ClientMetadata: {
+            client: "metadata",
+          },
+        });
+
+        expect(mockTriggers.preSignUp).toHaveBeenCalledWith(TestContext, {
+          clientId: null,
+          clientMetadata: {
+            client: "metadata",
+          },
+          source: "PreSignUp_AdminCreateUser",
+          userAttributes: [
+            { Name: "email", Value: "example@example.com" },
+            { Name: "sub", Value: expect.stringMatching(UUID) },
+          ],
+          userPoolId: "test",
+          username: expect.stringMatching(UUID),
+          validationData: undefined,
+        });
+      });
+
+      it("throws if the PreSignUp trigger fails", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.preSignUp.mockRejectedValue(new UserLambdaValidationError());
+
+        await expect(
+          adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+          })
+        ).rejects.toEqual(new UserLambdaValidationError());
+      });
+
+      describe("autoConfirmUser response", () => {
+        beforeEach(() => {
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+          mockTriggers.preSignUp.mockResolvedValue({
+            autoConfirmUser: true,
+            autoVerifyPhone: false,
+            autoVerifyEmail: false,
+          });
+        });
+
+        it("creates user with status CONFIRMED when autoConfirmUser is true", async () => {
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+            MessageAction: "SUPPRESS",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              UserStatus: "CONFIRMED",
+            })
+          );
+        });
+
+        describe("when PostConfirmation trigger is also enabled", () => {
+          beforeEach(() => {
+            mockTriggers.enabled.mockImplementation(
+              (trigger) =>
+                trigger === "PreSignUp" || trigger === "PostConfirmation"
+            );
+          });
+
+          it("calls the PostConfirmation trigger after auto-confirming the user", async () => {
+            await adminCreateUser(TestContext, {
+              TemporaryPassword: "pwd",
+              UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+              Username: "user-supplied",
+              UserPoolId: "test",
+              MessageAction: "SUPPRESS",
+              ClientMetadata: {
+                client: "metadata",
+              },
+            });
+
+            expect(mockTriggers.postConfirmation).toHaveBeenCalledWith(
+              TestContext,
+              {
+                clientId: null,
+                clientMetadata: {
+                  client: "metadata",
+                },
+                source: "PostConfirmation_ConfirmSignUp",
+                username: "user-supplied",
+                userPoolId: "test",
+                userAttributes: expect.arrayContaining([
+                  { Name: "email", Value: "example@example.com" },
+                  { Name: "sub", Value: expect.stringMatching(UUID) },
+                  { Name: "cognito:user_status", Value: "CONFIRMED" },
+                ]),
+              }
+            );
+          });
+        });
+      });
+
+      describe("autoVerifyEmail response", () => {
+        beforeEach(() => {
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+          mockTriggers.preSignUp.mockResolvedValue({
+            autoConfirmUser: false,
+            autoVerifyPhone: false,
+            autoVerifyEmail: true,
+          });
+        });
+
+        it("adds email_verified attribute when autoVerifyEmail is true and user has email", async () => {
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+            MessageAction: "SUPPRESS",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              Attributes: expect.arrayContaining([
+                { Name: "email", Value: "example@example.com" },
+                { Name: "email_verified", Value: "true" },
+              ]),
+            })
+          );
+        });
+
+        it("adds email_verified attribute when autoVerifyEmail is true and user pool uses email as username", async () => {
+          mockUserPoolService.options.UsernameAttributes = ["email"];
+
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [],
+            Username: "example@example.com",
+            UserPoolId: "test",
+            MessageAction: "SUPPRESS",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              Attributes: expect.arrayContaining([
+                { Name: "email", Value: "example@example.com" },
+                { Name: "email_verified", Value: "true" },
+              ]),
+            })
+          );
+        });
+
+        it("does not add email_verified attribute when user has no email", async () => {
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              Attributes: expect.not.arrayContaining([
+                { Name: "email_verified", Value: "true" },
+              ]),
+            })
+          );
+        });
+      });
+
+      describe("autoVerifyPhone response", () => {
+        beforeEach(() => {
+          mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+          mockTriggers.preSignUp.mockResolvedValue({
+            autoConfirmUser: false,
+            autoVerifyPhone: true,
+            autoVerifyEmail: false,
+          });
+        });
+
+        it("adds phone_number_verified attribute when autoVerifyPhone is true and user has phone_number", async () => {
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "phone_number", Value: "0400000000" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              Attributes: expect.arrayContaining([
+                { Name: "phone_number", Value: "0400000000" },
+                { Name: "phone_number_verified", Value: "true" },
+              ]),
+            })
+          );
+        });
+
+        it("does not add phone_number_verified attribute when user has no phone_number", async () => {
+          await adminCreateUser(TestContext, {
+            TemporaryPassword: "pwd",
+            UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+            Username: "user-supplied",
+            UserPoolId: "test",
+            MessageAction: "SUPPRESS",
+          });
+
+          expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+            TestContext,
+            expect.objectContaining({
+              Attributes: expect.not.arrayContaining([
+                { Name: "phone_number_verified", Value: "true" },
+              ]),
+            })
+          );
+        });
+      });
+    });
+
+    describe("when PreSignUp trigger is disabled", () => {
+      it("does not call the PreSignUp trigger", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+
+        await adminCreateUser(TestContext, {
+          TemporaryPassword: "pwd",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+        });
+
+        expect(mockTriggers.preSignUp).not.toHaveBeenCalled();
+      });
+
+      it("creates user with default status FORCE_CHANGE_PASSWORD", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+
+        await adminCreateUser(TestContext, {
+          TemporaryPassword: "pwd",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+        });
+
+        expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+          TestContext,
+          expect.objectContaining({
+            UserStatus: "FORCE_CHANGE_PASSWORD",
+          })
+        );
+      });
+
+      it("does not call PostConfirmation even if enabled", async () => {
+        mockUserPoolService.getUserByUsername.mockResolvedValue(null);
+        mockTriggers.enabled.mockImplementation(
+          (trigger) => trigger === "PostConfirmation"
+        );
+
+        await adminCreateUser(TestContext, {
+          TemporaryPassword: "pwd",
+          UserAttributes: [{ Name: "email", Value: "example@example.com" }],
+          Username: "user-supplied",
+          UserPoolId: "test",
+          MessageAction: "SUPPRESS",
+        });
+
+        expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();
+      });
+    });
+  });
 });

@@ -5,7 +5,7 @@ import type { Trigger } from "./trigger";
 
 export type PreSignUpTrigger = Trigger<
   {
-    clientId: string;
+    clientId: string | null;
     source:
       | "PreSignUp_AdminCreateUser"
       | "PreSignUp_ExternalProvider"
