@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
+import * as uuid from "uuid";
 import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
-import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
@@ -13,7 +13,26 @@ import {
   type AssociateSoftwareTokenTarget,
 } from "./associateSoftwareToken";
 
-const currentDate = new Date();
+const signAccessToken = (sub: string) =>
+  jwt.sign(
+    {
+      sub,
+      event_id: "0",
+      token_use: "access",
+      scope: "aws.cognito.signin.user.admin",
+      auth_time: new Date(),
+      jti: uuid.v4(),
+      client_id: "test",
+      username: sub,
+    },
+    PrivateKey.pem,
+    {
+      algorithm: "RS256",
+      issuer: "http://localhost:9229/test",
+      expiresIn: "24h",
+      keyid: "CognitoLocal",
+    },
+  );
 
 describe("AssociateSoftwareToken target", () => {
   let associateSoftwareToken: AssociateSoftwareTokenTarget;
@@ -23,49 +42,33 @@ describe("AssociateSoftwareToken target", () => {
     mockUserPoolService = newMockUserPoolService();
     associateSoftwareToken = AssociateSoftwareToken({
       cognito: newMockCognitoService(mockUserPoolService),
-      clock: new ClockFake(currentDate),
     });
   });
 
-  it("generates TOTP secret and saves on user when AccessToken provided", async () => {
-    const user = TDB.user({ Username: "testuser" });
-    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
-
-    const validToken = jwt.sign(
-      { sub: user.Username, client_id: "test", token_use: "access", username: user.Username },
-      PrivateKey.pem,
-      { algorithm: "RS256", keyid: "CognitoLocal" },
-    );
-
-    const result = await associateSoftwareToken(TestContext, {
-      AccessToken: validToken,
-    });
-
-    expect(result.SecretCode).toBeDefined();
-    expect(result.SecretCode!.length).toBeGreaterThan(0);
-    expect(result.Session).toBeDefined();
-    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
-      TestContext,
-      expect.objectContaining({
-        TOTPSecret: result.SecretCode,
-        UserLastModifiedDate: currentDate,
-      }),
-    );
-  });
-
-  it("returns SecretCode and Session when only Session is provided", async () => {
-    const result = await associateSoftwareToken(TestContext, {
-      Session: "some-session",
-    });
-
-    expect(result.SecretCode).toBeDefined();
-    expect(result.Session).toBeDefined();
-    expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
-  });
-
-  it("throws if neither AccessToken nor Session provided", async () => {
+  it("rejects when neither AccessToken nor Session provided", async () => {
     await expect(
       associateSoftwareToken(TestContext, {}),
     ).rejects.toBeInstanceOf(InvalidParameterError);
+  });
+
+  it("generates and stores a TOTP secret for the authed user", async () => {
+    const user = TDB.user();
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+    const result = await associateSoftwareToken(TestContext, {
+      AccessToken: signAccessToken(user.Username),
+    });
+
+    expect(result.SecretCode).toMatch(/^[A-Z2-7]+=*$/);
+    expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
+      TestContext,
+      expect.objectContaining({
+        Username: user.Username,
+        SoftwareTokenMfaConfiguration: {
+          Secret: result.SecretCode,
+          Verified: false,
+        },
+      }),
+    );
   });
 });

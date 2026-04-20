@@ -53,15 +53,15 @@ export const user = (partial?: Partial<User>): User => ({
   MFACode: partial?.MFACode ?? undefined,
   MFAOptions: partial?.MFAOptions ?? undefined,
   Password: partial?.Password ?? "Password123!",
+  PreferredMfaSetting: partial?.PreferredMfaSetting,
   RefreshTokens: partial?.RefreshTokens ?? [],
+  SoftwareTokenMfaConfiguration: partial?.SoftwareTokenMfaConfiguration,
   UnverifiedAttributeChanges: partial?.UnverifiedAttributeChanges,
+  UserMFASettingList: partial?.UserMFASettingList,
   UserCreateDate: partial?.UserCreateDate ?? new Date(),
   UserLastModifiedDate: partial?.UserLastModifiedDate ?? new Date(),
   UserStatus: partial?.UserStatus ?? "CONFIRMED",
   Username: partial?.Username ?? id("User"),
-  PreferredMfaSetting: partial?.PreferredMfaSetting ?? undefined,
-  UserMFASettingList: partial?.UserMFASettingList ?? undefined,
-  TOTPSecret: partial?.TOTPSecret ?? undefined,
 });
 
 export const userPool = (partial?: Partial<UserPool>): UserPool => {

@@ -34,22 +34,19 @@ type InitiateAuthServices = Pick<
   "cognito" | "messages" | "otp" | "tokenGenerator" | "triggers"
 >;
 
-const verifyMfaChallenge = async (
+const smsMfaChallenge = async (
   ctx: Context,
   user: User,
   req: InitiateAuthRequest,
   userPool: UserPoolService,
   services: InitiateAuthServices,
 ): Promise<InitiateAuthResponse> => {
-  if (!user.MFAOptions?.length) {
-    throw new NotAuthorizedError();
-  }
   const smsMfaOption = user.MFAOptions?.find(
     (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
       x.DeliveryMedium === "SMS",
   );
   if (!smsMfaOption) {
-    throw new UnsupportedError("MFA challenge without SMS");
+    throw new UnsupportedError("SMS_MFA without SMS MFAOption");
   }
 
   const deliveryDestination = attributeValue(
@@ -88,7 +85,68 @@ const verifyMfaChallenge = async (
       CODE_DELIVERY_DESTINATION: deliveryDestination,
       USER_ID_FOR_SRP: user.Username,
     },
+    Session: v4(),
   };
+};
+
+const softwareTokenMfaChallenge = (user: User): InitiateAuthResponse => ({
+  ChallengeName: "SOFTWARE_TOKEN_MFA",
+  ChallengeParameters: {
+    USER_ID_FOR_SRP: user.Username,
+    ...(user.SoftwareTokenMfaConfiguration?.FriendlyDeviceName
+      ? {
+          FRIENDLY_DEVICE_NAME:
+            user.SoftwareTokenMfaConfiguration.FriendlyDeviceName,
+        }
+      : {}),
+  },
+  Session: v4(),
+});
+
+const enabledMfaMethods = (
+  user: User,
+): readonly ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] => {
+  const explicit = user.UserMFASettingList ?? [];
+  const legacy =
+    explicit.length === 0 &&
+    (user.MFAOptions ?? []).some((o) => o.DeliveryMedium === "SMS")
+      ? ["SMS_MFA"]
+      : [];
+  const methods = new Set<string>([...explicit, ...legacy]);
+
+  const result: ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] = [];
+  if (methods.has("SMS_MFA")) result.push("SMS_MFA");
+  if (methods.has("SOFTWARE_TOKEN_MFA")) result.push("SOFTWARE_TOKEN_MFA");
+  return result;
+};
+
+const verifyMfaChallenge = async (
+  ctx: Context,
+  user: User,
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  services: InitiateAuthServices,
+): Promise<InitiateAuthResponse> => {
+  const methods = enabledMfaMethods(user);
+  if (methods.length === 0) {
+    throw new NotAuthorizedError();
+  }
+
+  if (methods.length > 1) {
+    return {
+      ChallengeName: "SELECT_MFA_TYPE",
+      ChallengeParameters: {
+        USER_ID_FOR_SRP: user.Username,
+        MFAS_CAN_CHOOSE: JSON.stringify(methods),
+      },
+      Session: v4(),
+    };
+  }
+
+  if (methods[0] === "SOFTWARE_TOKEN_MFA") {
+    return softwareTokenMfaChallenge(user);
+  }
+  return smsMfaChallenge(ctx, user, req, userPool, services);
 };
 
 const verifyPasswordChallenge = async (
@@ -117,7 +175,7 @@ const verifyPasswordChallenge = async (
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
   return {
-    ChallengeName: "PASSWORD_VERIFIER",
+    ChallengeName: undefined,
     ChallengeParameters: {},
     AuthenticationResult: tokens,
   };
@@ -186,10 +244,12 @@ const userPasswordAuthFlow = async (
     throw new UserNotConfirmedException();
   }
 
+  const userHasMfa =
+    (user.MFAOptions ?? []).length > 0 ||
+    (user.UserMFASettingList ?? []).length > 0;
   if (
-    (userPool.options.MfaConfiguration === "OPTIONAL" &&
-      (user.MFAOptions ?? []).length > 0) ||
-    userPool.options.MfaConfiguration === "ON"
+    userPool.options.MfaConfiguration === "ON" ||
+    (userPool.options.MfaConfiguration !== "OFF" && userHasMfa)
   ) {
     return verifyMfaChallenge(ctx, user, req, userPool, services);
   }
@@ -291,7 +351,10 @@ const userSrpAuthFlow = async (
     throw new InvalidParameterError("Missing required parameter USERNAME");
   }
 
-  const user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
+  const user = await userPool.getUserByUsername(
+    ctx,
+    req.AuthParameters.USERNAME,
+  );
   if (!user) {
     throw new NotAuthorizedError();
   }

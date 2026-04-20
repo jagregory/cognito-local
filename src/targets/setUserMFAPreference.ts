@@ -3,7 +3,7 @@ import type {
   SetUserMFAPreferenceResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
-import { InvalidParameterError, UserNotFoundError } from "../errors";
+import { InvalidParameterError, NotAuthorizedError } from "../errors";
 import type { Services } from "../services";
 import type { Token } from "../services/tokenGenerator";
 import type { Target } from "./Target";
@@ -13,50 +13,64 @@ export type SetUserMFAPreferenceTarget = Target<
   SetUserMFAPreferenceResponse
 >;
 
-type SetUserMFAPreferenceServices = Pick<Services, "cognito" | "clock">;
+type SetUserMFAPreferenceServices = Pick<Services, "cognito">;
 
 export const SetUserMFAPreference =
-  ({
-    cognito,
-    clock,
-  }: SetUserMFAPreferenceServices): SetUserMFAPreferenceTarget =>
+  ({ cognito }: SetUserMFAPreferenceServices): SetUserMFAPreferenceTarget =>
   async (ctx, req) => {
-    const decodedToken = jwt.decode(req.AccessToken) as Token | null;
-    if (!decodedToken) {
+    if (!req.AccessToken) {
+      throw new InvalidParameterError("Missing required parameter AccessToken");
+    }
+
+    const decoded = jwt.decode(req.AccessToken) as Token | null;
+    if (!decoded) {
       throw new InvalidParameterError();
     }
 
     const userPool = await cognito.getUserPoolForClientId(
       ctx,
-      decodedToken.client_id,
+      decoded.client_id,
     );
-    const user = await userPool.getUserByUsername(ctx, decodedToken.sub);
+    const user = await userPool.getUserByUsername(ctx, decoded.sub);
     if (!user) {
-      throw new UserNotFoundError();
+      throw new NotAuthorizedError();
     }
 
-    const mfaSettingList: string[] = [];
-    let preferredMfaSetting: string | undefined;
+    const sms = req.SMSMfaSettings;
+    const software = req.SoftwareTokenMfaSettings;
 
-    if (req.SMSMfaSettings?.Enabled) {
-      mfaSettingList.push("SMS_MFA");
-      if (req.SMSMfaSettings.PreferredMfa) {
-        preferredMfaSetting = "SMS_MFA";
-      }
+    if (software?.Enabled && !user.SoftwareTokenMfaConfiguration?.Verified) {
+      throw new InvalidParameterError(
+        "User has not verified software token MFA",
+      );
     }
 
-    if (req.SoftwareTokenMfaSettings?.Enabled) {
-      mfaSettingList.push("SOFTWARE_TOKEN_MFA");
-      if (req.SoftwareTokenMfaSettings.PreferredMfa) {
-        preferredMfaSetting = "SOFTWARE_TOKEN_MFA";
-      }
+    const methods = new Set(user.UserMFASettingList ?? []);
+    if (sms) {
+      if (sms.Enabled) methods.add("SMS_MFA");
+      else methods.delete("SMS_MFA");
+    }
+    if (software) {
+      if (software.Enabled) methods.add("SOFTWARE_TOKEN_MFA");
+      else methods.delete("SOFTWARE_TOKEN_MFA");
+    }
+
+    const preferred = sms?.PreferredMfa
+      ? "SMS_MFA"
+      : software?.PreferredMfa
+        ? "SOFTWARE_TOKEN_MFA"
+        : undefined;
+
+    if (preferred && !methods.has(preferred)) {
+      throw new InvalidParameterError(
+        `Cannot set ${preferred} as preferred — it is not enabled`,
+      );
     }
 
     await userPool.saveUser(ctx, {
       ...user,
-      UserMFASettingList: mfaSettingList,
-      PreferredMfaSetting: preferredMfaSetting,
-      UserLastModifiedDate: clock.get(),
+      UserMFASettingList: [...methods],
+      PreferredMfaSetting: preferred,
     });
 
     return {};

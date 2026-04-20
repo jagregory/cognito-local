@@ -3,6 +3,7 @@ import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import type { UserPoolService } from "../services";
+import { DateClock } from "../services/clock";
 import {
   SetUserPoolMfaConfig,
   type SetUserPoolMfaConfigTarget,
@@ -16,6 +17,7 @@ describe("SetUserPoolMfaConfig target", () => {
     mockUserPoolService = newMockUserPoolService();
     setUserPoolMfaConfig = SetUserPoolMfaConfig({
       cognito: newMockCognitoService(mockUserPoolService),
+      clock: new DateClock(),
     });
   });
 

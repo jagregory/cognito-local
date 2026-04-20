@@ -1,24 +1,39 @@
 import jwt from "jsonwebtoken";
-import { TOTP } from "otpauth";
+import * as uuid from "uuid";
 import { beforeEach, describe, expect, it, type MockedObject } from "vitest";
-import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
 import { TestContext } from "../__tests__/testContext";
 import * as TDB from "../__tests__/testDataBuilder";
-import {
-  CodeMismatchError,
-  InvalidParameterError,
-} from "../errors";
+import { CodeMismatchError, InvalidParameterError } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import type { UserPoolService } from "../services";
+import { generate, generateSecret } from "../services/totp";
 import {
   VerifySoftwareToken,
   type VerifySoftwareTokenTarget,
 } from "./verifySoftwareToken";
 
-const currentDate = new Date();
-const TEST_TOTP_SECRET = "JBSWY3DPEHPK3PXP";
+const signAccessToken = (sub: string) =>
+  jwt.sign(
+    {
+      sub,
+      event_id: "0",
+      token_use: "access",
+      scope: "aws.cognito.signin.user.admin",
+      auth_time: new Date(),
+      jti: uuid.v4(),
+      client_id: "test",
+      username: sub,
+    },
+    PrivateKey.pem,
+    {
+      algorithm: "RS256",
+      issuer: "http://localhost:9229/test",
+      expiresIn: "24h",
+      keyid: "CognitoLocal",
+    },
+  );
 
 describe("VerifySoftwareToken target", () => {
   let verifySoftwareToken: VerifySoftwareTokenTarget;
@@ -28,78 +43,61 @@ describe("VerifySoftwareToken target", () => {
     mockUserPoolService = newMockUserPoolService();
     verifySoftwareToken = VerifySoftwareToken({
       cognito: newMockCognitoService(mockUserPoolService),
-      clock: new ClockFake(currentDate),
     });
   });
 
-  it("verifies a valid TOTP code and adds SOFTWARE_TOKEN_MFA", async () => {
+  it("verifies a correct code and marks the secret verified", async () => {
+    const secret = generateSecret();
     const user = TDB.user({
-      Username: "testuser",
-      TOTPSecret: TEST_TOTP_SECRET,
-      UserMFASettingList: [],
+      SoftwareTokenMfaConfiguration: { Secret: secret, Verified: false },
     });
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    const totp = new TOTP({ secret: TEST_TOTP_SECRET, algorithm: "SHA1", digits: 6, period: 30 });
-    const validCode = totp.generate();
-
-    const validToken = jwt.sign(
-      { sub: user.Username, client_id: "test", token_use: "access", username: user.Username },
-      PrivateKey.pem,
-      { algorithm: "RS256", keyid: "CognitoLocal" },
-    );
-
     const result = await verifySoftwareToken(TestContext, {
-      AccessToken: validToken,
-      UserCode: validCode,
+      AccessToken: signAccessToken(user.Username),
+      UserCode: generate(secret),
+      FriendlyDeviceName: "iPhone",
     });
 
     expect(result.Status).toBe("SUCCESS");
-    expect(result.Session).toBeDefined();
     expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(
       TestContext,
       expect.objectContaining({
+        SoftwareTokenMfaConfiguration: {
+          Secret: secret,
+          Verified: true,
+          FriendlyDeviceName: "iPhone",
+        },
         UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
-        UserLastModifiedDate: currentDate,
       }),
     );
   });
 
-  it("throws if UserCode is missing", async () => {
-    await expect(
-      verifySoftwareToken(TestContext, {
-        AccessToken: "some-token",
-        UserCode: "",
-      }),
-    ).rejects.toBeInstanceOf(InvalidParameterError);
-  });
-
-  it("throws if neither AccessToken nor Session provided", async () => {
-    await expect(
-      verifySoftwareToken(TestContext, {
-        UserCode: "123456",
-      }),
-    ).rejects.toBeInstanceOf(InvalidParameterError);
-  });
-
-  it("throws CodeMismatchError for wrong TOTP code", async () => {
+  it("rejects a wrong code", async () => {
+    const secret = generateSecret();
     const user = TDB.user({
-      Username: "testuser",
-      TOTPSecret: TEST_TOTP_SECRET,
+      SoftwareTokenMfaConfiguration: { Secret: secret, Verified: false },
     });
     mockUserPoolService.getUserByUsername.mockResolvedValue(user);
 
-    const validToken = jwt.sign(
-      { sub: user.Username, client_id: "test", token_use: "access", username: user.Username },
-      PrivateKey.pem,
-      { algorithm: "RS256", keyid: "CognitoLocal" },
-    );
-
     await expect(
       verifySoftwareToken(TestContext, {
-        AccessToken: validToken,
+        AccessToken: signAccessToken(user.Username),
         UserCode: "000000",
       }),
     ).rejects.toBeInstanceOf(CodeMismatchError);
+    expect(mockUserPoolService.saveUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects when the user has no associated secret", async () => {
+    const user = TDB.user();
+    mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+    await expect(
+      verifySoftwareToken(TestContext, {
+        AccessToken: signAccessToken(user.Username),
+        UserCode: "123456",
+      }),
+    ).rejects.toBeInstanceOf(InvalidParameterError);
   });
 });

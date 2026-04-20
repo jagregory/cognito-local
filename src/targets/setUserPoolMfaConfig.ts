@@ -10,24 +10,50 @@ export type SetUserPoolMfaConfigTarget = Target<
   SetUserPoolMfaConfigResponse
 >;
 
-type SetUserPoolMfaConfigServices = Pick<Services, "cognito">;
+type SetUserPoolMfaConfigServices = Pick<Services, "cognito" | "clock">;
 
 export const SetUserPoolMfaConfig =
-  ({ cognito }: SetUserPoolMfaConfigServices): SetUserPoolMfaConfigTarget =>
+  ({
+    cognito,
+    clock,
+  }: SetUserPoolMfaConfigServices): SetUserPoolMfaConfigTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
 
     await userPool.updateOptions(ctx, {
       ...userPool.options,
-      MfaConfiguration: req.MfaConfiguration,
-      SmsConfiguration: req.SmsMfaConfiguration?.SmsConfiguration,
+      MfaConfiguration:
+        req.MfaConfiguration ?? userPool.options.MfaConfiguration,
       SmsAuthenticationMessage:
-        req.SmsMfaConfiguration?.SmsAuthenticationMessage,
+        req.SmsMfaConfiguration?.SmsAuthenticationMessage ??
+        userPool.options.SmsAuthenticationMessage,
+      SmsConfiguration:
+        req.SmsMfaConfiguration?.SmsConfiguration ??
+        userPool.options.SmsConfiguration,
+      SoftwareTokenMfaConfiguration: req.SoftwareTokenMfaConfiguration
+        ? {
+            Enabled: req.SoftwareTokenMfaConfiguration.Enabled ?? false,
+          }
+        : userPool.options.SoftwareTokenMfaConfiguration,
+      LastModifiedDate: clock.get(),
     });
 
     return {
-      MfaConfiguration: req.MfaConfiguration,
-      SmsMfaConfiguration: req.SmsMfaConfiguration,
-      SoftwareTokenMfaConfiguration: req.SoftwareTokenMfaConfiguration,
+      MfaConfiguration:
+        req.MfaConfiguration ?? userPool.options.MfaConfiguration,
+      SmsMfaConfiguration: {
+        SmsAuthenticationMessage:
+          req.SmsMfaConfiguration?.SmsAuthenticationMessage ??
+          userPool.options.SmsAuthenticationMessage,
+        SmsConfiguration:
+          req.SmsMfaConfiguration?.SmsConfiguration ??
+          userPool.options.SmsConfiguration,
+      },
+      SoftwareTokenMfaConfiguration: {
+        Enabled:
+          req.SoftwareTokenMfaConfiguration?.Enabled ??
+          userPool.options.SoftwareTokenMfaConfiguration?.Enabled ??
+          false,
+      },
     };
   };

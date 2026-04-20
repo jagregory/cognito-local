@@ -1,3 +1,10 @@
+# [5.2.0](https://github.com/jagregory/cognito-local/compare/v5.1.0...v5.2.0) (2026-04-18)
+
+
+### Features
+
+* TOTP / software token MFA support ([#469](https://github.com/jagregory/cognito-local/issues/469)) ([86a63ac](https://github.com/jagregory/cognito-local/commit/86a63ac4e6c3bf7cdf0358b71960738714b2787e))
+
 # [5.1.0](https://github.com/jagregory/cognito-local/compare/v5.0.0...v5.1.0) (2025-08-06)
 
 
