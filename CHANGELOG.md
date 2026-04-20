@@ -1,3 +1,10 @@
+# [1.0.0-dev.9](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.8...v1.0.0-dev.9) (2026-04-20)
+
+
+### Bug Fixes
+
+* **ci:** disable @semantic-release/github PR comments + labels ([aca5c95](https://github.com/Geekoosh/cognito-local/commit/aca5c95275540d0a58cfac69ed5be4072c24d885)), closes [#NNN](https://github.com/Geekoosh/cognito-local/issues/NNN) [#469](https://github.com/Geekoosh/cognito-local/issues/469)
+
 # [1.0.0-dev.8](https://github.com/Geekoosh/cognito-local/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-04-19)
 
 
