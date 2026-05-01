@@ -17,6 +17,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 - [Configuration](#configuration)
   - [Custom Email Sender Trigger](#custom-email-sender-trigger)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
+  - [Pool-level Lambda Triggers](#pool-level-lambda-triggers)
   - [User Pools and Clients](#user-pools-and-clients)
 - [Known Limitations](#known-limitations)
 - [Multi-factor authentication](#multi-factor-authentication)
@@ -214,7 +215,6 @@ cognito-local how to connect to your local Lambda server:
 #### Known limitations
 
 1. Incomplete support for triggers
-2. Triggers can only be configured globally and not per-pool
 
 ## Usage
 
@@ -444,6 +444,54 @@ verification in Node for Cognito Local. The easiest way to do this is to run Cog
 
     NODE_TLS_REJECT_UNAUTHORIZED=0 cognito-local
     docker run --env NODE_TLS_REJECT_UNAUTHORIZED=0 ...
+
+### Pool-level Lambda Triggers
+
+Triggers can be configured per-pool by setting `LambdaConfig` in the pool's JSON file (`.cognito/db/$userPoolId.json`).
+Pool-level configuration takes precedence over the global `TriggerFunctions` in `config.json`. Any trigger not
+configured at the pool level falls back to the global configuration.
+
+This is useful when multiple projects share a single cognito-local instance and each project needs its own trigger
+functions.
+
+Edit the pool file directly and populate the `Options.LambdaConfig` field:
+
+```json
+{
+  "Users": {},
+  "Options": {
+    "Id": "local_myapp",
+    "LambdaConfig": {
+      "PreSignUp": "my-pre-signup-function",
+      "PostConfirmation": "my-post-confirmation-function",
+      "PostAuthentication": "my-post-authentication-function",
+      "PreTokenGeneration": "my-pre-token-generation-function",
+      "CustomMessage": "my-custom-message-function",
+      "UserMigration": "my-user-migration-function"
+    }
+  }
+}
+```
+
+For `CustomEmailSender`, the value follows the AWS SDK shape — an object with `LambdaArn` and `LambdaVersion`:
+
+```json
+{
+  "Options": {
+    "LambdaConfig": {
+      "CustomEmailSender": {
+        "LambdaArn": "my-custom-email-sender-function",
+        "LambdaVersion": "V1_0"
+      }
+    }
+  }
+}
+```
+
+The function names are resolved using the same `LambdaClient` configuration as global triggers. If you are invoking
+local functions, make sure `LambdaClient.endpoint` in `config.json` is set accordingly.
+
+You will need to restart Cognito Local after editing a pool file.
 
 ### User Pools and Clients
 

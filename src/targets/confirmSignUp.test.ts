@@ -146,5 +146,84 @@ describe("ConfirmSignUp target", () => {
         expect(mockTriggers.postConfirmation).not.toHaveBeenCalled();
       });
     });
+
+    describe("pool-level trigger override", () => {
+      it("passes pool's LambdaConfig to forPool", async () => {
+        const lambdaConfig = { PostConfirmation: "pool-post-confirmation-fn" };
+        mockUserPoolService = newMockUserPoolService({
+          Id: "test",
+          LambdaConfig: lambdaConfig,
+        });
+        confirmSignUp = ConfirmSignUp({
+          cognito: newMockCognitoService(mockUserPoolService),
+          clock,
+          triggers: mockTriggers,
+        });
+        mockTriggers.enabled.mockReturnValue(false);
+
+        const user = TDB.user({
+          ConfirmationCode: "123456",
+          UserStatus: "UNCONFIRMED",
+        });
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+        await confirmSignUp(TestContext, {
+          ClientId: "clientId",
+          Username: user.Username,
+          ConfirmationCode: "123456",
+        });
+
+        expect(mockTriggers.forPool).toHaveBeenCalledWith(lambdaConfig);
+      });
+
+      it("invokes trigger using pool-level config when pool has LambdaConfig", async () => {
+        const lambdaConfig = { PostConfirmation: "pool-post-confirmation-fn" };
+        mockUserPoolService = newMockUserPoolService({
+          Id: "test",
+          LambdaConfig: lambdaConfig,
+        });
+        confirmSignUp = ConfirmSignUp({
+          cognito: newMockCognitoService(mockUserPoolService),
+          clock,
+          triggers: mockTriggers,
+        });
+        mockTriggers.enabled.mockReturnValue(true);
+
+        const user = TDB.user({
+          ConfirmationCode: "123456",
+          UserStatus: "UNCONFIRMED",
+        });
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+        await confirmSignUp(TestContext, {
+          ClientId: "clientId",
+          Username: user.Username,
+          ConfirmationCode: "123456",
+        });
+
+        expect(mockTriggers.forPool).toHaveBeenCalledWith(lambdaConfig);
+        expect(mockTriggers.postConfirmation).toHaveBeenCalled();
+      });
+
+      it("passes undefined to forPool when pool has no LambdaConfig, using global config as fallback", async () => {
+        // default mockUserPoolService has no LambdaConfig
+        mockTriggers.enabled.mockReturnValue(true);
+
+        const user = TDB.user({
+          ConfirmationCode: "123456",
+          UserStatus: "UNCONFIRMED",
+        });
+        mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+        await confirmSignUp(TestContext, {
+          ClientId: "clientId",
+          Username: user.Username,
+          ConfirmationCode: "123456",
+        });
+
+        expect(mockTriggers.forPool).toHaveBeenCalledWith(undefined);
+        expect(mockTriggers.postConfirmation).toHaveBeenCalled();
+      });
+    });
   });
 });

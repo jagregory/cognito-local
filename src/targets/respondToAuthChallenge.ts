@@ -186,8 +186,10 @@ export const RespondToAuthChallenge =
       );
     }
 
-    if (triggers.enabled("PostAuthentication")) {
-      await triggers.postAuthentication(ctx, {
+    const poolTriggers = triggers.forPool(userPool.options.LambdaConfig);
+
+    if (poolTriggers.enabled("PostAuthentication")) {
+      await poolTriggers.postAuthentication(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostAuthentication_Authentication",
@@ -201,13 +203,15 @@ export const RespondToAuthChallenge =
 
     return {
       ChallengeParameters: {},
-      AuthenticationResult: await tokenGenerator.generate(
-        ctx,
-        user,
-        userGroups,
-        userPoolClient,
-        req.ClientMetadata,
-        "Authentication",
-      ),
+      AuthenticationResult: await tokenGenerator
+        .forPool(userPool.options.LambdaConfig)
+        .generate(
+          ctx,
+          user,
+          userGroups,
+          userPoolClient,
+          req.ClientMetadata,
+          "Authentication",
+        ),
     };
   };

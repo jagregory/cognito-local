@@ -1,3 +1,4 @@
+import type { LambdaConfigType } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { Context } from "./context";
 import type {
   DeliveryDetails,
@@ -25,6 +26,7 @@ type MessageSource =
   | "VerifyUserAttribute";
 
 export interface Messages {
+  forPool(poolLambdaConfig: LambdaConfigType | undefined): Messages;
   deliver(
     ctx: Context,
     source: MessageSource,
@@ -44,6 +46,13 @@ export class MessagesService implements Messages {
   public constructor(triggers: Triggers, messageDelivery: MessageDelivery) {
     this.triggers = triggers;
     this.messageDelivery = messageDelivery;
+  }
+
+  public forPool(poolLambdaConfig: LambdaConfigType | undefined): Messages {
+    return new MessagesService(
+      this.triggers.forPool(poolLambdaConfig),
+      this.messageDelivery,
+    );
   }
 
   public async deliver(

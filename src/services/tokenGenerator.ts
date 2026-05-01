@@ -1,6 +1,9 @@
 import type { StringMap } from "aws-lambda/trigger/cognito-user-pool-trigger/_common";
 import type { GroupOverrideDetails } from "aws-lambda/trigger/cognito-user-pool-trigger/pre-token-generation";
-import type { TimeUnitsType } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import type {
+  LambdaConfigType,
+  TimeUnitsType,
+} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import type { StringValue, UnitAnyCase } from "ms";
 import * as uuid from "uuid";
@@ -91,6 +94,7 @@ export interface Tokens {
 }
 
 export interface TokenGenerator {
+  forPool(poolLambdaConfig: LambdaConfigType | undefined): TokenGenerator;
   generate(
     ctx: Context,
     user: User,
@@ -139,6 +143,16 @@ export class JwtTokenGenerator implements TokenGenerator {
     this.clock = clock;
     this.triggers = triggers;
     this.tokenConfig = tokenConfig;
+  }
+
+  public forPool(
+    poolLambdaConfig: LambdaConfigType | undefined,
+  ): TokenGenerator {
+    return new JwtTokenGenerator(
+      this.clock,
+      this.triggers.forPool(poolLambdaConfig),
+      this.tokenConfig,
+    );
   }
 
   public async generate(
