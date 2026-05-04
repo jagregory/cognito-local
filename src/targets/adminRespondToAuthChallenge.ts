@@ -99,7 +99,8 @@ export const AdminRespondToAuthChallenge =
       }
       if (
         (userPool.options.MfaConfiguration === "OPTIONAL" &&
-          (user.MFAOptions ?? []).length > 0) ||
+          ((user.MFAOptions ?? []).length > 0 ||
+            (user.UserMFASettingList ?? []).length > 0)) ||
         userPool.options.MfaConfiguration === "ON"
       ) {
         return {

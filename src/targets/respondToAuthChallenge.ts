@@ -194,7 +194,8 @@ export const RespondToAuthChallenge =
       // Check if MFA is required
       if (
         (userPool.options.MfaConfiguration === "OPTIONAL" &&
-          (user.MFAOptions ?? []).length > 0) ||
+          ((user.MFAOptions ?? []).length > 0 ||
+            (user.UserMFASettingList ?? []).length > 0)) ||
         userPool.options.MfaConfiguration === "ON"
       ) {
         return {

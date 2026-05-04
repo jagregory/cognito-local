@@ -77,6 +77,28 @@ const adminUserPasswordAuthFlow = async (
     throw new UserNotConfirmedException();
   }
 
+  const userHasMfa =
+    (user.MFAOptions ?? []).length > 0 ||
+    (user.UserMFASettingList ?? []).length > 0;
+
+  if (
+    userPool.options.MfaConfiguration === "ON" ||
+    (userPool.options.MfaConfiguration !== "OFF" && userHasMfa)
+  ) {
+    if (!userHasMfa) {
+      throw new NotAuthorizedError();
+    }
+    return {
+      ChallengeName:
+        user.PreferredMfaSetting === "SOFTWARE_TOKEN_MFA"
+          ? "SOFTWARE_TOKEN_MFA"
+          : "SMS_MFA",
+      ChallengeParameters: { USER_ID_FOR_SRP: user.Username },
+      Session: v4(),
+      AuthenticationResult: undefined,
+    };
+  }
+
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
   const tokens = await services.tokenGenerator.generate(
