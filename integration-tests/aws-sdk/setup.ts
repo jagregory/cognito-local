@@ -7,6 +7,7 @@ import { afterEach, beforeEach, vi } from "vitest";
 import { createServer } from "../../src";
 import { FakeMessageDeliveryService } from "../../src/__tests__/FakeMessageDeliveryService";
 import { MockLogger } from "../../src/__tests__/mockLogger";
+import { InMemoryAuthorizationCodeStore } from "../../src/services/authorizationCodeStore";
 import { DefaultConfig } from "../../src/server/config";
 import { Router } from "../../src/server/Router";
 import {
@@ -70,6 +71,7 @@ export const withCognitoSdk =
 
       fakeMessageDeliveryService = new FakeMessageDeliveryService();
       const router = Router({
+        authorizationCodeStore: new InMemoryAuthorizationCodeStore(),
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,

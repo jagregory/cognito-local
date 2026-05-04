@@ -83,6 +83,119 @@ describe("AdminInitiateAuth target", () => {
     );
   });
 
+  describe("MFA enforcement", () => {
+    it("returns SMS_MFA challenge when MfaConfiguration is ON and user has SMS MFA", async () => {
+      const existingUser = TDB.user({
+        MFAOptions: [{ DeliveryMedium: "SMS", AttributeName: "phone_number" }],
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+      mockUserPoolService.options.MfaConfiguration = "ON";
+
+      const response = await adminInitiateAuth(TestContext, {
+        AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        ClientId: userPoolClient.ClientId,
+        UserPoolId: userPoolClient.UserPoolId,
+        AuthParameters: {
+          USERNAME: existingUser.Username,
+          PASSWORD: existingUser.Password,
+        },
+      });
+
+      expect(response.ChallengeName).toEqual("SMS_MFA");
+      expect(response.ChallengeParameters).toEqual({
+        USER_ID_FOR_SRP: existingUser.Username,
+      });
+      expect(response.AuthenticationResult).toBeUndefined();
+      expect(mockTokenGenerator.generate).not.toHaveBeenCalled();
+    });
+
+    it("returns SOFTWARE_TOKEN_MFA challenge when MfaConfiguration is ON and user prefers TOTP", async () => {
+      const existingUser = TDB.user({
+        UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+        PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+      mockUserPoolService.options.MfaConfiguration = "ON";
+
+      const response = await adminInitiateAuth(TestContext, {
+        AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        ClientId: userPoolClient.ClientId,
+        UserPoolId: userPoolClient.UserPoolId,
+        AuthParameters: {
+          USERNAME: existingUser.Username,
+          PASSWORD: existingUser.Password,
+        },
+      });
+
+      expect(response.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+      expect(response.AuthenticationResult).toBeUndefined();
+    });
+
+    it("throws NotAuthorizedError when MfaConfiguration is ON but user has no MFA configured", async () => {
+      const existingUser = TDB.user();
+      mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+      mockUserPoolService.options.MfaConfiguration = "ON";
+
+      await expect(
+        adminInitiateAuth(TestContext, {
+          AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+          ClientId: userPoolClient.ClientId,
+          UserPoolId: userPoolClient.UserPoolId,
+          AuthParameters: {
+            USERNAME: existingUser.Username,
+            PASSWORD: existingUser.Password,
+          },
+        }),
+      ).rejects.toThrow("User not authorized");
+    });
+
+    it("returns MFA challenge when MfaConfiguration is OPTIONAL and user has MFA", async () => {
+      const existingUser = TDB.user({
+        UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+        PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+      mockUserPoolService.options.MfaConfiguration = "OPTIONAL";
+
+      const response = await adminInitiateAuth(TestContext, {
+        AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        ClientId: userPoolClient.ClientId,
+        UserPoolId: userPoolClient.UserPoolId,
+        AuthParameters: {
+          USERNAME: existingUser.Username,
+          PASSWORD: existingUser.Password,
+        },
+      });
+
+      expect(response.ChallengeName).toEqual("SOFTWARE_TOKEN_MFA");
+      expect(response.AuthenticationResult).toBeUndefined();
+    });
+
+    it("issues tokens directly when MfaConfiguration is OPTIONAL and user has no MFA", async () => {
+      mockTokenGenerator.generate.mockResolvedValue({
+        AccessToken: "access",
+        IdToken: "id",
+        RefreshToken: "refresh",
+      });
+      const existingUser = TDB.user();
+      mockUserPoolService.getUserByUsername.mockResolvedValue(existingUser);
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
+      mockUserPoolService.options.MfaConfiguration = "OPTIONAL";
+
+      const response = await adminInitiateAuth(TestContext, {
+        AuthFlow: "ADMIN_USER_PASSWORD_AUTH",
+        ClientId: userPoolClient.ClientId,
+        UserPoolId: userPoolClient.UserPoolId,
+        AuthParameters: {
+          USERNAME: existingUser.Username,
+          PASSWORD: existingUser.Password,
+        },
+      });
+
+      expect(response.AuthenticationResult?.AccessToken).toEqual("access");
+    });
+  });
+
   it("supports REFRESH_TOKEN_AUTH", async () => {
     mockTokenGenerator.generate.mockResolvedValue({
       AccessToken: "access",

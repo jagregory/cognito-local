@@ -9,6 +9,8 @@ import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import type { Services } from "../services";
+import { createOAuth2Router } from "./oauth2Router";
 import type { Router } from "./Router";
 
 export type ServerOptions = {
@@ -30,6 +32,7 @@ export const createServer = (
   router: Router,
   logger: Logger,
   options: ServerOptions,
+  services?: Services,
 ): Server => {
   const pino = Pino({
     logger,
@@ -55,6 +58,14 @@ export const createServer = (
     }),
   );
 
+  // URL-encoded body parser for OAuth2 endpoints
+  app.use(express.urlencoded({ extended: false }));
+
+  // Mount OAuth2/OIDC router
+  if (services) {
+    app.use(createOAuth2Router(services));
+  }
+
   app.get("/:userPoolId/.well-known/jwks.json", (_req, res) => {
     res.status(200).json({
       keys: [PublicKey.jwk],
@@ -62,10 +73,28 @@ export const createServer = (
   });
 
   app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
+    const baseUrl =
+      services?.config.TokenConfig.IssuerDomain ??
+      `${req.protocol}://${req.get("host")}`;
+    const poolUrl = `${baseUrl}/${req.params.userPoolId}`;
+
     res.status(200).json({
+      issuer: poolUrl,
+      jwks_uri: `${poolUrl}/.well-known/jwks.json`,
+      authorization_endpoint: `${baseUrl}/oauth2/authorize`,
+      token_endpoint: `${baseUrl}/oauth2/token`,
+      userinfo_endpoint: `${baseUrl}/oauth2/userInfo`,
+      revocation_endpoint: `${baseUrl}/oauth2/revoke`,
+      end_session_endpoint: `${baseUrl}/logout`,
+      response_types_supported: ["code"],
+      subject_types_supported: ["public"],
       id_token_signing_alg_values_supported: ["RS256"],
-      jwks_uri: `http://localhost:9229/${req.params.userPoolId}/.well-known/jwks.json`,
-      issuer: `http://localhost:9229/${req.params.userPoolId}`,
+      scopes_supported: ["openid", "email", "phone", "profile"],
+      token_endpoint_auth_methods_supported: [
+        "client_secret_basic",
+        "client_secret_post",
+      ],
+      code_challenge_methods_supported: ["S256"],
     });
   });
 

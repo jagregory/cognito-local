@@ -1,4 +1,5 @@
 import type { Config } from "../server/config";
+import type { AuthorizationCodeStore } from "./authorizationCodeStore";
 import type { Clock } from "./clock";
 import type { CognitoService } from "./cognitoService";
 import type { Messages } from "./messages";
@@ -13,6 +14,7 @@ export { Triggers, TriggersService } from "./triggers";
 export { UserPoolService, UserPoolServiceImpl } from "./userPoolService";
 
 export interface Services {
+  authorizationCodeStore: AuthorizationCodeStore;
   clock: Clock;
   cognito: CognitoService;
   config: Config;

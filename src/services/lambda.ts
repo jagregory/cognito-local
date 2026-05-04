@@ -138,15 +138,24 @@ interface PostConfirmationEvent
 }
 
 export interface FunctionConfig {
+  CreateAuthChallenge?: string;
+  CustomEmailSender?: string;
   CustomMessage?: string;
+  DefineAuthChallenge?: string;
   PostAuthentication?: string;
   PostConfirmation?: string;
   PreSignUp?: string;
   PreTokenGeneration?: string;
   UserMigration?: string;
-  CustomEmailSender?: string;
+  VerifyAuthChallengeResponse?: string;
 }
 
+export type DefineAuthChallengeTriggerResponse =
+  DefineAuthChallengeTriggerEvent["response"];
+export type CreateAuthChallengeTriggerResponse =
+  CreateAuthChallengeTriggerEvent["response"];
+export type VerifyAuthChallengeResponseTriggerResponse =
+  VerifyAuthChallengeResponseTriggerEvent["response"];
 export type CustomMessageTriggerResponse =
   CustomMessageTriggerEvent["response"];
 export type UserMigrationTriggerResponse =
@@ -161,8 +170,52 @@ export type PostConfirmationTriggerResponse =
 export type CustomEmailSenderTriggerResponse =
   CustomEmailSenderTriggerEvent["response"];
 
+interface DefineAuthChallengeEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
+  triggerSource: "DefineAuthChallenge_Authentication";
+  session: Array<{
+    challengeName: string;
+    challengeResult: boolean;
+    challengeMetadata?: string;
+  }>;
+  userNotFound?: boolean;
+}
+
+interface CreateAuthChallengeEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
+  triggerSource: "CreateAuthChallenge_Authentication";
+  challengeName: string;
+  session: Array<{
+    challengeName: string;
+    challengeResult: boolean;
+    challengeMetadata?: string;
+  }>;
+}
+
+interface VerifyAuthChallengeResponseEvent extends EventCommonParameters {
+  clientMetadata: Record<string, string> | undefined;
+  triggerSource: "VerifyAuthChallengeResponse_Authentication";
+  challengeAnswer: string;
+  privateChallengeParameters?: Record<string, string>;
+}
+
 export interface Lambda {
   enabled(lambda: keyof FunctionConfig): boolean;
+  invoke(
+    ctx: Context,
+    lambda: "DefineAuthChallenge",
+    event: DefineAuthChallengeEvent,
+  ): Promise<DefineAuthChallengeTriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "CreateAuthChallenge",
+    event: CreateAuthChallengeEvent,
+  ): Promise<CreateAuthChallengeTriggerResponse>;
+  invoke(
+    ctx: Context,
+    lambda: "VerifyAuthChallengeResponse",
+    event: VerifyAuthChallengeResponseEvent,
+  ): Promise<VerifyAuthChallengeResponseTriggerResponse>;
   invoke(
     ctx: Context,
     lambda: "CustomMessage",
@@ -217,13 +270,16 @@ export class LambdaService implements Lambda {
     ctx: Context,
     trigger: keyof FunctionConfig,
     event:
-      | CustomMessageEvent
+      | CreateAuthChallengeEvent
       | CustomEmailSenderEvent
+      | CustomMessageEvent
+      | DefineAuthChallengeEvent
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
-      | UserMigrationEvent,
+      | UserMigrationEvent
+      | VerifyAuthChallengeResponseEvent,
   ) {
     const functionName = this.config[trigger];
     if (!functionName) {
@@ -284,13 +340,16 @@ export class LambdaService implements Lambda {
 
   private createLambdaEvent(
     event:
-      | CustomMessageEvent
+      | CreateAuthChallengeEvent
       | CustomEmailSenderEvent
+      | CustomMessageEvent
+      | DefineAuthChallengeEvent
       | PostAuthenticationEvent
       | PostConfirmationEvent
       | PreSignUpEvent
       | PreTokenGenerationEvent
-      | UserMigrationEvent,
+      | UserMigrationEvent
+      | VerifyAuthChallengeResponseEvent,
   ): CognitoUserPoolEvent {
     const version = "0"; // TODO: how do we know what this is?
     const callerContext = {
@@ -454,6 +513,72 @@ export class LambdaService implements Lambda {
           },
           response: {},
         };
+      case "DefineAuthChallenge_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            session:
+              event.session as DefineAuthChallengeTriggerEvent["request"]["session"],
+            clientMetadata: event.clientMetadata,
+            userNotFound: event.userNotFound,
+          },
+          response: {
+            challengeName: "",
+            issueTokens: false,
+            failAuthentication: false,
+          },
+        };
+      }
+
+      case "CreateAuthChallenge_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            challengeName: event.challengeName,
+            session:
+              event.session as CreateAuthChallengeTriggerEvent["request"]["session"],
+            clientMetadata: event.clientMetadata,
+          },
+          response: {
+            publicChallengeParameters: {},
+            privateChallengeParameters: {},
+            challengeMetadata: "",
+          },
+        };
+      }
+
+      case "VerifyAuthChallengeResponse_Authentication": {
+        return {
+          version,
+          callerContext,
+          region,
+          userPoolId: event.userPoolId,
+          triggerSource: event.triggerSource,
+          userName: event.username,
+          request: {
+            userAttributes: event.userAttributes,
+            challengeAnswer: event.challengeAnswer,
+            privateChallengeParameters: event.privateChallengeParameters ?? {},
+            clientMetadata: event.clientMetadata,
+          },
+          response: {
+            answerCorrect: false,
+          },
+        };
+      }
+
       default: {
         throw new Error("Unsupported Trigger Source");
       }

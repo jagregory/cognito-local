@@ -1,0 +1,10 @@
+services:
+  cognito-local:
+    build: .
+    ports:
+      - "9229:9229"
+    volumes:
+      - ./.cognito:/app/.cognito
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9229
