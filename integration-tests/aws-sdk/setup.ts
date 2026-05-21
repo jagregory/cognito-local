@@ -33,6 +33,7 @@ export const withCognitoSdk =
       services: {
         readonly dataStoreFactory: () => DataStoreFactory;
         readonly messageDelivery: () => FakeMessageDeliveryService;
+        readonly serverUrl: () => string;
       },
     ) => void,
     {
@@ -46,6 +47,7 @@ export const withCognitoSdk =
     let cognitoSdk: AWS.CognitoIdentityServiceProvider;
     let dataStoreFactory: DataStoreFactory;
     let fakeMessageDeliveryService: FakeMessageDeliveryService;
+    let baseUrl: string;
 
     beforeEach(async () => {
       dataDirectory = await mkdtemp("/tmp/cognito-local:");
@@ -69,7 +71,7 @@ export const withCognitoSdk =
       );
 
       fakeMessageDeliveryService = new FakeMessageDeliveryService();
-      const router = Router({
+      const services = {
         clock,
         cognito: cognitoClient,
         config: DefaultConfig,
@@ -81,13 +83,19 @@ export const withCognitoSdk =
           triggers,
           DefaultConfig.TokenConfig,
         ),
-      });
-      const server = createServer(router, ctx.logger, {
-        development: false,
-        hostname: "127.0.0.1",
-        https: false,
-        port: 0,
-      });
+      };
+      const router = Router(services);
+      const server = createServer(
+        router,
+        ctx.logger,
+        {
+          development: false,
+          hostname: "127.0.0.1",
+          https: false,
+          port: 0,
+        },
+        services,
+      );
       httpServer = await server.start();
 
       const address = httpServer.address();
@@ -98,6 +106,8 @@ export const withCognitoSdk =
         typeof address === "string"
           ? address
           : `${address.address}:${address.port}`;
+
+      baseUrl = `http://${url}`;
 
       cognitoSdk = new AWS.CognitoIdentityServiceProvider({
         credentials: {
@@ -112,6 +122,7 @@ export const withCognitoSdk =
     fn(() => cognitoSdk, {
       dataStoreFactory: () => dataStoreFactory,
       messageDelivery: () => fakeMessageDeliveryService,
+      serverUrl: () => baseUrl,
     });
 
     afterEach(() => {
