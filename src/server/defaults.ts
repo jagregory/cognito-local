@@ -58,24 +58,18 @@ export const createDefaultServer = async (
     new CryptoService(config.KMSConfig),
   );
 
-  return createServer(
-    Router({
-      clock,
-      cognito: cognitoClient,
-      config,
-      messages: new MessagesService(
-        triggers,
-        new MessageDeliveryService(new ConsoleMessageSender()),
-      ),
-      otp,
-      tokenGenerator: new JwtTokenGenerator(
-        clock,
-        triggers,
-        config.TokenConfig,
-      ),
+  const services = {
+    clock,
+    cognito: cognitoClient,
+    config,
+    messages: new MessagesService(
       triggers,
-    }),
-    logger,
-    config.ServerConfig,
-  );
+      new MessageDeliveryService(new ConsoleMessageSender()),
+    ),
+    otp,
+    tokenGenerator: new JwtTokenGenerator(clock, triggers, config.TokenConfig),
+    triggers,
+  };
+
+  return createServer(Router(services), logger, config.ServerConfig, services);
 };

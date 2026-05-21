@@ -9,6 +9,9 @@ import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
+import { AuthorizationCodeStore } from "../oauth2/authorizationCodeStore";
+import { attachOAuth2Routes } from "../oauth2/routes";
+import type { Services } from "../services";
 import type { Router } from "./Router";
 
 export type ServerOptions = {
@@ -30,6 +33,7 @@ export const createServer = (
   router: Router,
   logger: Logger,
   options: ServerOptions,
+  services?: Services,
 ): Server => {
   const pino = Pino({
     logger,
@@ -54,6 +58,7 @@ export const createServer = (
       type: "application/x-amz-json-1.1",
     }),
   );
+  app.use(bodyParser.urlencoded({ extended: false }));
 
   app.get("/:userPoolId/.well-known/jwks.json", (_req, res) => {
     res.status(200).json({
@@ -72,6 +77,11 @@ export const createServer = (
   app.get("/health", (_req, res) => {
     res.status(200).json({ ok: true });
   });
+
+  if (services) {
+    const codeStore = new AuthorizationCodeStore();
+    attachOAuth2Routes(app, services, codeStore);
+  }
 
   app.post("/", (req, res) => {
     const xAmzTarget = req.headers["x-amz-target"];
