@@ -2,6 +2,7 @@ import type {
   AdminCreateUserRequest,
   AdminCreateUserResponse,
   DeliveryMediumListType,
+  UserStatusType,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import shortUUID from "short-uuid";
 import * as uuid from "uuid";
@@ -14,6 +15,8 @@ import type { Messages, Services, UserPoolService } from "../services";
 import type { Context } from "../services/context";
 import type { DeliveryDetails } from "../services/messageDelivery/messageDelivery";
 import {
+  attribute,
+  attributesAppend,
   attributesInclude,
   attributeValue,
   type User,
@@ -32,7 +35,7 @@ export type AdminCreateUserTarget = Target<
 
 type AdminCreateUserServices = Pick<
   Services,
-  "clock" | "cognito" | "messages" | "config"
+  "clock" | "cognito" | "messages" | "config" | "triggers"
 >;
 
 const selectAppropriateDeliveryMethod = (
@@ -100,6 +103,7 @@ export const AdminCreateUser =
     clock,
     cognito,
     messages,
+    triggers,
   }: AdminCreateUserServices): AdminCreateUserTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
@@ -139,12 +143,47 @@ export const AdminCreateUser =
       username = sub;
     }
 
+    let userStatus: UserStatusType = "FORCE_CHANGE_PASSWORD";
+
+    if (triggers.enabled("PreSignUp")) {
+      const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
+        await triggers.preSignUp(ctx, {
+          clientId: null,
+          clientMetadata: req.ClientMetadata,
+          source: "PreSignUp_AdminCreateUser",
+          userAttributes: attributes,
+          username,
+          userPoolId: userPool.options.Id,
+          validationData: undefined,
+        });
+
+      if (autoConfirmUser) {
+        userStatus = "CONFIRMED";
+      }
+
+      const isEmailUsername =
+        userPool.options.UsernameAttributes?.includes("email");
+      const hasEmailAttribute = attributesInclude("email", attributes);
+
+      if ((isEmailUsername || hasEmailAttribute) && autoVerifyEmail) {
+        if (!attributesInclude("email_verified", attributes)) {
+          attributes.push({ Name: "email_verified", Value: "true" });
+        }
+      }
+
+      if (attributesInclude("phone_number", attributes) && autoVerifyPhone) {
+        if (!attributesInclude("phone_number_verified", attributes)) {
+          attributes.push({ Name: "phone_number_verified", Value: "true" });
+        }
+      }
+    }
+
     const user: User = {
       Username: username,
       Password: temporaryPassword,
       Attributes: attributes.sort((a, b) => a.Name.localeCompare(b.Name)),
       Enabled: true,
-      UserStatus: "FORCE_CHANGE_PASSWORD",
+      UserStatus: userStatus,
       ConfirmationCode: undefined,
       UserCreateDate: now,
       UserLastModifiedDate: now,
@@ -152,11 +191,25 @@ export const AdminCreateUser =
     };
     await userPool.saveUser(ctx, user);
 
+    if (user.UserStatus === "CONFIRMED" && triggers.enabled("PostConfirmation")) {
+      await triggers.postConfirmation(ctx, {
+        clientId: null,
+        clientMetadata: req.ClientMetadata,
+        source: "PostConfirmation_ConfirmSignUp",
+        username: user.Username,
+        userPoolId: userPool.options.Id,
+        userAttributes: attributesAppend(
+          user.Attributes,
+          attribute("cognito:user_status", user.UserStatus),
+        ),
+      });
+    }
+
     // TODO: should throw InvalidParameterException when a non-email is supplied as the Username when the pool has email as a UsernameAttribute
     // TODO: support MessageAction=="RESEND"
     // TODO: should generate a TemporaryPassword if one isn't set
     // TODO: support ForceAliasCreation
-    // TODO: support PreSignIn lambda and ValidationData
+    // TODO: support ValidationData parameter (AdminCreateUserRequest doesn't include it in AWS SDK)
 
     if (!supressWelcomeMessage) {
       await deliverWelcomeMessage(

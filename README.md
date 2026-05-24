@@ -199,7 +199,7 @@ cognito-local how to connect to your local Lambda server:
 | PostConfirmation            | ConfirmForgotPassword                         | ✅      |
 | PostConfirmation            | ConfirmSignUp                                 | ✅      |
 | PreAuthentication           | \*                                            | ❌      |
-| PreSignUp                   | PreSignUp_AdminCreateUser                     | ❌      |
+| PreSignUp                   | PreSignUp_AdminCreateUser                     | ✅      |
 | PreSignUp                   | PreSignUp_ExternalProvider                    | ❌      |
 | PreSignUp                   | PreSignUp_SignUp                              | ✅      |
 | PreTokenGeneration          | TokenGeneration_AuthenticateDevice            | ❌      |
