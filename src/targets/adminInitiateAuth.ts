@@ -47,13 +47,15 @@ const adminUserPasswordAuthFlow = async (
   const userPoolClient = await services.cognito.getAppClient(ctx, req.ClientId);
   let user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
 
-  if (!user && services.triggers.enabled("UserMigration")) {
+  const poolTriggers = services.triggers.forPool(userPool.options.LambdaConfig);
+
+  if (!user && poolTriggers.enabled("UserMigration")) {
     // https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-migrate-user.html
     //
     // Amazon Cognito invokes [the User Migration] trigger when a user does not exist in the user pool at the time of
     // sign-in with a password, or in the forgot-password flow. After the Lambda function returns successfully, Amazon
     // Cognito creates the user in the user pool.
-    user = await services.triggers.userMigration(ctx, {
+    user = await poolTriggers.userMigration(ctx, {
       clientMetadata: {},
       validationData: {},
       userPoolId: userPool.options.Id,
@@ -78,14 +80,16 @@ const adminUserPasswordAuthFlow = async (
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
-  const tokens = await services.tokenGenerator.generate(
-    ctx,
-    user,
-    userGroups,
-    userPoolClient,
-    req.ClientMetadata,
-    "Authentication",
-  );
+  const tokens = await services.tokenGenerator
+    .forPool(userPool.options.LambdaConfig)
+    .generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "Authentication",
+    );
 
   await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
 
@@ -134,14 +138,16 @@ const refreshTokenAuthFlow = async (
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);
 
-  const tokens = await services.tokenGenerator.generate(
-    ctx,
-    user,
-    userGroups,
-    userPoolClient,
-    req.ClientMetadata,
-    "RefreshTokens",
-  );
+  const tokens = await services.tokenGenerator
+    .forPool(userPool.options.LambdaConfig)
+    .generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "RefreshTokens",
+    );
 
   return {
     ChallengeName: undefined,

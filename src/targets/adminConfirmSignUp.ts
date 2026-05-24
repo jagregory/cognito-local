@@ -44,8 +44,10 @@ export const AdminConfirmSignUp =
 
     await userPool.saveUser(ctx, updatedUser);
 
-    if (triggers.enabled("PostConfirmation")) {
-      await triggers.postConfirmation(ctx, {
+    const poolTriggers = triggers.forPool(userPool.options.LambdaConfig);
+
+    if (poolTriggers.enabled("PostConfirmation")) {
+      await poolTriggers.postConfirmation(ctx, {
         source: "PostConfirmation_ConfirmSignUp",
         clientId: null,
         clientMetadata: req.ClientMetadata,

@@ -578,6 +578,94 @@ describe("Lambda function invoker", () => {
       });
     });
 
+    describe("forPool", () => {
+      it("uses pool config over global config", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "response": {} }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          { PostConfirmation: "global-fn" },
+          mockLambdaClient,
+        );
+
+        const poolLambda = lambda.forPool({ PostConfirmation: "pool-fn" });
+
+        expect(poolLambda.enabled("PostConfirmation")).toBe(true);
+        await poolLambda.invoke(TestContext, "PostConfirmation", {
+          clientId: "clientId",
+          clientMetadata: undefined,
+          triggerSource: "PostConfirmation_ConfirmSignUp",
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {},
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith(
+          expect.objectContaining({ FunctionName: "pool-fn" }),
+        );
+      });
+
+      it("falls back to global config when pool has no config for the trigger", async () => {
+        const response = Promise.resolve({
+          StatusCode: 200,
+          Payload: '{ "response": {} }',
+        });
+        mockLambdaClient.invoke.mockReturnValue({
+          promise: () => response,
+        } as any);
+        const lambda = new LambdaService(
+          { PostConfirmation: "global-fn" },
+          mockLambdaClient,
+        );
+
+        const poolLambda = lambda.forPool({});
+
+        expect(poolLambda.enabled("PostConfirmation")).toBe(true);
+        await poolLambda.invoke(TestContext, "PostConfirmation", {
+          clientId: "clientId",
+          clientMetadata: undefined,
+          triggerSource: "PostConfirmation_ConfirmSignUp",
+          username: "username",
+          userPoolId: "userPoolId",
+          userAttributes: {},
+        });
+
+        expect(mockLambdaClient.invoke).toHaveBeenCalledWith(
+          expect.objectContaining({ FunctionName: "global-fn" }),
+        );
+      });
+
+      it("returns disabled when neither pool nor global config has the trigger", () => {
+        const lambda = new LambdaService({}, mockLambdaClient);
+        const poolLambda = lambda.forPool({});
+        expect(poolLambda.enabled("PostConfirmation")).toBe(false);
+      });
+
+      it("extracts LambdaArn from pool's CustomEmailSender config", () => {
+        const lambda = new LambdaService({}, mockLambdaClient);
+        const poolLambda = lambda.forPool({
+          CustomEmailSender: {
+            LambdaArn: "pool-email-fn",
+            LambdaVersion: "V1_0",
+          },
+        });
+        expect(poolLambda.enabled("CustomEmailSender")).toBe(true);
+      });
+
+      it("falls back to global CustomEmailSender when pool has no CustomEmailSender", () => {
+        const lambda = new LambdaService(
+          { CustomEmailSender: "global-email-fn" },
+          mockLambdaClient,
+        );
+        const poolLambda = lambda.forPool({});
+        expect(poolLambda.enabled("CustomEmailSender")).toBe(true);
+      });
+    });
+
     describe.each([
       "CustomEmailSender_SignUp",
       "CustomEmailSender_ResendCode",

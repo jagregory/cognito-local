@@ -48,16 +48,18 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  await messages.deliver(
-    ctx,
-    "SignUp",
-    clientId,
-    userPool.options.Id,
-    user,
-    code,
-    clientMetadata,
-    deliveryDetails,
-  );
+  await messages
+    .forPool(userPool.options.LambdaConfig)
+    .deliver(
+      ctx,
+      "SignUp",
+      clientId,
+      userPool.options.Id,
+      user,
+      code,
+      clientMetadata,
+      deliveryDetails,
+    );
 
   return deliveryDetails;
 };
@@ -105,9 +107,11 @@ export const SignUp =
       username = sub;
     }
 
-    if (triggers.enabled("PreSignUp")) {
+    const poolTriggers = triggers.forPool(userPool.options.LambdaConfig);
+
+    if (poolTriggers.enabled("PreSignUp")) {
       const { autoConfirmUser, autoVerifyEmail, autoVerifyPhone } =
-        await triggers.preSignUp(ctx, {
+        await poolTriggers.preSignUp(ctx, {
           clientId: req.ClientId,
           clientMetadata: req.ClientMetadata,
           source: "PreSignUp_SignUp",
@@ -167,9 +171,9 @@ export const SignUp =
 
     if (
       updatedUser.UserStatus === "CONFIRMED" &&
-      triggers.enabled("PostConfirmation")
+      poolTriggers.enabled("PostConfirmation")
     ) {
-      await triggers.postConfirmation(ctx, {
+      await poolTriggers.postConfirmation(ctx, {
         clientId: req.ClientId,
         clientMetadata: req.ClientMetadata,
         source: "PostConfirmation_ConfirmSignUp",

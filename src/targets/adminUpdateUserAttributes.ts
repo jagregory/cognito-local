@@ -35,16 +35,18 @@ const sendAttributeVerificationCode = async (
     );
   }
 
-  await messages.deliver(
-    ctx,
-    "UpdateUserAttribute",
-    null,
-    userPool.options.Id,
-    user,
-    code,
-    req.ClientMetadata,
-    deliveryDetails,
-  );
+  await messages
+    .forPool(userPool.options.LambdaConfig)
+    .deliver(
+      ctx,
+      "UpdateUserAttribute",
+      null,
+      userPool.options.Id,
+      user,
+      code,
+      req.ClientMetadata,
+      deliveryDetails,
+    );
 };
 
 export type AdminUpdateUserAttributesTarget = Target<

@@ -83,16 +83,18 @@ const deliverWelcomeMessage = async (
     );
   }
 
-  await messages.deliver(
-    ctx,
-    "AdminCreateUser",
-    null,
-    userPool.options.Id,
-    user,
-    temporaryPassword,
-    req.ClientMetadata,
-    deliveryDetails,
-  );
+  await messages
+    .forPool(userPool.options.LambdaConfig)
+    .deliver(
+      ctx,
+      "AdminCreateUser",
+      null,
+      userPool.options.Id,
+      user,
+      temporaryPassword,
+      req.ClientMetadata,
+      deliveryDetails,
+    );
 };
 
 export const AdminCreateUser =

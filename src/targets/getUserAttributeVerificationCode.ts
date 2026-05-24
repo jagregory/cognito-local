@@ -30,16 +30,18 @@ const sendAttributeVerificationCode = async (
     );
   }
 
-  await messages.deliver(
-    ctx,
-    "VerifyUserAttribute",
-    null,
-    userPool.options.Id,
-    user,
-    code,
-    req.ClientMetadata,
-    deliveryDetails,
-  );
+  await messages
+    .forPool(userPool.options.LambdaConfig)
+    .deliver(
+      ctx,
+      "VerifyUserAttribute",
+      null,
+      userPool.options.Id,
+      user,
+      code,
+      req.ClientMetadata,
+      deliveryDetails,
+    );
 };
 
 export type GetUserAttributeVerificationCodeTarget = Target<
