@@ -86,13 +86,16 @@ export const UserMigration =
     }
 
     const now = clock.get();
+    const userId = result.userAttributes?.username || uuid.v4();
+    const attributes = result.userAttributes || {};
+
     const user: User = {
-      Attributes: attributesFromRecord(result.userAttributes ?? {}),
+      Attributes: attributesFromRecord({ ...attributes, sub: userId }),
       Enabled: true,
       Password: password,
       UserCreateDate: now,
       UserLastModifiedDate: now,
-      Username: result.userAttributes?.username || uuid.v4(),
+      Username: userId,
       UserStatus: result.finalUserStatus ?? "CONFIRMED",
       RefreshTokens: [],
     };
