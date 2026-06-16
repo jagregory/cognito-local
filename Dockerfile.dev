@@ -1,0 +1,17 @@
+FROM node:14-alpine
+WORKDIR /app
+
+# dependencies
+ADD package.json yarn.lock ./
+RUN yarn --frozen-lockfile
+
+# library code
+ADD src src
+
+# bindings
+EXPOSE 9229
+ENV HOST 0.0.0.0
+ENV PORT 9229
+VOLUME /app/.cognito
+
+ENTRYPOINT ["yarn", "start:debug"]
