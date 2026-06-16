@@ -4,6 +4,7 @@ import type {
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { GroupNotFoundError, UserNotFoundError } from "../errors";
 import type { Services } from "../services";
+import { paginate } from "../services/pagination";
 import { userToResponseObject } from "./responses";
 import type { Target } from "./Target";
 
@@ -21,16 +22,20 @@ export const ListUsersInGroup =
       throw new GroupNotFoundError();
     }
 
-    return {
-      Users: await Promise.all(
-        group?.members?.map(async (username) => {
-          const user = await userPool.getUserByUsername(ctx, username);
-          if (!user) {
-            throw new UserNotFoundError();
-          }
+    const allUsers = await Promise.all(
+      group?.members?.map(async (username) => {
+        const user = await userPool.getUserByUsername(ctx, username);
+        if (!user) {
+          throw new UserNotFoundError();
+        }
+        return userToResponseObject(user);
+      }) ?? [],
+    );
 
-          return userToResponseObject(user);
-        }) ?? [],
-      ),
+    const { items, nextToken } = paginate(allUsers, req.Limit, req.NextToken);
+
+    return {
+      Users: items,
+      NextToken: nextToken,
     };
   };

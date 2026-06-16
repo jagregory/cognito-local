@@ -67,10 +67,28 @@ export const createServer = (
   });
 
   app.get("/:userPoolId/.well-known/openid-configuration", (req, res) => {
+    const baseUrl =
+      services?.config.TokenConfig.IssuerDomain ??
+      `${req.protocol}://${req.get("host")}`;
+    const poolUrl = `${baseUrl}/${req.params.userPoolId}`;
+
     res.status(200).json({
+      issuer: poolUrl,
+      jwks_uri: `${poolUrl}/.well-known/jwks.json`,
+      authorization_endpoint: `${baseUrl}/oauth2/authorize`,
+      token_endpoint: `${baseUrl}/oauth2/token`,
+      userinfo_endpoint: `${baseUrl}/oauth2/userInfo`,
+      revocation_endpoint: `${baseUrl}/oauth2/revoke`,
+      end_session_endpoint: `${baseUrl}/logout`,
+      response_types_supported: ["code"],
+      subject_types_supported: ["public"],
       id_token_signing_alg_values_supported: ["RS256"],
-      jwks_uri: `http://localhost:9229/${req.params.userPoolId}/.well-known/jwks.json`,
-      issuer: `http://localhost:9229/${req.params.userPoolId}`,
+      scopes_supported: ["openid", "email", "phone", "profile"],
+      token_endpoint_auth_methods_supported: [
+        "client_secret_basic",
+        "client_secret_post",
+      ],
+      code_challenge_methods_supported: ["S256"],
     });
   });
 

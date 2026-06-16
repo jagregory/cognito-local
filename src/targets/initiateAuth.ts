@@ -1,3 +1,4 @@
+import * as crypto from "node:crypto";
 import type {
   DeliveryMediumType,
   InitiateAuthRequest,
@@ -115,7 +116,14 @@ const enabledMfaMethods = (
 
   const result: ("SMS_MFA" | "SOFTWARE_TOKEN_MFA")[] = [];
   if (methods.has("SMS_MFA")) result.push("SMS_MFA");
-  if (methods.has("SOFTWARE_TOKEN_MFA")) result.push("SOFTWARE_TOKEN_MFA");
+  // Only advertise SOFTWARE_TOKEN_MFA if the user has completed TOTP
+  // registration; otherwise the challenge would always fail on response.
+  if (
+    methods.has("SOFTWARE_TOKEN_MFA") &&
+    user.SoftwareTokenMfaConfiguration?.Verified
+  ) {
+    result.push("SOFTWARE_TOKEN_MFA");
+  }
   return result;
 };
 
@@ -331,6 +339,140 @@ const refreshTokenAuthFlow = async (
   };
 };
 
+const userSrpAuthFlow = async (
+  ctx: Context,
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  _userPoolClient: AppClient,
+  _services: InitiateAuthServices,
+): Promise<InitiateAuthResponse> => {
+  if (!req.AuthParameters) {
+    throw new InvalidParameterError(
+      "Missing required parameter authParameters",
+    );
+  }
+  if (!req.AuthParameters.SRP_A) {
+    throw new InvalidParameterError("Missing required parameter SRP_A");
+  }
+  if (!req.AuthParameters.USERNAME) {
+    throw new InvalidParameterError("Missing required parameter USERNAME");
+  }
+
+  const user = await userPool.getUserByUsername(
+    ctx,
+    req.AuthParameters.USERNAME,
+  );
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  if (user.UserStatus === "RESET_REQUIRED") {
+    throw new PasswordResetRequiredError();
+  }
+  if (user.UserStatus === "UNCONFIRMED") {
+    throw new UserNotConfirmedException();
+  }
+
+  // Simplified SRP: return fake SRP_B, SALT, SECRET_BLOCK
+  // The emulator doesn't perform real SRP math — PASSWORD_VERIFIER
+  // response handler will verify the password directly.
+  const salt = crypto.randomBytes(16).toString("hex");
+  const srpB = crypto.randomBytes(128).toString("hex");
+  const secretBlock = crypto.randomBytes(64).toString("base64");
+
+  return {
+    ChallengeName: "PASSWORD_VERIFIER",
+    ChallengeParameters: {
+      SALT: salt,
+      SRP_B: srpB,
+      SECRET_BLOCK: secretBlock,
+      USER_ID_FOR_SRP: user.Username,
+      USERNAME: user.Username,
+    },
+    Session: v4(),
+  };
+};
+
+const customAuthFlow = async (
+  ctx: Context,
+  req: InitiateAuthRequest,
+  userPool: UserPoolService,
+  userPoolClient: AppClient,
+  services: InitiateAuthServices,
+): Promise<InitiateAuthResponse> => {
+  if (!services.triggers.enabled("DefineAuthChallenge")) {
+    throw new UnsupportedError(
+      "CUSTOM_AUTH requires DefineAuthChallenge trigger",
+    );
+  }
+
+  if (!req.AuthParameters?.USERNAME) {
+    throw new InvalidParameterError("Missing required parameter USERNAME");
+  }
+
+  const user = await userPool.getUserByUsername(
+    ctx,
+    req.AuthParameters.USERNAME,
+  );
+  if (!user) {
+    throw new NotAuthorizedError();
+  }
+
+  const defineResult = await services.triggers.defineAuthChallenge(ctx, {
+    clientId: req.ClientId,
+    userAttributes: user.Attributes,
+    username: user.Username,
+    userPoolId: userPool.options.Id,
+    session: [],
+    clientMetadata: req.ClientMetadata,
+  });
+
+  if (defineResult.failAuthentication) {
+    throw new NotAuthorizedError();
+  }
+
+  if (defineResult.issueTokens) {
+    const userGroups = await userPool.listUserGroupMembership(ctx, user);
+    const tokens = await services.tokenGenerator.generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "Authentication",
+    );
+    await userPool.storeRefreshToken(ctx, tokens.RefreshToken, user);
+    return {
+      AuthenticationResult: tokens,
+    };
+  }
+
+  if (!services.triggers.enabled("CreateAuthChallenge")) {
+    throw new UnsupportedError(
+      "CUSTOM_AUTH requires CreateAuthChallenge trigger",
+    );
+  }
+
+  const challengeResult = await services.triggers.createAuthChallenge(ctx, {
+    clientId: req.ClientId,
+    userAttributes: user.Attributes,
+    username: user.Username,
+    userPoolId: userPool.options.Id,
+    challengeName: defineResult.challengeName ?? "CUSTOM_CHALLENGE",
+    session: [],
+    clientMetadata: req.ClientMetadata,
+  });
+
+  return {
+    ChallengeName: "CUSTOM_CHALLENGE",
+    ChallengeParameters: {
+      ...challengeResult.publicChallengeParameters,
+      USER_ID_FOR_SRP: user.Username,
+    },
+    Session: v4(),
+  };
+};
+
 export const InitiateAuth =
   (services: InitiateAuthServices): InitiateAuthTarget =>
   async (ctx, req) => {
@@ -348,11 +490,15 @@ export const InitiateAuth =
 
     if (req.AuthFlow === "USER_PASSWORD_AUTH") {
       return userPasswordAuthFlow(ctx, req, userPool, userPoolClient, services);
+    } else if (req.AuthFlow === "USER_SRP_AUTH") {
+      return userSrpAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else if (
       req.AuthFlow === "REFRESH_TOKEN" ||
       req.AuthFlow === "REFRESH_TOKEN_AUTH"
     ) {
       return refreshTokenAuthFlow(ctx, req, userPool, userPoolClient, services);
+    } else if (req.AuthFlow === "CUSTOM_AUTH") {
+      return customAuthFlow(ctx, req, userPool, userPoolClient, services);
     } else {
       throw new UnsupportedError(`InitAuth with AuthFlow=${req.AuthFlow}`);
     }

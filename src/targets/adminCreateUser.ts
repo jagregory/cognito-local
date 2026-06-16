@@ -107,7 +107,30 @@ export const AdminCreateUser =
     const supressWelcomeMessage = req.MessageAction === "SUPPRESS";
 
     if (existingUser && req.MessageAction === "RESEND") {
-      throw new UnsupportedError("AdminCreateUser with MessageAction=RESEND");
+      const temporaryPassword =
+        req.TemporaryPassword ??
+        process.env.CODE ??
+        generator.new().slice(0, 6);
+
+      const updatedUser = {
+        ...existingUser,
+        Password: temporaryPassword,
+        UserLastModifiedDate: clock.get(),
+      };
+      await userPool.saveUser(ctx, updatedUser);
+
+      await deliverWelcomeMessage(
+        ctx,
+        req,
+        temporaryPassword,
+        updatedUser,
+        messages,
+        userPool,
+      );
+
+      return {
+        User: userToResponseObject(updatedUser),
+      };
     } else if (existingUser) {
       throw new UsernameExistsError();
     }

@@ -3,6 +3,7 @@ import type {
   ListUserPoolsResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { Services } from "../services";
+import { paginate } from "../services/pagination";
 import { userPoolToResponseObject } from "./responses";
 import type { Target } from "./Target";
 
@@ -15,13 +16,17 @@ type ListGroupServices = Pick<Services, "cognito">;
 
 export const ListUserPools =
   ({ cognito }: ListGroupServices): ListUserPoolsTarget =>
-  async (ctx) => {
-    // TODO: NextToken support
-    // TODO: MaxResults support
-
+  async (ctx, req) => {
     const userPools = await cognito.listUserPools(ctx);
 
+    const { items, nextToken } = paginate(
+      userPools,
+      req.MaxResults,
+      req.NextToken,
+    );
+
     return {
-      UserPools: userPools.map(userPoolToResponseObject),
+      UserPools: items.map(userPoolToResponseObject),
+      NextToken: nextToken,
     };
   };

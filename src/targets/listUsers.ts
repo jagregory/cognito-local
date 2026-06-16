@@ -3,6 +3,7 @@ import type {
   ListUsersResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import type { Services } from "../services";
+import { paginate } from "../services/pagination";
 import { userToResponseObject } from "./responses";
 import type { Target } from "./Target";
 
@@ -14,12 +15,14 @@ export const ListUsers =
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const users = await userPool.listUsers(ctx, req.Filter);
 
-    // TODO: support AttributesToGet
-    // TODO: support Filter
-    // TODO: support Limit
-    // TODO: support PaginationToken
+    const { items, nextToken } = paginate(
+      users,
+      req.Limit,
+      req.PaginationToken,
+    );
 
     return {
-      Users: users.map(userToResponseObject),
+      Users: items.map(userToResponseObject),
+      PaginationToken: nextToken,
     };
   };

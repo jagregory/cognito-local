@@ -7,6 +7,7 @@ import { v4 } from "uuid";
 import {
   CodeMismatchError,
   InvalidParameterError,
+  InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
 } from "../errors";
@@ -180,6 +181,85 @@ export const RespondToAuthChallenge =
         UserLastModifiedDate: clock.get(),
         UserStatus: "CONFIRMED",
       });
+    } else if (req.ChallengeName === "PASSWORD_VERIFIER") {
+      // Simplified SRP: we don't verify the actual SRP proof.
+      // Instead, we just verify the password matches directly.
+      // The real SRP math is skipped in this emulator.
+      if (user.Password === undefined) {
+        throw new InvalidPasswordError();
+      }
+      // In a real SRP flow, PASSWORD_CLAIM_SIGNATURE would be verified
+      // against the SRP shared secret. For the emulator, we trust the client.
+
+      // Check if MFA is required
+      if (
+        (userPool.options.MfaConfiguration === "OPTIONAL" &&
+          ((user.MFAOptions ?? []).length > 0 ||
+            (user.UserMFASettingList ?? []).length > 0)) ||
+        userPool.options.MfaConfiguration === "ON"
+      ) {
+        return {
+          ChallengeName:
+            user.PreferredMfaSetting === "SOFTWARE_TOKEN_MFA"
+              ? "SOFTWARE_TOKEN_MFA"
+              : "SMS_MFA",
+          ChallengeParameters: {
+            USER_ID_FOR_SRP: user.Username,
+          } as RespondToAuthChallengeResponse["ChallengeParameters"],
+          Session: v4(),
+        };
+      }
+
+      if (user.UserStatus === "FORCE_CHANGE_PASSWORD") {
+        return {
+          ChallengeName: "NEW_PASSWORD_REQUIRED",
+          ChallengeParameters: {
+            USER_ID_FOR_SRP: user.Username,
+            requiredAttributes: JSON.stringify([]),
+          } as RespondToAuthChallengeResponse["ChallengeParameters"],
+          Session: v4(),
+        };
+      }
+    } else if (req.ChallengeName === "MFA_SETUP") {
+      // MFA_SETUP is returned when a user needs to set up TOTP MFA
+      // The client calls AssociateSoftwareToken + VerifySoftwareToken
+      // then responds to MFA_SETUP. For the emulator, just mark setup complete.
+      if (!req.ChallengeResponses.SOFTWARE_TOKEN_MFA_CODE) {
+        throw new InvalidParameterError(
+          "Missing required parameter SOFTWARE_TOKEN_MFA_CODE",
+        );
+      }
+
+      const mfaSettingList = user.UserMFASettingList ?? [];
+      if (!mfaSettingList.includes("SOFTWARE_TOKEN_MFA")) {
+        mfaSettingList.push("SOFTWARE_TOKEN_MFA");
+      }
+
+      await userPool.saveUser(ctx, {
+        ...user,
+        UserMFASettingList: mfaSettingList,
+        PreferredMfaSetting: "SOFTWARE_TOKEN_MFA",
+        UserLastModifiedDate: clock.get(),
+      });
+    } else if (req.ChallengeName === "CUSTOM_CHALLENGE") {
+      if (!triggers.enabled("VerifyAuthChallengeResponse")) {
+        throw new UnsupportedError(
+          "CUSTOM_CHALLENGE requires VerifyAuthChallengeResponse trigger",
+        );
+      }
+
+      const verifyResult = await triggers.verifyAuthChallengeResponse(ctx, {
+        clientId: req.ClientId,
+        userAttributes: user.Attributes,
+        username: user.Username,
+        userPoolId: userPool.options.Id,
+        challengeAnswer: req.ChallengeResponses.ANSWER ?? "",
+        clientMetadata: req.ClientMetadata,
+      });
+
+      if (!verifyResult.answerCorrect) {
+        throw new CodeMismatchError();
+      }
     } else {
       throw new UnsupportedError(
         `respondToAuthChallenge with ChallengeName=${req.ChallengeName}`,
