@@ -1,3 +1,10 @@
+# [5.3.0](https://github.com/jagregory/cognito-local/compare/v5.2.0...v5.3.0) (2026-05-21)
+
+
+### Features
+
+* **oauth:** add oauth2 authorization code flow with PKCE support ([#471](https://github.com/jagregory/cognito-local/issues/471)) ([3e137f6](https://github.com/jagregory/cognito-local/commit/3e137f60679cec10770aee6af9c9597fbcf8e340))
+
 # [5.2.0](https://github.com/jagregory/cognito-local/compare/v5.1.0...v5.2.0) (2026-04-18)
 
 

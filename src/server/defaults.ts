@@ -6,7 +6,6 @@ import {
   MessagesService,
   TriggersService,
 } from "../services";
-import { InMemoryAuthorizationCodeStore } from "../services/authorizationCodeStore";
 import { CognitoServiceFactoryImpl } from "../services/cognitoService";
 import { CryptoService } from "../services/crypto";
 import { StormDBDataStoreFactory } from "../services/dataStore/stormDb";
@@ -73,7 +72,6 @@ export const createDefaultServer = async (
   }
 
   const services = {
-    authorizationCodeStore: new InMemoryAuthorizationCodeStore(),
     clock,
     cognito: cognitoClient,
     config,
@@ -82,18 +80,9 @@ export const createDefaultServer = async (
       new MessageDeliveryService(messageSender),
     ),
     otp,
-    tokenGenerator: new JwtTokenGenerator(
-      clock,
-      triggers,
-      config.TokenConfig,
-    ),
+    tokenGenerator: new JwtTokenGenerator(clock, triggers, config.TokenConfig),
     triggers,
   };
 
-  return createServer(
-    Router(services),
-    logger,
-    config.ServerConfig,
-    services,
-  );
+  return createServer(Router(services), logger, config.ServerConfig, services);
 };
