@@ -18,10 +18,13 @@ export type VerifySoftwareTokenTarget = Target<
   VerifySoftwareTokenResponse
 >;
 
-type VerifySoftwareTokenServices = Pick<Services, "cognito">;
+type VerifySoftwareTokenServices = Pick<Services, "cognito" | "sessions">;
 
 export const VerifySoftwareToken =
-  ({ cognito }: VerifySoftwareTokenServices): VerifySoftwareTokenTarget =>
+  ({
+    cognito,
+    sessions,
+  }: VerifySoftwareTokenServices): VerifySoftwareTokenTarget =>
   async (ctx, req) => {
     if (!req.UserCode) {
       throw new InvalidParameterError("Missing required parameter UserCode");
@@ -32,9 +35,54 @@ export const VerifySoftwareToken =
       );
     }
     if (!req.AccessToken) {
-      throw new InvalidParameterError(
-        "VerifySoftwareToken via Session (MFA_SETUP flow) is not supported; call with AccessToken",
-      );
+      const session = sessions.get(req.Session as string);
+      if (!session || session.purpose !== "MFA_SETUP") {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      const userPool = await cognito.getUserPool(ctx, session.userPoolId);
+      const user = await userPool.getUserByUsername(ctx, session.username);
+      if (!user) {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      const secret = user.SoftwareTokenMfaConfiguration?.Secret;
+      if (!secret) {
+        throw new InvalidParameterError(
+          "User has not associated a software token",
+        );
+      }
+
+      if (!verify(secret, req.UserCode)) {
+        throw new CodeMismatchError();
+      }
+
+      const existingMethods = user.UserMFASettingList ?? [];
+      const UserMFASettingList = existingMethods.includes("SOFTWARE_TOKEN_MFA")
+        ? existingMethods
+        : [...existingMethods, "SOFTWARE_TOKEN_MFA"];
+
+      await userPool.saveUser(ctx, {
+        ...user,
+        SoftwareTokenMfaConfiguration: {
+          Secret: secret,
+          Verified: true,
+          FriendlyDeviceName:
+            req.FriendlyDeviceName ??
+            user.SoftwareTokenMfaConfiguration?.FriendlyDeviceName,
+        },
+        UserMFASettingList,
+      });
+
+      const rotatedSession = sessions.rotate(req.Session as string);
+      if (!rotatedSession) {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      return {
+        Status: "SUCCESS",
+        Session: rotatedSession,
+      };
     }
 
     const decoded = jwt.decode(req.AccessToken) as Token | null;

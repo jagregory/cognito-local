@@ -18,6 +18,7 @@ import {
   type MFAOption,
   type User,
 } from "../services/userPoolService";
+import { verifyMfaChallenge } from "./initiateAuth";
 import type { Target } from "./Target";
 
 export type RespondToAuthChallengeTarget = Target<
@@ -27,7 +28,13 @@ export type RespondToAuthChallengeTarget = Target<
 
 type RespondToAuthChallengeService = Pick<
   Services,
-  "clock" | "cognito" | "messages" | "otp" | "triggers" | "tokenGenerator"
+  | "clock"
+  | "cognito"
+  | "messages"
+  | "otp"
+  | "sessions"
+  | "triggers"
+  | "tokenGenerator"
 >;
 
 const sendSmsMfaChallenge = async (
@@ -137,6 +144,16 @@ export const RespondToAuthChallenge =
         throw new UserNotConfirmedException();
       }
 
+      const userHasMfa =
+        (user.MFAOptions ?? []).length > 0 ||
+        (user.UserMFASettingList ?? []).length > 0;
+      if (
+        userPool.options.MfaConfiguration === "ON" ||
+        (userPool.options.MfaConfiguration !== "OFF" && userHasMfa)
+      ) {
+        return verifyMfaChallenge(ctx, user, req, userPool, services);
+      }
+
       if (triggers.enabled("PostAuthentication")) {
         await triggers.postAuthentication(ctx, {
           clientId: req.ClientId,
@@ -167,7 +184,7 @@ export const RespondToAuthChallenge =
       };
     }
 
-    // SMS_MFA and NEW_PASSWORD_REQUIRED require Session
+    // MFA challenges and NEW_PASSWORD_REQUIRED require Session
     if (!req.Session) {
       throw new InvalidParameterError("Missing required parameter Session");
     }
@@ -212,7 +229,28 @@ export const RespondToAuthChallenge =
       );
     }
 
-    if (req.ChallengeName === "SMS_MFA") {
+    if (req.ChallengeName === "MFA_SETUP") {
+      const session = services.sessions.consume(req.Session);
+      if (
+        !session ||
+        session.purpose !== "MFA_SETUP" ||
+        session.clientId !== req.ClientId ||
+        session.userPoolId !== userPool.options.Id ||
+        session.username !== user.Username
+      ) {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+      if (!user.SoftwareTokenMfaConfiguration?.Verified) {
+        throw new InvalidParameterError(
+          "User has not verified software token MFA",
+        );
+      }
+
+      await userPool.saveUser(ctx, {
+        ...user,
+        UserLastModifiedDate: clock.get(),
+      });
+    } else if (req.ChallengeName === "SMS_MFA") {
       if (user.MFACode !== req.ChallengeResponses.SMS_MFA_CODE) {
         throw new CodeMismatchError();
       }

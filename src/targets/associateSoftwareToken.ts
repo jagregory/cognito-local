@@ -3,7 +3,11 @@ import type {
   AssociateSoftwareTokenResponse,
 } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import jwt from "jsonwebtoken";
-import { InvalidParameterError, NotAuthorizedError } from "../errors";
+import {
+  InvalidParameterError,
+  NotAuthorizedError,
+  UnsupportedError,
+} from "../errors";
 import type { Services } from "../services";
 import type { Token } from "../services/tokenGenerator";
 import { generateSecret } from "../services/totp";
@@ -14,10 +18,13 @@ export type AssociateSoftwareTokenTarget = Target<
   AssociateSoftwareTokenResponse
 >;
 
-type AssociateSoftwareTokenServices = Pick<Services, "cognito">;
+type AssociateSoftwareTokenServices = Pick<Services, "cognito" | "sessions">;
 
 export const AssociateSoftwareToken =
-  ({ cognito }: AssociateSoftwareTokenServices): AssociateSoftwareTokenTarget =>
+  ({
+    cognito,
+    sessions,
+  }: AssociateSoftwareTokenServices): AssociateSoftwareTokenTarget =>
   async (ctx, req) => {
     if (!req.AccessToken && !req.Session) {
       throw new InvalidParameterError(
@@ -26,9 +33,41 @@ export const AssociateSoftwareToken =
     }
 
     if (!req.AccessToken) {
-      throw new InvalidParameterError(
-        "AssociateSoftwareToken via Session (MFA_SETUP flow) is not supported; call with AccessToken",
-      );
+      const session = sessions.get(req.Session as string);
+      if (!session || session.purpose !== "MFA_SETUP") {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      const userPool = await cognito.getUserPool(ctx, session.userPoolId);
+      if (!userPool.options.SoftwareTokenMfaConfiguration?.Enabled) {
+        throw new UnsupportedError(
+          "MFA_SETUP supports only SOFTWARE_TOKEN_MFA enrollment",
+        );
+      }
+
+      const user = await userPool.getUserByUsername(ctx, session.username);
+      if (!user) {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      const secret = generateSecret();
+      await userPool.saveUser(ctx, {
+        ...user,
+        SoftwareTokenMfaConfiguration: {
+          Secret: secret,
+          Verified: false,
+        },
+      });
+
+      const rotatedSession = sessions.rotate(req.Session as string);
+      if (!rotatedSession) {
+        throw new NotAuthorizedError("Invalid session for the user.");
+      }
+
+      return {
+        SecretCode: secret,
+        Session: rotatedSession,
+      };
     }
 
     const decoded = jwt.decode(req.AccessToken) as Token | null;

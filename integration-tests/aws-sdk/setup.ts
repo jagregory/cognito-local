@@ -12,6 +12,7 @@ import { Router } from "../../src/server/Router";
 import {
   type Clock,
   DateClock,
+  InMemorySessionService,
   MessagesService,
   TriggersService,
 } from "../../src/services";
@@ -79,6 +80,7 @@ export const withCognitoSdk =
         config: DefaultConfig,
         messages: new MessagesService(triggers, fakeMessageDeliveryService),
         otp,
+        sessions: new InMemorySessionService(clock),
         triggers,
         tokenGenerator: new JwtTokenGenerator(
           clock,

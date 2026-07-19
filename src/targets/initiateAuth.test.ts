@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
+import { newMockSessionService } from "../__tests__/mockSessionService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -24,7 +25,12 @@ import {
 } from "../errors";
 import PrivateKey from "../keys/cognitoLocal.private.json";
 import { DefaultConfig } from "../server/config";
-import type { Messages, Triggers, UserPoolService } from "../services";
+import type {
+  Messages,
+  SessionService,
+  Triggers,
+  UserPoolService,
+} from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
 import { attributesToRecord, type User } from "../services/userPoolService";
 import { InitiateAuth, type InitiateAuthTarget } from "./initiateAuth";
@@ -34,6 +40,7 @@ describe("InitiateAuth target", () => {
   let mockUserPoolService: MockedObject<UserPoolService>;
   let mockMessages: MockedObject<Messages>;
   let mockOtp: Mock<() => string>;
+  let mockSessions: MockedObject<SessionService>;
   let mockTriggers: MockedObject<Triggers>;
   let mockTokenGenerator: MockedObject<TokenGenerator>;
   const userPoolClient = TDB.appClient();
@@ -44,6 +51,8 @@ describe("InitiateAuth target", () => {
     });
     mockMessages = newMockMessages();
     mockOtp = vi.fn().mockReturnValue("123456");
+    mockSessions = newMockSessionService();
+    mockSessions.create.mockReturnValue("mfa-session");
     mockTriggers = newMockTriggers();
     mockTokenGenerator = newMockTokenGenerator();
 
@@ -55,6 +64,7 @@ describe("InitiateAuth target", () => {
       cognito: mockCognitoService,
       messages: mockMessages,
       otp: mockOtp,
+      sessions: mockSessions,
       triggers: mockTriggers,
       tokenGenerator: mockTokenGenerator,
     });
@@ -271,6 +281,59 @@ describe("InitiateAuth target", () => {
                 },
               }),
             ).rejects.toBeInstanceOf(NotAuthorizedError);
+          });
+
+          it("starts MFA_SETUP when software token MFA is available", async () => {
+            mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+              Enabled: true,
+            };
+
+            const output = await initiateAuth(TestContext, {
+              ClientId: userPoolClient.ClientId,
+              AuthFlow: "USER_PASSWORD_AUTH",
+              AuthParameters: {
+                USERNAME: user.Username,
+                PASSWORD: user.Password,
+              },
+            });
+
+            expect(output).toEqual({
+              ChallengeName: "MFA_SETUP",
+              ChallengeParameters: {
+                USER_ID_FOR_SRP: user.Username,
+                MFAS_CAN_SETUP: JSON.stringify(["SOFTWARE_TOKEN_MFA"]),
+              },
+              Session: "mfa-session",
+            });
+            expect(mockSessions.create).toHaveBeenCalledWith({
+              clientId: userPoolClient.ClientId,
+              purpose: "MFA_SETUP",
+              userPoolId: userPoolClient.UserPoolId,
+              username: user.Username,
+            });
+            expect(mockTokenGenerator.generate).not.toHaveBeenCalled();
+          });
+
+          it("advertises every pool-level setup mechanism", async () => {
+            mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+              Enabled: true,
+            };
+            mockUserPoolService.options.SmsConfiguration = {
+              SnsCallerArn: "arn:aws:iam::000000000000:role/test",
+            };
+
+            const output = await initiateAuth(TestContext, {
+              ClientId: userPoolClient.ClientId,
+              AuthFlow: "USER_PASSWORD_AUTH",
+              AuthParameters: {
+                USERNAME: user.Username,
+                PASSWORD: user.Password,
+              },
+            });
+
+            expect(
+              JSON.parse(output.ChallengeParameters?.MFAS_CAN_SETUP ?? "[]"),
+            ).toEqual(["SOFTWARE_TOKEN_MFA", "SMS_MFA"]);
           });
         });
       });
@@ -710,6 +773,7 @@ describe("InitiateAuth target", () => {
         cognito: cognitoService,
         messages: mockMessages,
         otp: mockOtp,
+        sessions: mockSessions,
         tokenGenerator: mockTokenGenerator,
         triggers: mockTriggers,
       });

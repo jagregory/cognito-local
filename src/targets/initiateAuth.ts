@@ -32,15 +32,28 @@ export type InitiateAuthTarget = Target<
 
 type InitiateAuthServices = Pick<
   Services,
-  "cognito" | "config" | "messages" | "otp" | "tokenGenerator" | "triggers"
+  | "cognito"
+  | "config"
+  | "messages"
+  | "otp"
+  | "sessions"
+  | "tokenGenerator"
+  | "triggers"
 >;
+
+type MfaChallengeRequest = Pick<
+  InitiateAuthRequest,
+  "ClientId" | "ClientMetadata"
+>;
+
+type MfaChallengeServices = Pick<Services, "messages" | "otp" | "sessions">;
 
 const smsMfaChallenge = async (
   ctx: Context,
   user: User,
-  req: InitiateAuthRequest,
+  req: MfaChallengeRequest,
   userPool: UserPoolService,
-  services: InitiateAuthServices,
+  services: MfaChallengeServices,
 ): Promise<InitiateAuthResponse> => {
   const smsMfaOption = user.MFAOptions?.find(
     (x): x is MFAOption & { DeliveryMedium: DeliveryMediumType } =>
@@ -121,16 +134,43 @@ const enabledMfaMethods = (
   return result;
 };
 
-const verifyMfaChallenge = async (
+export const verifyMfaChallenge = async (
   ctx: Context,
   user: User,
-  req: InitiateAuthRequest,
+  req: MfaChallengeRequest,
   userPool: UserPoolService,
-  services: InitiateAuthServices,
+  services: MfaChallengeServices,
 ): Promise<InitiateAuthResponse> => {
   const methods = enabledMfaMethods(user);
   if (methods.length === 0) {
-    throw new NotAuthorizedError();
+    if (userPool.options.MfaConfiguration !== "ON") {
+      throw new NotAuthorizedError();
+    }
+
+    const methodsToSetup: ("SOFTWARE_TOKEN_MFA" | "SMS_MFA")[] = [];
+    if (userPool.options.SoftwareTokenMfaConfiguration?.Enabled) {
+      methodsToSetup.push("SOFTWARE_TOKEN_MFA");
+    }
+    if (userPool.options.SmsConfiguration) {
+      methodsToSetup.push("SMS_MFA");
+    }
+    if (methodsToSetup.length === 0) {
+      throw new NotAuthorizedError();
+    }
+
+    return {
+      ChallengeName: "MFA_SETUP",
+      ChallengeParameters: {
+        USER_ID_FOR_SRP: user.Username,
+        MFAS_CAN_SETUP: JSON.stringify(methodsToSetup),
+      },
+      Session: services.sessions.create({
+        clientId: req.ClientId,
+        purpose: "MFA_SETUP",
+        userPoolId: userPool.options.Id,
+        username: user.Username,
+      }),
+    };
   }
 
   if (methods.length > 1) {
@@ -358,7 +398,10 @@ const userSrpAuthFlow = async (
     throw new InvalidParameterError("Missing required parameter SRP_A");
   }
 
-  const user = await userPool.getUserByUsername(ctx, req.AuthParameters.USERNAME);
+  const user = await userPool.getUserByUsername(
+    ctx,
+    req.AuthParameters.USERNAME,
+  );
   if (!user) {
     throw new NotAuthorizedError();
   }

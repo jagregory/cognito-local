@@ -54,7 +54,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminRemoveUserFromGroup         | ✅                   |
 | AdminResetUserPassword           | ❌                   |
 | AdminRespondToAuthChallenge      | ❌                   |
-| AdminSetUserMFAPreference        | ❌                   |
+| AdminSetUserMFAPreference        | ✅                   |
 | AdminSetUserPassword             | ✅                   |
 | AdminSetUserSettings             | ❌                   |
 | AdminUpdateAuthEventFeedback     | ❌                   |
@@ -583,10 +583,14 @@ Without `Region`, consumers need workarounds to override the auth flow, bypass J
 
 ## Multi-factor authentication
 
-There is limited support for Multi-Factor Authentication in Cognito Local. Currently, if a User Pool is configured to
-have a `MfaConfiguration` of `OPTIONAL` or `ON` **and** a user has an `MFAOption` of `SMS` then Cognito Local will
-follow the MFA flows. If a user does not have a `phone_number` attribute or any other type of MFA is used, Cognito Local
-will fail.
+There is support for SMS and software-token (TOTP) Multi-Factor Authentication in Cognito Local. When a User Pool
+requires MFA with `MfaConfiguration: "ON"`, users without an enabled MFA method are sent through the `MFA_SETUP`
+forced-enrollment flow. Software-token enrollment is supported by `AssociateSoftwareToken` and `VerifySoftwareToken`;
+SMS can be advertised as available by Cognito Local, but enrollment during `MFA_SETUP` is currently TOTP-only.
+
+For compatibility with existing Cognito Local behavior, successfully verifying a software token automatically adds
+`SOFTWARE_TOKEN_MFA` to the user's `UserMFASettingList`. AWS Cognito applications may instead set this preference
+explicitly with `SetUserMFAPreference` or `AdminSetUserMFAPreference`.
 
 ## Confirmation codes
 

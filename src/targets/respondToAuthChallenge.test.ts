@@ -10,6 +10,7 @@ import {
 import { ClockFake } from "../__tests__/clockFake";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockMessages } from "../__tests__/mockMessages";
+import { newMockSessionService } from "../__tests__/mockSessionService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockTriggers } from "../__tests__/mockTriggers";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -20,7 +21,12 @@ import {
   InvalidParameterError,
   NotAuthorizedError,
 } from "../errors";
-import type { Messages, Triggers, UserPoolService } from "../services";
+import type {
+  Messages,
+  SessionService,
+  Triggers,
+  UserPoolService,
+} from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
 import { generateSecret, generate as genTotp } from "../services/totp";
 import {
@@ -37,6 +43,7 @@ describe("RespondToAuthChallenge target", () => {
   let mockUserPoolService: MockedObject<UserPoolService>;
   let mockMessages: MockedObject<Messages>;
   let mockOtp: Mock<() => string>;
+  let mockSessions: MockedObject<SessionService>;
   let clock: ClockFake;
   const userPoolClient = TDB.appClient();
 
@@ -54,6 +61,8 @@ describe("RespondToAuthChallenge target", () => {
     });
     mockMessages = newMockMessages();
     mockOtp = vi.fn().mockReturnValue("123456");
+    mockSessions = newMockSessionService();
+    mockSessions.create.mockReturnValue("setup-session");
 
     const mockCognitoService = newMockCognitoService(mockUserPoolService);
     mockCognitoService.getAppClient.mockResolvedValue(userPoolClient);
@@ -63,6 +72,7 @@ describe("RespondToAuthChallenge target", () => {
       cognito: mockCognitoService,
       messages: mockMessages,
       otp: mockOtp,
+      sessions: mockSessions,
       tokenGenerator: mockTokenGenerator,
       triggers: mockTriggers,
     });
@@ -123,6 +133,178 @@ describe("RespondToAuthChallenge target", () => {
     ).rejects.toEqual(
       new InvalidParameterError("Missing required parameter Session"),
     );
+  });
+
+  describe("ChallengeName=MFA_SETUP", () => {
+    const sessionFor = (username: string) => ({
+      clientId: userPoolClient.ClientId,
+      expiresAt: Date.now() + 60_000,
+      purpose: "MFA_SETUP" as const,
+      userPoolId: userPoolClient.UserPoolId,
+      username,
+    });
+
+    it("consumes the session and issues tokens after TOTP verification", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: {
+          Secret: generateSecret(),
+          Verified: true,
+        },
+        UserMFASettingList: ["SOFTWARE_TOKEN_MFA"],
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
+      mockSessions.consume.mockReturnValue(sessionFor(user.Username));
+
+      const result = await respondToAuthChallenge(TestContext, {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "MFA_SETUP",
+        ChallengeResponses: { USERNAME: user.Username },
+        Session: "verified-session",
+      });
+
+      expect(mockSessions.consume).toHaveBeenCalledWith("verified-session");
+      expect(mockUserPoolService.saveUser).toHaveBeenCalledWith(TestContext, {
+        ...user,
+        UserLastModifiedDate: currentDate,
+      });
+      expect(result.AuthenticationResult?.AccessToken).toEqual("access");
+    });
+
+    it("rejects replaying a consumed session", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: {
+          Secret: generateSecret(),
+          Verified: true,
+        },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockUserPoolService.listUserGroupMembership.mockResolvedValue([]);
+      mockSessions.consume
+        .mockReturnValueOnce(sessionFor(user.Username))
+        .mockReturnValueOnce(null);
+
+      const request = {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "MFA_SETUP" as const,
+        ChallengeResponses: { USERNAME: user.Username },
+        Session: "one-time-session",
+      };
+
+      await respondToAuthChallenge(TestContext, request);
+      await expect(
+        respondToAuthChallenge(TestContext, request),
+      ).rejects.toEqual(
+        new NotAuthorizedError("Invalid session for the user."),
+      );
+    });
+
+    it("rejects an unverified software token", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: {
+          Secret: generateSecret(),
+          Verified: false,
+        },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockSessions.consume.mockReturnValue(sessionFor(user.Username));
+
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "MFA_SETUP",
+          ChallengeResponses: { USERNAME: user.Username },
+          Session: "unverified-session",
+        }),
+      ).rejects.toEqual(
+        new InvalidParameterError("User has not verified software token MFA"),
+      );
+    });
+
+    it("rejects a session bound to a different user", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: {
+          Secret: generateSecret(),
+          Verified: true,
+        },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockSessions.consume.mockReturnValue(sessionFor("another-user"));
+
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "MFA_SETUP",
+          ChallengeResponses: { USERNAME: user.Username },
+          Session: "mismatched-session",
+        }),
+      ).rejects.toEqual(
+        new NotAuthorizedError("Invalid session for the user."),
+      );
+    });
+
+    it("rejects a session bound to a different client", async () => {
+      const user = TDB.user({
+        SoftwareTokenMfaConfiguration: {
+          Secret: generateSecret(),
+          Verified: true,
+        },
+      });
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      mockSessions.consume.mockReturnValue({
+        ...sessionFor(user.Username),
+        clientId: "another-client",
+      });
+
+      await expect(
+        respondToAuthChallenge(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          ChallengeName: "MFA_SETUP",
+          ChallengeResponses: { USERNAME: user.Username },
+          Session: "mismatched-session",
+        }),
+      ).rejects.toEqual(
+        new NotAuthorizedError("Invalid session for the user."),
+      );
+    });
+  });
+
+  describe("ChallengeName=PASSWORD_VERIFIER", () => {
+    it("applies forced MFA enrollment after the SRP password challenge", async () => {
+      const user = TDB.user();
+      mockUserPoolService.options.MfaConfiguration = "ON";
+      mockUserPoolService.options.SoftwareTokenMfaConfiguration = {
+        Enabled: true,
+      };
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+      const secretBlock = Buffer.from(
+        JSON.stringify({
+          username: user.Username,
+          password: user.Password,
+          userPoolId: userPoolClient.UserPoolId,
+        }),
+      ).toString("base64");
+
+      const result = await respondToAuthChallenge(TestContext, {
+        ClientId: userPoolClient.ClientId,
+        ChallengeName: "PASSWORD_VERIFIER",
+        ChallengeResponses: {
+          PASSWORD_CLAIM_SECRET_BLOCK: secretBlock,
+          TIMESTAMP: new Date().toISOString(),
+          USERNAME: user.Username,
+        },
+      });
+
+      expect(result).toEqual({
+        ChallengeName: "MFA_SETUP",
+        ChallengeParameters: {
+          USER_ID_FOR_SRP: user.Username,
+          MFAS_CAN_SETUP: JSON.stringify(["SOFTWARE_TOKEN_MFA"]),
+        },
+        Session: "setup-session",
+      });
+      expect(mockTokenGenerator.generate).not.toHaveBeenCalled();
+    });
   });
 
   describe("ChallengeName=SMS_MFA", () => {
