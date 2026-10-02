@@ -11,10 +11,17 @@ export type AdminEnableUserTarget = Target<
   AdminEnableUserResponse
 >;
 
-type AdminEnableUserServices = Pick<Services, "cognito" | "clock">;
+type AdminEnableUserServices = Pick<
+  Services,
+  "cognito" | "clock" | "browserSessions"
+>;
 
 export const AdminEnableUser =
-  ({ cognito, clock }: AdminEnableUserServices): AdminEnableUserTarget =>
+  ({
+    cognito,
+    clock,
+    browserSessions,
+  }: AdminEnableUserServices): AdminEnableUserTarget =>
   async (ctx, req) => {
     const userPool = await cognito.getUserPool(ctx, req.UserPoolId);
     const user = await userPool.getUserByUsername(ctx, req.Username);
@@ -22,11 +29,18 @@ export const AdminEnableUser =
       throw new UserNotFoundError();
     }
 
-    await userPool.saveUser(ctx, {
-      ...user,
-      Enabled: true,
-      UserLastModifiedDate: clock.get(),
-    });
+    const enable = async () => {
+      const current = await userPool.getUserByUsername(ctx, user.Username);
+      if (!current) throw new UserNotFoundError();
+      await userPool.saveUser(ctx, {
+        ...current,
+        Enabled: true,
+        UserLastModifiedDate: clock.get(),
+      });
+    };
+    if (browserSessions)
+      await browserSessions.withUser(req.UserPoolId, user.Username, enable);
+    else await enable();
 
     return {};
   };

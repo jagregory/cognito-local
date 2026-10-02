@@ -4,12 +4,13 @@ import * as https from "node:https";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import type { Logger } from "pino";
+import { type Logger, type SerializerFn, stdSerializers, symbols } from "pino";
 import Pino from "pino-http";
 import * as uuid from "uuid";
 import { CognitoError, UnsupportedError } from "../errors";
 import PublicKey from "../keys/cognitoLocal.public.json";
 import { AuthorizationCodeStore } from "../oauth2/authorizationCodeStore";
+import { BrowserSessionStore } from "../oauth2/browserSessionStore";
 import { attachOAuth2Routes } from "../oauth2/routes";
 import type { Services } from "../services";
 import type { Router } from "./Router";
@@ -18,6 +19,8 @@ export type ServerOptions = {
   port?: number;
   hostname?: string;
   development?: boolean;
+  /** Opt in only behind a trusted local TLS-terminating proxy. */
+  trustProxy?: "loopback";
 } & (
   | { https: true; key?: string; ca?: string; cert?: string }
   | { https?: false }
@@ -29,14 +32,46 @@ export interface Server {
   start(): Promise<http.Server | https.Server>;
 }
 
+function cookieSafeSerializer(
+  serializer: SerializerFn,
+  cookieHeader: string,
+): SerializerFn {
+  return (value) => {
+    const serialized = serializer(value);
+    if (!serialized || typeof serialized !== "object") return serialized;
+    const headers = { ...serialized.headers };
+    for (const key of Object.keys(headers)) {
+      if (key.toLowerCase() === cookieHeader) delete headers[key];
+    }
+    return { ...serialized, headers };
+  };
+}
+
 export const createServer = (
   router: Router,
   logger: Logger,
   options: ServerOptions,
   services?: Services,
+  browserSessions?: BrowserSessionStore,
 ): Server => {
+  const inherited =
+    (
+      logger as Logger & {
+        [symbols.serializersSym]: Record<string, SerializerFn>;
+      }
+    )[symbols.serializersSym] ?? {};
   const pino = Pino({
     logger,
+    // Preserve the caller's redaction policy. Child redact options replace it.
+    wrapSerializers: false,
+    serializers: {
+      ...inherited,
+      req: cookieSafeSerializer(inherited.req ?? stdSerializers.req, "cookie"),
+      res: cookieSafeSerializer(
+        inherited.res ?? stdSerializers.res,
+        "set-cookie",
+      ),
+    },
     useLevel: "debug",
     genReqId: () => uuid.v4().split("-")[0],
     quietReqLogger: true,
@@ -45,6 +80,7 @@ export const createServer = (
     },
   });
   const app = express();
+  if (options.trustProxy === "loopback") app.set("trust proxy", "loopback");
 
   app.use(pino);
 
@@ -79,8 +115,12 @@ export const createServer = (
   });
 
   if (services) {
+    // Router closes over this same services object, so management operations
+    // and OAuth routes always share the store (including embedded servers).
+    services.browserSessions ??=
+      browserSessions ?? new BrowserSessionStore(services.clock);
     const codeStore = new AuthorizationCodeStore();
-    attachOAuth2Routes(app, services, codeStore);
+    attachOAuth2Routes(app, services, codeStore, services.browserSessions);
   }
 
   app.post("/", (req, res) => {

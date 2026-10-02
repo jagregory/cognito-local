@@ -1,3 +1,4 @@
+import type { BrowserSessionStore } from "../oauth2/browserSessionStore";
 import type { Config } from "../server/config";
 import type { Clock } from "./clock";
 import type { CognitoService } from "./cognitoService";
@@ -13,6 +14,7 @@ export { Triggers, TriggersService } from "./triggers";
 export { UserPoolService, UserPoolServiceImpl } from "./userPoolService";
 
 export interface Services {
+  browserSessions?: BrowserSessionStore;
   clock: Clock;
   cognito: CognitoService;
   config: Config;

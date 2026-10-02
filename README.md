@@ -14,6 +14,7 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
   - [Using a different port](#using-a-different-port)
   - [Updating your application](#updating-your-application)
   - [Creating your first User Pool](#creating-your-first-user-pool)
+- [OAuth browser sessions](#oauth-browser-sessions)
 - [Configuration](#configuration)
   - [Custom Email Sender Trigger](#custom-email-sender-trigger)
   - [HTTPS endpoints with self-signed certificates](#https-endpoints-with-self-signed-certificates)
@@ -297,6 +298,54 @@ or you can have each team member run the above command when they first start usi
 > credentials configured in the terminal you're running the aws-cli from. You can use dummy credentials if necessary:
 > `AWS_ACCESS_KEY_ID=123 AWS_SECRET_ACCESS_KEY=123 aws --endpoint http://localhost:9229 cognito-idp ...`
 
+## OAuth browser sessions
+
+Interactive OAuth2 sign-in creates a browser session that lasts one hour. Requests to
+`/oauth2/authorize` reuse that session when `prompt` is omitted, and `prompt=none`
+returns a new authorization code without displaying the form. Without an active
+session, `prompt=none` redirects to the registered callback with `error=login_required`
+and the original `state`. `prompt=login` always displays the sign-in form. Other prompt
+values and combinations are not currently supported.
+
+Interactive POSTs must originate from a freshly fetched sign-in form. The form
+contains a one-use CSRF token bound to its authorization parameters and an HttpOnly
+pre-login cookie; both expire after ten minutes. Direct credential POSTs without
+that form transaction are rejected. An expired form must be reloaded. Automated
+clients must retain the form cookie and submit its hidden `csrf_token` field.
+
+Sessions are shared by app clients in the same user pool, not across pools. Silent
+reuse does not extend expiry. A successful interactive login replaces the current
+browser's session for that pool. `GET /logout?client_id=...&logout_uri=...` clears that
+session and redirects only to a URL registered in the client's `LogoutURLs`. This
+endpoint implements the sign-out-URL form of logout, not federated IdP logout or the
+`redirect_uri` form that starts a new login.
+
+Disabling a user revokes all of that user's browser sessions before reporting
+success. Re-enabling the user does not restore those sessions, including after a
+server restart. Logout rejects unregistered destinations and revokes every valid
+ID presented in duplicate session cookies; a storage failure never reports logout
+success. Request logging preserves the supplied logger's redaction configuration
+while excluding Cookie and Set-Cookie headers.
+
+The CLI stores sessions in `.cognito/browser-sessions.json` (mode `0600` on POSIX), so
+they survive server restarts. The file contains session ID hashes, user-pool/user
+identities and expiry times; it contains no passwords or tokens. Do not commit this
+file. Each data directory must be owned by one running emulator. Programmatic
+`createServer` instances use in-memory sessions unless a store is explicitly supplied.
+
+Session cookies are host-only, HttpOnly and SameSite=Lax, with Secure enabled on HTTPS.
+Behind a trusted TLS-terminating **loopback** proxy (for example a local Codespaces
+forwarder), explicitly set `ServerConfig.trustProxy` to `"loopback"` in
+`.cognito/config.json`. Forwarded protocol headers are ignored by default. Only enable
+this when the proxy overwrites untrusted `X-Forwarded-Proto` headers; keep the emulator
+bound to loopback and development ports private. Request/response logs redact cookies.
+
+These behaviors follow the [AWS one-hour session](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-managed-login.html),
+[authorization endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html)
+and [logout endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/logout-endpoint.html)
+semantics for the supported local username/password flow. Existing PKCE, single-use
+codes and token issuance still apply; this does not add federation or MFA flows.
+
 ## Configuration
 
 You do not need to supply a config unless you need to customise the behaviour of Cognito Local. If you are using Lambda
@@ -319,6 +368,7 @@ You can edit that `.cognito/config.json` and add any of the following settings:
 | `ServerConfig`                             | `object`   |                         | Any setting you would pass to the Express server            |
 | `ServerConfig.hostname`                    | `string`   | `localhost`             | Hostname to listen on                                       |
 | `ServerConfig.port`                        | `number`   | `9229`                  | Port to listen on                                           |
+| `ServerConfig.trustProxy`                  | `"loopback"` | unset                  | Explicitly trust a loopback TLS proxy for Secure cookies    |
 | `ServerConfig.https`                       | `boolean`  | `false`                 | Enable HTTPS                                                |
 | `ServerConfig.ca`                          | `string`   |                         | Path to the TLS CA file (ServerConfig.https must be true)   |
 | `ServerConfig.cert`                        | `string`   |                         | Path to the TLS Cert file (ServerConfig.https must be true) |

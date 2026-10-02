@@ -18,10 +18,22 @@ async function submitLogin(
   url: string,
   body: Record<string, string>,
 ): Promise<Response> {
+  const { username: _username, password: _password, ...params } = body;
+  const form = await getForm(url, { ...params, prompt: "login" });
+  const csrf_token = (await form.text()).match(
+    /name="csrf_token" value="([A-Za-z0-9_-]+)"/,
+  )?.[1];
+  if (!csrf_token) throw new Error("Missing login form token");
   return fetch(`${url}/oauth2/authorize`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: form.headers
+        .getSetCookie()
+        .map((value) => value.split(";")[0])
+        .join("; "),
+    },
+    body: new URLSearchParams({ ...body, csrf_token }).toString(),
     redirect: "manual",
   });
 }
@@ -53,6 +65,7 @@ describe(
           AllowedOAuthFlows: ["code"],
           AllowedOAuthScopes: ["openid", "email", "profile"],
           CallbackURLs: ["http://localhost:9876"],
+          LogoutURLs: ["http://localhost:9876/"],
         })
         .promise();
       const clientId = upc.UserPoolClient!.ClientId!;
@@ -135,6 +148,59 @@ describe(
       expect(tokens.refresh_token).toBeTruthy();
       expect(tokens.token_type).toBe("Bearer");
       expect(tokens.expires_in).toBe(3600);
+
+      const cookie = loginRes.headers.getSetCookie()[0].split(";")[0];
+      const silentQuery = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: "http://localhost:9876",
+        response_type: "code",
+        code_challenge: challenge,
+        code_challenge_method: "S256",
+        scope: "openid",
+        prompt: "none",
+        state: "silent-state",
+      });
+      const silent = await fetch(
+        `${serverUrl()}/oauth2/authorize?${silentQuery}`,
+        {
+          headers: { Cookie: cookie },
+          redirect: "manual",
+        },
+      );
+      expect(silent.status).toBe(302);
+      expect(silent.headers.getSetCookie()).toEqual([]);
+      const silentLocation = new URL(silent.headers.get("location")!);
+      expect(silentLocation.searchParams.get("state")).toBe("silent-state");
+      const silentCode = silentLocation.searchParams.get("code")!;
+      expect(silentCode).not.toBe(code);
+      const silentTokens = await exchangeCode(serverUrl(), {
+        grant_type: "authorization_code",
+        code: silentCode,
+        redirect_uri: "http://localhost:9876",
+        client_id: clientId,
+        code_verifier: verifier,
+      });
+      expect(silentTokens.status).toBe(200);
+      expect((await silentTokens.json()).access_token).toBeTruthy();
+      const signOut = await fetch(
+        `${serverUrl()}/logout?${new URLSearchParams({
+          client_id: clientId,
+          logout_uri: "http://localhost:9876/",
+        })}`,
+        { headers: { Cookie: cookie }, redirect: "manual" },
+      );
+      expect(signOut.status).toBe(302);
+      expect(signOut.headers.get("location")).toBe("http://localhost:9876/");
+      const afterLogout = await fetch(
+        `${serverUrl()}/oauth2/authorize?${silentQuery}`,
+        {
+          headers: { Cookie: cookie },
+          redirect: "manual",
+        },
+      );
+      expect(
+        new URL(afterLogout.headers.get("location")!).searchParams.get("error"),
+      ).toBe("login_required");
     });
 
     it("returns the login form again with an error message on wrong password", async () => {

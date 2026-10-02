@@ -3,6 +3,7 @@ import express from "express";
 import supertest from "supertest";
 import type { MockedObject } from "vitest";
 import { beforeEach, describe, expect, it } from "vitest";
+import { submitLogin } from "../__tests__/loginForm";
 import { newMockCognitoService } from "../__tests__/mockCognitoService";
 import { newMockTokenGenerator } from "../__tests__/mockTokenGenerator";
 import { newMockUserPoolService } from "../__tests__/mockUserPoolService";
@@ -173,10 +174,7 @@ describe("OAuth2 routes", () => {
 
     it("redirects with code and state on valid credentials", async () => {
       const { app } = buildApp(mockCognito, mockTokenGenerator);
-      const res = await supertest(app)
-        .post("/oauth2/authorize")
-        .type("form")
-        .send(validFormData);
+      const res = await submitLogin(supertest(app), validFormData);
       expect(res.status).toBe(302);
       const location = new URL(res.header.location);
       expect(location.hostname).toBe("localhost");
@@ -191,10 +189,7 @@ describe("OAuth2 routes", () => {
         Password: "different-password",
       });
       const { app } = buildApp(mockCognito, mockTokenGenerator);
-      const res = await supertest(app)
-        .post("/oauth2/authorize")
-        .type("form")
-        .send(validFormData);
+      const res = await submitLogin(supertest(app), validFormData);
       expect(res.status).toBe(200);
       expect(res.text).toContain("Incorrect username or password");
     });
@@ -202,10 +197,7 @@ describe("OAuth2 routes", () => {
     it("shows login form with error when user not found", async () => {
       mockUserPoolService.getUserByUsername.mockResolvedValue(null);
       const { app } = buildApp(mockCognito, mockTokenGenerator);
-      const res = await supertest(app)
-        .post("/oauth2/authorize")
-        .type("form")
-        .send(validFormData);
+      const res = await submitLogin(supertest(app), validFormData);
       expect(res.status).toBe(200);
       expect(res.text).toContain("Incorrect username or password");
     });
@@ -216,10 +208,7 @@ describe("OAuth2 routes", () => {
         UserStatus: "UNCONFIRMED",
       });
       const { app } = buildApp(mockCognito, mockTokenGenerator);
-      const res = await supertest(app)
-        .post("/oauth2/authorize")
-        .type("form")
-        .send(validFormData);
+      const res = await submitLogin(supertest(app), validFormData);
       expect(res.status).toBe(200);
       expect(res.text).toContain("Incorrect username or password");
     });

@@ -1,5 +1,6 @@
 import * as AWS from "aws-sdk";
 import type pino from "pino";
+import { BrowserSessionStore } from "../oauth2/browserSessionStore";
 import {
   DateClock,
   LambdaService,
@@ -71,5 +72,15 @@ export const createDefaultServer = async (
     triggers,
   };
 
-  return createServer(Router(services), logger, config.ServerConfig, services);
+  const browserSessions = await BrowserSessionStore.load(
+    clock,
+    `${configDirectory}/browser-sessions.json`,
+  );
+  return createServer(
+    Router(services),
+    logger,
+    config.ServerConfig,
+    services,
+    browserSessions,
+  );
 };
