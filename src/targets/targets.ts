@@ -10,8 +10,10 @@ import { AdminGetUser } from "./adminGetUser";
 import { AdminInitiateAuth } from "./adminInitiateAuth";
 import { AdminListGroupsForUser } from "./adminListGroupsForUser";
 import { AdminRemoveUserFromGroup } from "./adminRemoveUserFromGroup";
+import { AdminSetUserMFAPreference } from "./adminSetUserMFAPreference";
 import { AdminSetUserPassword } from "./adminSetUserPassword";
 import { AdminUpdateUserAttributes } from "./adminUpdateUserAttributes";
+import { AdminUserGlobalSignOut } from "./adminUserGlobalSignOut";
 import { AssociateSoftwareToken } from "./associateSoftwareToken";
 import { ChangePassword } from "./changePassword";
 import { ConfirmForgotPassword } from "./confirmForgotPassword";
@@ -63,8 +65,10 @@ export const Targets = {
   AdminInitiateAuth,
   AdminListGroupsForUser,
   AdminRemoveUserFromGroup,
+  AdminSetUserMFAPreference,
   AdminSetUserPassword,
   AdminUpdateUserAttributes,
+  AdminUserGlobalSignOut,
   ChangePassword,
   ConfirmForgotPassword,
   ConfirmSignUp,
