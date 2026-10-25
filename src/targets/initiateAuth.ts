@@ -10,6 +10,7 @@ import {
   NotAuthorizedError,
   PasswordResetRequiredError,
   UnsupportedError,
+  UserDisabledError,
   UserNotConfirmedException,
 } from "../errors";
 import type { Services, UserPoolService } from "../services";
@@ -230,6 +231,9 @@ const userPasswordAuthFlow = async (
   if (!user) {
     throw new NotAuthorizedError();
   }
+  if (user.Enabled === false) {
+    throw new UserDisabledError();
+  }
   if (user.UserStatus === "RESET_REQUIRED") {
     throw new PasswordResetRequiredError();
   }
@@ -299,6 +303,9 @@ const refreshTokenAuthFlow = async (
   );
   if (!user) {
     throw new NotAuthorizedError();
+  }
+  if (user.Enabled === false) {
+    throw new UserDisabledError();
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);

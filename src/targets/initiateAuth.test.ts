@@ -20,6 +20,7 @@ import {
   InvalidPasswordError,
   NotAuthorizedError,
   PasswordResetRequiredError,
+  UserDisabledError,
 } from "../errors";
 import type { Messages, Triggers, UserPoolService } from "../services";
 import type { TokenGenerator } from "../services/tokenGenerator";
@@ -83,6 +84,24 @@ describe("InitiateAuth target", () => {
           },
         }),
       ).rejects.toBeInstanceOf(InvalidPasswordError);
+    });
+
+    it("throws when the user is disabled, even with the right password", async () => {
+      const user = TDB.user({ Enabled: false });
+
+      mockUserPoolService.getUserByUsername.mockResolvedValue(user);
+
+      await expect(
+        initiateAuth(TestContext, {
+          ClientId: userPoolClient.ClientId,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: {
+            USERNAME: user.Username,
+            PASSWORD: user.Password,
+          },
+        }),
+      ).rejects.toEqual(new UserDisabledError());
+      expect(mockTokenGenerator.generate).not.toHaveBeenCalled();
     });
 
     it("throws when user requires reset", async () => {
@@ -653,6 +672,21 @@ describe("InitiateAuth target", () => {
   });
 
   describe("REFRESH_TOKEN_AUTH auth flow", () => {
+    it("throws when the user is disabled", async () => {
+      mockUserPoolService.getUserByRefreshToken.mockResolvedValue(
+        TDB.user({ Enabled: false, RefreshTokens: ["refresh token"] }),
+      );
+
+      await expect(
+        initiateAuth(TestContext, {
+          AuthFlow: "REFRESH_TOKEN_AUTH",
+          ClientId: userPoolClient.ClientId,
+          AuthParameters: { REFRESH_TOKEN: "refresh token" },
+        }),
+      ).rejects.toEqual(new UserDisabledError());
+      expect(mockTokenGenerator.generate).not.toHaveBeenCalled();
+    });
+
     it("returns new tokens", async () => {
       mockTokenGenerator.generate.mockResolvedValue({
         AccessToken: "access",
