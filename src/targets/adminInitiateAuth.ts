@@ -7,6 +7,7 @@ import {
   InvalidPasswordError,
   NotAuthorizedError,
   UnsupportedError,
+  UserDisabledError,
   UserNotConfirmedException,
 } from "../errors";
 import type { Services } from "../services";
@@ -66,6 +67,9 @@ const adminUserPasswordAuthFlow = async (
 
   if (!user || !userPoolClient) {
     throw new NotAuthorizedError();
+  }
+  if (user.Enabled === false) {
+    throw new UserDisabledError();
   }
 
   if (user.Password !== req.AuthParameters.PASSWORD) {
@@ -130,6 +134,9 @@ const refreshTokenAuthFlow = async (
   );
   if (!user || !userPoolClient) {
     throw new NotAuthorizedError();
+  }
+  if (user.Enabled === false) {
+    throw new UserDisabledError();
   }
 
   const userGroups = await userPool.listUserGroupMembership(ctx, user);

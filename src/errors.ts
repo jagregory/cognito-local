@@ -15,6 +15,16 @@ export class NotAuthorizedError extends CognitoError {
   }
 }
 
+/**
+ * A disabled user (AdminDisableUser) signing in or refreshing their tokens: Cognito refuses with
+ * NotAuthorizedException "User is disabled.".
+ */
+export class UserDisabledError extends NotAuthorizedError {
+  public constructor() {
+    super("User is disabled.");
+  }
+}
+
 export class UserNotFoundError extends CognitoError {
   public constructor(message = "User not found.") {
     super("UserNotFoundException", message);
