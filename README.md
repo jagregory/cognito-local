@@ -50,13 +50,13 @@ A _Good Enough_ offline emulator for [Amazon Cognito](https://aws.amazon.com/cog
 | AdminRemoveUserFromGroup         | ✅                   |
 | AdminResetUserPassword           | ❌                   |
 | AdminRespondToAuthChallenge      | ❌                   |
-| AdminSetUserMFAPreference        | ❌                   |
+| AdminSetUserMFAPreference        | ✅                   |
 | AdminSetUserPassword             | ✅                   |
 | AdminSetUserSettings             | ❌                   |
 | AdminUpdateAuthEventFeedback     | ❌                   |
 | AdminUpdateDeviceStatus          | ❌                   |
 | AdminUpdateUserAttributes        | ✅                   |
-| AdminUserGlobalSignOut           | ❌                   |
+| AdminUserGlobalSignOut           | ✅                   |
 | AssociateSoftwareToken           | 🕒 (partial support) |
 | ChangePassword                   | ✅                   |
 | ConfirmDevice                    | ❌                   |
