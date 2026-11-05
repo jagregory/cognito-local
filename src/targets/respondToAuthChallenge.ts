@@ -198,16 +198,23 @@ export const RespondToAuthChallenge =
     }
 
     const userGroups = await userPool.listUserGroupMembership(ctx, user);
+    const tokens = await tokenGenerator.generate(
+      ctx,
+      user,
+      userGroups,
+      userPoolClient,
+      req.ClientMetadata,
+      "Authentication",
+    );
+
+    // As InitiateAuth does: the refresh token must be usable (REFRESH_TOKEN_AUTH). Stored on the
+    // user as saved above (a new password, a cleared code), not the copy read before.
+    const saved =
+      (await userPool.getUserByUsername(ctx, user.Username)) ?? user;
+    await userPool.storeRefreshToken(ctx, tokens.RefreshToken, saved);
 
     return {
       ChallengeParameters: {},
-      AuthenticationResult: await tokenGenerator.generate(
-        ctx,
-        user,
-        userGroups,
-        userPoolClient,
-        req.ClientMetadata,
-        "Authentication",
-      ),
+      AuthenticationResult: tokens,
     };
   };
