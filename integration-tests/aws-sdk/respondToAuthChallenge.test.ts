@@ -63,6 +63,30 @@ describe(
         },
         ChallengeParameters: {},
       });
+
+      // The refresh token it issued can be used, and the new password stays.
+      const refreshed = await client
+        .initiateAuth({
+          ClientId: upc.UserPoolClient?.ClientId!,
+          AuthFlow: "REFRESH_TOKEN_AUTH",
+          AuthParameters: {
+            REFRESH_TOKEN: response.AuthenticationResult?.RefreshToken!,
+          },
+        })
+        .promise();
+      expect(refreshed.AuthenticationResult?.AccessToken).toEqual(
+        expect.any(String),
+      );
+      const again = await client
+        .initiateAuth({
+          ClientId: upc.UserPoolClient?.ClientId!,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          AuthParameters: { USERNAME: "abc", PASSWORD: "new_password" },
+        })
+        .promise();
+      expect(again.AuthenticationResult?.AccessToken).toEqual(
+        expect.any(String),
+      );
     });
 
     it("handles SOFTWARE_TOKEN_MFA challenge", async () => {
@@ -150,6 +174,20 @@ describe(
         .promise();
 
       expect(response.AuthenticationResult?.AccessToken).toBeDefined();
+
+      // The refresh token it issued can be used.
+      const refreshed = await client
+        .initiateAuth({
+          ClientId: clientId,
+          AuthFlow: "REFRESH_TOKEN_AUTH",
+          AuthParameters: {
+            REFRESH_TOKEN: response.AuthenticationResult?.RefreshToken!,
+          },
+        })
+        .promise();
+      expect(refreshed.AuthenticationResult?.AccessToken).toEqual(
+        expect.any(String),
+      );
 
       // wrong TOTP code surfaces as CodeMismatchException through the SDK
       const nextChallenge = await client
