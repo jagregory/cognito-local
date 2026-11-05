@@ -43,6 +43,11 @@ describe("RespondToAuthChallenge target", () => {
   beforeEach(() => {
     clock = new ClockFake(currentDate);
     mockTokenGenerator = newMockTokenGenerator();
+    mockTokenGenerator.generate.mockResolvedValue({
+      AccessToken: "access",
+      IdToken: "id",
+      RefreshToken: "refresh",
+    });
     mockTriggers = newMockTriggers();
     mockUserPoolService = newMockUserPoolService({
       Id: userPoolClient.UserPoolId,
@@ -380,6 +385,12 @@ describe("RespondToAuthChallenge target", () => {
       });
 
       expect(result.AuthenticationResult?.AccessToken).toEqual("a");
+      // The refresh token can be used later (REFRESH_TOKEN_AUTH), as after InitiateAuth.
+      expect(mockUserPoolService.storeRefreshToken).toHaveBeenCalledWith(
+        TestContext,
+        "r",
+        user,
+      );
     });
 
     it("rejects an incorrect code", async () => {
