@@ -158,7 +158,7 @@ export class JwtTokenGenerator implements TokenGenerator {
     const authTime = Math.floor(this.clock.get().getTime() / 1000);
     const sub = attributeValue("sub", user.Attributes);
 
-    const accessToken: RawToken = {
+    let accessToken: RawToken = {
       auth_time: authTime,
       client_id: userPoolClient.ClientId,
       event_id: eventId,
@@ -206,6 +206,15 @@ export class JwtTokenGenerator implements TokenGenerator {
       });
 
       idToken = applyTokenOverrides(idToken, result.claimsOverrideDetails);
+
+      // V2: claimsAndScopeOverrideDetails.accessTokenGeneration applies to access token
+      const v2 = (result as any).claimsAndScopeOverrideDetails;
+      if (v2?.accessTokenGeneration) {
+        accessToken = applyTokenOverrides(accessToken, v2.accessTokenGeneration);
+      }
+      if (v2?.idTokenGeneration) {
+        idToken = applyTokenOverrides(idToken, v2.idTokenGeneration);
+      }
     }
 
     const issuer = `${this.tokenConfig.IssuerDomain}/${userPoolClient.UserPoolId}`;
